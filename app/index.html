@@ -781,8 +781,8 @@ body.lbopen{overflow:hidden}
     <div class="grid2">
       <div class="panel">
         <h2>Add a listing</h2>
-        <p class="lede">Same columns as your “Peninsula 3 Listings” sheet. Listings you add are private to you and show up in your Offers with a “Mine” tag.</p>
-        <form id="mine-form" class="fgrid" autocomplete="off">
+        <p class="lede" id="mine-form-lede">Your own units, with the owner's details. Only you and the admin can see them. They show up in your Offers with a “Mine” tag.</p>
+        <form id="mine-form" class="fgrid" autocomplete="off"><input type="hidden" id="m-id">
           <div class="field"><label for="m-unit">Unit no.</label><input id="m-unit" placeholder="e.g. 3305"></div>
           <div class="field"><label for="m-bld">Building</label><select id="m-bld"><option value="3">Peninsula Three</option><option value="1">Peninsula One</option><option value="2">Peninsula Two</option><option value="4">Peninsula Four</option><option value="5">Peninsula Five</option></select></div>
           <div class="field"><label for="m-type">Type</label><select id="m-type"><option value="0">Studio</option><option value="1">1 Bedroom</option><option value="2">2 Bedroom</option><option value="3">3 Bedroom</option></select></div>
@@ -793,12 +793,12 @@ body.lbopen{overflow:hidden}
           <div class="field"><label for="m-price">Price (AED, or rent per year)</label><input id="m-price" inputmode="numeric" required></div>
           <div class="field"><label for="m-status">Status</label><select id="m-status"><option>Ready</option><option>Vacant</option><option>Tenanted</option><option>Off-plan</option></select></div>
           <div class="field"><label for="m-furn">Furnishing</label><select id="m-furn"><option>Unfurnished</option><option>Fully fitted</option><option>Fully furnished</option></select></div>
-          <div class="field"><label for="m-owner">Owner / client</label><input id="m-owner"></div>
-          <div class="field"><label for="m-phone">Owner phone</label><input id="m-phone" inputmode="tel"></div>
+          <div class="field"><label for="m-owner">Owner's name</label><input id="m-owner" autocomplete="off"></div>
+          <div class="field"><label for="m-phone">Owner's phone</label><input id="m-phone" inputmode="tel" autocomplete="off" placeholder="+971 …"></div>
           <div class="field"><label for="m-agent">Agent</label><select id="m-agent"><option value="talal">Talal Al Deraawi</option><option value="giulia">Giulia Perego</option><option value="blendjana">Blendjana</option></select></div>
           <div class="field"><label for="m-date">Date listed</label><input id="m-date" type="date"></div>
           <div class="field wide"><label for="m-notes">Notes</label><textarea id="m-notes" rows="2"></textarea></div>
-          <div class="wide actions"><button class="btn primary" type="submit">Save listing</button></div>
+          <div class="wide actions"><button class="btn primary" type="submit" id="m-save">Save listing</button><button class="btn" type="button" id="m-cancel" hidden>Cancel editing</button></div>
         </form>
       </div>
       <div class="panel stack">
@@ -809,6 +809,7 @@ body.lbopen{overflow:hidden}
         <textarea class="copybox" id="csv-text" readonly aria-label="CSV export"></textarea>
       </div>
     </div>
+<div class="panel" id="team-listings-panel" hidden style="margin-top:16px"><h2>Agents' listings</h2><p class="lede">Every unit your agents have added, with the owners' details. Each agent sees only their own; you see them all.</p><div class="stack" id="team-listings"></div></div>
 <div class="panel" style="margin-top:16px">
       <h2>Backup &amp; restore</h2>
       <p class="lede">Your listings, clients and shortlist are private to you. Copy a backup from time to time and keep it in Notes or email it to yourself. To move to another device, paste the backup here and restore it.</p>
@@ -1049,7 +1050,7 @@ function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");cl
 async function copy(text,box){try{await navigator.clipboard.writeText(text);toast("Copied")}catch(e){if(box){box.value=text;box.focus();box.select()}toast("Select the text and copy it")}}
 const costs=p=>{const d=p*FEES.dld;return{dld:d,total:p+d+FEES.trustee+FEES.admin}};
 
-let mine=store.get("orla.mine",[]);
+let mine=store.get("orla.mine",[]),teamListings=[],listingsReady=false;
 let starred=new Set(store.get("orla.star",[]));
 let ovr=store.get("orla.ovr",null);
 let clients=store.get("orla.clients",[]);
@@ -1059,8 +1060,8 @@ const FDEF={deal:"all",type:"",bld:"",sort:"price-asc",q:"",pmin:"",pmax:"",smin
 const state=Object.assign({},FDEF,store.get("orla.filters",{}),{client:null,sel:store.get("orla.sel",null)});
 
 function mineToOffer(m){return{id:m.id,b:+m.b,beds:+m.beds,deal:m.deal,title:(m.unit?"Unit "+m.unit+" · ":"")+TYPE[+m.beds],price:m.deal==="sale"?+m.price:undefined,rent:m.deal==="rent"?+m.price:undefined,
-  size:m.size?+m.size:null,floor:m.floor||"On request",view:m.view||"On request",furn:m.furn,status:m.status,agent:m.agent,hl:m.notes||"",mine:true,owner:m.owner,ownerPhone:m.phone,date:m.date,src:"Added on this device"}}
-const all=()=>OFFERS.concat(mine.map(mineToOffer)).map(enrich);
+  size:m.size?+m.size:null,floor:m.floor||"On request",view:m.view||"On request",furn:m.furn,status:m.status,agent:m.agent,hl:m.notes||"",mine:true,unit:m.unit||null,owner:m.owner,ownerPhone:m.phone,date:m.date,by:m._by||null,own:m._own!==false,src:SRV?(m._by?"Added by "+(m._by.name||m._by.email):"Added by you"):"Added on this device"}}
+const all=()=>OFFERS.concat(mine.map(mineToOffer),teamListings.map(mineToOffer)).map(enrich);
 const agentOf=o=>AGENTS[o.agent]||Object.values(AGENTS)[0]||{name:"Orla Properties",phone:""};
 const dldLabel=()=>"DLD registration ("+(+(FEES.dld*100).toFixed(2))+"%)";
 const keyPrice=o=>o.deal==="rent"?o.rent:o.price;
@@ -1073,7 +1074,7 @@ function pills(o){
   let h="";
   if(o.deal!=="rent")h+='<span class="pill sale">Sale</span>';
   if(o.deal!=="sale")h+='<span class="pill rent">Rent</span>';
-  if(o.mine)h+='<span class="pill mine">Mine</span>';
+  if(o.mine)h+=`<span class="pill mine">${o.by?esc(String(o.by.name||o.by.email||"Agent").split(" ")[0]):"Mine"}</span>`;
   if(o.avail!=="Available")h+=`<span class="pill st ${isDone(o)?"done":""}">${esc(o.avail)}</span>`;
   if(o.x&&o.x.reduced)h+='<span class="pill reduced">Price reduced</span>';
   if(o.x&&o.x.value==='below')h+='<span class="pill below">Below market</span>';
@@ -1148,12 +1149,12 @@ function renderDetail(){
     +metric("Security deposit",aed(o.rent*dep),(dep*100)+"% of annual rent");
   const pos=o.deal!=="rent"&&x.psf&&x.mS?{v:x.psf,m:x.mS.psf,f:v=>"AED "+fmt(v),t:"Asking price per sq ft against the building's registered average"}:(x.vsR!=null?{v:o.rent,m:x.mR.avg,f:v=>short(v),t:"Annual rent against the building's average registered lease"}:null);
   const tags=x.views.map(v=>`<span class="tag">${esc(VIEWS[v])}</span>`).join("")+(x.band?`<span class="tag">${esc(BAND[x.band])}</span>`:"")+(x.furn?`<span class="tag">${esc(FURN[x.furn])}</span>`:"");
-  const unit=(isTeam()&&o.unit?[["Unit number",o.unit+" (team only)"]]:[]).concat([["Unit type",TYPE[o.beds]]]);unit.push(["Size",o.size?fmt(o.size)+" sq ft · "+(o.size*0.092903).toFixed(1)+" m²":"On request"]);
+  const unit=(isTeam()&&o.unit?[["Unit number",o.unit]]:[]).concat([["Unit type",TYPE[o.beds]]]);unit.push(["Size",o.size?fmt(o.size)+" sq ft · "+(o.size*0.092903).toFixed(1)+" m²":"On request"]);
   if(o.balcony)unit.push(["Balcony",o.balcony+" sq ft"]);
   unit.push(["Bathrooms",String(o.baths??"—")],["Floor",o.floor||"On request"],["View",o.view||"On request"],["Furnishing",o.furn||"—"],["Handover",o.status||"—"],["Availability",o.avail]);
   if(o.parking)unit.push(["Parking",o.parking]);
-  if(o.mine&&o.owner)unit.push(["Owner / client",o.owner]);
-  if(o.mine&&o.ownerPhone)unit.push(["Owner phone",o.ownerPhone]);
+  if(o.mine&&!SRV&&o.owner)unit.push(["Owner / client",o.owner]);
+  if(o.mine&&!SRV&&o.ownerPhone)unit.push(["Owner phone",o.ownerPhone]);
   if(o.date)unit.push(["Date listed",o.date]);
   let money="";
   if(o.deal!=="rent"){const c=costs(o.price);money+=`<div><h4>Purchase cost</h4>${kv("Price",aed(o.price))}${kv(dldLabel(),aed(c.dld))}${kv("Trustee office fee",aed(FEES.trustee))}${kv("Admin fee",aed(FEES.admin))}${kv("Total cost",aed(c.total),"total")}</div>`}
@@ -1181,7 +1182,7 @@ function renderDetail(){
         <button class="btn" id="d-copy">${ic("copy")}Copy offer text</button>
         <a class="btn" href="${wa}" target="_blank" rel="noopener">${ic("chat")}Share on WhatsApp</a>
         ${o.deal!=="rent"?'<button class="btn" id="d-calc">'+ic("calc")+'Open in calculator</button>':""}
-        ${o.mine?'<button class="btn" id="d-del">Delete listing</button>':""}
+        ${o.mine&&SRV?'<button class="btn" id="d-edit">'+ic("file")+'Edit listing</button>':""}${o.mine?'<button class="btn" id="d-del">Delete listing</button>':""}
       </div>
       ${ownerCard(o)}
       <div class="metrics">${M}</div>
@@ -1210,7 +1211,8 @@ function renderDetail(){
     if(await saveOffer(n,`Updated ${BLD[n.b]} · ${n.title}: ${n.avail}${n.deal!=="rent"?", "+aed(n.price):""}${n.deal!=="sale"?", rent "+aed(n.rent):""}`))toast("Offer updated for everyone")};
   const ef=$("#e-full");if(ef)ef.onclick=()=>{show("admin");openOfferForm(o.id)};
   const dc=$("#d-calc");if(dc)dc.onclick=()=>{loadCalc(o.id);show("calc")};
-  const dd=$("#d-del");if(dd)dd.onclick=()=>{if(dd.dataset.armed){mine=mine.filter(m=>m.id!==o.id);persist();starred.delete(o.id);saveStar();renderAll();toast("Listing deleted")}else{dd.dataset.armed=1;dd.textContent="Tap again to delete"}};
+  const de=$("#d-edit");if(de)de.onclick=()=>editListing(o.id);
+  const dd=$("#d-del");if(dd)dd.onclick=async()=>{if(dd.dataset.armed){if(SRV){try{await api("data/listings/delete",{id:o.id});await loadListings()}catch(x){toast(x.message);return}}else{mine=mine.filter(m=>m.id!==o.id);persist()}starred.delete(o.id);saveStar();renderAll();toast("Listing deleted")}else{dd.dataset.armed=1;dd.textContent="Tap again to delete"}};
 }
 function toggleStar(id){starred.has(id)?starred.delete(id):starred.add(id);saveStar();renderList();renderShort()}
 function saveStar(){persist();$("#cnt-short").textContent=starred.size}
@@ -1271,19 +1273,41 @@ function renderMarketBase(){
 }
 /* ---------------- My listings ---------------- */
 function renderMine(){
-  $("#mine-lede").textContent=mine.length?`${mine.length} saved on this device.`:"Nothing saved yet.";
+  $("#mine-lede").textContent=SRV?(mine.length?`${mine.length} unit${mine.length===1?"":"s"}. Only you and the admin can see them.`:"Nothing added yet. Only you and the admin will see what you add."):(mine.length?`${mine.length} saved on this device.`:"Nothing saved yet.");
+  const tp=$("#team-listings-panel");tp.hidden=!(SRV&&isAdmin);
+  if(SRV&&isAdmin){const g={};teamListings.forEach(m=>{const k=m._by?m._by.id:"?";(g[k]=g[k]||{by:m._by,l:[]}).l.push(m)});const groups=Object.values(g).sort((a,b)=>String(a.by&&a.by.name).localeCompare(String(b.by&&b.by.name)));
+    $("#team-listings").innerHTML=groups.length?groups.map(x=>`<div><h4>${esc((x.by&&(x.by.name||x.by.email))||"Agent")} · ${x.l.length} unit${x.l.length===1?"":"s"}</h4><div class="list">${x.l.map(m=>cardHTML(enrich(mineToOffer(m)),false)).join("")}</div></div>`).join(""):'<div class="empty">No agent has added a unit yet.</div>'}
   $("#mine-list").innerHTML=mine.length?mine.map(m=>cardHTML(mineToOffer(m),false)).join(""):'<div class="empty">Listings you add appear here and in Offers.</div>';
   const head=["Unit No.","Type","Floor","View","Size (sq ft)","Sale / Rent","Price (AED)","AED per sq ft","Status","Furnishing","Owner / Client","Owner Phone","Date Listed","Notes"];
   const q=v=>{v=String(v??"");return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
   $("#csv-text").value=mine.length?[head.join(",")].concat(mine.map(m=>[m.unit,TYPE[m.beds],m.floor,m.view,m.size,m.deal==="sale"?"Sale":"Rent",m.price,m.size&&m.price?Math.round(m.price/m.size):"",m.status,m.furn,m.owner,m.phone,m.date,m.notes].map(q).join(","))).join("\n"):"";
 }
-$("#mine-form").addEventListener("submit",e=>{e.preventDefault();
+$("#mine-form").addEventListener("submit",async e=>{e.preventDefault();
   const g=id=>$(id).value.trim();
   const price=parseFloat(g("#m-price").replace(/[^0-9.]/g,""));
   if(!price){toast("Enter a price");$("#m-price").focus();return}
-  const m={id:"mine-"+Date.now(),unit:g("#m-unit"),b:g("#m-bld"),beds:g("#m-type"),deal:g("#m-deal"),floor:g("#m-floor"),view:g("#m-view"),size:g("#m-size").replace(/[^0-9.]/g,""),price,status:g("#m-status"),furn:g("#m-furn"),owner:g("#m-owner"),phone:g("#m-phone"),agent:g("#m-agent"),date:g("#m-date"),notes:g("#m-notes")};
-  mine.push(m);persist();e.target.reset();$("#m-date").valueAsDate=new Date();renderAll();toast("Listing saved");
+  const m={id:g("#m-id")||"l-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),unit:g("#m-unit"),b:g("#m-bld"),beds:g("#m-type"),deal:g("#m-deal"),floor:g("#m-floor"),view:g("#m-view"),size:g("#m-size").replace(/[^0-9.]/g,""),price,status:g("#m-status"),furn:g("#m-furn"),owner:g("#m-owner"),phone:g("#m-phone"),agent:g("#m-agent"),date:g("#m-date"),notes:g("#m-notes")};
+  if(SRV){const{id,...data}=m;try{await api("data/listings",{id,data},"PUT")}catch(x){toast(x.message);return}await loadListings()}
+  else{const i=mine.findIndex(x=>x.id===m.id);if(i>=0)mine[i]=m;else mine.push(m);persist()}
+  const was=!!g("#m-id");resetMineForm();renderAll();toast(was?"Listing updated":"Listing saved");
 });
+function resetMineForm(){$("#mine-form").reset();$("#m-id").value="";$("#m-save").textContent="Save listing";$("#m-cancel").hidden=true;try{$("#m-date").valueAsDate=new Date()}catch(e){}const k=myKey();if(k&&AGENTS[k])$("#m-agent").value=k}
+$("#m-cancel").onclick=resetMineForm;
+function editListing(id){const m=mine.concat(teamListings).find(x=>x.id===id);if(!m)return;show("mine");
+  const set=(k,v)=>{$(k).value=v??""};set("#m-id",m.id);set("#m-unit",m.unit);set("#m-bld",m.b);set("#m-type",m.beds);set("#m-deal",m.deal);set("#m-floor",m.floor);set("#m-view",m.view);set("#m-size",m.size);set("#m-price",m.price?fmt(m.price):"");
+  set("#m-status",m.status);set("#m-furn",m.furn);set("#m-owner",m.owner);set("#m-phone",m.phone);if(AGENTS[m.agent])set("#m-agent",m.agent);set("#m-date",m.date);set("#m-notes",m.notes);
+  $("#m-save").textContent="Save changes";$("#m-cancel").hidden=false;setTimeout(()=>{$("#mine-form").scrollIntoView({behavior:"smooth",block:"start"});$("#m-owner").focus({preventScroll:true})},60)}
+// Each agent's own units live on the server. Units saved before (in the agent's private app data) move there once.
+async function loadListings(){if(!SRV||!isTeam())return;
+  try{let d=await api("data/listings");
+    const own=d.listings.filter(r=>r.own),old=listingsReady?[]:mine.filter(m=>m&&m.id&&!own.some(r=>r.id===m.id));
+    if(old.length&&!listingsReady){let moved=0;for(const m of old){const{id,...data}=m;try{await api("data/listings",{id:/^[A-Za-z0-9_-]{1,64}$/.test(id)?id:"l-"+Date.now().toString(36)+moved,data},"PUT");moved++}catch(x){}}
+      if(moved!==old.length){toast("Some of your listings couldn't be moved to your account yet. They're kept on this device.");return}
+      d=await api("data/listings")}
+    mine=d.listings.filter(r=>r.own).map(r=>Object.assign({},r.data,{id:r.id}));
+    teamListings=d.listings.filter(r=>!r.own).map(r=>Object.assign({},r.data,{id:r.id,_by:r.by,_own:false}));
+    const first=!listingsReady;listingsReady=true;store.set("orla.mine",mine);if(first){persist();if(!$("#m-id").value)resetMineForm()}}
+  catch(x){}}
 
 /* ---------------- Dashboard ---------------- */
 const today=()=>new Date().toISOString().slice(0,10);
@@ -1291,7 +1315,7 @@ const isDue=c=>c.follow&&c.follow<=today()&&c.status!=="Closed"&&c.status!=="Los
 function renderDash(){if(!isTeam()){renderShowroom();return}clearInterval(heroT);renderTeamDash();
   const myl=renderMyListings();if(myl){const r=$("#dash").children[0];if(r)r.insertAdjacentHTML("afterend",myl);else $("#dash").insertAdjacentHTML("afterbegin",myl)}
   $("#dash").insertAdjacentHTML("afterbegin",`<div class="reqband" style="--rb:url('${imgSrc("p3-canal-sunset",true)}')"><div><h3>New client request</h3><p>Ask 4 quick questions and get three homes to send: premium, balanced and best value, with photos.</p></div><button class="btn primary big" style="width:auto" data-find>${ic("star")}Find 3 options</button></div>`)}
-function renderMyListings(){const k=myKey();if(!k||!AGENTS[k])return"";const l=OFFERS.filter(o=>o.agent===k).map(enrich).sort((a,b)=>a.b-b.b||a.beds-b.beds);if(!l.length)return"";
+function renderMyListings(){const k=myKey();const l=OFFERS.filter(o=>k&&AGENTS[k]&&o.agent===k).concat(SRV?mine.map(mineToOffer):[]).map(enrich).sort((a,b)=>a.b-b.b||a.beds-b.beds);if(!l.length)return"";
   const withOwner=l.filter(o=>o.ownerPhone).length;
   return `<div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Listed under you</h2><p class="lede">${l.length} offer${l.length===1?"":"s"} in your name${withOwner<l.length?` · ${l.length-withOwner} without an owner's number yet`:""}. Only you can see these owners' contacts.</p></div><button class="btn" data-mine-all>See them in Offers${ic("arrowr")}</button></div>
     <div class="mylist">${l.map(o=>`<div class="myrow"><img src="${esc(imgSrc(photosOf(o)[0].k,true))}" alt=""><div class="t"><b>${o.unit?"Unit "+esc(o.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(TYPE[o.beds])}</b><span>${esc(o.deal==="rent"?aed(o.rent)+" / yr":aed(o.price))}${o.owner?" · Owner: "+esc(o.owner):""}${o.ownerPhone?" · "+esc(o.ownerPhone):" · No owner number yet"}</span></div>
@@ -1728,7 +1752,7 @@ const ICONS={"home": "M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-
 const ic=(n,cls="")=>`<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[n]}"/></svg>`;
 const PAGES={dash:["home","Dashboard",""],offers:["building","Offers","Browse, filter, compare and present every unit"],analysis:["chart","Analysis","How your offers compare with each other and the market"],
   reports:["file","Reports","Portfolio report and Excel-ready downloads"],shortlist:["star","Client shortlist","Offers you've starred, ready to present or send"],clients:["users","Clients","Buyers, investors and tenants you're working with"],
-  calc:["calc","Deal calculator","Purchase costs, yield, resale return and mortgage"],market:["trend","Market data","Registered sales and rents in the Peninsula"],mine:["list","My listings","Your own listings, backup and device security"],admin:["shield","Admin","Users, offers, market data, fees and agents"]};
+  calc:["calc","Deal calculator","Purchase costs, yield, resale return and mortgage"],market:["trend","Market data","Registered sales and rents in the Peninsula"],mine:["list","My listings","Your own units with the owners' details. Only you and the admin can see them."],admin:["shield","Admin","Users, offers, market data, fees and agents"]};
 function setPageHead(v){const p=PAGES[v]||PAGES.dash,h=new Date().getHours(),first=((meInfo&&meInfo.name)||"").split(" ")[0];
   const sub=v==="dash"?(first?`Good ${h<12?"morning":h<18?"afternoon":"evening"}, ${first}. Here's your portfolio today.`:"Your portfolio at a glance"):p[2];
   $("#pagehead").innerHTML=`<div class="phi">${ic(p[0])}</div><div><h1>${esc(p[1])}</h1><p>${esc(sub)}</p></div>`}
@@ -1770,7 +1794,7 @@ function applySettings(x){settings=x||{};applyMarket(settings.market);Object.key
   if(document.activeElement?.id!=="c-dld")$("#c-dld").value=+(FEES.dld*100).toFixed(3);
   const opts=Object.entries(AGENTS).map(([k,a])=>`<option value="${esc(k)}">${esc(a.name)}</option>`).join("");["#m-agent","#o-agent"].forEach(id=>{const el=$(id),v=el.value;el.innerHTML=opts;if(v&&AGENTS[v])el.value=v})}
 function persist(){store.set("orla.mine",mine);store.set("orla.clients",clients);store.set("orla.star",[...starred]);
-  if(SRV){if(!uid)return;clearTimeout(saveT);saveT=setTimeout(async()=>{try{await api("data/state",{data:{mine,clients,starred:[...starred]}},"PUT")}catch(e){if(!warnedRO){warnedRO=true;toast("Couldn't sync your data. It's kept on this device.")}}},700);return}
+  if(SRV){if(!uid)return;clearTimeout(saveT);saveT=setTimeout(async()=>{try{await api("data/state",{data:{mine:listingsReady?[]:mine,clients,starred:[...starred]}},"PUT")}catch(e){if(!warnedRO){warnedRO=true;toast("Couldn't sync your data. It's kept on this device.")}}},700);return}
   if(!(CLOUD&&uid&&cloudReady))return;clearTimeout(saveT);saveT=setTimeout(async()=>{lastAt=new Date().toISOString();
     try{await db.doc("data/users/"+uid+"/state").set({mine,clients,starred:[...starred],at:lastAt})}catch(e){if(!warnedRO){warnedRO=true;toast("Saved on this device only: your access lets you browse but not save")}}},700)}
 async function logAct(text){if(SRV){if(uid&&isAdmin){try{await api("admin/activity",{text:String(text).slice(0,300)})}catch(e){}loadLog()}return}if(!CLOUD||!db)return;try{await db.collection("log").add({at:new Date().toISOString(),by:uid,text:String(text).slice(0,300)})}catch(e){}}
@@ -1938,7 +1962,7 @@ async function loadAll(first){
       else if(owner&&owner!==uid){mine=[];clients=[];starred=new Set();persist()}
       else if(mine.length||clients.length||starred.size)persist();
       store.set("orla.localOwner",uid)}
-    migrateOvr()}
+    migrateOvr();if(isTeam())await loadListings()}
   catch(e){if(e.status===401||e.status===403){location.reload();return}
     if(first){OFFERS=store.get("orla.cache.offers",[]);applySettings(store.get("orla.cache.settings",{}))}
     if(first||!loadAll.warned){loadAll.warned=true;toast("Offline: showing what's saved on this device")}}
@@ -2222,7 +2246,10 @@ const telOf=p=>String(p||"").replace(/[^0-9+]/g,"");
 function ownerWa(o){const me=(meInfo&&meInfo.name)||"your agent";
   const msg=`Hello${o.owner?" "+String(o.owner).split(" ")[0]:""}, this is ${me} from Orla Properties. About your ${TYPE[o.beds].toLowerCase()} in ${BLD[o.b]}${o.unit?" (unit "+o.unit+")":""}: I have a client interested. When would suit you for a viewing?`;
   return "https://wa.me/"+telOf(o.ownerPhone).replace(/^\+/,"")+"?text="+encodeURIComponent(msg)}
-function ownerCard(o){if(!isTeam()||o.mine)return"";const a=agentOf(o);
+function ownerCard(o){if(!isTeam()||(o.mine&&!SRV))return"";const a=agentOf(o);
+  if(o.mine){if(!o.owner&&!o.ownerPhone&&!o.unit)return"";const who=o.by?(o.by.name||o.by.email):"you";
+    return `<div class="ocard"><div class="ow"><span class="ok">${o.deal==="rent"?"Landlord":"Owner"}${o.unit?" · Unit "+esc(o.unit):""}</span><b>${esc(o.owner||"Owner's name not added")}</b>${o.ownerPhone?`<span class="num">${esc(o.ownerPhone)}</span>`:""}<small>${o.by?"Added by "+esc(who)+". Only they and you (admin) can see it.":"Your own listing. Only you and the admin can see it."}</small></div>
+      ${o.ownerPhone?`<div class="actions"><a class="btn primary" href="tel:${esc(telOf(o.ownerPhone))}">${ic("phone")}Call owner</a><a class="btn" href="${esc(ownerWa(o))}" target="_blank" rel="noopener">${ic("chat")}WhatsApp for a viewing</a></div>`:""}</div>`}
   if(o.owner||o.ownerPhone){const mineL=o.agent&&o.agent===myKey();
     return `<div class="ocard"><div class="ow"><span class="ok">${o.deal==="rent"?"Landlord":"Owner"}${o.unit?" · Unit "+esc(o.unit):""}</span><b>${esc(o.owner||"Owner")}</b>${o.ownerPhone?`<span class="num">${esc(o.ownerPhone)}</span>`:""}<small>${mineL?"Only you can see this: the offer is listed under your name.":"You see this as admin. Listed under "+esc(a.name)+"."}</small></div>
       ${o.ownerPhone?`<div class="actions"><a class="btn primary" href="tel:${esc(telOf(o.ownerPhone))}">${ic("phone")}Call owner</a><a class="btn" href="${esc(ownerWa(o))}" target="_blank" rel="noopener">${ic("chat")}WhatsApp for a viewing</a></div>`:""}</div>`}
@@ -2291,7 +2318,7 @@ $("#f-q").oninput=e=>{state.q=e.target.value;renderList()};
 document.querySelectorAll("[data-f]").forEach(el=>el.addEventListener(el.type==="checkbox"?"change":"input",()=>{const k=el.dataset.f;state[k]=el.type==="checkbox"?el.checked:(el.dataset.num?el.value.replace(/[^0-9]/g,""):el.value.trim());saveFilters();renderList()}));
 $("#f-chips").addEventListener("click",e=>{const b=e.target.closest("[data-clear]");if(!b)return;const k=b.dataset.clear;if(k==="*")Object.keys(FDEF).forEach(f=>{if(f!=="deal"&&f!=="sort")state[f]=FDEF[f]});else state[k]=FDEF[k];syncFilters();renderList()});
 function onCard(e){if(e.target.closest("[data-act]"))return;const c=e.target.closest("[data-id]");if(!c)return;state.sel=c.dataset.id;show("offers");renderList();if(matchMedia("(max-width:860px)").matches)$("#detail").scrollIntoView({behavior:"smooth"})}
-["#list","#shortlist","#mine-list","#dash","#analysis","#reports"].forEach(s=>$(s).addEventListener("click",onCard));
+["#list","#shortlist","#mine-list","#team-listings","#dash","#analysis","#reports"].forEach(s=>$(s).addEventListener("click",onCard));
 $("#copy-short").onclick=()=>{const t=$("#short-text").value;t?copy(t,$("#short-text")):toast("Shortlist is empty")};
 $("#clear-short").onclick=()=>{starred.clear();saveStar();renderList();renderShort()};
 $("#copy-csv").onclick=()=>{const t=$("#csv-text").value;t?copy(t,$("#csv-text")):toast("No listings to export")};

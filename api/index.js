@@ -86,10 +86,12 @@ function forRole(data, user) {
   if (user && user.role === "admin") return data;
   if (isTeam(user)) {
     // An agent sees the owner's contact only on offers listed under their own name.
+    // Unit numbers and owners' details are for the agent the offer is listed under (and the admin) only.
     if (data.agent && data.agent === user.agent_key) return data;
     const d = { ...data };
-    if (OWNER.some(k => d[k])) d.ownerHidden = true;
-    for (const k of OWNER) delete d[k];
+    if (d.unit || OWNER.some(k => d[k])) d.ownerHidden = true;
+    for (const k of ["unit", ...OWNER]) delete d[k];
+    if (typeof d.title === "string") d.title = d.title.replace(/\bunit\s*[#no.]*\s*\d+[a-z]?\b\s*[·,-]?\s*/gi, "").trim();
     return d;
   }
   const d = { ...data };
@@ -133,6 +135,7 @@ const requireActive = c => {
   if (!c.user) fail(401, "Sign in first.", "signed_out");
   if (c.user.status !== "active") fail(403, "Your account doesn't have access yet.", "not_active");
 };
+const requireTeam = c => { requireActive(c); if (c.user.role !== "admin" && c.user.role !== "agent") fail(403, "Only the Orla team can do this.", "not_team"); };
 const requireAdmin = c => { requireActive(c); if (c.user.role !== "admin") fail(403, "Only the admin can do this.", "not_admin"); };
 
 async function sendVerification(req, u) {
@@ -278,6 +281,40 @@ const routes = {
     if (!data || typeof data !== "object" || JSON.stringify(data).length > 500000) fail(400, "Invalid data.");
     await q(`insert into user_state (user_id, data, updated_at) values ($1, $2, now())
              on conflict (user_id) do update set data = excluded.data, updated_at = now()`, [c.user.id, data]);
+    return { ok: true };
+  },
+
+  // An agent's own units. Each agent reads only their own; the admin reads everyone's.
+  "GET data/listings": async c => {
+    requireTeam(c);
+    const admin = c.user.role === "admin";
+    const { rows } = await q(
+      `select l.id, l.user_id, l.data, l.created_at, l.updated_at, u.name, u.email, u.agent_key
+       from listings l join users u on u.id = l.user_id
+       ${admin ? "" : "where l.user_id = $1"} order by l.created_at`, admin ? [] : [c.user.id]);
+    return { listings: rows.map(r => ({ id: r.id, data: r.data, createdAt: r.created_at, updatedAt: r.updated_at, own: r.user_id === c.user.id,
+      by: { id: r.user_id, name: r.name, email: r.email, agentKey: r.agent_key } })) };
+  },
+
+  "PUT data/listings": async c => {
+    requireTeam(c);
+    const id = str(c.body.id, 64), data = c.body.data;
+    if (!/^[A-Za-z0-9_-]{1,64}$/.test(id)) fail(400, "Invalid listing id.");
+    if (!data || typeof data !== "object" || Array.isArray(data) || JSON.stringify(data).length > 20000) fail(400, "Invalid listing.");
+    const { rows: [prev] } = await q("select user_id from listings where id = $1", [id]);
+    if (prev && prev.user_id !== c.user.id && c.user.role !== "admin") fail(403, "This listing belongs to another agent.");
+    if (!prev) {
+      const { rows: [n] } = await q("select count(*)::int as n from listings where user_id = $1", [c.user.id]);
+      if (n.n >= 1000) fail(400, "You've reached 1,000 listings. Delete old ones first.");
+      await q("insert into listings (id, user_id, data) values ($1, $2, $3)", [id, c.user.id, data]);
+    } else await q("update listings set data = $2, updated_at = now() where id = $1", [id, data]);
+    return { ok: true };
+  },
+
+  "POST data/listings/delete": async c => {
+    requireTeam(c);
+    const { rowCount } = await q("delete from listings where id = $1 and (user_id = $2 or $3)", [str(c.body.id, 64), c.user.id, c.user.role === "admin"]);
+    if (!rowCount) fail(404, "Listing not found.");
     return { ok: true };
   },
 
