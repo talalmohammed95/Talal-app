@@ -163,6 +163,26 @@ async function guessAgentKey(u) {
   if (key) { await q("update users set agent_key = $2 where id = $1", [u.id, key]); u.agent_key = key; }
 }
 
+// Writes the offer for a shared listing. Only these fields are copied: the unit number, the owner and the notes stay in the listing.
+const SHARE_STATUS = { Ready: "Ready", Vacant: "Ready · vacant", Tenanted: "Tenanted", "Off-plan": "Off-plan" };
+async function shareListing(listingId, email) {
+  const { rows: [l] } = await q("select l.data, u.agent_key from listings l join users u on u.id = l.user_id where l.id = $1", [listingId]);
+  if (!l || !l.data.sharedOffer) return;
+  const d = l.data, beds = Math.max(0, Math.min(3, parseInt(d.beds, 10) || 0)), price = Number(d.price) || null;
+  const offer = {
+    b: Math.max(1, Math.min(5, parseInt(d.b, 10) || 3)), beds, deal: d.deal === "rent" ? "rent" : "sale",
+    title: `${["Studio", "1 bed", "2 bed", "3 bed"][beds]}, ${str(d.floor, 40)}${/floor/i.test(d.floor || "") ? "" : " floor"}`,
+    price: d.deal === "rent" ? null : price, rent: d.deal === "rent" ? price : null, size: Number(d.size) || null,
+    floor: str(d.floor, 40), view: str(d.view, 80) || "On request", furn: str(d.furn, 40) || "—", baths: "—",
+    status: SHARE_STATUS[d.status] || "Ready", avail: "Available", agent: str(d.agent, 40) || l.agent_key || "",
+    hl: str(d.shareNote, 500), teamOnly: d.shareTo !== "all", fromListing: listingId, src: "Shared by the listing agent"
+  };
+  const { rows: [prev] } = await q("select data from offers where id = $1", [d.sharedOffer]);
+  await q(`insert into offers (id, data, updated_at) values ($1, $2, now())
+           on conflict (id) do update set data = excluded.data, updated_at = now()`, [d.sharedOffer, prev ? { ...prev.data, ...offer, avail: prev.data.avail || "Available" } : offer]);
+  await recordHistory(d.sharedOffer, prev && prev.data, offer, email);
+}
+
 // Price, rent and status changes, kept per offer for days on market and price history.
 async function recordHistory(id, prev, next, email) {
   const title = str(next.title, 200), rows = [];
@@ -272,7 +292,8 @@ const routes = {
       q("select data from settings where id = 'app'"),
       q("select data from user_state where user_id = $1", [c.user.id])
     ]);
-    return { offers: offers.rows.map(r => ({ ...r, data: forRole(r.data, c.user) })), settings: settings.rows[0]?.data || {}, state: state.rows[0]?.data || null };
+    const rows = isTeam(c.user) ? offers.rows : offers.rows.filter(r => !r.data.teamOnly);
+    return { offers: rows.map(r => ({ ...r, data: forRole(r.data, c.user) })), settings: settings.rows[0]?.data || {}, state: state.rows[0]?.data || null };
   },
 
   "PUT data/state": async c => {
@@ -308,11 +329,37 @@ const routes = {
       if (n.n >= 1000) fail(400, "You've reached 1,000 listings. Delete old ones first.");
       await q("insert into listings (id, user_id, data) values ($1, $2, $3)", [id, c.user.id, data]);
     } else await q("update listings set data = $2, updated_at = now() where id = $1", [id, data]);
+    if (data.sharedOffer) await shareListing(id, c.user.email);
     return { ok: true };
+  },
+
+  // An agent shares their own unit as an offer: with the floor, never the unit number or the owner.
+  "POST data/listings/share": async c => {
+    requireTeam(c);
+    const id = str(c.body.id, 64);
+    const { rows: [l] } = await q("select user_id, data from listings where id = $1", [id]);
+    if (!l || (l.user_id !== c.user.id && c.user.role !== "admin")) fail(404, "Listing not found.");
+    const data = { ...l.data };
+    if (c.body.share === false) {
+      if (data.sharedOffer) {
+        const { rows: [prev] } = await q("delete from offers where id = $1 and data->>'fromListing' = $2 returning data", [data.sharedOffer, id]);
+        if (prev) await q("insert into offer_history (offer_id, by_email, kind, title) values ($1, $2, 'removed', $3)", [data.sharedOffer, c.user.email, str(prev.data.title, 200)]);
+      }
+      delete data.sharedOffer; delete data.shareTo; delete data.shareNote;
+    } else {
+      const floor = str(c.body.floor ?? data.floor, 40);
+      if (!floor) fail(400, "Add the floor before sharing.", "no_floor");
+      Object.assign(data, { floor, shareTo: c.body.to === "all" ? "all" : "team", shareNote: str(c.body.note ?? data.shareNote, 500), sharedOffer: "s-" + id.slice(0, 60) });
+    }
+    await q("update listings set data = $2, updated_at = now() where id = $1", [id, data]);
+    if (data.sharedOffer) await shareListing(id, c.user.email);
+    return { ok: true, offerId: data.sharedOffer || null };
   },
 
   "POST data/listings/delete": async c => {
     requireTeam(c);
+    const { rows: [gone] } = await q("select data from listings where id = $1 and (user_id = $2 or $3)", [str(c.body.id, 64), c.user.id, c.user.role === "admin"]);
+    if (gone && gone.data.sharedOffer) await q("delete from offers where id = $1 and data->>'fromListing' = $2", [gone.data.sharedOffer, str(c.body.id, 64)]);
     const { rowCount } = await q("delete from listings where id = $1 and (user_id = $2 or $3)", [str(c.body.id, 64), c.user.id, c.user.role === "admin"]);
     if (!rowCount) fail(404, "Listing not found.");
     return { ok: true };
@@ -413,7 +460,7 @@ const routes = {
   "GET public/offers": async c => {
     const { rows } = await q("select id, data from offers order by id");
     c.cache = "public, max-age=60, s-maxage=60";
-    return { offers: rows.filter(r => !["Sold", "Rented"].includes(r.data.avail)).map(r => ({ id: r.id, ...forPublic(r.data) })) };
+    return { offers: rows.filter(r => !["Sold", "Rented"].includes(r.data.avail) && !r.data.teamOnly).map(r => ({ id: r.id, ...forPublic(r.data) })) };
   },
 
   // Photos and floor plans: the admin uploads them already resized in the browser.
