@@ -72,16 +72,25 @@ async function limit(key, max, seconds) {
 }
 
 // ---------- sessions and users ----------
-const publicUser = u => ({ id: u.id, email: u.email, name: u.name, role: u.role, status: u.status, emailVerified: u.email_verified, company: u.company || "", phone: u.phone || "" });
+const publicUser = u => ({ id: u.id, email: u.email, name: u.name, role: u.role, status: u.status, emailVerified: u.email_verified, company: u.company || "", phone: u.phone || "", agentKey: u.agent_key || "" });
 
 // Roles: admin and agent (the Orla team) see everything. Brokers (agents at other agencies) and clients
 // never receive unit numbers, owner details or internal notes: they're removed here, on the server.
 const ROLES = ["agent", "broker", "client"];
 const ROLE_NAME = { admin: "Admin", agent: "Orla team agent", broker: "External agent", client: "Buyer or tenant" };
 const isTeam = u => u && (u.role === "admin" || u.role === "agent");
-const TEAM_ONLY = ["unit", "owner", "ownerPhone", "notes", "check", "internal"];
+const TEAM_ONLY = ["unit", "owner", "ownerPhone", "ownerNote", "notes", "check", "internal"];
+const OWNER = ["owner", "ownerPhone", "ownerNote"];
 function forRole(data, user) {
-  if (isTeam(user)) return data;
+  if (user && user.role === "admin") return data;
+  if (isTeam(user)) {
+    // An agent sees the owner's contact only on offers listed under their own name.
+    if (data.agent && data.agent === user.agent_key) return data;
+    const d = { ...data };
+    if (OWNER.some(k => d[k])) d.ownerHidden = true;
+    for (const k of OWNER) delete d[k];
+    return d;
+  }
   const d = { ...data };
   for (const k of TEAM_ONLY) delete d[k];
   if (typeof d.title === "string") d.title = d.title.replace(/\bunit\s*[#no.]*\s*\d+[a-z]?\b\s*[·,-]?\s*/gi, "").trim();
@@ -141,6 +150,15 @@ async function notifyAdminOfNewUser(req, u) {
     `Approve or decline them in Admin › Users:\n${appUrl(req)}/app/\n`);
 }
 
+// Links a new team account to the agent with the same first name on the offers (the admin can change it).
+async function guessAgentKey(u) {
+  const { rows: [st] } = await q("select data from settings where id = 'app'");
+  const agents = (st && st.data && st.data.agents) || {};
+  const first = s => String(s || "").trim().split(/\s+/)[0].toLowerCase();
+  const key = Object.keys(agents).find(k => first(agents[k].name) && first(agents[k].name) === first(u.name));
+  if (key) { await q("update users set agent_key = $2 where id = $1", [u.id, key]); u.agent_key = key; }
+}
+
 // Price, rent and status changes, kept per offer for days on market and price history.
 async function recordHistory(id, prev, next, email) {
   const title = str(next.title, 200), rows = [];
@@ -182,6 +200,7 @@ const routes = {
       if (e.code === "23505") fail(409, "An account with this email already exists. Sign in instead.", "exists");
       throw e;
     }
+    if (role === "agent" && !isAdmin) await guessAgentKey(user);
     if (emailOn) { await sendVerification(c.req, user); return { needsVerification: true }; }
     await startSession(c.req, c.res, user.id);
     return { user: publicUser(user) };
@@ -292,7 +311,7 @@ const routes = {
 
   "GET admin/users": async c => {
     requireAdmin(c);
-    const { rows } = await q("select id, email, name as full_name, role, status, email_verified, created_at, company, phone from users order by created_at");
+    const { rows } = await q("select id, email, name as full_name, role, status, email_verified, created_at, company, phone, agent_key from users order by created_at");
     return { users: rows };
   },
 
@@ -319,6 +338,15 @@ const routes = {
     if (!user) fail(404, "User not found.");
     if (user.role === "admin") fail(400, "The admin's role can't be changed.");
     await q("update users set role = $2 where id = $1", [user.id, role]);
+    return { ok: true };
+  },
+
+  "POST admin/users/agent": async c => {
+    requireAdmin(c);
+    const key = str(c.body.agentKey, 40);
+    if (key && !/^[A-Za-z0-9_-]+$/.test(key)) fail(400, "Invalid agent.");
+    const { rowCount } = await q("update users set agent_key = $2 where id = $1", [String(c.body.id || ""), key]);
+    if (!rowCount) fail(404, "User not found.");
     return { ok: true };
   },
 

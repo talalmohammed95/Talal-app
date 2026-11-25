@@ -569,6 +569,21 @@ body.lbopen{overflow:hidden}
 @media (max-width:760px){.pgal{grid-template-columns:minmax(0,1fr)}.pside{grid-template-rows:none;grid-template-columns:1fr 1fr;height:140px}.pgal .gmain{min-height:240px}}
 @media print{.gnav,.gthumbs,.gcap .gn{display:none}.gmain{aspect-ratio:16/9}}
 @media (prefers-reduced-motion:reduce){.sh-img{transition:opacity .3s}.hcard,.hph img,.btile img,.wopt,.tcard{transition:none}}
+.ocard{border:1.5px solid var(--primary);background:var(--accent-soft);border-radius:16px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.ocard .ow{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ocard .ok{font:700 11.5px var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink)}
+.ocard b{font:800 17px var(--display)}.ocard .num{font-size:15px;font-weight:600}
+.ocard small{color:var(--muted);font-size:12.5px}
+.ocard .actions{display:flex;gap:8px;flex-wrap:wrap}
+.ocard.locked{border-style:dashed;border-color:var(--line-strong);background:var(--sunk)}
+.mylist{display:flex;flex-direction:column;gap:8px}
+.myrow{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:14px;background:var(--bg)}
+.myrow img{width:64px;height:48px;border-radius:8px;object-fit:cover;display:block}
+.myrow .t{min-width:0}.myrow .t b{display:block;font:700 14.5px var(--display);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.myrow .t span{display:block;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.myrow .actions{display:flex;gap:6px}
+@media (max-width:560px){.myrow{grid-template-columns:52px minmax(0,1fr)}.myrow img{width:52px;height:40px}.myrow .actions{grid-column:1/-1}}
+.edtable input.ow{min-width:120px}.edtable input[data-k="ownerPhone"]{min-width:160px}
 </style>
 <script src="/config.js"></script>
 </head>
@@ -853,12 +868,17 @@ body.lbopen{overflow:hidden}
           <div class="field wide"><label for="o-hl">Highlight</label><textarea id="o-hl" rows="2"></textarea></div>
           <div class="field wide"><label for="o-check">Figures to confirm (one per line)</label><textarea id="o-check" rows="2"></textarea></div>
           <div class="field"><label for="o-unit">Unit number (Orla team only)</label><input id="o-unit" placeholder="e.g. 3305"></div>
+          <div class="field"><label for="o-owner">Owner's name (listing agent only)</label><input id="o-owner" autocomplete="off"></div>
+          <div class="field"><label for="o-ophone">Owner's phone (listing agent only)</label><input id="o-ophone" inputmode="tel" autocomplete="off" placeholder="+971 …"></div>
           <div class="field wide"><label>Photos and floor plan</label><p class="src" id="o-ph-note" style="margin:0 0 8px"></p><div class="phed" id="o-photos"></div>
             <div class="actions" style="margin-top:10px"><label class="btn filebtn">Upload photos<input type="file" id="o-up" accept="image/*" multiple></label><label class="btn filebtn">Upload floor plan<input type="file" id="o-up-plan" accept="image/*"></label><button type="button" class="btn" id="o-lib">Choose from photo library</button><button type="button" class="btn" id="o-ph-reset">Use default photos</button></div>
             <div class="libgrid" id="o-libgrid" hidden></div></div>
           <div class="wide actions"><button class="btn primary" type="submit">Save offer</button><button class="btn" type="button" id="o-cancel">Cancel</button><button class="btn" type="button" id="o-del" hidden>Delete offer</button></div>
         </form>
       </div>
+      <div class="panel" id="ad-own-panel"><h2>Unit numbers and owners</h2><p class="lede">Fill these in for every offer in one go. The Orla team sees unit numbers; the owner's name and phone are shown only to the agent the offer is listed under (and to you). External agents and clients never see any of this.</p>
+        <div class="tablewrap"><table class="edtable" id="own-table"></table></div>
+        <div class="actions" style="margin-top:10px"><button class="btn primary" id="own-save">Save unit numbers and owners</button></div></div>
       <div class="panel" id="ad-mkt-panel"><h2>Market data</h2><p class="lede">Registered deals used for every market comparison, value rating and chart. Update them as new DLD deals come in; everyone sees the change straight away.</p>
         <div class="fgrid"><div class="field"><label for="mk-asof">Period these figures cover</label><input id="mk-asof" placeholder="e.g. Aug–Nov 2026"></div></div>
         <h4 style="margin-top:14px">Registered sales</h4><div class="tablewrap"><table class="edtable" id="mk-sale"></table></div>
@@ -1120,8 +1140,8 @@ function renderDetail(){
   if(o.balcony)unit.push(["Balcony",o.balcony+" sq ft"]);
   unit.push(["Bathrooms",String(o.baths??"—")],["Floor",o.floor||"On request"],["View",o.view||"On request"],["Furnishing",o.furn||"—"],["Handover",o.status||"—"],["Availability",o.avail]);
   if(o.parking)unit.push(["Parking",o.parking]);
-  if(o.owner)unit.push(["Owner / client",o.owner]);
-  if(o.ownerPhone)unit.push(["Owner phone",o.ownerPhone]);
+  if(o.mine&&o.owner)unit.push(["Owner / client",o.owner]);
+  if(o.mine&&o.ownerPhone)unit.push(["Owner phone",o.ownerPhone]);
   if(o.date)unit.push(["Date listed",o.date]);
   let money="";
   if(o.deal!=="rent"){const c=costs(o.price);money+=`<div><h4>Purchase cost</h4>${kv("Price",aed(o.price))}${kv(dldLabel(),aed(c.dld))}${kv("Trustee office fee",aed(FEES.trustee))}${kv("Admin fee",aed(FEES.admin))}${kv("Total cost",aed(c.total),"total")}</div>`}
@@ -1151,6 +1171,7 @@ function renderDetail(){
         ${o.deal!=="rent"?'<button class="btn" id="d-calc">'+ic("calc")+'Open in calculator</button>':""}
         ${o.mine?'<button class="btn" id="d-del">Delete listing</button>':""}
       </div>
+      ${ownerCard(o)}
       <div class="metrics">${M}</div>
       ${pos?`<div class="team-only"><h4>Market position ${valueChip(x)}</h4>${chartSlot("detail-pos",W=>chartVsMarket([{label:"This offer",v:pos.v,m:pos.m}],W,{compact:true,fmt:pos.f,label:pos.t}))}${legend([["var(--fg)","Building average","tick"],[x.value==="above"?"var(--d-above)":x.value==="below"?"var(--d-below)":"var(--faint)","This offer"]])}</div>`:""}
       ${o.hl?`<p class="hl">${esc(o.hl)}</p>`:""}
@@ -1256,7 +1277,13 @@ $("#mine-form").addEventListener("submit",e=>{e.preventDefault();
 const today=()=>new Date().toISOString().slice(0,10);
 const isDue=c=>c.follow&&c.follow<=today()&&c.status!=="Closed"&&c.status!=="Lost";
 function renderDash(){if(!isTeam()){renderShowroom();return}clearInterval(heroT);renderTeamDash();
+  const myl=renderMyListings();if(myl){const r=$("#dash").children[0];if(r)r.insertAdjacentHTML("afterend",myl);else $("#dash").insertAdjacentHTML("afterbegin",myl)}
   $("#dash").insertAdjacentHTML("afterbegin",`<div class="reqband" style="--rb:url('${imgSrc("p3-canal-sunset",true)}')"><div><h3>New client request</h3><p>Ask 4 quick questions and get three homes to send: premium, balanced and best value, with photos.</p></div><button class="btn primary big" style="width:auto" data-find>${ic("star")}Find 3 options</button></div>`)}
+function renderMyListings(){const k=myKey();if(!k||!AGENTS[k])return"";const l=OFFERS.filter(o=>o.agent===k).map(enrich).sort((a,b)=>a.b-b.b||a.beds-b.beds);if(!l.length)return"";
+  const withOwner=l.filter(o=>o.ownerPhone).length;
+  return `<div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Listed under you</h2><p class="lede">${l.length} offer${l.length===1?"":"s"} in your name${withOwner<l.length?` · ${l.length-withOwner} without an owner's number yet`:""}. Only you can see these owners' contacts.</p></div><button class="btn" data-mine-all>See them in Offers${ic("arrowr")}</button></div>
+    <div class="mylist">${l.map(o=>`<div class="myrow"><img src="${esc(imgSrc(photosOf(o)[0].k,true))}" alt=""><div class="t"><b>${o.unit?"Unit "+esc(o.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(TYPE[o.beds])}</b><span>${esc(o.deal==="rent"?aed(o.rent)+" / yr":aed(o.price))}${o.owner?" · Owner: "+esc(o.owner):""}${o.ownerPhone?" · "+esc(o.ownerPhone):" · No owner number yet"}</span></div>
+      <div class="actions">${o.ownerPhone?`<a class="btn sm" href="tel:${esc(telOf(o.ownerPhone))}">${ic("phone")}Call</a><a class="btn sm" href="${esc(ownerWa(o))}" target="_blank" rel="noopener">${ic("chat")}WhatsApp</a>`:""}<button class="btn sm" data-id="${esc(o.id)}">Open</button></div></div>`).join("")}</div></div>`}
 function renderTeamDash(){setTimeout(()=>{const dp=$("#dash-pending");if(dp)dp.onclick=()=>{show("admin");setTimeout(()=>$("#ad-users-panel").scrollIntoView({behavior:"smooth"}),300)}});
   const A=all(),act=A.filter(o=>!isDone(o)),sale=act.filter(o=>o.deal!=="rent"&&o.price),rent=act.filter(o=>o.deal!=="sale"&&o.rent);
   const ys=sale.filter(o=>o.x.gy),avgY=ys.length?ys.reduce((s,o)=>s+o.x.gy,0)/ys.length:null;
@@ -1805,7 +1832,7 @@ function renderAdmin(){$("#tab-admin").hidden=!isAdmin;$("#sheet-admin").hidden=
   if(a!=="ad-notice")$("#ad-notice").value=settings.notice||"";
   if(!["ad-dld","ad-trustee","ad-admin"].includes(a)){$("#ad-dld").value=+(FEES.dld*100).toFixed(3);$("#ad-trustee").value=fmt(FEES.trustee);$("#ad-admin").value=fmt(FEES.admin)}
   if(!$("#ad-agents").contains(document.activeElement)){agentDraft=Object.entries(AGENTS).map(([k,x])=>({k,name:x.name,phone:x.phone}));drawAgents()}
-  $("#ad-log-panel").hidden=!(CLOUD||SRV);$("#ad-users-panel").hidden=!SRV;renderMarketEditor()}
+  $("#ad-log-panel").hidden=!(CLOUD||SRV);$("#ad-users-panel").hidden=!SRV;renderMarketEditor();renderOwnTable()}
 function drawAgents(){$("#ad-agents").innerHTML=agentDraft.map((x,i)=>`<div class="fgrid"><div class="field"><label for="ag-n${i}">Name</label><input id="ag-n${i}" data-ai="${i}" data-af="name" value="${esc(x.name)}"></div><div class="field"><label for="ag-p${i}">Phone</label><input id="ag-p${i}" data-ai="${i}" data-af="phone" inputmode="tel" value="${esc(x.phone)}"></div></div>`).join("")}
 $("#ad-agents").addEventListener("input",e=>{const t=e.target;if(t.dataset.ai!=null)agentDraft[+t.dataset.ai][t.dataset.af]=t.value});
 $("#ad-agent-add").onclick=()=>{agentDraft.push({k:"a"+Date.now().toString(36),name:"",phone:""});drawAgents();$("#ag-n"+(agentDraft.length-1)).focus()};
@@ -1819,7 +1846,7 @@ $("#ad-csv").onclick=()=>{const q=v=>{v=String(v??"");return /[",\n]/.test(v)?'"
   const box=$("#ad-csv-text");box.hidden=false;box.value=t;copy(t,box)};
 function openOfferForm(id){const o=id?OFFERS.find(x=>x.id===id):null;$("#ad-form").reset();$("#ad-form-panel").hidden=false;$("#ad-form-title").textContent=o?"Edit offer":"Add offer";$("#o-id").value=o?o.id:"";
   const set=(k,v)=>{$(k).value=v??""};
-  if(o){set("#o-title",o.title);set("#o-b",o.b);set("#o-beds",o.beds);set("#o-deal",o.deal);set("#o-avail",o.avail||"Available");set("#o-price",o.price?fmt(o.price):"");set("#o-rent",o.rent?fmt(o.rent):"");set("#o-size",o.size||"");set("#o-floor",o.floor);set("#o-view",o.view);set("#o-furn",o.furn);set("#o-baths",o.baths);set("#o-status",o.status);set("#o-cheques",o.cheques);set("#o-deposit",o.deposit);if(AGENTS[o.agent])set("#o-agent",o.agent);set("#o-irent",o.inv&&o.inv.rent?fmt(o.inv.rent):"");set("#o-hl",o.hl);set("#o-check",(o.check||[]).join("\n"));set("#o-unit",o.unit)}
+  if(o){set("#o-title",o.title);set("#o-b",o.b);set("#o-beds",o.beds);set("#o-deal",o.deal);set("#o-avail",o.avail||"Available");set("#o-price",o.price?fmt(o.price):"");set("#o-rent",o.rent?fmt(o.rent):"");set("#o-size",o.size||"");set("#o-floor",o.floor);set("#o-view",o.view);set("#o-furn",o.furn);set("#o-baths",o.baths);set("#o-status",o.status);set("#o-cheques",o.cheques);set("#o-deposit",o.deposit);if(AGENTS[o.agent])set("#o-agent",o.agent);set("#o-irent",o.inv&&o.inv.rent?fmt(o.inv.rent):"");set("#o-hl",o.hl);set("#o-check",(o.check||[]).join("\n"));set("#o-unit",o.unit);set("#o-owner",o.owner);set("#o-ophone",o.ownerPhone)}
   phLoad(o);
   const d=$("#o-del");d.hidden=!o;delete d.dataset.armed;d.textContent="Delete offer";
   setTimeout(()=>{$("#ad-form-panel").scrollIntoView({behavior:"smooth",block:"start"})},30)}
@@ -1833,7 +1860,7 @@ $("#ad-form").addEventListener("submit",async e=>{e.preventDefault();const g=k=>
   const o=Object.assign({},base,{id:id||"o-"+Date.now().toString(36),title:g("#o-title"),b:+g("#o-b"),beds:+g("#o-beds"),deal,avail:g("#o-avail"),price:deal!=="rent"?n("#o-price"):null,rent:deal!=="sale"?n("#o-rent"):null,size:n("#o-size")||null,floor:g("#o-floor")||"On request",view:g("#o-view")||"On request",furn:g("#o-furn")||"—",baths:g("#o-baths")||"—",status:g("#o-status")||"Ready",cheques:g("#o-cheques")||null,deposit:g("#o-deposit")||null,agent:g("#o-agent"),hl:g("#o-hl"),src:base.src||"Added in Admin"});
   const ir=n("#o-irent");o.inv=ir?Object.assign({},base.inv||{},{rent:ir}):(base.inv&&base.inv.resale?{resale:base.inv.resale}:null);
   const ch=g("#o-check").split("\n").map(x=>x.trim()).filter(Boolean);o.check=ch.length?ch:null;
-  o.unit=g("#o-unit")||null;if(phDraft.photos)o.photos=phDraft.photos;else delete o.photos;if(phDraft.plan)o.plan=phDraft.plan;else delete o.plan;
+  o.unit=g("#o-unit")||null;o.owner=g("#o-owner")||null;o.ownerPhone=g("#o-ophone")||null;if(phDraft.photos)o.photos=phDraft.photos;else delete o.photos;if(phDraft.plan)o.plan=phDraft.plan;else delete o.plan;
   if(await saveOffer(o,(id?"Edited ":"Added ")+BLD[o.b]+" · "+o.title)){$("#ad-form-panel").hidden=true;toast(id?"Offer saved":"Offer added")}});
 $("#o-del").onclick=async()=>{const d=$("#o-del"),id=$("#o-id").value,o=OFFERS.find(x=>x.id===id);if(!o)return;if(!d.dataset.armed){d.dataset.armed=1;d.textContent="Tap again to delete";return}if(await removeOffer(id,"Deleted "+BLD[o.b]+" · "+o.title)){$("#ad-form-panel").hidden=true;toast("Offer deleted")}};
 async function renderLog(){if(!(CLOUD||SRV)||!isAdmin)return;const ids=[...new Set(logRows.map(r=>r.by).filter(Boolean))];let ps={};try{ps=ids.length&&uapi?await uapi.profiles(ids):{}}catch(e){}
@@ -1913,7 +1940,7 @@ function renderUsers(){const n=pendingCount(),c=$("#cnt-pending");c.hidden=!n;c.
   const pill=u=>u.status==="pending"?'<span class="pill pending">Waiting</span>'+(emailOn&&!u.email_verified?' <span class="pill st">Email not confirmed</span>':""):u.status==="active"?'<span class="pill ok">Approved</span>':'<span class="pill st done">Blocked</span>';
   const btn=(u,to,t,cls="")=>`<button class="btn sm ${cls}" data-uact="${esc(u.id)}" data-to="${to}">${t}</button>`;
   const btns=u=>u.id===uid?"You":(u.status==="pending"?btn(u,"active","Approve","primary")+btn(u,"blocked","Decline"):u.status==="active"?btn(u,"blocked","Block")+btn(u,"reset","Reset link"):btn(u,"active","Approve"));
-  $("#ad-users").innerHTML='<tr><th>Name</th><th>Email</th><th>Role</th><th>Registered</th><th>Status</th><th></th></tr>'+l.map(u=>`<tr><td>${esc(u.full_name||"—")}</td><td>${esc(u.email)}</td><td>${u.role==="admin"?"Admin":`<select data-urole="${esc(u.id)}" aria-label="Role of ${esc(u.email)}">${[["agent","Orla team"],["broker","External agent"],["client","Client"]].map(([v,t])=>`<option value="${v}"${u.role===v?" selected":""}>${t}</option>`).join("")}</select>`}${u.company?`<div class="src">${esc(u.company)}</div>`:""}${u.phone?`<div class="src num">${esc(u.phone)}</div>`:""}</td><td>${esc(new Date(u.created_at).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}))}</td><td>${pill(u)}</td><td>${btns(u)}</td></tr>`).join("")}
+  $("#ad-users").innerHTML='<tr><th>Name</th><th>Email</th><th>Role</th><th>Registered</th><th>Status</th><th></th></tr>'+l.map(u=>`<tr><td>${esc(u.full_name||"—")}</td><td>${esc(u.email)}</td><td>${u.role==="admin"?"Admin":`<select data-urole="${esc(u.id)}" aria-label="Role of ${esc(u.email)}">${[["agent","Orla team"],["broker","External agent"],["client","Client"]].map(([v,t])=>`<option value="${v}"${u.role===v?" selected":""}>${t}</option>`).join("")}</select>`}${u.role==="admin"||u.role==="agent"?`<select data-uagent="${esc(u.id)}" aria-label="Offers listed under" style="margin-top:6px"><option value="">Listings: none</option>${Object.entries(AGENTS).map(([k,a])=>`<option value="${esc(k)}"${u.agent_key===k?" selected":""}>Listings: ${esc(a.name)}</option>`).join("")}</select>`:""}${u.company?`<div class="src">${esc(u.company)}</div>`:""}${u.phone?`<div class="src num">${esc(u.phone)}</div>`:""}</td><td>${esc(new Date(u.created_at).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}))}</td><td>${pill(u)}</td><td>${btns(u)}</td></tr>`).join("")}
 $("#ad-users").addEventListener("click",async e=>{const b=e.target.closest("[data-uact]");if(!b)return;const u=usersList.find(x=>x.id===b.dataset.uact);if(!u)return;const to=b.dataset.to;
   try{
     if(to==="reset"){const r=await api("admin/users/reset-link",{id:u.id});const box=$("#ad-csv-text");box.hidden=false;box.value="Password reset link for "+u.email+" (works for 24 hours):\n"+r.url;await copy(box.value,box);logAct("Made a password reset link for "+u.email);return}
@@ -1921,7 +1948,9 @@ $("#ad-users").addEventListener("click",async e=>{const b=e.target.closest("[dat
     await api("admin/users/status",{id:u.id,status:to});
     const verb=to==="active"?"Approved ":u.status==="pending"?"Declined ":"Blocked ";logAct(verb+u.email);toast(verb.trim()+": "+u.email);loadUsers()
   }catch(x){toast(x.message)}});
-$("#ad-users").addEventListener("change",async e=>{const sel=e.target.closest("[data-urole]");if(!sel)return;const u=usersList.find(x=>x.id===sel.dataset.urole);
+$("#ad-users").addEventListener("change",async e=>{const ag=e.target.closest("[data-uagent]");
+  if(ag){try{await api("admin/users/agent",{id:ag.dataset.uagent,agentKey:ag.value});if(ag.dataset.uagent===uid&&profile){profile.agentKey=ag.value;renderAll()}toast("Saved: offers listed under "+(AGENTS[ag.value]?AGENTS[ag.value].name:"nobody"));loadUsers()}catch(x){toast(x.message)}return}
+  const sel=e.target.closest("[data-urole]");if(!sel)return;const u=usersList.find(x=>x.id===sel.dataset.urole);
   try{await api("admin/users/role",{id:sel.dataset.urole,role:sel.value});logAct("Changed "+(u?u.email:"a user")+" to "+sel.options[sel.selectedIndex].text);toast("Role saved");loadUsers()}catch(x){toast(x.message)}});
 $("#signout").onclick=async()=>{try{await api("auth/logout",{})}catch(e){}["orla.mine","orla.clients","orla.star","orla.cache.offers","orla.cache.profile","orla.cache.settings"].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});try{sessionStorage.removeItem("orla.open")}catch(e){}location.reload()};
 async function enterServer(u){if(entering)return;entering=true;
@@ -2174,6 +2203,35 @@ async function phUpload(files,asPlan){if(!SRV){toast("Uploading needs the online
   phDraw();toast(asPlan?"Floor plan uploaded. Save the offer to keep it.":"Photos uploaded. Save the offer to keep them.")}
 $("#o-up").onchange=e=>{if(e.target.files.length)phUpload(e.target.files,false);e.target.value=""};
 $("#o-up-plan").onchange=e=>{if(e.target.files.length)phUpload(e.target.files,true);e.target.value=""};
+
+/* ---------------- Owners: only the agent an offer is listed under sees the owner's contact ---------------- */
+function myKey(){if(profile&&profile.agentKey)return profile.agentKey;const a=myAgent();return a?Object.keys(AGENTS).find(k=>AGENTS[k]===a):""}
+const telOf=p=>String(p||"").replace(/[^0-9+]/g,"");
+function ownerWa(o){const me=(meInfo&&meInfo.name)||"your agent";
+  const msg=`Hello${o.owner?" "+String(o.owner).split(" ")[0]:""}, this is ${me} from Orla Properties. About your ${TYPE[o.beds].toLowerCase()} in ${BLD[o.b]}${o.unit?" (unit "+o.unit+")":""}: I have a client interested. When would suit you for a viewing?`;
+  return "https://wa.me/"+telOf(o.ownerPhone).replace(/^\+/,"")+"?text="+encodeURIComponent(msg)}
+function ownerCard(o){if(!isTeam()||o.mine)return"";const a=agentOf(o);
+  if(o.owner||o.ownerPhone){const mineL=o.agent&&o.agent===myKey();
+    return `<div class="ocard"><div class="ow"><span class="ok">${o.deal==="rent"?"Landlord":"Owner"}${o.unit?" · Unit "+esc(o.unit):""}</span><b>${esc(o.owner||"Owner")}</b>${o.ownerPhone?`<span class="num">${esc(o.ownerPhone)}</span>`:""}<small>${mineL?"Only you can see this: the offer is listed under your name.":"You see this as admin. Listed under "+esc(a.name)+"."}</small></div>
+      ${o.ownerPhone?`<div class="actions"><a class="btn primary" href="tel:${esc(telOf(o.ownerPhone))}">${ic("phone")}Call owner</a><a class="btn" href="${esc(ownerWa(o))}" target="_blank" rel="noopener">${ic("chat")}WhatsApp for a viewing</a></div>`:""}</div>`}
+  if(o.ownerHidden)return `<div class="ocard locked"><div class="ow"><span class="ok">Owner${o.unit?" · Unit "+esc(o.unit):""}</span><b>Listed under ${esc(a.name)}</b><small>The owner's contact is only visible to ${esc(a.name.split(" ")[0])}. Call them to arrange a viewing.</small></div><div class="actions"><a class="btn" href="tel:${esc(telOf(a.phone))}">${ic("phone")}Call ${esc(a.name.split(" ")[0])}</a></div></div>`;
+  return ""}
+$("#dash").addEventListener("click",e=>{if(!e.target.closest("[data-mine-all]"))return;Object.assign(state,{agent:myKey(),hide:true});syncFilters();show("offers");renderList()});
+let ownDirty=false;
+function renderOwnTable(force){if(!isAdmin)return;const t=$("#own-table");if(!t||(!force&&(ownDirty||$("#ad-own-panel").contains(document.activeElement))))return;
+  const l=[...OFFERS].sort((a,b)=>a.b-b.b||a.beds-b.beds||(keyPrice(a)||0)-(keyPrice(b)||0));
+  const agOpts=k=>Object.entries(AGENTS).map(([x,a])=>`<option value="${esc(x)}"${x===k?" selected":""}>${esc(a.name)}</option>`).join("");
+  t.innerHTML='<tr><th>Offer</th><th>Listed under</th><th>Unit no.</th><th>Owner\'s name</th><th>Owner\'s phone</th></tr>'+l.map(o=>`<tr data-own="${esc(o.id)}"><td><b>P${o.b}</b> · ${esc(TYPE[o.beds])} · ${esc(o.deal==="rent"?short(o.rent)+" / yr":short(o.price))}<div class="src">${esc(o.title)}</div></td>
+    <td><select data-k="agent" aria-label="Listed under">${agOpts(o.agent)}</select></td><td><input data-k="unit" value="${esc(o.unit||"")}" placeholder="—" aria-label="Unit number" style="width:80px"></td>
+    <td><input class="ow" data-k="owner" value="${esc(o.owner||"")}" aria-label="Owner's name"></td><td><input class="ow" data-k="ownerPhone" inputmode="tel" value="${esc(o.ownerPhone||"")}" placeholder="+971 …" aria-label="Owner's phone"></td></tr>`).join("")}
+$("#own-table").addEventListener("input",()=>{ownDirty=true});$("#own-table").addEventListener("change",()=>{ownDirty=true});
+$("#own-save").onclick=async()=>{const rows=[...document.querySelectorAll("#own-table [data-own]")];let n=0,failed=0;$("#own-save").disabled=true;
+  try{for(const r of rows){const o=OFFERS.find(x=>x.id===r.dataset.own);if(!o)continue;const v=k=>r.querySelector(`[data-k="${k}"]`).value.trim();
+    const nx=Object.assign({},o,{agent:v("agent")||o.agent,unit:v("unit")||null,owner:v("owner")||null,ownerPhone:v("ownerPhone")||null});
+    if(["agent","unit","owner","ownerPhone"].every(k=>(o[k]||null)===(nx[k]||null)))continue;
+    if(await saveOffer(nx,"Updated unit and owner details: "+BLD[o.b]+" · "+o.title))n++;else failed++}}
+  finally{$("#own-save").disabled=false}
+  ownDirty=false;renderOwnTable(true);toast(failed?`Saved ${n}, ${failed} couldn't be saved`:n?`Saved ${n} offer${n===1?"":"s"}`:"Nothing changed")};
 
 /* ---------------- Start-up ---------------- */
 function startApp(){if(!SRV)setRole(isAdmin?"admin":"team");updateAcct();const ch=$("#userchip");

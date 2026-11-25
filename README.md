@@ -28,7 +28,8 @@ scripts/     build.mjs (Vercel build) and dev.mjs (run it on your computer)
 | **Client** | Registers as "Buying or renting a home" | The same showroom as external agents, with "Ask about this home" buttons that open WhatsApp to the listing agent |
 
 - Anyone can register with their name, email and a password of at least 8 characters. With email turned on, they first confirm their email from a link.
-- The admin can change anyone's role in Admin › Users. Unit numbers are entered in Admin › Edit offer › Unit number.
+- The admin can change anyone's role in Admin › Users. Each team account is also linked to an agent name on the offers ("Listings: …"); new team accounts are linked automatically when their first name matches.
+- **Owners' contacts:** enter unit numbers and each owner's name and phone in Admin › Unit numbers and owners (all offers in one table). An agent sees the owner's name and phone, with Call and WhatsApp buttons, only on offers listed under their own name; other team agents see "Listed under …" with a button to call that agent. The admin sees all. The server removes owners' details from everyone else's data.
 - After signing in, everyone except the admin is asked "What are you looking for?" (buy or rent, type, purpose, budget) and gets three options: premium, balanced and best value, ready to present or send on WhatsApp. **Find 3 options** in the top bar opens it any time.
 - Every new account waits for the admin's approval. They see **Waiting for approval** until you tap **Approve** in Admin › Users. With email on, you get an email when someone is waiting, and they get one when you approve them. Declined or blocked users can't sign in, and blocking someone signs them out everywhere.
 - Forgot a password? With email on, a reset link is sent by email. Without email, the admin taps **Reset link** in Admin › Users and sends the link, for example on WhatsApp.
