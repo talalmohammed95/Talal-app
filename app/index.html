@@ -150,6 +150,27 @@ tr:last-child td{border-bottom:0}
 .toast.show{opacity:1}
 textarea.copybox{width:100%;min-height:140px;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);font-size:13px}
 [hidden]{display:none!important}
+.gate{position:fixed;inset:0;z-index:40;background:var(--bar);display:flex;align-items:center;justify-content:center;overflow-y:auto;padding:max(24px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(24px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.gate:not([hidden])~header.top,.gate:not([hidden])~main{display:none}
+.gcard{width:100%;max-width:420px;background:var(--surface);color:var(--fg);border-radius:18px;padding:28px 26px;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.gbrand{display:flex;align-items:baseline;gap:10px}
+.gbrand b{font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:13px;color:var(--accent-ink)}
+.gbrand span{font-family:var(--display);font-weight:700;font-size:17px}
+.gcard h1{margin:0;font-family:var(--display);font-size:28px;font-weight:800}
+.gcard .lede{margin:0;color:var(--muted)}
+.gwho{display:flex;align-items:center;gap:12px;background:var(--sunk);border-radius:12px;padding:12px}
+.gwho img{width:44px;height:44px;border-radius:50%}
+.gwho b{display:block;font-family:var(--display);margin-bottom:3px}
+.gerr{margin:0;color:#C2352B;font-size:13.5px;min-height:1.2em}
+.btn.big{width:100%;justify-content:center;min-height:50px;font-size:16px}
+#gate-pin,#gate-pin2{font-size:22px;letter-spacing:.4em;text-align:center}
+.userchip{display:flex;align-items:center;gap:8px;font-size:12.5px;color:#CFC8BF}
+.userchip img{width:26px;height:26px;border-radius:50%}
+.pill.admin{background:var(--accent);color:#1F1D1B}
+.pill.agent{background:#3A3532;color:#fff}
+.notice{background:var(--accent-soft);border:1px solid var(--accent);border-radius:12px;padding:12px 16px;font-size:14.5px;white-space:pre-line}
+.notice b{font-family:var(--display);color:var(--accent-ink);display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:2px}
+td select{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-height:38px}
 .pill.st{background:var(--sunk);color:var(--fg)}
 .pill.st.done{background:#C2352B;color:#fff}
 .tog{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted);min-height:42px;white-space:nowrap}
@@ -192,10 +213,26 @@ details.edit .fgrid{margin-top:10px}
 </head>
 <body>
 
+<div id="gate" class="gate" role="dialog" aria-modal="true" aria-labelledby="gate-title">
+  <div class="gcard">
+    <div class="gbrand"><b>ORLA</b><span>Peninsula Offers</span></div>
+    <h1 id="gate-title">Sign in</h1>
+    <p class="lede" id="gate-msg">Checking your sign-in…</p>
+    <div id="gate-who" class="gwho" hidden><img id="gate-avatar" alt=""><div><b id="gate-name"></b><span id="gate-role" class="pill"></span></div></div>
+    <form id="gate-form" class="stack" hidden autocomplete="off">
+      <div class="field" id="gate-pin-wrap"><label for="gate-pin" id="gate-pin-label">PIN</label><input id="gate-pin" type="password" inputmode="numeric" maxlength="12" autocomplete="off"></div>
+      <div class="field" id="gate-pin2-wrap" hidden><label for="gate-pin2">Repeat PIN</label><input id="gate-pin2" type="password" inputmode="numeric" maxlength="12" autocomplete="off"></div>
+      <p class="gerr" id="gate-err" role="alert"></p>
+      <button class="btn primary big" type="submit" id="gate-go">Continue</button>
+    </form>
+    <p class="src">Orla Properties L.L.C · Licensed broker · BRN 41837</p>
+  </div>
+</div>
+
 <header class="top">
   <div class="brandrow">
     <div class="brand"><b>ORLA</b><span>Peninsula Offers</span><small>Business Bay · Nov 2026</small></div>
-    <button class="themebtn" id="theme" aria-label="Switch between automatic, light and dark theme">Theme: Auto</button>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="userchip" id="userchip"></span><button class="themebtn" id="theme" aria-label="Switch between automatic, light and dark theme">Theme: Auto</button><button class="themebtn" id="lock">Lock</button></div>
   </div>
   <nav class="tabs" role="tablist" aria-label="Sections">
     <button class="tab" role="tab" id="tab-dash" data-view="dash" aria-selected="true">Dashboard</button>
@@ -205,6 +242,7 @@ details.edit .fgrid{margin-top:10px}
     <button class="tab" role="tab" id="tab-calc" data-view="calc" aria-selected="false">Deal calculator</button>
     <button class="tab" role="tab" id="tab-market" data-view="market" aria-selected="false">Market data</button>
     <button class="tab" role="tab" id="tab-mine" data-view="mine" aria-selected="false">My listings</button>
+    <button class="tab" role="tab" id="tab-admin" data-view="admin" aria-selected="false" hidden>Admin</button>
   </nav>
 </header>
 
@@ -260,7 +298,7 @@ details.edit .fgrid{margin-top:10px}
     <div class="grid2">
       <div class="panel">
         <h2 id="cl-title">Add a client</h2>
-        <p class="lede">Track buyers, investors and tenants, their budget, their stage and when to follow up. Saved on this device.</p>
+        <p class="lede">Track buyers, investors and tenants, their budget, their stage and when to follow up. Only you can see your clients.</p>
         <form id="cl-form" class="fgrid" autocomplete="off">
           <input type="hidden" id="cl-id">
           <div class="field"><label for="cl-name">Name</label><input id="cl-name" required></div>
@@ -284,7 +322,7 @@ details.edit .fgrid{margin-top:10px}
     <div class="grid2">
       <div class="panel">
         <h2>Deal calculator</h2>
-        <p class="lede">Purchase costs, yield and resale return, using the same fees as your decks: 4% DLD registration, AED 5,250 trustee office fee and AED 5,000 admin fee.</p>
+        <p class="lede">Purchase costs, yield and resale return, using the fees set in Admin: DLD registration, trustee office fee and admin fee.</p>
         <div class="fgrid">
           <div class="field wide"><label for="c-pick">Load an offer</label><select id="c-pick"><option value="">Custom figures</option></select></div>
           <div class="field"><label for="c-price">Purchase price (AED)</label><input id="c-price" inputmode="numeric" value="1229000"></div>
@@ -326,7 +364,7 @@ details.edit .fgrid{margin-top:10px}
     <div class="grid2">
       <div class="panel">
         <h2>Add a listing</h2>
-        <p class="lede">Same columns as your “Peninsula 3 Listings” sheet. Listings you add are saved on this iPad only and show up in Offers with a “Mine” tag.</p>
+        <p class="lede">Same columns as your “Peninsula 3 Listings” sheet. Listings you add are private to you and show up in your Offers with a “Mine” tag.</p>
         <form id="mine-form" class="fgrid" autocomplete="off">
           <div class="field"><label for="m-unit">Unit no.</label><input id="m-unit" placeholder="e.g. 3305"></div>
           <div class="field"><label for="m-bld">Building</label><select id="m-bld"><option value="3">Peninsula Three</option><option value="1">Peninsula One</option><option value="2">Peninsula Two</option><option value="4">Peninsula Four</option><option value="5">Peninsula Five</option></select></div>
@@ -356,9 +394,68 @@ details.edit .fgrid{margin-top:10px}
     </div>
 <div class="panel" style="margin-top:16px">
       <h2>Backup &amp; restore</h2>
-      <p class="lede">Your listings, clients, shortlist and price updates are stored on this iPad only. Copy a backup from time to time and keep it in Notes or email it to yourself. To move to another device, paste the backup here and restore it.</p>
+      <p class="lede">Your listings, clients and shortlist are private to you. Copy a backup from time to time and keep it in Notes or email it to yourself. To move to another device, paste the backup here and restore it.</p>
       <div class="actions"><button class="btn" id="bk-copy">Copy backup</button><button class="btn primary" id="bk-restore">Restore from pasted backup</button></div>
       <textarea class="copybox" id="bk-text" aria-label="Backup data" placeholder="Paste a backup here to restore it"></textarea>
+    </div>
+    <div class="panel" style="margin-top:16px">
+      <h2>Login &amp; security</h2>
+      <p class="lede" id="sec-lede"></p>
+      <div class="fgrid">
+        <div class="field"><label for="sec-pin">New PIN for this device (4–12 digits)</label><input id="sec-pin" type="password" inputmode="numeric" maxlength="12" autocomplete="off"></div>
+        <div class="field"><label for="sec-pin2">Repeat new PIN</label><input id="sec-pin2" type="password" inputmode="numeric" maxlength="12" autocomplete="off"></div>
+        <div class="field"><label for="sec-lockmin">Lock automatically after</label><select id="sec-lockmin"><option value="0">Never</option><option value="5">5 minutes idle</option><option value="15">15 minutes idle</option><option value="60">1 hour idle</option></select></div>
+      </div>
+      <div class="actions" style="margin-top:10px"><button class="btn primary" id="sec-save">Save PIN</button><button class="btn" id="sec-clear">Remove PIN</button><button class="btn" id="sec-lock">Lock now</button></div>
+    </div>
+  </section>
+  <!-- ADMIN -->
+  <section class="view" id="view-admin" hidden>
+    <div class="stack">
+      <div class="panel"><h2>Admin</h2><p class="lede" id="ad-access" style="margin:0"></p></div>
+      <div class="grid2">
+        <div class="panel"><h2>Team announcement</h2><p class="lede">Shown at the top of everyone's dashboard. Leave it empty to hide it.</p>
+          <div class="field"><label for="ad-notice">Announcement</label><textarea id="ad-notice" rows="3"></textarea></div>
+          <div class="actions" style="margin-top:10px"><button class="btn primary" id="ad-notice-save">Publish announcement</button></div></div>
+        <div class="panel"><h2>Fees</h2><p class="lede">Used in every total cost, presentation and calculator figure.</p>
+          <div class="fgrid"><div class="field"><label for="ad-dld">DLD registration (%)</label><input id="ad-dld" inputmode="decimal"></div><div class="field"><label for="ad-trustee">Trustee office fee (AED)</label><input id="ad-trustee" inputmode="numeric"></div><div class="field"><label for="ad-admin">Admin fee (AED)</label><input id="ad-admin" inputmode="numeric"></div></div>
+          <div class="actions" style="margin-top:10px"><button class="btn primary" id="ad-fees-save">Save fees</button></div></div>
+      </div>
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Offers</h2><p class="lede" id="ad-offers-lede"></p></div><div class="actions"><button class="btn primary" id="ad-add">Add offer</button><button class="btn" id="ad-csv">Copy all as CSV</button></div></div>
+        <div class="tablewrap"><table id="ad-table"></table></div>
+        <textarea class="copybox" id="ad-csv-text" readonly aria-label="Offers CSV" hidden style="margin-top:10px"></textarea>
+      </div>
+      <div class="panel" id="ad-form-panel" hidden>
+        <h2 id="ad-form-title">Add offer</h2>
+        <form id="ad-form" class="fgrid" autocomplete="off" style="margin-top:10px">
+          <input type="hidden" id="o-id">
+          <div class="field wide"><label for="o-title">Headline</label><input id="o-title" placeholder="e.g. Corner 2 bed, Burj &amp; canal"></div>
+          <div class="field"><label for="o-b">Building</label><select id="o-b"><option value="1">Peninsula One</option><option value="2">Peninsula Two</option><option value="3">Peninsula Three</option><option value="4">Peninsula Four</option><option value="5">Peninsula Five</option></select></div>
+          <div class="field"><label for="o-beds">Unit type</label><select id="o-beds"><option value="0">Studio</option><option value="1">1 Bedroom</option><option value="2">2 Bedroom</option><option value="3">3 Bedroom</option></select></div>
+          <div class="field"><label for="o-deal">Offer</label><select id="o-deal"><option value="sale">For sale</option><option value="rent">For rent</option><option value="both">For sale or rent</option></select></div>
+          <div class="field"><label for="o-avail">Status</label><select id="o-avail"><option>Available</option><option>Reserved</option><option>Under offer</option><option>Sold</option><option>Rented</option></select></div>
+          <div class="field"><label for="o-price">Sale price (AED)</label><input id="o-price" inputmode="numeric"></div>
+          <div class="field"><label for="o-rent">Rent (AED / yr)</label><input id="o-rent" inputmode="numeric"></div>
+          <div class="field"><label for="o-size">Size (sq ft)</label><input id="o-size" inputmode="numeric"></div>
+          <div class="field"><label for="o-floor">Floor</label><input id="o-floor"></div>
+          <div class="field"><label for="o-view">View</label><input id="o-view"></div>
+          <div class="field"><label for="o-furn">Furnishing</label><input id="o-furn"></div>
+          <div class="field"><label for="o-baths">Bathrooms</label><input id="o-baths"></div>
+          <div class="field"><label for="o-status">Handover</label><input id="o-status" placeholder="e.g. Ready"></div>
+          <div class="field"><label for="o-cheques">Cheques</label><input id="o-cheques"></div>
+          <div class="field"><label for="o-deposit">Security deposit</label><input id="o-deposit" placeholder="e.g. 5%"></div>
+          <div class="field"><label for="o-agent">Agent</label><select id="o-agent"></select></div>
+          <div class="field"><label for="o-irent">Expected rent for investors (AED / yr)</label><input id="o-irent" inputmode="numeric"></div>
+          <div class="field wide"><label for="o-hl">Highlight</label><textarea id="o-hl" rows="2"></textarea></div>
+          <div class="field wide"><label for="o-check">Figures to confirm (one per line)</label><textarea id="o-check" rows="2"></textarea></div>
+          <div class="wide actions"><button class="btn primary" type="submit">Save offer</button><button class="btn" type="button" id="o-cancel">Cancel</button><button class="btn" type="button" id="o-del" hidden>Delete offer</button></div>
+        </form>
+      </div>
+      <div class="panel"><h2>Agents</h2><p class="lede">Names and numbers shown on offers, presentations and messages. Clear a name to remove that agent.</p>
+        <div class="stack" id="ad-agents"></div>
+        <div class="actions" style="margin-top:10px"><button class="btn" id="ad-agent-add">Add agent</button><button class="btn primary" id="ad-agents-save">Save agents</button></div></div>
+      <div class="panel" id="ad-log-panel"><h2>Activity</h2><p class="lede">The latest 50 changes admins made to offers and settings.</p><div class="tablewrap"><table id="ad-log"></table></div></div>
     </div>
   </section>
 </main>
@@ -367,7 +464,7 @@ details.edit .fgrid{margin-top:10px}
 
 <script>
 /* ---------------- Data extracted from your decks and flyers (Nov 2026) ---------------- */
-const AGENTS={
+const AGENTS={ // defaults; admins can change them
   talal:{name:"Talal Al Deraawi",phone:"+971 50 120 9933"},
   giulia:{name:"Giulia Perego",phone:"+971 58 217 4063"},
   blendjana:{name:"Blendjana",phone:"+971 58 832 7743"}
@@ -389,7 +486,7 @@ const AMEN={
   5:["Swimming pool","Gym","Community mall","Canal promenade","Water taxi"]
 };
 // deal: sale | rent | both. price = sale price, rent = annual rent.
-const OFFERS=[
+let OFFERS=/*SEED*/[
  {id:"p3-studio-410",b:3,beds:0,deal:"sale",title:"Studio, mid floor",price:1229000,size:410,floor:"Mid floor",view:"On request",furn:"Fully fitted",baths:1,status:"Ready",agent:"talal",
   hl:"Lowest entry price in the Peninsula. Studios here sold for AED 1.12M–1.20M in Sep–Oct and are listed from AED 1.19M to 1.48M. Rents run AED 70k–100k.",
   inv:{rent:78000,resale:1350000},src:"Investor Selection deck"},
@@ -455,7 +552,7 @@ const OFFERS=[
  {id:"p1-3bed-maid",b:1,beds:3,deal:"rent",title:"3 bed + maid, waterfront",rent:340000,size:null,floor:"Podium",view:"Dubai Canal",furn:"Fully furnished",baths:"—",status:"Ready",cheques:"1",deposit:"10%",agent:"giulia",
   hl:"Podium waterfront residence facing the canal, 11% under a comparable 3-bed listing. Price non-negotiable.",
   market:[["Simplexes listed now","AED 320k – 380k"],["Comparable 3-bed listed","AED 380,000"],["vs comparable listing","−11%"]],src:"Giulia_P1 flyer"}
-];
+]/*END*/;
 const COMPS=[
  {t:"Peninsula Three · Studios",rows:[["8 Oct 2026",422,1200000],["25 Sep 2026",427,1150000],["23 Sep 2026",420,1200000]],mine:[410,1229000]},
  {t:"Peninsula Four · 1 Beds",rows:[["13 Nov 2026",831,2235000],["13 Nov 2026",859,2385000],["12 Nov 2026",861,2250000]],mine:[553,1745000]},
@@ -493,7 +590,7 @@ const costs=p=>{const d=p*FEES.dld;return{dld:d,total:p+d+FEES.trustee+FEES.admi
 
 let mine=store.get("orla.mine",[]);
 let starred=new Set(store.get("orla.star",[]));
-let ovr=store.get("orla.ovr",{});
+let ovr=store.get("orla.ovr",null);
 let clients=store.get("orla.clients",[]);
 const STATUS=["Available","Reserved","Under offer","Sold","Rented"];
 const isDone=o=>o.avail==="Sold"||o.avail==="Rented";
@@ -501,8 +598,9 @@ const state={deal:"all",type:"",bld:"",sort:"price-asc",q:"",max:"",hide:true,cl
 
 function mineToOffer(m){return{id:m.id,b:+m.b,beds:+m.beds,deal:m.deal,title:(m.unit?"Unit "+m.unit+" · ":"")+TYPE[+m.beds],price:m.deal==="sale"?+m.price:undefined,rent:m.deal==="rent"?+m.price:undefined,
   size:m.size?+m.size:null,floor:m.floor||"On request",view:m.view||"On request",furn:m.furn,status:m.status,agent:m.agent,hl:m.notes||"",mine:true,owner:m.owner,ownerPhone:m.phone,date:m.date,src:"Added on this device"}}
-const applyOvr=o=>{const v=ovr[o.id]||{};return Object.assign({},o,v.price?{price:v.price}:{},v.rent?{rent:v.rent}:{},{avail:v.avail||"Available",edited:!!ovr[o.id]})};
-const all=()=>OFFERS.concat(mine.map(mineToOffer)).map(applyOvr);
+const all=()=>OFFERS.concat(mine.map(mineToOffer)).map(o=>o.avail?o:Object.assign({},o,{avail:"Available"}));
+const agentOf=o=>AGENTS[o.agent]||Object.values(AGENTS)[0]||{name:"Orla Properties",phone:""};
+const dldLabel=()=>"DLD registration ("+(+(FEES.dld*100).toFixed(2))+"%)";
 const keyPrice=o=>o.deal==="rent"?o.rent:o.price;
 function priceLine(o){
   if(o.deal==="rent")return{big:aed(o.rent),sub:"per year"};
@@ -543,19 +641,19 @@ function renderList(){
   if(!l.find(o=>o.id===state.sel))state.sel=l[0]?.id??null;
   const sale=l.filter(o=>o.deal!=="rent").length,rent=l.filter(o=>o.deal!=="sale").length;
   $("#summary").textContent=`${l.length} offers · ${sale} for sale · ${rent} for rent`;
-  $("#list").innerHTML=l.length?l.map(o=>cardHTML(o,o.id===state.sel)).join(""):'<div class="empty">No offers match these filters.</div>';
+  $("#list").innerHTML=l.length?l.map(o=>cardHTML(o,o.id===state.sel)).join(""):(all().length?'<div class="empty">No offers match these filters.</div>':'<div class="empty">No offers yet. Admins add them in the Admin tab.</div>');
   $("#cnt-offers").textContent=all().length;
   renderDetail();
 }
 function kv(k,v,cls=""){return `<div class="kv ${cls}"><span>${esc(k)}</span><span class="num">${esc(v)}</span></div>`}
 function offerText(o){
-  const a=AGENTS[o.agent]||AGENTS.talal,p=priceLine(o);
+  const a=agentOf(o),p=priceLine(o);
   let t=`*${BLD[o.b]} – ${TYPE[o.beds]}* (${o.deal==="rent"?"for rent":o.deal==="both"?"for sale or rent":"for sale"})\n`;
   t+=`${o.title}\n💰 ${p.big}${p.sub?" ("+p.sub+")":""}\n`;
   if(o.size)t+=`📐 ${fmt(o.size)} sq ft\n`;
   t+=`🏢 Floor: ${o.floor} · View: ${o.view}\n`;
   if(o.furn&&o.furn!=="—")t+=`🛋 ${o.furn}\n`;
-  if(o.deal!=="rent"){const c=costs(o.price);t+=`Total with fees: ${aed(c.total)} (4% DLD ${aed(c.dld)} + AED 10,250 trustee & admin)\n`}
+  if(o.deal!=="rent"){const c=costs(o.price);t+=`Total with fees: ${aed(c.total)} (DLD ${aed(c.dld)} + ${aed(FEES.trustee+FEES.admin)} trustee & admin)\n`}
   if(o.cheques)t+=`Cheques: ${o.cheques}\n`;
   t+=`Business Bay, on the Dubai Canal · 7 min to Dubai Mall\n`;
   t+=`\n${a.name} · Orla Properties · BRN 41837\n${a.phone}`;
@@ -565,7 +663,7 @@ function renderDetail(){
   const o=all().find(x=>x.id===state.sel),el=$("#detail");
   if(!o){el.innerHTML='<div class="empty">Pick an offer to see its details.</div>';return}
   store.set("orla.sel",o.id);
-  const p=priceLine(o),a=AGENTS[o.agent]||AGENTS.talal;
+  const p=priceLine(o),a=agentOf(o);
   const facts=[["Unit type",TYPE[o.beds]],["Size",o.size?fmt(o.size)+" sq ft ("+(o.size*0.092903).toFixed(1)+" m²)":"On request"]];
   if(o.balcony)facts.push(["Balcony",o.balcony+" sq ft"]);
   facts.push(["Floor",o.floor],["View",o.view],["Bathrooms",String(o.baths??"—")],["Furnishing",o.furn||"—"],["Status",o.status||"—"]);
@@ -576,7 +674,7 @@ function renderDetail(){
   if(o.ownerPhone)facts.push(["Owner phone",o.ownerPhone]);
   if(o.date)facts.push(["Date listed",o.date]);
   let money="";
-  if(o.deal!=="rent"){const c=costs(o.price);money=`<div><h4>Total purchase cost</h4>${kv("Price",aed(o.price))}${kv("DLD registration (4%)",aed(c.dld))}${kv("Trustee office fee",aed(FEES.trustee))}${kv("Admin fee",aed(FEES.admin))}${kv("Total cost",aed(c.total),"total")}</div>`}
+  if(o.deal!=="rent"){const c=costs(o.price);money=`<div><h4>Total purchase cost</h4>${kv("Price",aed(o.price))}${kv(dldLabel(),aed(c.dld))}${kv("Trustee office fee",aed(FEES.trustee))}${kv("Admin fee",aed(FEES.admin))}${kv("Total cost",aed(c.total),"total")}</div>`}
   else{const dep=parseFloat(o.deposit||"5")/100;money=`<div><h4>Rent</h4>${kv("Annual rent",aed(o.rent))}${kv("Monthly equivalent",aed(o.rent/12))}${kv("Security deposit ("+(dep*100)+"%)",aed(o.rent*dep))}${o.size?kv("Rent per sq ft",aed(o.rent/o.size)):""}${kv("Rent per year",aed(o.rent),"total")}</div>`}
   let inv="";const r=o.inv?.rent||(o.deal==="both"?o.rent:null);
   if(o.deal!=="rent"&&r){const c=costs(o.price);let rows=kv("Expected rent",aed(r)+" / yr")+kv("Gross yield on price",(r/o.price*100).toFixed(1)+"%");
@@ -602,11 +700,11 @@ function renderDetail(){
       <div class="cols"><div><h4>Unit details</h4>${facts.map(f=>kv(f[0],f[1])).join("")}</div>${money}</div>
       ${inv||mkt?`<div class="cols">${inv}${mkt}</div>`:""}
       <div><h4>The building</h4><p class="hl" style="margin-bottom:8px">${esc(TOWER[o.b])}</p><div class="chips">${AMEN[o.b].map(x=>'<span class="chip">'+esc(x)+'</span>').join("")}</div></div>
-      <details class="edit"><summary>Update price &amp; status${o.edited?" (updated by you)":""}</summary><div class="fgrid">
+      ${isAdmin&&!o.mine?`<details class="edit"><summary>Admin: update price &amp; status</summary><div class="fgrid">
         <div class="field"><label for="e-st">Status</label><select id="e-st">${STATUS.map(s=>`<option${s===o.avail?" selected":""}>${s}</option>`).join("")}</select></div>
         ${o.deal!=="rent"?`<div class="field"><label for="e-price">Sale price (AED)</label><input id="e-price" inputmode="numeric" value="${fmt(o.price)}"></div>`:""}
         ${o.deal!=="sale"?`<div class="field"><label for="e-rent">Rent (AED / yr)</label><input id="e-rent" inputmode="numeric" value="${fmt(o.rent)}"></div>`:""}
-        <div class="wide actions"><button class="btn primary" id="e-save">Save changes</button>${o.edited?'<button class="btn" id="e-reset">Restore original figures</button>':""}</div></div></details>
+        <div class="wide actions"><button class="btn primary" id="e-save">Save for everyone</button><button class="btn" id="e-full">Edit all details</button></div></div></details>`:""}
       <div class="agent"><div class="who"><b>${esc(a.name)}</b><span>Orla Properties L.L.C · BRN 41837</span></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="phone num">${esc(a.phone)}</span><button class="btn" id="d-phone">Copy number</button></div></div>
       <p class="src">Source: ${esc(o.src)}. Drive times approx.: Dubai Mall 7 min · Business Bay Metro 7 min · DIFC 12 min · DXB 16 min.</p>
     </div></article>`;
@@ -614,13 +712,14 @@ function renderDetail(){
   $("#d-copy").onclick=()=>copy(offerText(o));
   $("#d-phone").onclick=()=>copy(a.phone);
   $("#d-present").onclick=()=>openPresent(filtered().map(x=>x.id),o.id);
-  $("#e-save").onclick=()=>{const v={avail:$("#e-st").value};if($("#e-price"))v.price=nv("#e-price")||undefined;if($("#e-rent"))v.rent=nv("#e-rent")||undefined;ovr[o.id]=v;store.set("orla.ovr",ovr);renderAll();toast("Offer updated")};
-  const er=$("#e-reset");if(er)er.onclick=()=>{delete ovr[o.id];store.set("orla.ovr",ovr);renderAll();toast("Original figures restored")};
+  const es=$("#e-save");if(es)es.onclick=async()=>{const base=OFFERS.find(x=>x.id===o.id);if(!base)return;const n=Object.assign({},base,{avail:$("#e-st").value});if($("#e-price"))n.price=nv("#e-price")||base.price;if($("#e-rent"))n.rent=nv("#e-rent")||base.rent;
+    if(await saveOffer(n,`Updated ${BLD[n.b]} · ${n.title}: ${n.avail}${n.deal!=="rent"?", "+aed(n.price):""}${n.deal!=="sale"?", rent "+aed(n.rent):""}`))toast("Offer updated for everyone")};
+  const ef=$("#e-full");if(ef)ef.onclick=()=>{show("admin");openOfferForm(o.id)};
   const dc=$("#d-calc");if(dc)dc.onclick=()=>{loadCalc(o.id);show("calc")};
-  const dd=$("#d-del");if(dd)dd.onclick=()=>{if(dd.dataset.armed){mine=mine.filter(m=>m.id!==o.id);store.set("orla.mine",mine);starred.delete(o.id);saveStar();renderAll();toast("Listing deleted")}else{dd.dataset.armed=1;dd.textContent="Tap again to delete"}};
+  const dd=$("#d-del");if(dd)dd.onclick=()=>{if(dd.dataset.armed){mine=mine.filter(m=>m.id!==o.id);persist();starred.delete(o.id);saveStar();renderAll();toast("Listing deleted")}else{dd.dataset.armed=1;dd.textContent="Tap again to delete"}};
 }
 function toggleStar(id){starred.has(id)?starred.delete(id):starred.add(id);saveStar();renderList();renderShort()}
-function saveStar(){store.set("orla.star",[...starred]);$("#cnt-short").textContent=starred.size}
+function saveStar(){persist();$("#cnt-short").textContent=starred.size}
 
 /* ---------------- Shortlist ---------------- */
 function renderShort(){
@@ -679,7 +778,7 @@ $("#mine-form").addEventListener("submit",e=>{e.preventDefault();
   const price=parseFloat(g("#m-price").replace(/[^0-9.]/g,""));
   if(!price){toast("Enter a price");$("#m-price").focus();return}
   const m={id:"mine-"+Date.now(),unit:g("#m-unit"),b:g("#m-bld"),beds:g("#m-type"),deal:g("#m-deal"),floor:g("#m-floor"),view:g("#m-view"),size:g("#m-size").replace(/[^0-9.]/g,""),price,status:g("#m-status"),furn:g("#m-furn"),owner:g("#m-owner"),phone:g("#m-phone"),agent:g("#m-agent"),date:g("#m-date"),notes:g("#m-notes")};
-  mine.push(m);store.set("orla.mine",mine);e.target.reset();$("#m-date").valueAsDate=new Date();renderAll();toast("Listing saved");
+  mine.push(m);persist();e.target.reset();$("#m-date").valueAsDate=new Date();renderAll();toast("Listing saved");
 });
 
 /* ---------------- Dashboard ---------------- */
@@ -693,7 +792,7 @@ function renderDash(){
   const kpi=(l,v,s)=>`<div class="kpi"><span>${l}</span><b class="num">${v}</b><small>${s}</small></div>`;
   const go=(o,t)=>`<button class="btn sm" data-id="${esc(o.id)}">P${o.b} · ${t}</button>`;
   const best=[0,1,2,3].map(b=>[TYPE[b],sale.filter(o=>o.beds===b).sort((x,y)=>x.price-y.price)[0],rent.filter(o=>o.beds===b).sort((x,y)=>x.rent-y.rent)[0]]);
-  $("#dash").innerHTML=`<div class="kpis">${kpi("Active offers",act.length,`${sale.length} for sale · ${rent.length} for rent`)}${kpi("Sale stock value","AED "+short(sale.reduce((s,o)=>s+o.price,0)),"total asking price")}${kpi("Average gross yield",ys.length?(ys.reduce((a,b)=>a+b,0)/ys.length*100).toFixed(1)+"%":"—",`${ys.length} sale offers with rent data`)}${kpi("Follow-ups due",due.length,`${clients.length} client${clients.length===1?"":"s"} · ${closed} offer${closed===1?"":"s"} closed`)}</div>
+  $("#dash").innerHTML=`${settings.notice?`<div class="notice"><b>Announcement</b>${esc(settings.notice)}</div>`:""}<div class="kpis">${kpi("Active offers",act.length,`${sale.length} for sale · ${rent.length} for rent`)}${kpi("Sale stock value","AED "+short(sale.reduce((s,o)=>s+o.price,0)),"total asking price")}${kpi("Average gross yield",ys.length?(ys.reduce((a,b)=>a+b,0)/ys.length*100).toFixed(1)+"%":"—",`${ys.length} sale offers with rent data`)}${kpi("Follow-ups due",due.length,`${clients.length} client${clients.length===1?"":"s"} · ${closed} offer${closed===1?"":"s"} closed`)}</div>
    <div class="grid2">
     <div class="panel"><h2>Follow-ups due</h2><p class="lede">Clients with a follow-up date of today or earlier.</p><div class="list">${due.length?due.map(clientRow).join(""):'<div class="empty">Nothing due. Add clients and follow-up dates in the Clients tab.</div>'}</div></div>
     <div class="panel"><h2>Best entry price by type</h2><p class="lede">Cheapest active offer in each category. Tap one to open it.</p><div class="tablewrap"><table><tr><th>Type</th><th>For sale</th><th>For rent</th></tr>${best.map(r=>`<tr><td>${r[0]}</td><td>${r[1]?go(r[1],short(r[1].price)):"—"}</td><td>${r[2]?go(r[2],short(r[2].rent)+" / yr"):"—"}</td></tr>`).join("")}</table></div></div>
@@ -722,16 +821,16 @@ function editClient(c){show("clients");resetClientForm();$("#cl-id").value=c.id;
 $("#cl-form").addEventListener("submit",e=>{e.preventDefault();const g=id=>$(id).value.trim();if(!g("#cl-name")){toast("Enter a name");return}
   const id=g("#cl-id")||"c-"+Date.now(),old=clients.find(c=>c.id===id);
   const c={id,name:g("#cl-name"),phone:g("#cl-phone"),intent:g("#cl-intent"),beds:g("#cl-beds"),budget:parseFloat(g("#cl-budget").replace(/[^0-9.]/g,""))||0,status:g("#cl-status"),follow:g("#cl-follow"),source:g("#cl-source"),notes:g("#cl-notes"),short:old?.short||[]};
-  clients=old?clients.map(x=>x.id===id?c:x):clients.concat(c);store.set("orla.clients",clients);resetClientForm();renderAll();toast(old?"Client updated":"Client saved")});
+  clients=old?clients.map(x=>x.id===id?c:x):clients.concat(c);persist();resetClientForm();renderAll();toast(old?"Client updated":"Client saved")});
 $("#cl-new").onclick=resetClientForm;
-$("#cl-del").onclick=()=>{const b=$("#cl-del");if(!b.dataset.armed){b.dataset.armed=1;b.textContent="Tap again to delete";return}const id=$("#cl-id").value;clients=clients.filter(c=>c.id!==id);if(state.client===id)state.client=null;store.set("orla.clients",clients);resetClientForm();renderAll();toast("Client deleted")};
+$("#cl-del").onclick=()=>{const b=$("#cl-del");if(!b.dataset.armed){b.dataset.armed=1;b.textContent="Tap again to delete";return}const id=$("#cl-id").value;clients=clients.filter(c=>c.id!==id);if(state.client===id)state.client=null;persist();resetClientForm();renderAll();toast("Client deleted")};
 function syncFilters(){document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.deal===state.deal));$("#f-type").value=state.type;$("#f-bld").value=state.bld;$("#f-max").value=state.max?fmt(+state.max):""}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)return;const c=clients.find(x=>x.id===b.dataset.cid);if(!c)return;
   if(b.dataset.act==="edit")editClient(c);
   if(b.dataset.act==="load"){state.client=c.id;starred=new Set(c.short||[]);saveStar();renderAll();show("shortlist")}
   if(b.dataset.act==="match"){state.deal=c.intent==="Rent"?"rent":"sale";state.type=c.beds??"";state.max=c.budget?String(c.budget):"";state.bld="";state.q="";$("#f-q").value="";syncFilters();renderList();show("offers")}});
 $("#short-client").onchange=e=>{state.client=e.target.value||null;renderShort()};
-$("#short-save").onclick=()=>{const c=clients.find(x=>x.id===state.client);if(!c){toast("Choose a client first");return}c.short=[...starred];store.set("orla.clients",clients);renderAll();toast("Shortlist saved to "+c.name)};
+$("#short-save").onclick=()=>{const c=clients.find(x=>x.id===state.client);if(!c){toast("Choose a client first");return}c.short=[...starred];persist();renderAll();toast("Shortlist saved to "+c.name)};
 
 /* ---------------- Present mode ---------------- */
 let pres={ids:[],i:0};
@@ -740,11 +839,11 @@ function closePresent(){$("#present").hidden=true;document.body.style.overflow="
 function stepPresent(d){const i=pres.i+d;if(i<0||i>=pres.ids.length)return;pres.i=i;renderPresent();$("#present").scrollTop=0}
 function renderPresent(){
   const o=all().find(x=>x.id===pres.ids[pres.i]);if(!o){closePresent();return}
-  const p=priceLine(o),a=AGENTS[o.agent]||AGENTS.talal;
+  const p=priceLine(o),a=agentOf(o);
   const f=[["Unit",TYPE[o.beds]],["Size",o.size?fmt(o.size)+" sq ft":"On request"],["Floor",o.floor],["View",o.view],["Bathrooms",String(o.baths??"—")],["Furnishing",o.furn&&o.furn!=="—"?o.furn:"On request"],["Status",o.avail==="Available"?(o.status||"Ready"):o.avail]];
   f.push(o.parking?["Parking",o.parking]:o.cheques?["Cheques",o.cheques]:["Community","The Peninsula"]);
   let money="";
-  if(o.deal!=="rent"){const c=costs(o.price);money+=`<div class="panel"><h4>Total purchase cost</h4>${kv("Price",aed(o.price))}${kv("DLD registration (4%)",aed(c.dld))}${kv("Trustee office fee",aed(FEES.trustee))}${kv("Admin fee",aed(FEES.admin))}${kv("Total cost",aed(c.total),"total")}</div>`}
+  if(o.deal!=="rent"){const c=costs(o.price);money+=`<div class="panel"><h4>Total purchase cost</h4>${kv("Price",aed(o.price))}${kv(dldLabel(),aed(c.dld))}${kv("Trustee office fee",aed(FEES.trustee))}${kv("Admin fee",aed(FEES.admin))}${kv("Total cost",aed(c.total),"total")}</div>`}
   if(o.deal!=="sale"){const dep=parseFloat(o.deposit||"5")/100;money+=`<div class="panel"><h4>Rent</h4>${kv("Annual rent",aed(o.rent))}${kv("Monthly equivalent",aed(o.rent/12))}${kv("Security deposit ("+(dep*100)+"%)",aed(o.rent*dep))}${kv("Cheques",o.cheques||"On request")}</div>`}
   $("#present").innerHTML=`<div class="pbar"><button class="btn" id="p-close">Close</button><span class="num" style="font-size:13px;color:#CFC8BF">${pres.i+1} of ${pres.ids.length}</span><div style="display:flex;gap:8px"><button class="btn" id="p-prev" ${pres.i===0?"disabled":""}>‹ Previous</button><button class="btn" id="p-next" ${pres.i===pres.ids.length-1?"disabled":""}>Next ›</button></div></div>
    <div class="pwrap">
@@ -762,18 +861,147 @@ function renderPresent(){
 $("#present-short").onclick=()=>openPresent(all().filter(o=>starred.has(o.id)).map(o=>o.id));
 
 /* ---------------- Backup & theme ---------------- */
-$("#bk-copy").onclick=()=>{const t=JSON.stringify({app:"peninsula-offers",v:1,at:new Date().toISOString(),mine,clients,ovr,starred:[...starred]});$("#bk-text").value=t;copy(t,$("#bk-text"))};
+$("#bk-copy").onclick=()=>{const t=JSON.stringify(Object.assign({app:"peninsula-offers",v:2,at:new Date().toISOString(),mine,clients,starred:[...starred]},CLOUD?{}:{offers:OFFERS,settings}));$("#bk-text").value=t;copy(t,$("#bk-text"))};
 $("#bk-restore").onclick=()=>{const b=$("#bk-restore");let d;try{d=JSON.parse($("#bk-text").value)}catch(e){toast("Paste a backup first");return}if(!d||d.app!=="peninsula-offers"){toast("That isn't a Peninsula Offers backup");return}
   if(!b.dataset.armed){b.dataset.armed=1;b.textContent="Tap again to replace the data on this device";return}
-  delete b.dataset.armed;b.textContent="Restore from pasted backup";mine=d.mine||[];clients=d.clients||[];ovr=d.ovr||{};starred=new Set(d.starred||[]);
-  store.set("orla.mine",mine);store.set("orla.clients",clients);store.set("orla.ovr",ovr);saveStar();renderAll();toast("Backup restored")};
+  delete b.dataset.armed;b.textContent="Restore from pasted backup";mine=d.mine||[];clients=d.clients||[];starred=new Set(d.starred||[]);
+  if(!CLOUD&&Array.isArray(d.offers)){OFFERS=d.offers;store.set("orla.offers",OFFERS)}
+  if(!CLOUD&&d.settings){store.set("orla.settings",d.settings);applySettings(d.settings)}
+  saveStar();renderAll();renderMarket();toast("Backup restored")};
 let theme=store.get("orla.theme","auto");
 function applyTheme(){if(theme==="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.setAttribute("data-theme",theme);$("#theme").textContent="Theme: "+{auto:"Auto",light:"Light",dark:"Dark"}[theme]}
 $("#theme").onclick=()=>{theme={auto:"light",light:"dark",dark:"auto"}[theme];store.set("orla.theme",theme);applyTheme()};
 if(theme!=="auto")applyTheme();
 
+/* ---------------- Sign-in, roles and storage ---------------- */
+const CLOUD=!!(window.claude&&typeof window.claude.use==="function");
+let db=null,uapi=null,uid=null,meInfo=null,isAdmin=!CLOUD,settings={},cloudReady=false,lastAt=null,saveT=null,warnedRO=false,logRows=[];
+const SEED_AGENTS=JSON.parse(JSON.stringify(AGENTS)),SEED_FEES=Object.assign({},FEES);
+function applySettings(x){settings=x||{};Object.keys(AGENTS).forEach(k=>delete AGENTS[k]);Object.assign(AGENTS,settings.agents&&Object.keys(settings.agents).length?settings.agents:SEED_AGENTS);Object.assign(FEES,SEED_FEES,settings.fees||{});
+  if(document.activeElement?.id!=="c-dld")$("#c-dld").value=+(FEES.dld*100).toFixed(3);
+  const opts=Object.entries(AGENTS).map(([k,a])=>`<option value="${esc(k)}">${esc(a.name)}</option>`).join("");["#m-agent","#o-agent"].forEach(id=>{const el=$(id),v=el.value;el.innerHTML=opts;if(v&&AGENTS[v])el.value=v})}
+function persist(){store.set("orla.mine",mine);store.set("orla.clients",clients);store.set("orla.star",[...starred]);
+  if(!(CLOUD&&uid&&cloudReady))return;clearTimeout(saveT);saveT=setTimeout(async()=>{lastAt=new Date().toISOString();
+    try{await db.doc("data/users/"+uid+"/state").set({mine,clients,starred:[...starred],at:lastAt})}catch(e){if(!warnedRO){warnedRO=true;toast("Saved on this device only: your access lets you browse but not save")}}},700)}
+async function logAct(text){if(!CLOUD||!db)return;try{await db.collection("log").add({at:new Date().toISOString(),by:uid,text:String(text).slice(0,300)})}catch(e){}}
+function cleanOffer(o){const c=JSON.parse(JSON.stringify(o));delete c.id;delete c.mine;return c}
+async function saveOffer(o,label){
+  if(CLOUD){try{await db.collection("offers").doc(o.id).set(cleanOffer(o));logAct(label)}catch(e){toast(e&&e.code==="quota_exceeded"?"Storage is full. Delete old offers first.":"Couldn't save. Only admins can change offers.");return false}}
+  else{const c=Object.assign(cleanOffer(o),{id:o.id}),i=OFFERS.findIndex(x=>x.id===o.id);if(i>=0)OFFERS[i]=c;else OFFERS.push(c);store.set("orla.offers",OFFERS);renderAll()}
+  return true}
+async function removeOffer(id,label){
+  if(CLOUD){try{await db.collection("offers").doc(id).delete();logAct(label)}catch(e){toast("Couldn't delete. Only admins can change offers.");return false}}
+  else{OFFERS=OFFERS.filter(o=>o.id!==id);store.set("orla.offers",OFFERS);renderAll()}
+  starred.delete(id);saveStar();return true}
+async function saveSettings(patch,label){const x=Object.assign({},settings,patch);
+  if(CLOUD){try{await db.doc("settings/app").set(x);logAct(label)}catch(e){toast("Couldn't save. Only admins can change settings.");return false}}
+  else{store.set("orla.settings",x);applySettings(x);renderAll();renderMarket()}
+  return true}
+function migrateOvr(){if(!ovr||!OFFERS.length||(CLOUD&&!isAdmin))return;const o2=ovr;ovr=null;try{localStorage.removeItem("orla.ovr")}catch(e){}
+  Object.entries(o2).forEach(([id,v])=>{const o=OFFERS.find(x=>x.id===id);if(o)saveOffer(Object.assign({},o,v.price?{price:v.price}:{},v.rent?{rent:v.rent}:{},{avail:v.avail||"Available"}),"Imported a change saved earlier on one device: "+BLD[o.b]+" · "+o.title)})}
+
+/* ---------------- Login page ---------------- */
+let gateMode="loading",idleT=null;
+const sessionOpen=()=>{try{return sessionStorage.getItem("orla.open")==="1"}catch(e){return false}};
+async function pinHash(p){try{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("orla-pin:"+p));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}catch(e){let h=7;for(const c of "orla-pin:"+p)h=(h*31+c.charCodeAt(0))|0;return "x"+h}}
+function setGate(mode){gateMode=mode;closePresent();$("#gate").hidden=false;
+  const T={loading:["Sign in","Checking your sign-in…"],
+    signedout:["Sign-in required","Open this app while signed in to claude.ai, with an account it has been shared with. Ask the owner for access if you don't have it."],
+    continue:["Welcome",CLOUD?"You're signed in with your claude.ai account.":""],
+    pin:["Enter your PIN","This device is locked."],
+    create:["Create your PIN",CLOUD?"Choose a 4 to 12 digit PIN to lock the app on this device.":"This copy of the app lives on this device. Choose a 4 to 12 digit PIN; you'll enter it to open the app."]}[mode];
+  $("#gate-title").textContent=T[0];$("#gate-msg").textContent=T[1];$("#gate-msg").hidden=!T[1];
+  $("#gate-form").hidden=mode==="loading"||mode==="signedout";$("#gate-pin-wrap").hidden=mode==="continue";$("#gate-pin2-wrap").hidden=mode!=="create";
+  $("#gate-pin").value="";$("#gate-pin2").value="";$("#gate-err").textContent="";
+  $("#gate-pin-label").textContent=mode==="create"?"New PIN":"PIN";
+  $("#gate-go").textContent=mode==="create"?"Create PIN and open":mode==="pin"?"Unlock":"Continue";
+  $("#gate-who").hidden=!meInfo;
+  if(meInfo){$("#gate-avatar").src=meInfo.avatarUrl;$("#gate-name").textContent=meInfo.name||"Signed in";const r=$("#gate-role");r.textContent=isAdmin?"Admin":"Agent";r.className="pill "+(isAdmin?"admin":"agent")}
+  if(mode==="pin"||mode==="create")setTimeout(()=>{try{$("#gate-pin").focus()}catch(e){}},60)}
+function lock(){try{sessionStorage.removeItem("orla.open")}catch(e){}clearTimeout(idleT);const pin=store.get("orla.pin",null);setGate(pin?"pin":CLOUD?"continue":"create")}
+function unlock(){$("#gate").hidden=true;try{sessionStorage.setItem("orla.open","1")}catch(e){}bump()}
+function bump(){clearTimeout(idleT);const m=+store.get("orla.lockmin",15);if(m&&store.get("orla.pin",null)&&$("#gate").hidden)idleT=setTimeout(lock,m*60000)}
+["pointerdown","keydown","scroll"].forEach(ev=>addEventListener(ev,bump,{passive:true}));
+$("#gate-form").addEventListener("submit",async e=>{e.preventDefault();const p=$("#gate-pin").value.trim(),err=$("#gate-err");
+  if(gateMode==="continue"){unlock();return}
+  if(gateMode==="create"){if(!/^\d{4,12}$/.test(p)){err.textContent="Use 4 to 12 digits.";return}if(p!==$("#gate-pin2").value.trim()){err.textContent="The two PINs don't match.";return}store.set("orla.pin",await pinHash(p));unlock();toast("PIN created");return}
+  const until=store.get("orla.wait",0);if(Date.now()<until){err.textContent="Too many attempts. Try again in "+Math.ceil((until-Date.now())/1000)+" seconds.";return}
+  if(await pinHash(p)===store.get("orla.pin",null)){store.set("orla.fails",0);unlock()}
+  else{const f=store.get("orla.fails",0)+1;store.set("orla.fails",f);$("#gate-pin").value="";if(f>=5){store.set("orla.fails",0);store.set("orla.wait",Date.now()+60000);err.textContent="Too many attempts. Try again in 60 seconds."}else err.textContent="Wrong PIN. "+(5-f)+" attempts left."}});
+$("#lock").onclick=lock;$("#sec-lock").onclick=lock;
+function renderSecurity(){const has=!!store.get("orla.pin",null);
+  $("#sec-lede").textContent=(CLOUD?"You sign in with your claude.ai account"+(meInfo?.name?" ("+meInfo.name+")":"")+" as "+(isAdmin?"an admin":"an agent")+". A PIN adds a lock on this device, handy on a shared iPad. ":"This copy of the app opens with a PIN on this device. ")+(has?"A PIN is set.":"No PIN is set.");
+  $("#sec-clear").hidden=!CLOUD||!has;$("#sec-lockmin").value=String(store.get("orla.lockmin",15))}
+$("#sec-save").onclick=async()=>{const p=$("#sec-pin").value.trim();if(!/^\d{4,12}$/.test(p)){toast("Use 4 to 12 digits");return}if(p!==$("#sec-pin2").value.trim()){toast("The two PINs don't match");return}store.set("orla.pin",await pinHash(p));$("#sec-pin").value="";$("#sec-pin2").value="";renderSecurity();bump();toast("PIN saved")};
+$("#sec-clear").onclick=()=>{try{localStorage.removeItem("orla.pin")}catch(e){}renderSecurity();toast("PIN removed")};
+$("#sec-lockmin").onchange=e=>{store.set("orla.lockmin",+e.target.value);bump()};
+
+/* ---------------- Admin backend ---------------- */
+let agentDraft=[];
+function renderAdmin(){$("#tab-admin").hidden=!isAdmin;renderSecurity();if(!isAdmin)return;
+  $("#ad-access").textContent=CLOUD?"You're an admin because you have Edit access to this app. Changes you make here reach the whole team straight away. To add people, use Share: Edit access makes someone an admin, Contributor access makes them an agent who can browse offers and keep their own clients, and Viewer access lets them browse only.":"This copy runs only on this device, so whoever unlocks it with the PIN is the admin. Changes stay on this device; use Backup to copy them elsewhere.";
+  const l=[...OFFERS].sort((a,b)=>a.b-b.b||a.beds-b.beds||(keyPrice(a)||0)-(keyPrice(b)||0));
+  $("#ad-offers-lede").textContent=l.length+" offers. Change a status here, or tap Edit to change everything about an offer.";
+  $("#ad-table").innerHTML='<tr><th>Offer</th><th>Deal</th><th class="r">Price</th><th class="r">Rent / yr</th><th>Status</th><th></th></tr>'+l.map(o=>`<tr><td><b>P${o.b}</b> · ${esc(TYPE[o.beds])} · ${esc(o.title)}${o.check?' <span class="pill check">Check</span>':""}</td><td>${o.deal==="both"?"Sale or rent":o.deal==="rent"?"Rent":"Sale"}</td><td class="r">${o.deal!=="rent"&&o.price?fmt(o.price):"—"}</td><td class="r">${o.deal!=="sale"&&o.rent?fmt(o.rent):"—"}</td><td><select data-st="${esc(o.id)}" aria-label="Status">${STATUS.map(x=>`<option${x===(o.avail||"Available")?" selected":""}>${x}</option>`).join("")}</select></td><td><button class="btn sm" data-edit="${esc(o.id)}">Edit</button></td></tr>`).join("");
+  const a=document.activeElement?.id||"";
+  if(a!=="ad-notice")$("#ad-notice").value=settings.notice||"";
+  if(!["ad-dld","ad-trustee","ad-admin"].includes(a)){$("#ad-dld").value=+(FEES.dld*100).toFixed(3);$("#ad-trustee").value=fmt(FEES.trustee);$("#ad-admin").value=fmt(FEES.admin)}
+  if(!$("#ad-agents").contains(document.activeElement)){agentDraft=Object.entries(AGENTS).map(([k,x])=>({k,name:x.name,phone:x.phone}));drawAgents()}
+  $("#ad-log-panel").hidden=!CLOUD}
+function drawAgents(){$("#ad-agents").innerHTML=agentDraft.map((x,i)=>`<div class="fgrid"><div class="field"><label for="ag-n${i}">Name</label><input id="ag-n${i}" data-ai="${i}" data-af="name" value="${esc(x.name)}"></div><div class="field"><label for="ag-p${i}">Phone</label><input id="ag-p${i}" data-ai="${i}" data-af="phone" inputmode="tel" value="${esc(x.phone)}"></div></div>`).join("")}
+$("#ad-agents").addEventListener("input",e=>{const t=e.target;if(t.dataset.ai!=null)agentDraft[+t.dataset.ai][t.dataset.af]=t.value});
+$("#ad-agent-add").onclick=()=>{agentDraft.push({k:"a"+Date.now().toString(36),name:"",phone:""});drawAgents();$("#ag-n"+(agentDraft.length-1)).focus()};
+$("#ad-agents-save").onclick=async()=>{const ag={};agentDraft.filter(x=>x.name.trim()).forEach(x=>ag[x.k]={name:x.name.trim(),phone:x.phone.trim()});if(!Object.keys(ag).length){toast("Keep at least one agent");return}document.activeElement?.blur?.();if(await saveSettings({agents:ag},"Updated the agent list"))toast("Agents saved")};
+$("#ad-notice-save").onclick=async()=>{const t=$("#ad-notice").value.trim();$("#ad-notice").blur();if(await saveSettings({notice:t},t?"Published an announcement":"Removed the announcement"))toast(t?"Announcement published":"Announcement removed")};
+$("#ad-fees-save").onclick=async()=>{const d=nv("#ad-dld");if(d<0||d>20){toast("DLD must be between 0 and 20%");return}document.activeElement?.blur?.();if(await saveSettings({fees:{dld:d/100,trustee:nv("#ad-trustee"),admin:nv("#ad-admin")}},`Set fees: DLD ${d}%, trustee ${aed(nv("#ad-trustee"))}, admin ${aed(nv("#ad-admin"))}`))toast("Fees saved")};
+$("#ad-table").addEventListener("change",async e=>{const el=e.target.closest("[data-st]");if(!el)return;const o=OFFERS.find(x=>x.id===el.dataset.st);if(!o)return;if(await saveOffer(Object.assign({},o,{avail:el.value}),`Set ${BLD[o.b]} · ${o.title} to ${el.value}`))toast("Status saved")});
+$("#ad-table").addEventListener("click",e=>{const b=e.target.closest("[data-edit]");if(b)openOfferForm(b.dataset.edit)});
+$("#ad-csv").onclick=()=>{const q=v=>{v=String(v??"");return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  const t=[["Building","Type","Headline","Offer","Status","Price (AED)","Rent (AED / yr)","Size (sq ft)","Floor","View","Furnishing","Agent"].join(",")].concat(OFFERS.map(o=>[BLD[o.b],TYPE[o.beds],o.title,o.deal,o.avail||"Available",o.deal!=="rent"?o.price:"",o.deal!=="sale"?o.rent:"",o.size||"",o.floor,o.view,o.furn,agentOf(o).name].map(q).join(","))).join("\n");
+  const box=$("#ad-csv-text");box.hidden=false;box.value=t;copy(t,box)};
+function openOfferForm(id){const o=id?OFFERS.find(x=>x.id===id):null;$("#ad-form").reset();$("#ad-form-panel").hidden=false;$("#ad-form-title").textContent=o?"Edit offer":"Add offer";$("#o-id").value=o?o.id:"";
+  const set=(k,v)=>{$(k).value=v??""};
+  if(o){set("#o-title",o.title);set("#o-b",o.b);set("#o-beds",o.beds);set("#o-deal",o.deal);set("#o-avail",o.avail||"Available");set("#o-price",o.price?fmt(o.price):"");set("#o-rent",o.rent?fmt(o.rent):"");set("#o-size",o.size||"");set("#o-floor",o.floor);set("#o-view",o.view);set("#o-furn",o.furn);set("#o-baths",o.baths);set("#o-status",o.status);set("#o-cheques",o.cheques);set("#o-deposit",o.deposit);if(AGENTS[o.agent])set("#o-agent",o.agent);set("#o-irent",o.inv&&o.inv.rent?fmt(o.inv.rent):"");set("#o-hl",o.hl);set("#o-check",(o.check||[]).join("\n"))}
+  const d=$("#o-del");d.hidden=!o;delete d.dataset.armed;d.textContent="Delete offer";
+  setTimeout(()=>{$("#ad-form-panel").scrollIntoView({behavior:"smooth",block:"start"})},30)}
+$("#ad-add").onclick=()=>openOfferForm(null);
+$("#o-cancel").onclick=()=>{$("#ad-form-panel").hidden=true};
+$("#ad-form").addEventListener("submit",async e=>{e.preventDefault();const g=k=>$(k).value.trim(),n=k=>parseFloat(g(k).replace(/[^0-9.]/g,""))||0;
+  const id=g("#o-id"),base=id?(OFFERS.find(x=>x.id===id)||{}):{},deal=g("#o-deal");
+  if(!g("#o-title")){toast("Enter a headline");$("#o-title").focus();return}
+  if(deal!=="rent"&&!n("#o-price")){toast("Enter the sale price");$("#o-price").focus();return}
+  if(deal!=="sale"&&!n("#o-rent")){toast("Enter the rent");$("#o-rent").focus();return}
+  const o=Object.assign({},base,{id:id||"o-"+Date.now().toString(36),title:g("#o-title"),b:+g("#o-b"),beds:+g("#o-beds"),deal,avail:g("#o-avail"),price:deal!=="rent"?n("#o-price"):null,rent:deal!=="sale"?n("#o-rent"):null,size:n("#o-size")||null,floor:g("#o-floor")||"On request",view:g("#o-view")||"On request",furn:g("#o-furn")||"—",baths:g("#o-baths")||"—",status:g("#o-status")||"Ready",cheques:g("#o-cheques")||null,deposit:g("#o-deposit")||null,agent:g("#o-agent"),hl:g("#o-hl"),src:base.src||"Added in Admin"});
+  const ir=n("#o-irent");o.inv=ir?Object.assign({},base.inv||{},{rent:ir}):(base.inv&&base.inv.resale?{resale:base.inv.resale}:null);
+  const ch=g("#o-check").split("\n").map(x=>x.trim()).filter(Boolean);o.check=ch.length?ch:null;
+  if(await saveOffer(o,(id?"Edited ":"Added ")+BLD[o.b]+" · "+o.title)){$("#ad-form-panel").hidden=true;toast(id?"Offer saved":"Offer added")}});
+$("#o-del").onclick=async()=>{const d=$("#o-del"),id=$("#o-id").value,o=OFFERS.find(x=>x.id===id);if(!o)return;if(!d.dataset.armed){d.dataset.armed=1;d.textContent="Tap again to delete";return}if(await removeOffer(id,"Deleted "+BLD[o.b]+" · "+o.title)){$("#ad-form-panel").hidden=true;toast("Offer deleted")}};
+async function renderLog(){if(!CLOUD||!isAdmin)return;const ids=[...new Set(logRows.map(r=>r.by).filter(Boolean))];let ps={};try{ps=ids.length?await uapi.profiles(ids):{}}catch(e){}
+  $("#ad-log").innerHTML=logRows.length?'<tr><th>When</th><th>Who</th><th>Change</th></tr>'+logRows.map(r=>`<tr><td>${esc(new Date(r.at).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}))}</td><td>${esc((ps[r.by]&&ps[r.by].name)||"Someone")}</td><td style="white-space:normal;min-width:260px">${esc(r.text)}</td></tr>`).join(""):'<tr><td>No changes yet.</td></tr>'}
+
+/* ---------------- Start-up ---------------- */
+function startApp(){const ch=$("#userchip");
+  if(CLOUD&&meInfo){ch.innerHTML=`<img alt="" src="${esc(meInfo.avatarUrl)}"><span></span>`;ch.querySelector("span").textContent=(meInfo.name||"You")+" · "+(isAdmin?"Admin":"Agent")}else ch.textContent="Admin · this device";
+  renderAll();renderMarket();const first=OFFERS.find(o=>o.deal!=="rent"&&o.price);if(first&&!pick.value)loadCalc(first.id);else calc();show(store.get("orla.tab","dash"))}
+async function boot(){
+  if(!CLOUD){const saved=store.get("orla.offers",null);if(Array.isArray(saved))OFFERS=saved;applySettings(store.get("orla.settings",{}));migrateOvr();startApp();if(sessionOpen()&&store.get("orla.pin",null))unlock();else lock();return}
+  setGate("loading");
+  const [u,d]=await Promise.all([claude.use("user"),claude.use("db")]);uapi=u;db=d;
+  if(!u||!d){setGate("signedout");return}
+  meInfo=await u.me();uid=meInfo.id;isAdmin=!!meInfo.canEdit;
+  if(!uid){meInfo=null;setGate("signedout");return}
+  OFFERS=[];applySettings({});startApp();
+  let loaded=false;const t=setTimeout(()=>{if(!loaded)toast("Can't reach the team's offers yet. Check your connection.")},10000);
+  db.collection("offers").onSnapshot(x=>{OFFERS=x.docs.map(dc=>Object.assign({},dc.data(),{id:dc.id}));if(!x.metadata.fromCache){loaded=true;clearTimeout(t)}migrateOvr();renderAll();if(!$("#c-pick").value){const f=OFFERS.find(o=>o.deal!=="rent"&&o.price);if(f)loadCalc(f.id)}},()=>{clearTimeout(t);toast("Offers couldn't be loaded")});
+  db.doc("settings/app").onSnapshot(x=>{applySettings(x.exists?x.data():{});renderAll();renderMarket();calc()},()=>{});
+  db.doc("data/users/"+uid+"/state").onSnapshot(x=>{const first=!cloudReady;cloudReady=true;
+    if(x.exists){const dd=x.data();if(x.metadata.hasPendingWrites||dd.at===lastAt)return;mine=dd.mine||[];clients=dd.clients||[];starred=new Set(dd.starred||[]);store.set("orla.mine",mine);store.set("orla.clients",clients);store.set("orla.star",[...starred]);renderAll()}
+    else if(first&&(mine.length||clients.length||starred.size))persist()},()=>{cloudReady=true});
+  if(isAdmin)db.collection("log").orderBy("at","desc").limit(50).onSnapshot(x=>{logRows=x.docs.map(dc=>dc.data());renderLog()},()=>{});
+  if(sessionOpen()&&!store.get("orla.pin",null))unlock();else lock()}
+
 /* ---------------- Wiring ---------------- */
-function show(v){document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.view===v));document.querySelectorAll(".view").forEach(s=>s.hidden=s.id!=="view-"+v);store.set("orla.tab",v);window.scrollTo(0,0)}
+function show(v){if(v==="admin"&&!isAdmin)v="dash";document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.view===v));document.querySelectorAll(".view").forEach(s=>s.hidden=s.id!=="view-"+v);store.set("orla.tab",v);window.scrollTo(0,0)}
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>show(t.dataset.view));
 document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{state.deal=b.dataset.deal;document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x===b));renderList()});
 $("#f-type").onchange=e=>{state.type=e.target.value;renderList()};
@@ -787,13 +1015,13 @@ function onCard(e){if(e.target.closest("[data-act]"))return;const c=e.target.clo
 $("#copy-short").onclick=()=>{const t=$("#short-text").value;t?copy(t,$("#short-text")):toast("Shortlist is empty")};
 $("#clear-short").onclick=()=>{starred.clear();saveStar();renderList();renderShort()};
 $("#copy-csv").onclick=()=>{const t=$("#csv-text").value;t?copy(t,$("#csv-text")):toast("No listings to export")};
-const pick=$("#c-pick");OFFERS.filter(o=>o.deal!=="rent").forEach(o=>pick.insertAdjacentHTML("beforeend",`<option value="${o.id}">${esc(BLD[o.b]+" · "+o.title+" · "+short(o.price))}</option>`));
+const pick=$("#c-pick");
+function fillPick(){const cur=pick.value;pick.innerHTML='<option value="">Custom figures</option>'+OFFERS.filter(o=>o.deal!=="rent"&&o.price).map(o=>`<option value="${esc(o.id)}">${esc(BLD[o.b]+" · "+o.title+" · "+short(o.price))}</option>`).join("");pick.value=cur}
 pick.onchange=()=>pick.value&&loadCalc(pick.value);
 document.querySelectorAll("#view-calc input").forEach(i=>i.addEventListener("input",calc));
 try{$("#m-date").valueAsDate=new Date()}catch(e){}
-function renderAll(){renderList();renderShort();renderMine();renderClients();renderDash()}
-renderAll();renderMarket();loadCalc("p3-studio-410");
-show(store.get("orla.tab","dash"));
+function renderAll(){renderList();renderShort();renderMine();renderClients();renderDash();fillPick();renderAdmin()}
+boot();
 if("serviceWorker" in navigator&&location.protocol==="https:"&&!/claude|claudeusercontent/.test(location.host)){navigator.serviceWorker.register("sw.js").catch(()=>{})}
 </script>
 </body>

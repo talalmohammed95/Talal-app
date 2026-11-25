@@ -10,6 +10,12 @@ An offline app holding every Peninsula (Business Bay) sale and rental offer from
 - **Deal & mortgage calculator**: total cost, yield, break-even, resale return, monthly payment, cash needed upfront
 - **Market data**: DLD-registered sales and rents
 - **My listings** (same columns as the Peninsula 3 Listings sheet) and **Backup & restore**
+- **Login page**: a device PIN with lockout after 5 wrong tries and an automatic lock when idle
+- **Admin backend**: add, edit and delete offers, set statuses, fees, agents and a team announcement, and copy every offer as CSV
+
+## Two versions
+- **Team version (claude.ai artifact):** people sign in with their claude.ai account. Admins are the people with Edit access in the Share menu; Contributors are agents. Offers and settings live in a shared database that only admins can change, and each agent's clients are private to them.
+- **This standalone copy (`app/`):** runs on one device with no server, so the login is a PIN and whoever unlocks it is the admin. Data stays on the device; use Backup to move it.
 
 The app is in `app/`. It's a single `index.html` with no build step.
 
