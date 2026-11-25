@@ -167,6 +167,28 @@ textarea.copybox{width:100%;min-height:140px;border:1px solid var(--line);border
 .themeseg button[aria-pressed="true"]{background:var(--accent);color:#1C1A18}
 .ph{margin:0 0 4px;font-family:var(--display);font-size:17px;font-weight:800}
 .grid2{align-items:start}
+.hist{display:flex;flex-direction:column}
+.hrow{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.hrow:last-child{border-bottom:0}
+.hdate{color:var(--muted);font-size:12.5px}.hby{color:var(--faint);font-size:12px;text-align:right;overflow-wrap:anywhere}
+.hlink{background:none;border:0;padding:0;text-align:left;color:var(--fg);text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px;min-height:24px}
+@media (max-width:520px){.hrow{grid-template-columns:minmax(0,1fr)}.hby{text-align:left}}
+.pill.reduced{background:var(--good-soft);color:var(--good)}
+.edtable td{padding:4px 6px;vertical-align:middle}
+.edtable input,.edtable select{width:100%;min-width:90px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-height:38px}
+.edtable td:nth-child(1) select{min-width:150px}.edtable td:last-child{width:1%}.edtable td:nth-last-child(2) input{min-width:220px}.edtable td:nth-child(2) select{min-width:110px}
+.report .eyebrow{font-family:var(--display);font-size:11.5px;font-weight:700;letter-spacing:.16em;color:var(--accent-ink)}
+.report{display:flex;flex-direction:column;gap:16px}
+@media print{
+  :root,:root[data-theme="dark"]{--bg:#fff;--surface:#fff;--sunk:#F3F0EB;--fg:#111;--muted:#444;--faint:#666;--line:#ddd;--line-strong:#bbb;--accent-ink:#8A3A0C;color-scheme:light}
+  body{background:#fff}body::before,header.top,.noprint,#gate,#tip,.toast,.tabs{display:none!important}
+  main{padding:0!important;max-width:none}
+  .panel,.kpi,.detail,.card{box-shadow:none!important;break-inside:avoid}
+  .tablewrap{overflow:visible;border-color:#ccc}
+  body.print-present main{display:none!important}
+  body.print-present #present{position:static;overflow:visible}
+  body.print-present .pbar{display:none}
+}
 .grid3{align-items:start;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 @media (max-width:980px){.grid3{grid-template-columns:minmax(0,1fr)}}
 .chartbox{width:100%;min-height:40px}
@@ -307,6 +329,7 @@ details.edit .fgrid{margin-top:10px}
     <button class="tab" role="tab" id="tab-dash" data-view="dash" aria-selected="true">Dashboard</button>
     <button class="tab" role="tab" id="tab-offers" data-view="offers" aria-selected="false">Offers<span class="count num" id="cnt-offers"></span></button>
     <button class="tab" role="tab" id="tab-analysis" data-view="analysis" aria-selected="false">Analysis</button>
+    <button class="tab" role="tab" id="tab-reports" data-view="reports" aria-selected="false">Reports</button>
     <button class="tab" role="tab" id="tab-shortlist" data-view="shortlist" aria-selected="false">Client shortlist<span class="count num" id="cnt-short">0</span></button>
     <button class="tab" role="tab" id="tab-clients" data-view="clients" aria-selected="false">Clients<span class="count num" id="cnt-clients">0</span></button>
     <button class="tab" role="tab" id="tab-calc" data-view="calc" aria-selected="false">Deal calculator</button>
@@ -334,7 +357,7 @@ details.edit .fgrid{margin-top:10px}
             <select id="f-bld" aria-label="Building"><option value="">All buildings</option><option value="1">Peninsula One</option><option value="2">Peninsula Two</option><option value="3">Peninsula Three</option><option value="4">Peninsula Four</option><option value="5">Peninsula Five</option></select>
           </div>
           <div class="frow">
-            <select id="f-sort" aria-label="Sort"><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="psf-asc">Price per sq ft: lowest</option><option value="value">Best value vs market</option><option value="yield-desc">Gross yield: highest</option><option value="size-desc">Size: largest first</option><option value="bld">Building</option></select>
+            <select id="f-sort" aria-label="Sort"><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="psf-asc">Price per sq ft: lowest</option><option value="value">Best value vs market</option><option value="yield-desc">Gross yield: highest</option><option value="newest">Newest listings</option><option value="dom-desc">Longest on market</option><option value="size-desc">Size: largest first</option><option value="bld">Building</option></select>
             <input id="f-q" type="search" placeholder="Search view, floor, agent…" aria-label="Search">
           </div>
           <details class="more" id="f-more"><summary>More filters <span class="count num" id="f-count" hidden>0</span></summary>
@@ -353,6 +376,7 @@ details.edit .fgrid{margin-top:10px}
                 <label class="tog"><input type="checkbox" id="f-value" data-f="value"> Below market only</label>
                 <label class="tog"><input type="checkbox" id="f-check" data-f="checkOnly"> Figures to confirm</label>
                 <label class="tog"><input type="checkbox" id="f-star" data-f="starOnly"> Shortlisted only</label>
+                <label class="tog"><input type="checkbox" id="f-reduced" data-f="reduced"> Price reduced</label>
                 <label class="tog"><input type="checkbox" id="f-hide" data-f="hide" checked> Hide sold &amp; rented</label>
               </div>
             </div>
@@ -367,6 +391,8 @@ details.edit .fgrid{margin-top:10px}
   </section>
 
   <section class="view" id="view-analysis" hidden><div class="stack" id="analysis"></div></section>
+
+  <section class="view" id="view-reports" hidden><div class="stack" id="reports"></div></section>
 
   <!-- SHORTLIST -->
   <section class="view" id="view-shortlist" hidden>
@@ -542,6 +568,14 @@ details.edit .fgrid{margin-top:10px}
           <div class="wide actions"><button class="btn primary" type="submit">Save offer</button><button class="btn" type="button" id="o-cancel">Cancel</button><button class="btn" type="button" id="o-del" hidden>Delete offer</button></div>
         </form>
       </div>
+      <div class="panel" id="ad-mkt-panel"><h2>Market data</h2><p class="lede">Registered deals used for every market comparison, value rating and chart. Update them as new DLD deals come in; everyone sees the change straight away.</p>
+        <div class="fgrid"><div class="field"><label for="mk-asof">Period these figures cover</label><input id="mk-asof" placeholder="e.g. Aug–Nov 2026"></div></div>
+        <h4 style="margin-top:14px">Registered sales</h4><div class="tablewrap"><table class="edtable" id="mk-sale"></table></div>
+        <div class="actions" style="margin-top:8px"><button class="btn sm" id="mk-add-sale">Add a sales row</button></div>
+        <h4 style="margin-top:16px">Registered rents</h4><div class="tablewrap"><table class="edtable" id="mk-rent"></table></div>
+        <div class="actions" style="margin-top:8px"><button class="btn sm" id="mk-add-rent">Add a rents row</button></div>
+        <div class="actions" style="margin-top:16px"><button class="btn primary" id="mk-save">Save market data</button><button class="btn" id="mk-reset">Restore original figures</button></div>
+        <p class="src" id="mk-updated" style="margin-top:8px"></p></div>
       <div class="panel"><h2>Agents</h2><p class="lede">Names and numbers shown on offers, presentations and messages. Clear a name to remove that agent.</p>
         <div class="stack" id="ad-agents"></div>
         <div class="actions" style="margin-top:10px"><button class="btn" id="ad-agent-add">Add agent</button><button class="btn primary" id="ad-agents-save">Save agents</button></div></div>
@@ -686,7 +720,7 @@ let ovr=store.get("orla.ovr",null);
 let clients=store.get("orla.clients",[]);
 const STATUS=["Available","Reserved","Under offer","Sold","Rented"];
 const isDone=o=>o.avail==="Sold"||o.avail==="Rented";
-const FDEF={deal:"all",type:"",bld:"",sort:"price-asc",q:"",pmin:"",pmax:"",smin:"",smax:"",view:"",furn:"",band:"",avail:"",agent:"",ymin:"",value:false,checkOnly:false,starOnly:false,hide:true};
+const FDEF={deal:"all",type:"",bld:"",sort:"price-asc",q:"",pmin:"",pmax:"",smin:"",smax:"",view:"",furn:"",band:"",avail:"",agent:"",ymin:"",value:false,checkOnly:false,starOnly:false,hide:true,reduced:false};
 const state=Object.assign({},FDEF,store.get("orla.filters",{}),{client:null,sel:store.get("orla.sel",null)});
 
 function mineToOffer(m){return{id:m.id,b:+m.b,beds:+m.beds,deal:m.deal,title:(m.unit?"Unit "+m.unit+" · ":"")+TYPE[+m.beds],price:m.deal==="sale"?+m.price:undefined,rent:m.deal==="rent"?+m.price:undefined,
@@ -706,6 +740,7 @@ function pills(o){
   if(o.deal!=="sale")h+='<span class="pill rent">Rent</span>';
   if(o.mine)h+='<span class="pill mine">Mine</span>';
   if(o.avail!=="Available")h+=`<span class="pill st ${isDone(o)?"done":""}">${esc(o.avail)}</span>`;
+  if(o.x&&o.x.reduced)h+='<span class="pill reduced">Price reduced</span>';
   if(o.x&&o.x.value==='below')h+='<span class="pill below">Below market</span>';
   if(o.x&&o.x.value==='above')h+='<span class="pill above">Above market</span>';
   if(o.check)h+='<span class="pill check">Check price</span>';
@@ -730,11 +765,11 @@ function filtered(){
     &&(!F.pmin||(priceOf(o)||0)>=+F.pmin)&&(!F.pmax||(priceOf(o)||Infinity)<=+F.pmax)
     &&(!F.smin||(o.size||0)>=+F.smin)&&(!F.smax||(o.size&&o.size<=+F.smax))
     &&(!F.view||o.x.views.includes(F.view))&&(!F.furn||o.x.furn===F.furn)&&(!F.band||o.x.band===F.band)&&(!F.avail||o.avail===F.avail)&&(!F.agent||o.agent===F.agent)
-    &&(!F.ymin||(o.x.gy&&o.x.gy*100>=+F.ymin))&&(!F.value||o.x.value==="below")&&(!F.checkOnly||o.check)&&(!F.starOnly||starred.has(o.id))
+    &&(!F.ymin||(o.x.gy&&o.x.gy*100>=+F.ymin))&&(!F.value||o.x.value==="below")&&(!F.checkOnly||o.check)&&(!F.starOnly||starred.has(o.id))&&(!F.reduced||o.x.reduced)
     &&(!q||[o.title,o.view,o.floor,o.furn,BLD[o.b],AGENTS[o.agent]?.name,o.hl].join(" ").toLowerCase().includes(q)));
   const pk=o=>state.deal==="rent"?(o.rent??Infinity):keyPrice(o);
   const S={"price-asc":(a,b)=>pk(a)-pk(b),"price-desc":(a,b)=>pk(b)-pk(a),"size-desc":(a,b)=>(b.size||0)-(a.size||0),"bld":(a,b)=>a.b-b.b||a.beds-b.beds,
-    "psf-asc":(a,b)=>((a.x.psf||a.x.rpsf)??Infinity)-((b.x.psf||b.x.rpsf)??Infinity),"yield-desc":(a,b)=>(b.x.gy??-1)-(a.x.gy??-1),"value":(a,b)=>(a.x.ref??9)-(b.x.ref??9)};
+    "psf-asc":(a,b)=>((a.x.psf||a.x.rpsf)??Infinity)-((b.x.psf||b.x.rpsf)??Infinity),"yield-desc":(a,b)=>(b.x.gy??-1)-(a.x.gy??-1),"value":(a,b)=>(a.x.ref??9)-(b.x.ref??9),"newest":(a,b)=>(Date.parse(b.x.listed||0)||0)-(Date.parse(a.x.listed||0)||0),"dom-desc":(a,b)=>(b.x.dom??-1)-(a.x.dom??-1)};
   return l.sort(S[state.sort]||S["price-asc"]);
 }
 function renderList(){
@@ -820,6 +855,7 @@ function renderDetail(){
       <div class="dsec"><h4>Unit</h4>${tags?`<div class="tagrow">${tags}</div>`:""}<div class="cols"><div>${unit.slice(0,Math.ceil(unit.length/2)).map(f=>kv(f[0],f[1])).join("")}</div><div>${unit.slice(Math.ceil(unit.length/2)).map(f=>kv(f[0],f[1])).join("")}</div></div></div>
       <div class="dsec"><div class="cols">${money}${inv}</div></div>
       ${mrows||compT?`<div class="dsec"><h4>Market in ${esc(BLD[o.b])} · ${esc(TYPE[o.beds])}</h4>${mrows}${compT}</div>`:""}
+      <div class="dsec"><h4>History</h4><p class="hl" style="margin-bottom:6px">${x.listed?"Listed "+esc(dateS(x.listed))+" · "+x.dom+" day"+(x.dom===1?"":"s")+" on the market":"Listing date not recorded"}${x.pc.length?" · "+x.pc.length+" price change"+(x.pc.length===1?"":"s"):""}</p>${x.hist.length?histRows(x.hist,false):""}</div>
       <div class="dsec"><h4>The building</h4><p class="hl" style="margin-bottom:8px">${esc(TOWER[o.b])}</p><div class="chips">${AMEN[o.b].map(t=>'<span class="chip">'+esc(t)+'</span>').join("")}</div></div>
       ${isAdmin&&!o.mine?`<details class="edit"><summary>Admin: update price &amp; status</summary><div class="fgrid">
         <div class="field"><label for="e-st">Status</label><select id="e-st">${STATUS.map(s=>`<option${s===o.avail?" selected":""}>${s}</option>`).join("")}</select></div>
@@ -827,7 +863,7 @@ function renderDetail(){
         ${o.deal!=="sale"?`<div class="field"><label for="e-rent">Rent (AED / yr)</label><input id="e-rent" inputmode="numeric" value="${fmt(o.rent)}"></div>`:""}
         <div class="wide actions"><button class="btn primary" id="e-save">Save for everyone</button><button class="btn" id="e-full">Edit all details</button></div></div></details>`:""}
       <div class="agent"><div class="who"><b>${esc(a.name)}</b><span>Orla Properties L.L.C · BRN 41837</span></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="phone num">${esc(a.phone)}</span><button class="btn" id="d-phone">Copy number</button></div></div>
-      <p class="src">Source: ${esc(o.src)}. Market: DLD-registered deals, Aug–Nov 2026. Drive times approx.: Dubai Mall 7 min · Business Bay Metro 7 min · DIFC 12 min · DXB 16 min.</p>
+      <p class="src">Source: ${esc(o.src)}. Market: DLD-registered deals, ${esc(MKT.asOf)}. Drive times approx.: Dubai Mall 7 min · Business Bay Metro 7 min · DIFC 12 min · DXB 16 min.</p>
     </div></article>`;
   fillCharts(el);
   $("#d-star").onclick=()=>{toggleStar(o.id)};
@@ -886,9 +922,9 @@ function renderMarket(){
      <div class="panel"><h3 class="ph">Registered sale price per sq ft</h3><p class="lede">Average of DLD-registered sales by building and type.</p>${chartSlot("mk-psf",W=>chartBars(psfBars,W,{label:"Registered sale price per sq ft",color:"var(--s-sale)",lw:170}))}</div>
      <div class="panel"><h3 class="ph">Registered annual rent</h3><p class="lede">Average of DLD-registered leases by building and type.</p>${chartSlot("mk-rent",W=>chartBars(rentBars,W,{label:"Registered annual rent",color:"var(--s-rent)",lw:170}))}</div>
    </div>
-   <div class="panel"><h2>Registered sales</h2><p class="lede">DLD-registered deals, Aug–Nov 2026, as quoted on your flyers.</p>
+   <div class="panel"><h2>Registered sales</h2><p class="lede">DLD-registered deals, ${esc(MKT.asOf)}${MKT.updated?" · updated "+esc(dateS(MKT.updated)):""}.</p>
     <div class="tablewrap"><table><tr><th>Building</th><th>Type</th><th class="r">Sales</th><th>Period</th><th class="r">Average price</th><th class="r">AED / sq ft</th><th>Notes</th></tr>${sRows}</table></div></div>
-   <div class="panel"><h2>Registered rents</h2><p class="lede">DLD-registered leases and current listings, Aug–Nov 2026.</p>
+   <div class="panel"><h2>Registered rents</h2><p class="lede">DLD-registered leases and current listings, ${esc(MKT.asOf)}.</p>
     <div class="tablewrap"><table><tr><th>Building</th><th>Type</th><th class="r">Leases</th><th>Period</th><th class="r">Average rent / yr</th><th>Notes</th></tr>${rRows}</table></div></div>
    ${mYield.length?`<div class="panel"><h2>Market gross yield</h2><p class="lede">Average registered rent divided by average registered sale price, where both are known.</p>
     <div class="tablewrap"><table><tr><th>Building</th><th>Type</th><th class="r">Avg sale (AED)</th><th class="r">Avg rent / yr (AED)</th><th class="r">Gross yield</th></tr>${mYield.map(r=>`<tr>${r.map((c,i)=>`<td${i>1?' class="r"':""}>${esc(c)}</td>`).join("")}</tr>`).join("")}</table></div></div>`:""}
@@ -951,6 +987,7 @@ function renderDash(){setTimeout(()=>{const dp=$("#dash-pending");if(dp)dp.oncli
      ${chartSlot("d-vs",W=>chartVsMarket(vsRows,W,{fmt:v=>fmt(v),label:"Asking price per sq ft against the registered average"}))}
      ${legend([["var(--fg)","Registered average","tick"],["var(--d-below)","Below market"],["var(--faint)","Within 3%"],["var(--d-above)","Above market"]])}
      ${tableToggle("",["Offer","Asking AED / sq ft","Registered AED / sq ft","Difference"],vsRows.map(r=>[r.label,fmt(r.v),fmt(r.m),pct(r.v/r.m-1)]))}</div>
+   <div class="panel"><h3 class="ph">Recent changes</h3><p class="lede">The latest price, rent and status changes. Tap one to open the offer.</p>${histRows(HISTORY.slice(0,8))}</div>
    <div class="grid2">
     <div class="panel"><h3 class="ph">Client pipeline</h3><p class="lede">Clients at each stage${lost?` · ${lost} lost`:""}. Add and update clients in the Clients tab.</p>${clients.length?chartSlot("d-pipe",W=>chartBars(pipe,W,{label:"Clients by stage",lw:120})):'<div class="empty">No clients yet.</div>'}</div>
     <div class="panel"><h3 class="ph">Follow-ups due</h3><p class="lede">Clients with a follow-up date of today or earlier.</p><div class="list">${due.length?due.map(clientRow).join(""):'<div class="empty">Nothing due. Add clients and follow-up dates in the Clients tab.</div>'}</div></div>
@@ -1007,7 +1044,7 @@ function renderPresent(){
   let money="";
   if(o.deal!=="rent"){const c=costs(o.price);money+=`<div class="panel"><h4>Total purchase cost</h4>${kv("Price",aed(o.price))}${kv(dldLabel(),aed(c.dld))}${kv("Trustee office fee",aed(FEES.trustee))}${kv("Admin fee",aed(FEES.admin))}${kv("Total cost",aed(c.total),"total")}</div>`}
   if(o.deal!=="sale"){const dep=parseFloat(o.deposit||"5")/100;money+=`<div class="panel"><h4>Rent</h4>${kv("Annual rent",aed(o.rent))}${kv("Monthly equivalent",aed(o.rent/12))}${kv("Security deposit ("+(dep*100)+"%)",aed(o.rent*dep))}${kv("Cheques",o.cheques||"On request")}</div>`}
-  $("#present").innerHTML=`<div class="pbar"><button class="btn" id="p-close">Close</button><span class="num" style="font-size:13px;color:#CFC8BF">${pres.i+1} of ${pres.ids.length}</span><div style="display:flex;gap:8px"><button class="btn" id="p-prev" ${pres.i===0?"disabled":""}>‹ Previous</button><button class="btn" id="p-next" ${pres.i===pres.ids.length-1?"disabled":""}>Next ›</button></div></div>
+  $("#present").innerHTML=`<div class="pbar"><button class="btn" id="p-close">Close</button><span class="num" style="font-size:13px;color:#CFC8BF">${pres.i+1} of ${pres.ids.length}</span><div style="display:flex;gap:8px">${CLOUD?"":'<button class="btn" id="p-print">Print</button>'}<button class="btn" id="p-prev" ${pres.i===0?"disabled":""}>‹ Previous</button><button class="btn" id="p-next" ${pres.i===pres.ids.length-1?"disabled":""}>Next ›</button></div></div>
    <div class="pwrap">
     <div class="phero"><div><div class="eyebrow">${esc(BLD[o.b].toUpperCase())} · BUSINESS BAY · ${o.deal==="rent"?"FOR RENT":o.deal==="both"?"FOR SALE OR RENT":"FOR SALE"}</div><h1>${esc(o.title)}</h1></div><div class="big num"><b>${esc(p.big)}</b><span>${esc(p.sub)}</span></div></div>
     ${o.hl?`<p class="hl" style="font-size:17px">${esc(o.hl)}</p>`:""}
@@ -1017,6 +1054,7 @@ function renderPresent(){
     <div class="agent"><div class="who"><b>${esc(a.name)}</b><span>Orla Properties L.L.C · Licensed broker · BRN 41837</span></div><span class="phone num">${esc(a.phone)}</span></div>
     <p class="src">Prices and availability subject to confirmation. Drive times approximate.</p>
    </div>`;
+  const pp=$("#p-print");if(pp)pp.onclick=()=>{document.body.classList.add("print-present");window.print()};
   $("#p-close").onclick=closePresent;$("#p-prev").onclick=()=>stepPresent(-1);$("#p-next").onclick=()=>stepPresent(1);
 }
 (()=>{let x0=null;const P=$("#present");P.addEventListener("touchstart",e=>{x0=e.touches[0].clientX},{passive:true});P.addEventListener("touchend",e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>70)stepPresent(dx<0?1:-1)},{passive:true})})();
@@ -1063,14 +1101,17 @@ function enrich(o){
   const ref=o.deal==="rent"?vsR:(vs!=null?vs:vsR);
   return Object.assign({},o,{avail:o.avail||"Available",x:{psf,rpsf,rentFor,rentSrc,gy,vs,vsR,ref,
     value:ref==null?"":ref<-0.03?"below":ref>0.03?"above":"at",mS,mR,band:floorBand(o.floor),views:viewTags(o.view),furn:furnCat(o.furn),
-    mort:hasSale?mortgage(o.price):null}});
+    mort:hasSale?mortgage(o.price):null,...histInfo(o)}});
 }
+function histInfo(o){const hist=HISTORY.filter(h=>h.offer===o.id),pc=hist.filter(h=>(h.kind==="price"||h.kind==="rent")&&+h.old&&+h.nw);
+  const first=hist.filter(h=>h.kind==="listed").pop(),listed=o.listedAt||(first&&first.at)||o.date||null,t=listed?Date.parse(listed):NaN;
+  return {hist,pc,listed,dom:isNaN(t)?null:Math.max(0,Math.floor((Date.now()-t)/864e5)),reduced:!!(pc[0]&&+pc[0].nw<+pc[0].old)}}
 const valueChip=x=>x.value==="below"?`<span class="vchip below">${pct(x.ref)} below market</span>`.replace("−",""):x.value==="above"?`<span class="vchip above">${pct(x.ref)} above market</span>`.replace("+",""):x.value==="at"?'<span class="vchip at">At market</span>':"";
 
 /* ---------------- Filters ---------------- */
 const FLABEL={pmin:v=>"From "+short(+v),pmax:v=>"Up to "+short(+v),smin:v=>"From "+fmt(+v)+" sq ft",smax:v=>"Up to "+fmt(+v)+" sq ft",
   view:v=>VIEWS[v]+" view",furn:v=>FURN[v],band:v=>BAND[v],avail:v=>v,agent:v=>(AGENTS[v]&&AGENTS[v].name)||v,ymin:v=>"Yield "+v+"%+",
-  value:()=>"Below market",checkOnly:()=>"Figures to confirm",starOnly:()=>"Shortlisted",type:v=>TYPE[+v],bld:v=>BLD[+v],q:v=>"“"+v+"”",hide:()=>"Showing sold & rented"};
+  value:()=>"Below market",reduced:()=>"Price reduced",checkOnly:()=>"Figures to confirm",starOnly:()=>"Shortlisted",type:v=>TYPE[+v],bld:v=>BLD[+v],q:v=>"“"+v+"”",hide:()=>"Showing sold & rented"};
 function activeFilters(){return Object.keys(FLABEL).filter(k=>k==="hide"?state.hide===false:state[k]!==""&&state[k]!==false&&state[k]!=null)}
 function saveFilters(){const f={};Object.keys(FDEF).forEach(k=>f[k]=state[k]);store.set("orla.filters",f)}
 function renderChips(){const act=activeFilters(),n=act.filter(k=>!["type","bld","q"].includes(k)).length,c=$("#f-count");if(c){c.hidden=!n;c.textContent=n}
@@ -1177,7 +1218,7 @@ function renderAnalysis(){
     if(!s&&!r)return null;const ms=s?mortgage(s.price):null,mr=r?r.rent/12:null;
     return [TYPE[t],s?aed(s.price):"—",ms?aed(ms):"—",s?aed(s.price*MORT.down+costs(s.price).total-s.price):"—",r?aed(mr):"—",ms&&mr?(ms<mr?"Buying costs "+aed(mr-ms)+" less a month":"Renting costs "+aed(ms-mr)+" less a month"):"—"]}).filter(Boolean);
   el.innerHTML=`
-   <div class="panel"><h2>Analysis</h2><p class="lede" style="margin:0">How your active offers compare with each other and with registered deals in the same buildings. Tap any dot, bar or name to open that offer. Market figures are DLD-registered deals, Aug–Nov 2026.</p></div>
+   <div class="panel"><h2>Analysis</h2><p class="lede" style="margin:0">How your active offers compare with each other and with registered deals in the same buildings. Tap any dot, bar or name to open that offer. Market figures are DLD-registered deals, ${esc(MKT.asOf)}.</p></div>
    <div class="panel"><h3 class="ph">Size against price</h3><p class="lede">Each dot is an offer for sale. Dots below the dashed line are cheaper per sq ft than your average asking price.</p>
      ${chartSlot("an-scatter",W=>chartScatter(pts,W,{avgPsf}))}
      ${legend([["var(--s-sale)","Offer for sale"],["var(--faint)","Average asking price, AED "+fmt(avgPsf)+" / sq ft","dash"]])}
@@ -1189,6 +1230,12 @@ function renderAnalysis(){
        ${chartSlot("an-value",W=>chartDiverge(vRows,W))}
        ${legend([["var(--d-below)","More than 3% below market"],["var(--faint)","Within 3%"],["var(--d-above)","More than 3% above market"]])}</div>
    </div>
+   <div class="grid2">
+     <div class="panel"><h3 class="ph">Days on the market</h3><p class="lede">Active offers with a known listing date, longest first.</p>
+       ${chartSlot("an-dom",W=>chartBars(A.filter(o=>o.x.dom!=null).sort((a,b)=>b.x.dom-a.x.dom).slice(0,12).map(o=>({label:shortLabel(o),v:Math.max(o.x.dom,0.2),text:o.x.dom+" day"+(o.x.dom===1?"":"s"),id:o.id,tip:shortLabel(o)+"\nListed "+dateS(o.x.listed)})),W,{label:"Days on the market",color:"var(--q4)",lw:190}))}</div>
+     <div class="panel"><h3 class="ph">Price changes</h3><p class="lede">Every recorded price and rent change, newest first.</p>
+       ${(()=>{const pcs=HISTORY.filter(h=>(h.kind==="price"||h.kind==="rent")&&+h.old&&+h.nw);return pcs.length?`<div class="tablewrap"><table><tr><th>Date</th><th>Offer</th><th class="r">From</th><th class="r">To</th><th class="r">Change</th></tr>${pcs.slice(0,15).map(h=>`<tr><td>${esc(dateS(h.at))}</td><td>${esc(h.title||"")}</td><td class="r">${esc(short(+h.old))}</td><td class="r">${esc(short(+h.nw))}</td><td class="r">${esc(pct(h.nw/h.old-1))}</td></tr>`).join("")}</table></div>`:'<div class="empty">No price changes recorded yet.</div>'})()}</div>
+   </div>
    <div class="panel"><h3 class="ph">Price per sq ft by building</h3><p class="lede">Your average asking price per sq ft against the average registered sale in the same building.</p>
      <div class="tablewrap"><table><tr><th>Building</th><th class="r">Offers</th><th class="r">Asking AED / sq ft</th><th class="r">Registered AED / sq ft</th><th class="r">Difference</th></tr>${psfRows.map(r=>`<tr>${r.map((c,i)=>`<td${i?' class="r"':""}>${esc(c)}</td>`).join("")}</tr>`).join("")}</table></div></div>
    <div class="panel"><h3 class="ph">Buy or rent: monthly cost by unit type</h3><p class="lede">The cheapest offer of each type. Mortgage at ${MORT.down*100}% down, ${(MORT.rate*100).toFixed(1)}% interest over ${MORT.years} years, before service charges. Cash upfront = down payment plus DLD, trustee and admin fees.</p>
@@ -1196,6 +1243,137 @@ function renderAnalysis(){
   fillCharts(el);
 }
 
+/* ---------------- Price history ---------------- */
+let HISTORY=store.get("orla.history",[]);   // newest first: {offer, at, by, kind: listed|price|rent|avail|removed, old, nw, title}
+const dateS=t=>{const d=new Date(t);return isNaN(d)?"—":d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})};
+function histText(h,withTitle=true){const t=withTitle?(h.title||"Offer")+": ":"",money=v=>v==null||v===""?"—":aed(+v);
+  if(h.kind==="listed")return (withTitle?(h.title||"Offer")+" ":"")+"listed"+(h.nw?" at "+money(h.nw):"");
+  if(h.kind==="removed")return (withTitle?(h.title||"Offer")+" ":"")+"removed";
+  if(h.kind==="avail")return t+(h.old||"Available")+" → "+h.nw;
+  const d=+h.old&&+h.nw?h.nw/h.old-1:null;return t+(h.kind==="rent"?"rent ":"price ")+money(h.old)+" → "+money(h.nw)+(d!=null?" ("+pct(d)+")":"")}
+function diffHistory(id,prev,next,by){const at=new Date().toISOString(),title=next.title||"",out=[];
+  if(!prev)out.push({offer:id,at,by,kind:"listed",old:null,nw:next.deal==="rent"?next.rent:next.price,title});
+  else for(const k of ["price","rent","avail"]){const a=prev[k]??(k==="avail"?"Available":null),b=next[k]??(k==="avail"?"Available":null);
+    if(String(a??"")!==String(b??""))out.push({offer:id,at,by,kind:k,old:a==null?null:String(a),nw:b==null?null:String(b),title})}
+  return out}
+async function recordClientHistory(list){if(!list.length||SRV)return;
+  if(CLOUD&&db){for(const h of list){try{await db.collection("history").add(h)}catch(e){}}return}
+  HISTORY=list.slice().reverse().concat(HISTORY).slice(0,1000);store.set("orla.history",HISTORY)}
+const whoAmI=()=>(profile&&profile.email)||(meInfo&&meInfo.name)||"This device";
+function histRows(list,showTitle=true){return list.length?`<div class="hist">${list.map(h=>{const has=OFFERS.some(o=>o.id===h.offer);
+  return `<div class="hrow"><span class="hdate num">${esc(dateS(h.at))}</span>${has&&showTitle?`<button class="hlink" data-id="${esc(h.offer)}">${esc(histText(h,showTitle))}</button>`:`<span>${esc(histText(h,showTitle))}</span>`}<span class="hby">${esc(h.by||"")}</span></div>`}).join("")}</div>`:'<div class="empty">No changes recorded yet. Price, rent and status changes appear here from now on.</div>'}
+
+/* ---------------- Market data editor (admin) ---------------- */
+const SEED_MKT=JSON.parse(JSON.stringify(MKT));
+MKT.asOf=MKT.asOf||"Aug–Nov 2026";
+function applyMarket(m){const src=m&&Array.isArray(m.sale)?m:SEED_MKT;MKT.sale=JSON.parse(JSON.stringify(src.sale));MKT.rent=JSON.parse(JSON.stringify(src.rent||[]));MKT.asOf=src.asOf||"Aug–Nov 2026";MKT.updated=(m&&m.updated)||null}
+let mktDraft=null,mktDirty=false;
+const SALE_COLS=[["b","Building","bld"],["beds","Type","type"],["deals","Sales","n"],["period","Period","t"],["avg","Avg price (AED)","n"],["psf","AED / sq ft","n"],["lo","Low (AED)","n"],["hi","High (AED)","n"],["note","Note","t"]];
+const RENT_COLS=[["b","Building","bld"],["beds","Type","type"],["deals","Leases","n"],["period","Period","t"],["avg","Avg rent / yr (AED)","n"],["lo","Low (AED)","n"],["hi","High (AED)","n"],["note","Note","t"]];
+function mkCell(kind,i,c,v){const a=`id="mk-${kind}-${i}-${c[0]}" data-mk="${kind}" data-i="${i}" data-k="${c[0]}" aria-label="${esc(c[1])}, row ${i+1}"`;
+  if(c[2]==="bld")return `<select ${a}>${[1,2,3,4,5].map(b=>`<option value="${b}"${+v===b?" selected":""}>${BLD[b]}</option>`).join("")}</select>`;
+  if(c[2]==="type")return `<select ${a}>${TYPE.map((t,j)=>`<option value="${j}"${+v===j?" selected":""}>${t}</option>`).join("")}</select>`;
+  return `<input ${a}${c[2]==="n"?' inputmode="numeric"':""} value="${esc(v==null||v===""?"":(c[2]==="n"?fmt(v):v))}">`}
+function drawMarketEditor(){
+  const t=(kind,cols)=>`<tr>${cols.map(c=>`<th>${esc(c[1])}</th>`).join("")}<th></th></tr>`+mktDraft[kind].map((r,i)=>`<tr>${cols.map(c=>`<td>${mkCell(kind,i,c,r[c[0]])}</td>`).join("")}<td><button class="btn sm" data-mkdel="${kind}" data-i="${i}">Remove</button></td></tr>`).join("");
+  $("#mk-sale").innerHTML=t("sale",SALE_COLS);$("#mk-rent").innerHTML=t("rent",RENT_COLS);$("#mk-asof").value=mktDraft.asOf||"";
+  $("#mk-updated").textContent=MKT.updated?"Last updated "+dateS(MKT.updated)+".":"Showing the original figures from your Nov 2026 flyers."}
+function renderMarketEditor(force){if(!isAdmin)return;const p=$("#ad-mkt-panel");if(!p||(!force&&(mktDirty||p.contains(document.activeElement))))return;
+  mktDraft=JSON.parse(JSON.stringify({asOf:MKT.asOf,sale:MKT.sale,rent:MKT.rent}));drawMarketEditor()}
+$("#ad-mkt-panel").addEventListener("input",e=>{const t=e.target;if(t.id==="mk-asof"){mktDraft.asOf=t.value;mktDirty=true;return}
+  if(!t.dataset.mk)return;const k=t.dataset.k,row=mktDraft[t.dataset.mk][+t.dataset.i],cols=t.dataset.mk==="sale"?SALE_COLS:RENT_COLS,c=cols.find(x=>x[0]===k);
+  row[k]=c[2]==="t"?t.value:(t.value.replace(/[^0-9.]/g,"")===""?null:+t.value.replace(/[^0-9.]/g,""));mktDirty=true});
+$("#ad-mkt-panel").addEventListener("change",e=>{const t=e.target;if(t.tagName==="SELECT"&&t.dataset.mk){mktDraft[t.dataset.mk][+t.dataset.i][t.dataset.k]=+t.value;mktDirty=true}});
+$("#ad-mkt-panel").addEventListener("click",async e=>{const del=e.target.closest("[data-mkdel]");
+  if(del){mktDraft[del.dataset.mkdel].splice(+del.dataset.i,1);mktDirty=true;drawMarketEditor();return}
+  if(e.target.id==="mk-add-sale"||e.target.id==="mk-add-rent"){const k=e.target.id==="mk-add-sale"?"sale":"rent";mktDraft[k].push({b:3,beds:0,deals:0,period:""});mktDirty=true;drawMarketEditor();
+    const n=mktDraft[k].length-1;setTimeout(()=>{const f=$(`#mk-${k}-${n}-deals`);if(f)f.focus()},30);return}
+  if(e.target.id==="mk-save"){const clean=(rows,cols)=>rows.map(r=>{const o={};cols.forEach(c=>{const v=r[c[0]];if(v!==null&&v!==undefined&&v!=="")o[c[0]]=c[2]==="t"?String(v).trim():+v});return o});
+    const sale=clean(mktDraft.sale,SALE_COLS),rent=clean(mktDraft.rent,RENT_COLS);
+    const bad=sale.findIndex(r=>!(r.psf>0));if(bad>=0){toast("Registered sales row "+(bad+1)+" needs a price per sq ft");return}
+    const dup=(rows)=>rows.some((r,i)=>rows.findIndex(z=>z.b===r.b&&z.beds===r.beds)!==i);
+    if(dup(sale)||dup(rent)){toast("Each building and type can appear only once per table");return}
+    document.activeElement&&document.activeElement.blur&&document.activeElement.blur();
+    if(await saveSettings({market:{asOf:(mktDraft.asOf||"").trim()||"Aug–Nov 2026",sale,rent,updated:new Date().toISOString()}},"Updated the market data")){mktDirty=false;renderMarketEditor(true);toast("Market data saved")}return}
+  if(e.target.id==="mk-reset"){const b=e.target;if(!b.dataset.armed){b.dataset.armed=1;b.textContent="Tap again to restore";return}delete b.dataset.armed;b.textContent="Restore original figures";
+    if(await saveSettings({market:null},"Restored the original market data")){mktDirty=false;renderMarketEditor(true);toast("Original market data restored")}}});
+
+/* ---------------- Exports ---------------- */
+function csv(rows){const cell=v=>{if(v==null)return "";let s=String(v);if(typeof v==="string"&&/^[=+\-@\t\r]/.test(s))s="'"+s;return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
+  return rows.map(r=>r.map(cell).join(",")).join("\r\n")}
+async function downloadFile(name,text){
+  if(CLOUD){let d=null;try{d=await claude.use("downloads")}catch(e){}
+    if(d){try{await d.save({filename:name,data:"﻿"+text});toast("Saved "+name)}catch(e){if(e&&e.code!=="declined")toast("Couldn't save the file here")}return}
+    await copy(text);toast("Downloads aren't available here, so the data was copied instead");return}
+  const url=URL.createObjectURL(new Blob(["﻿"+text],{type:"text/csv;charset=utf-8"})),a=document.createElement("a");
+  a.href=url;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},1000);toast("Downloaded "+name)}
+const stamp=()=>new Date().toISOString().slice(0,10);
+const r1=v=>v==null?"":Math.round(v*10)/10;
+function exportOffers(){const rows=[["Offer ID","Building","Type","Offer","Status","Headline","Price (AED)","Rent (AED/yr)","Size (sq ft)","AED per sq ft","Rent per sq ft","Gross yield %","Vs market %","Value","Floor","Floor band","View","Furnishing","Bathrooms","Handover","Agent","Listed","Days on market","Last price change","Source"]];
+  all().forEach(o=>{const x=o.x,last=x.pc[0];rows.push([o.id,BLD[o.b],TYPE[o.beds],o.deal==="both"?"Sale or rent":o.deal==="rent"?"Rent":"Sale",o.avail,o.title,o.deal!=="rent"?o.price:"",o.deal!=="sale"?o.rent:"",o.size||"",x.psf?Math.round(x.psf):"",x.rpsf?Math.round(x.rpsf):"",x.gy?r1(x.gy*100):"",x.ref!=null?r1(x.ref*100):"",{below:"Below market",above:"Above market",at:"At market"}[x.value]||"",o.floor||"",BAND[x.band]||"",o.view||"",o.furn||"",o.baths??"",o.status||"",agentOf(o).name,x.listed?x.listed.slice(0,10):"",x.dom??"",last?histText(last,false)+" on "+dateS(last.at):"",o.src||""])});
+  downloadFile("peninsula-offers-"+stamp()+".csv",csv(rows))}
+function exportClients(){const rows=[["Name","Phone","Looking to","Unit type","Budget (AED)","Stage","Follow-up","Source","Notes","Saved offers","Matching offers"]];
+  clients.forEach(c=>rows.push([c.name,c.phone||"",c.intent,c.beds!==""&&c.beds!=null?TYPE[+c.beds]:"Any",c.budget||"",c.status,c.follow||"",c.source||"",c.notes||"",(c.short||[]).length,matches(c).length]));
+  downloadFile("peninsula-clients-"+stamp()+".csv",csv(rows))}
+function exportMarket(){const rows=[["Kind","Building","Type","Deals","Period","Average (AED)","AED per sq ft","Low (AED)","High (AED)","Note"]];
+  MKT.sale.forEach(m=>rows.push(["Sale",BLD[m.b],TYPE[m.beds],m.deals??"",m.period||"",m.avg||"",m.psf||"",m.lo||"",m.hi||"",m.note||""]));
+  MKT.rent.forEach(m=>rows.push(["Rent / yr",BLD[m.b],TYPE[m.beds],m.deals??"",m.period||"",m.avg||"","",m.lo||"",m.hi||"",m.note||""]));
+  downloadFile("peninsula-market-"+stamp()+".csv",csv(rows))}
+function exportHistory(){const rows=[["Date","Offer ID","Offer","Change","From","To","By"]];
+  HISTORY.forEach(h=>rows.push([String(h.at).slice(0,10),h.offer,h.title||"",{listed:"Listed",removed:"Removed",price:"Price",rent:"Rent",avail:"Status"}[h.kind]||h.kind,h.old??"",h.nw??"",h.by||""]));
+  downloadFile("peninsula-price-history-"+stamp()+".csv",csv(rows))}
+
+/* ---------------- Reports ---------------- */
+let repDays=+store.get("orla.repDays",30);
+function renderReports(){const el=$("#reports");if(!el)return;
+  const A=all(),act=A.filter(o=>!isDone(o)),sale=act.filter(o=>o.deal!=="rent"&&o.price),rent=act.filter(o=>o.deal!=="sale"&&o.rent);
+  const since=repDays?Date.now()-repDays*864e5:0,H=HISTORY.filter(h=>Date.parse(h.at)>=since);
+  const newL=H.filter(h=>h.kind==="listed"),pcs=H.filter(h=>(h.kind==="price"||h.kind==="rent")&&+h.old&&+h.nw),st=H.filter(h=>h.kind==="avail"),closedP=st.filter(h=>h.nw==="Sold"||h.nw==="Rented");
+  const ys=sale.filter(o=>o.x.gy),avgY=ys.length?ys.reduce((s,o)=>s+o.x.gy,0)/ys.length:null;
+  const openC=clients.filter(c=>c.status!=="Closed"&&c.status!=="Lost"),due=clients.filter(isDue);
+  const period=repDays?"the last "+repDays+" days":"all time";
+  const groups={};act.forEach(o=>{const k=o.b+"-"+o.beds;(groups[k]=groups[k]||{b:o.b,beds:o.beds,l:[]}).l.push(o)});
+  const inv=Object.values(groups).sort((a,b)=>a.b-b.b||a.beds-b.beds).map(g=>{const s=g.l.filter(o=>o.deal!=="rent"&&o.price),r=g.l.filter(o=>o.deal!=="sale"&&o.rent),sz=s.filter(o=>o.size),v=g.l.filter(o=>o.x.ref!=null);
+    return [BLD[g.b],TYPE[g.beds],s.length,r.length,s.length?short(s.reduce((a,o)=>a+o.price,0)/s.length):"—",sz.length?fmt(sz.reduce((a,o)=>a+o.price,0)/sz.reduce((a,o)=>a+o.size,0)):"—",r.length?short(r.reduce((a,o)=>a+o.rent,0)/r.length):"—",v.length?pct(v.reduce((a,o)=>a+o.x.ref,0)/v.length):"—"]});
+  const tbl=(head,rows,num)=>rows.length?`<div class="tablewrap"><table><tr>${head.map((h,i)=>`<th${num&&num.includes(i)?' class="r"':""}>${esc(h)}</th>`).join("")}</tr>${rows.map(r=>`<tr>${r.map((c,i)=>`<td${num&&num.includes(i)?' class="r"':""}>${esc(c)}</td>`).join("")}</tr>`).join("")}</table></div>`:'<p class="src">Nothing in this period.</p>';
+  const above=act.filter(o=>o.x.value==="above").sort((a,b)=>b.x.ref-a.x.ref),belowL=act.filter(o=>o.x.value==="below").sort((a,b)=>a.x.ref-b.x.ref);
+  const stages=["New","Contacted","Viewing booked","Offer made","Closed","Lost"];
+  const kpi=(l,v,sm)=>`<div class="kpi"><span>${l}</span><b class="num">${v}</b><small>${sm}</small></div>`;
+  el.innerHTML=`
+   <div class="panel noprint"><h2>Reports</h2><p class="lede">A portfolio report you can print or save as PDF, and Excel-ready downloads of your data (CSV files open in Excel and Numbers).</p>
+     <div class="frow" style="align-items:flex-end"><div class="field" style="flex:1;min-width:180px"><label for="rep-days">Report period</label><select id="rep-days"><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="0">All time</option></select></div>
+       ${CLOUD?"":'<button class="btn primary" id="rep-print">Print or save as PDF</button>'}</div>
+     <h4 style="margin-top:16px">Download</h4>
+     <div class="actions"><button class="btn" data-exp="offers">Offers (${A.length})</button><button class="btn" data-exp="clients">Clients (${clients.length})</button><button class="btn" data-exp="market">Market data</button><button class="btn" data-exp="history">Price history (${HISTORY.length})</button></div></div>
+   <article class="report">
+     <div class="panel"><div class="eyebrow">ORLA PROPERTIES · PENINSULA, BUSINESS BAY</div><h2 style="font-size:24px;margin-top:4px">Portfolio report</h2><p class="lede" style="margin:0">${esc(dateS(new Date()))} · Changes over ${esc(period)} · Market data: DLD-registered deals, ${esc(MKT.asOf)}</p></div>
+     <div class="kpis">
+       ${kpi("Active offers",act.length,`${sale.length} for sale · ${rent.length} for rent`)}
+       ${kpi("Sale stock value","AED "+short(sale.reduce((s,o)=>s+o.price,0)),"total asking price")}
+       ${kpi("Annual rent roll","AED "+short(rent.reduce((s,o)=>s+o.rent,0)),"if every rental lets at asking")}
+       ${kpi("Average gross yield",avgY?(avgY*100).toFixed(1)+"%":"—",`across ${ys.length} sale offers`)}
+       ${kpi("New listings",newL.length,"in "+period)}
+       ${kpi("Price changes",pcs.length,pcs.length?(n=>n+" reduction"+(n===1?"":"s"))(pcs.filter(h=>+h.nw<+h.old).length):"in "+period)}
+       ${kpi("Sold or rented",closedP.length,"in "+period)}
+       ${kpi("Open clients",openC.length,`${due.length} follow-up${due.length===1?"":"s"} due`)}
+     </div>
+     <div class="panel"><h3 class="ph">Inventory by building and type</h3>${tbl(["Building","Type","For sale","For rent","Avg price","Avg AED / sq ft","Avg rent / yr","Vs market"],inv,[2,3,4,5,6,7])}</div>
+     <div class="panel"><h3 class="ph">Price changes</h3>${tbl(["Date","Offer","From","To","Change","By"],pcs.map(h=>[dateS(h.at),h.title||"",aed(+h.old),aed(+h.nw),pct(h.nw/h.old-1),h.by||""]),[2,3,4])}</div>
+     <div class="panel"><h3 class="ph">Status changes and new listings</h3>${tbl(["Date","Offer","Change","By"],H.filter(h=>h.kind==="avail"||h.kind==="listed"||h.kind==="removed").map(h=>[dateS(h.at),h.title||"",histText(h,false),h.by||""]))}</div>
+     <div class="grid2">
+       <div class="panel"><h3 class="ph">Pricing review: above market</h3><p class="lede">More than 3% above registered deals. These may need a price change to sell or let.</p>${tbl(["Offer","Asking","Vs market"],above.map(o=>[shortLabel(o),o.deal==="rent"?aed(o.rent)+" / yr":aed(o.price),pct(o.x.ref)]),[1,2])}</div>
+       <div class="panel"><h3 class="ph">Best value: below market</h3><p class="lede">More than 3% below registered deals. Lead with these for buyers and tenants.</p>${tbl(["Offer","Asking","Vs market"],belowL.map(o=>[shortLabel(o),o.deal==="rent"?aed(o.rent)+" / yr":aed(o.price),pct(o.x.ref)]),[1,2])}</div>
+     </div>
+     <div class="panel"><h3 class="ph">Client pipeline</h3>${tbl(["Stage","Clients"],stages.map(s=>[s,clients.filter(c=>c.status===s).length]),[1])}</div>
+     <p class="src">Prepared with Peninsula Offers. Market comparisons use DLD-registered deals (${esc(MKT.asOf)}); yields are gross, before service charges.</p>
+   </article>`;
+  $("#rep-days").value=String(repDays);
+  $("#rep-days").onchange=e=>{repDays=+e.target.value;store.set("orla.repDays",repDays);renderReports()};
+  const pb=$("#rep-print");if(pb)pb.onclick=()=>window.print();
+  el.querySelectorAll("[data-exp]").forEach(b=>b.onclick=()=>({offers:exportOffers,clients:exportClients,market:exportMarket,history:exportHistory})[b.dataset.exp]());
+}
+
+addEventListener("afterprint",()=>document.body.classList.remove("print-present"));
 /* ---------------- Backup & theme ---------------- */
 $("#bk-copy").onclick=()=>{const t=JSON.stringify(Object.assign({app:"peninsula-offers",v:2,at:new Date().toISOString(),mine,clients,starred:[...starred]},CLOUD?{}:{offers:OFFERS,settings}));$("#bk-text").value=t;copy(t,$("#bk-text"))};
 $("#bk-restore").onclick=()=>{const b=$("#bk-restore");let d;try{d=JSON.parse($("#bk-text").value)}catch(e){toast("Paste a backup first");return}if(!d||d.app!=="peninsula-offers"){toast("That isn't a Peninsula Offers backup");return}
@@ -1218,7 +1396,7 @@ const SRV=!CLOUD&&!!CFG.api;
 let profile=null,authMode=null,entering=false,recovering=false,liveT=null,usersList=[];
 let db=null,uapi=null,uid=null,meInfo=null,isAdmin=!CLOUD&&!SRV,settings={},cloudReady=false,lastAt=null,saveT=null,warnedRO=false,logRows=[];
 const SEED_AGENTS=JSON.parse(JSON.stringify(AGENTS)),SEED_FEES=Object.assign({},FEES);
-function applySettings(x){settings=x||{};Object.keys(AGENTS).forEach(k=>delete AGENTS[k]);Object.assign(AGENTS,settings.agents&&Object.keys(settings.agents).length?settings.agents:SEED_AGENTS);Object.assign(FEES,SEED_FEES,settings.fees||{});
+function applySettings(x){settings=x||{};applyMarket(settings.market);Object.keys(AGENTS).forEach(k=>delete AGENTS[k]);Object.assign(AGENTS,settings.agents&&Object.keys(settings.agents).length?settings.agents:SEED_AGENTS);Object.assign(FEES,SEED_FEES,settings.fees||{});
   if(document.activeElement?.id!=="c-dld")$("#c-dld").value=+(FEES.dld*100).toFixed(3);
   const opts=Object.entries(AGENTS).map(([k,a])=>`<option value="${esc(k)}">${esc(a.name)}</option>`).join("");["#m-agent","#o-agent"].forEach(id=>{const el=$(id),v=el.value;el.innerHTML=opts;if(v&&AGENTS[v])el.value=v})}
 function persist(){store.set("orla.mine",mine);store.set("orla.clients",clients);store.set("orla.star",[...starred]);
@@ -1226,17 +1404,21 @@ function persist(){store.set("orla.mine",mine);store.set("orla.clients",clients)
   if(!(CLOUD&&uid&&cloudReady))return;clearTimeout(saveT);saveT=setTimeout(async()=>{lastAt=new Date().toISOString();
     try{await db.doc("data/users/"+uid+"/state").set({mine,clients,starred:[...starred],at:lastAt})}catch(e){if(!warnedRO){warnedRO=true;toast("Saved on this device only: your access lets you browse but not save")}}},700)}
 async function logAct(text){if(SRV){if(uid&&isAdmin){try{await api("admin/activity",{text:String(text).slice(0,300)})}catch(e){}loadLog()}return}if(!CLOUD||!db)return;try{await db.collection("log").add({at:new Date().toISOString(),by:uid,text:String(text).slice(0,300)})}catch(e){}}
-function cleanOffer(o){const c=JSON.parse(JSON.stringify(o));delete c.id;delete c.mine;delete c.x;return c}
+function cleanOffer(o){const c=JSON.parse(JSON.stringify(o));delete c.id;delete c.mine;delete c.x;if(SRV){delete c.listedAt;delete c.updatedAt}return c}
 async function saveOffer(o,label){
   if(SRV){try{await api("admin/offers",{id:o.id,data:cleanOffer(o)},"PUT")}catch(e){toast(e.message);return false}logAct(label);await loadAll();return true}
+  const prevO=OFFERS.find(x=>x.id===o.id);if(!prevO&&!o.listedAt)o.listedAt=new Date().toISOString();const hist=diffHistory(o.id,prevO,o,whoAmI());
   if(CLOUD){try{await db.collection("offers").doc(o.id).set(cleanOffer(o));logAct(label)}catch(e){toast(e&&e.code==="quota_exceeded"?"Storage is full. Delete old offers first.":"Couldn't save. Only admins can change offers.");return false}}
-  else{const c=Object.assign(cleanOffer(o),{id:o.id}),i=OFFERS.findIndex(x=>x.id===o.id);if(i>=0)OFFERS[i]=c;else OFFERS.push(c);store.set("orla.offers",OFFERS);renderAll()}
+  else{const c=Object.assign(cleanOffer(o),{id:o.id}),i=OFFERS.findIndex(x=>x.id===o.id);if(i>=0)OFFERS[i]=c;else OFFERS.push(c);store.set("orla.offers",OFFERS)}
+  await recordClientHistory(hist);if(!CLOUD)renderAll();
   return true}
 async function removeOffer(id,label){
   if(SRV){try{await api("admin/offers/delete",{id})}catch(e){toast(e.message);return false}logAct(label);starred.delete(id);saveStar();await loadAll();return true}
+  const prevR=OFFERS.find(x=>x.id===id);
   if(CLOUD){try{await db.collection("offers").doc(id).delete();logAct(label)}catch(e){toast("Couldn't delete. Only admins can change offers.");return false}}
   else{OFFERS=OFFERS.filter(o=>o.id!==id);store.set("orla.offers",OFFERS);renderAll()}
-  starred.delete(id);saveStar();return true}
+  if(prevR)await recordClientHistory([{offer:id,at:new Date().toISOString(),by:whoAmI(),kind:"removed",old:null,nw:null,title:prevR.title}]);
+  starred.delete(id);saveStar();if(!CLOUD)renderAll();return true}
 async function saveSettings(patch,label){const x=Object.assign({},settings,patch);
   if(SRV){try{await api("admin/settings",{data:x},"PUT")}catch(e){toast(e.message);return false}logAct(label);await loadAll();return true}
   if(CLOUD){try{await db.doc("settings/app").set(x);logAct(label)}catch(e){toast("Couldn't save. Only admins can change settings.");return false}}
@@ -1292,7 +1474,7 @@ function renderAdmin(){$("#tab-admin").hidden=!isAdmin;renderSecurity();if(!isAd
   if(a!=="ad-notice")$("#ad-notice").value=settings.notice||"";
   if(!["ad-dld","ad-trustee","ad-admin"].includes(a)){$("#ad-dld").value=+(FEES.dld*100).toFixed(3);$("#ad-trustee").value=fmt(FEES.trustee);$("#ad-admin").value=fmt(FEES.admin)}
   if(!$("#ad-agents").contains(document.activeElement)){agentDraft=Object.entries(AGENTS).map(([k,x])=>({k,name:x.name,phone:x.phone}));drawAgents()}
-  $("#ad-log-panel").hidden=!(CLOUD||SRV);$("#ad-users-panel").hidden=!SRV}
+  $("#ad-log-panel").hidden=!(CLOUD||SRV);$("#ad-users-panel").hidden=!SRV;renderMarketEditor()}
 function drawAgents(){$("#ad-agents").innerHTML=agentDraft.map((x,i)=>`<div class="fgrid"><div class="field"><label for="ag-n${i}">Name</label><input id="ag-n${i}" data-ai="${i}" data-af="name" value="${esc(x.name)}"></div><div class="field"><label for="ag-p${i}">Phone</label><input id="ag-p${i}" data-ai="${i}" data-af="phone" inputmode="tel" value="${esc(x.phone)}"></div></div>`).join("")}
 $("#ad-agents").addEventListener("input",e=>{const t=e.target;if(t.dataset.ai!=null)agentDraft[+t.dataset.ai][t.dataset.af]=t.value});
 $("#ad-agent-add").onclick=()=>{agentDraft.push({k:"a"+Date.now().toString(36),name:"",phone:""});drawAgents();$("#ag-n"+(agentDraft.length-1)).focus()};
@@ -1372,8 +1554,9 @@ async function authSubmit(){const err=$("#gate-err"),go=$("#gate-go"),em=$("#g-e
     else if(authMode==="reset"){need(pw.length>=8,"Use at least 8 characters for your password.");need(pw===$("#g-pass2").value,"The two passwords don't match.");const r=await api("auth/reset",{token:resetToken,password:pw});resetToken=null;toast("Password updated");await enterServer(r.user)}
   }catch(e){err.textContent=e.message}finally{go.disabled=false}}
 async function loadAll(first){
-  try{const d=await api("data/all");
-    OFFERS=(d.offers||[]).map(r=>Object.assign({},r.data,{id:r.id}));store.set("orla.cache.offers",OFFERS);
+  try{const [d,hs]=await Promise.all([api("data/all"),api("data/history").catch(()=>({rows:[]}))]);
+    HISTORY=(hs.rows||[]).map(r=>({offer:r.offer_id,at:r.at,by:r.by_email,kind:r.kind,old:r.old_value,nw:r.new_value,title:r.title}));
+    OFFERS=(d.offers||[]).map(r=>Object.assign({},r.data,{id:r.id,listedAt:r.created_at,updatedAt:r.updated_at}));store.set("orla.cache.offers",OFFERS);
     applySettings(d.settings||{});store.set("orla.cache.settings",d.settings||{});
     if(first){const owner=store.get("orla.localOwner",null);
       if(d.state){mine=d.state.mine||[];clients=d.state.clients||[];starred=new Set(d.state.starred||[]);store.set("orla.mine",mine);store.set("orla.clients",clients);store.set("orla.star",[...starred])}
@@ -1443,6 +1626,7 @@ async function boot(){
   db.doc("data/users/"+uid+"/state").onSnapshot(x=>{const first=!cloudReady;cloudReady=true;
     if(x.exists){const dd=x.data();if(x.metadata.hasPendingWrites||dd.at===lastAt)return;mine=dd.mine||[];clients=dd.clients||[];starred=new Set(dd.starred||[]);store.set("orla.mine",mine);store.set("orla.clients",clients);store.set("orla.star",[...starred]);renderAll()}
     else if(first&&(mine.length||clients.length||starred.size))persist()},()=>{cloudReady=true});
+  db.collection("history").orderBy("at","desc").limit(1000).onSnapshot(x=>{HISTORY=x.docs.map(dc=>dc.data());renderAll()},()=>{});
   if(isAdmin)db.collection("log").orderBy("at","desc").limit(50).onSnapshot(x=>{logRows=x.docs.map(dc=>dc.data());renderLog()},()=>{});
   if(sessionOpen()&&!store.get("orla.pin",null))unlock();else lock()}
 
@@ -1457,7 +1641,7 @@ $("#f-q").oninput=e=>{state.q=e.target.value;renderList()};
 document.querySelectorAll("[data-f]").forEach(el=>el.addEventListener(el.type==="checkbox"?"change":"input",()=>{const k=el.dataset.f;state[k]=el.type==="checkbox"?el.checked:(el.dataset.num?el.value.replace(/[^0-9]/g,""):el.value.trim());saveFilters();renderList()}));
 $("#f-chips").addEventListener("click",e=>{const b=e.target.closest("[data-clear]");if(!b)return;const k=b.dataset.clear;if(k==="*")Object.keys(FDEF).forEach(f=>{if(f!=="deal"&&f!=="sort")state[f]=FDEF[f]});else state[k]=FDEF[k];syncFilters();renderList()});
 function onCard(e){if(e.target.closest("[data-act]"))return;const c=e.target.closest("[data-id]");if(!c)return;state.sel=c.dataset.id;show("offers");renderList();if(matchMedia("(max-width:860px)").matches)$("#detail").scrollIntoView({behavior:"smooth"})}
-["#list","#shortlist","#mine-list","#dash","#analysis"].forEach(s=>$(s).addEventListener("click",onCard));
+["#list","#shortlist","#mine-list","#dash","#analysis","#reports"].forEach(s=>$(s).addEventListener("click",onCard));
 $("#copy-short").onclick=()=>{const t=$("#short-text").value;t?copy(t,$("#short-text")):toast("Shortlist is empty")};
 $("#clear-short").onclick=()=>{starred.clear();saveStar();renderList();renderShort()};
 $("#copy-csv").onclick=()=>{const t=$("#csv-text").value;t?copy(t,$("#csv-text")):toast("No listings to export")};
@@ -1466,7 +1650,7 @@ function fillPick(){const cur=pick.value;pick.innerHTML='<option value="">Custom
 pick.onchange=()=>pick.value&&loadCalc(pick.value);
 document.querySelectorAll("#view-calc input").forEach(i=>i.addEventListener("input",calc));
 try{$("#m-date").valueAsDate=new Date()}catch(e){}
-function renderAll(){fillAgentFilter();renderList();renderShort();renderMine();renderClients();renderDash();renderAnalysis();fillPick();renderAdmin()}
+function renderAll(){fillAgentFilter();renderList();renderShort();renderMine();renderClients();renderDash();renderAnalysis();renderReports();fillPick();renderAdmin()}
 boot();
 if("serviceWorker" in navigator&&location.protocol==="https:"&&!/claude|claudeusercontent/.test(location.host)){navigator.serviceWorker.register("sw.js").catch(()=>{})}
 </script>

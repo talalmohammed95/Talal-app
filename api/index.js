@@ -124,6 +124,19 @@ async function notifyAdminOfNewUser(req, u) {
     `Approve or decline them in Admin › Users:\n${appUrl(req)}/\n`);
 }
 
+// Price, rent and status changes, kept per offer for days on market and price history.
+async function recordHistory(id, prev, next, email) {
+  const title = str(next.title, 200), rows = [];
+  if (!prev) rows.push(["listed", null, next.deal === "rent" ? next.rent : next.price]);
+  else for (const k of ["price", "rent", "avail"]) {
+    const a = prev[k] ?? (k === "avail" ? "Available" : null), b = next[k] ?? (k === "avail" ? "Available" : null);
+    if (String(a ?? "") !== String(b ?? "")) rows.push([k, a, b]);
+  }
+  for (const [kind, a, b] of rows)
+    await q("insert into offer_history (offer_id, by_email, kind, old_value, new_value, title) values ($1, $2, $3, $4, $5, $6)",
+      [id, email, kind, a == null ? null : String(a), b == null ? null : String(b), title]);
+}
+
 // ---------- routes ----------
 const routes = {
   "GET auth/config": async () => ({ emailEnabled: mailEnabled() }),
@@ -213,7 +226,7 @@ const routes = {
   "GET data/all": async c => {
     requireActive(c);
     const [offers, settings, state] = await Promise.all([
-      q("select id, data from offers order by id"),
+      q("select id, data, created_at, updated_at from offers order by id"),
       q("select data from settings where id = 'app'"),
       q("select data from user_state where user_id = $1", [c.user.id])
     ]);
@@ -234,14 +247,18 @@ const routes = {
     const id = str(c.body.id, 64), data = c.body.data;
     if (!/^[A-Za-z0-9_-]{1,64}$/.test(id)) fail(400, "Invalid offer id.");
     if (!data || typeof data !== "object" || Array.isArray(data) || JSON.stringify(data).length > 64000) fail(400, "Invalid offer.");
+    const { rows: [prev] } = await q("select data from offers where id = $1", [id]);
     await q(`insert into offers (id, data, updated_at, updated_by) values ($1, $2, now(), $3)
              on conflict (id) do update set data = excluded.data, updated_at = now(), updated_by = excluded.updated_by`, [id, data, c.user.id]);
+    await recordHistory(id, prev && prev.data, data, c.user.email);
     return { ok: true };
   },
 
   "POST admin/offers/delete": async c => {
     requireAdmin(c);
-    await q("delete from offers where id = $1", [str(c.body.id, 64)]);
+    const id = str(c.body.id, 64);
+    const { rows: [prev] } = await q("delete from offers where id = $1 returning data", [id]);
+    if (prev) await q("insert into offer_history (offer_id, by_email, kind, title) values ($1, $2, 'removed', $3)", [id, c.user.email, str(prev.data.title, 200)]);
     return { ok: true };
   },
 
@@ -281,6 +298,12 @@ const routes = {
     if (!user) fail(404, "User not found.");
     const token = await makeToken(user.id, "reset", 24);
     return { url: `${appUrl(c.req)}/?reset=${token}` };
+  },
+
+  "GET data/history": async c => {
+    requireActive(c);
+    const { rows } = await q("select offer_id, at, by_email, kind, old_value, new_value, title from offer_history order by at desc, id desc limit 1000");
+    return { rows };
   },
 
   "GET admin/activity": async c => {
