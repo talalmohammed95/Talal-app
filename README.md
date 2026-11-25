@@ -48,10 +48,7 @@ scripts/     build.mjs (Vercel build) and dev.mjs (run it on your computer)
 4. **Deploy.** The build checks the settings, creates the database tables and loads the 20 starting offers the first time. Every later push to GitHub deploys automatically, and the database keeps its data.
 5. **Register the admin first.** Open the site, tap **Create an account** and register with the `ADMIN_EMAIL` address. That account is approved automatically. Then share the address with your agents and approve them as they register.
 
-The build stops with a clear message when something is missing, instead of going live broken:
-- **No database:** the message explains how to connect Neon or add `DATABASE_URL`.
-- **No `ADMIN_EMAIL`:** the message asks you to add it.
-- **SMTP set without `MAIL_FROM`:** the message asks for `MAIL_FROM`.
+If a required setting is missing (no database, no `ADMIN_EMAIL`, a database that can't be reached, or SMTP without `MAIL_FROM`), the deploy still succeeds. Instead of the app, the site shows a **Finish setup** page that lists exactly what to add, and it contains no app data. Add what it lists, redeploy, and the app goes live. Builds on your computer or in GitHub Actions fail with the same list instead.
 
 After changing an environment variable, redeploy (Deployments › ⋯ › Redeploy).
 
