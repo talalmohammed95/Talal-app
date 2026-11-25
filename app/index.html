@@ -149,6 +149,44 @@ tr:last-child td{border-bottom:0}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;font-size:14px;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none;max-width:calc(100% - 32px)}
 .toast.show{opacity:1}
 textarea.copybox{width:100%;min-height:140px;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);font-size:13px}
+[hidden]{display:none!important}
+.pill.st{background:var(--sunk);color:var(--fg)}
+.pill.st.done{background:#C2352B;color:#fff}
+.tog{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted);min-height:42px;white-space:nowrap}
+.tog input{width:20px;height:20px;accent-color:var(--accent)}
+.themebtn{background:#3A3532;border:0;color:#fff;border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:600;min-height:34px}
+details.edit{border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+details.edit summary{font-weight:600;cursor:pointer;min-height:28px}
+details.edit .fgrid{margin-top:10px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:860px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.kpi span{display:block;font-size:12.5px;color:var(--muted)}
+.kpi b{display:block;font-family:var(--display);font-size:clamp(20px,2.6vw,28px);font-weight:800;margin-top:2px}
+.kpi small{font-size:12px;color:var(--muted)}
+.due{color:#C2352B;font-weight:700}
+.crow{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.crow h3{margin:0;font-family:var(--display);font-size:15px}
+.crow .meta{font-size:12.5px;color:var(--muted)}
+.crow .actions .btn,.btn.sm{min-height:38px;padding:6px 10px;font-size:13px}
+#present{position:fixed;inset:0;z-index:30;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.pbar{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--bar);color:var(--bar-fg);padding-top:calc(10px + env(safe-area-inset-top,0px));padding-bottom:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.pbar .btn{background:#3A3532;border-color:#3A3532;color:#fff}
+.pbar .btn:disabled{opacity:.4}
+.pwrap{max-width:1100px;margin:0 auto;padding-block:28px 48px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:24px}
+.phero{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;border-bottom:3px solid var(--accent);padding-bottom:18px}
+.phero .eyebrow{font-family:var(--display);font-weight:700;letter-spacing:.16em;font-size:13px;color:var(--accent-ink)}
+.phero h1{margin:6px 0 0;font-family:var(--display);font-weight:800;font-size:clamp(30px,4.6vw,52px);line-height:1.05;text-wrap:balance}
+.phero .big{text-align:right}
+.phero .big b{display:block;font-family:var(--display);font-weight:800;font-size:clamp(30px,4.6vw,52px);color:var(--accent-ink);line-height:1}
+.phero .big span{color:var(--muted);font-size:15px}
+.pfacts,.pdist{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:700px){.pfacts,.pdist{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.pfact{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.pfact span{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.pfact b{display:block;font-family:var(--display);font-size:19px;font-weight:700;margin-top:4px}
+.pdist div b{display:block;font-family:var(--display);font-size:24px;font-weight:800;color:var(--accent-ink)}
+.pdist div span{font-size:13px;color:var(--muted)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -157,19 +195,24 @@ textarea.copybox{width:100%;min-height:140px;border:1px solid var(--line);border
 <header class="top">
   <div class="brandrow">
     <div class="brand"><b>ORLA</b><span>Peninsula Offers</span><small>Business Bay · Nov 2026</small></div>
+    <button class="themebtn" id="theme" aria-label="Switch between automatic, light and dark theme">Theme: Auto</button>
   </div>
   <nav class="tabs" role="tablist" aria-label="Sections">
-    <button class="tab" role="tab" id="tab-offers" data-view="offers" aria-selected="true">Offers<span class="count num" id="cnt-offers"></span></button>
+    <button class="tab" role="tab" id="tab-dash" data-view="dash" aria-selected="true">Dashboard</button>
+    <button class="tab" role="tab" id="tab-offers" data-view="offers" aria-selected="false">Offers<span class="count num" id="cnt-offers"></span></button>
     <button class="tab" role="tab" id="tab-shortlist" data-view="shortlist" aria-selected="false">Client shortlist<span class="count num" id="cnt-short">0</span></button>
+    <button class="tab" role="tab" id="tab-clients" data-view="clients" aria-selected="false">Clients<span class="count num" id="cnt-clients">0</span></button>
     <button class="tab" role="tab" id="tab-calc" data-view="calc" aria-selected="false">Deal calculator</button>
     <button class="tab" role="tab" id="tab-market" data-view="market" aria-selected="false">Market data</button>
-    <button class="tab" role="tab" id="tab-mine" data-view="mine" aria-selected="false">Add listing</button>
+    <button class="tab" role="tab" id="tab-mine" data-view="mine" aria-selected="false">My listings</button>
   </nav>
 </header>
 
 <main>
   <!-- OFFERS -->
-  <section class="view" id="view-offers">
+  <section class="view" id="view-dash"><div class="stack" id="dash"></div></section>
+
+  <section class="view" id="view-offers" hidden>
     <div class="split">
       <div>
         <div class="filters">
@@ -186,6 +229,10 @@ textarea.copybox{width:100%;min-height:140px;border:1px solid var(--line);border
             <select id="f-sort" aria-label="Sort"><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="size-desc">Size: largest first</option><option value="bld">Building</option></select>
             <input id="f-q" type="search" placeholder="Search view, floor, agent…" aria-label="Search">
           </div>
+          <div class="frow">
+            <input id="f-max" inputmode="numeric" placeholder="Max price or rent (AED)" aria-label="Maximum price or rent">
+            <label class="tog"><input type="checkbox" id="f-hide" checked> Hide sold &amp; rented</label>
+          </div>
         </div>
         <p class="summary num" id="summary"></p>
         <div class="list" id="list"></div>
@@ -199,11 +246,36 @@ textarea.copybox{width:100%;min-height:140px;border:1px solid var(--line);border
     <div class="panel stack">
       <div>
         <h2>Client shortlist</h2>
-        <p class="lede">Star offers in the Offers tab to collect them here, then copy one WhatsApp-ready message with all of them for your client.</p>
+        <p class="lede">Star offers in the Offers tab to collect them here, then present them full screen or copy one WhatsApp-ready message for your client.</p>
       </div>
+      <div class="frow" style="align-items:flex-end"><div class="field" style="flex:1;min-width:200px"><label for="short-client">For client</label><select id="short-client"><option value="">No client selected</option></select></div><button class="btn" id="short-save">Save shortlist to client</button></div>
       <div class="list" id="shortlist"></div>
-      <div class="actions"><button class="btn primary" id="copy-short">Copy message for client</button><button class="btn" id="clear-short">Clear shortlist</button></div>
+      <div class="actions"><button class="btn primary" id="present-short">Present to client</button><button class="btn" id="copy-short">Copy message for client</button><button class="btn" id="clear-short">Clear shortlist</button></div>
       <textarea class="copybox" id="short-text" readonly aria-label="Shortlist message"></textarea>
+    </div>
+  </section>
+
+  <!-- CLIENTS -->
+  <section class="view" id="view-clients" hidden>
+    <div class="grid2">
+      <div class="panel">
+        <h2 id="cl-title">Add a client</h2>
+        <p class="lede">Track buyers, investors and tenants, their budget, their stage and when to follow up. Saved on this device.</p>
+        <form id="cl-form" class="fgrid" autocomplete="off">
+          <input type="hidden" id="cl-id">
+          <div class="field"><label for="cl-name">Name</label><input id="cl-name" required></div>
+          <div class="field"><label for="cl-phone">Phone</label><input id="cl-phone" inputmode="tel"></div>
+          <div class="field"><label for="cl-intent">Looking to</label><select id="cl-intent"><option>Buy</option><option>Invest</option><option>Rent</option></select></div>
+          <div class="field"><label for="cl-beds">Unit type</label><select id="cl-beds"><option value="">Any</option><option value="0">Studio</option><option value="1">1 Bedroom</option><option value="2">2 Bedroom</option><option value="3">3 Bedroom</option></select></div>
+          <div class="field"><label for="cl-budget">Budget (AED, or rent per year)</label><input id="cl-budget" inputmode="numeric"></div>
+          <div class="field"><label for="cl-status">Stage</label><select id="cl-status"><option>New</option><option>Contacted</option><option>Viewing booked</option><option>Offer made</option><option>Closed</option><option>Lost</option></select></div>
+          <div class="field"><label for="cl-follow">Follow-up date</label><input id="cl-follow" type="date"></div>
+          <div class="field"><label for="cl-source">Source</label><input id="cl-source" placeholder="e.g. Bayut, referral"></div>
+          <div class="field wide"><label for="cl-notes">Notes</label><textarea id="cl-notes" rows="2"></textarea></div>
+          <div class="wide actions"><button class="btn primary" type="submit">Save client</button><button class="btn" type="button" id="cl-new">New client</button><button class="btn" type="button" id="cl-del" hidden>Delete client</button></div>
+        </form>
+      </div>
+      <div class="panel stack"><div><h2>Clients</h2><p class="lede" id="cl-lede"></p></div><div class="list" id="cl-list"></div></div>
     </div>
   </section>
 
@@ -229,6 +301,18 @@ textarea.copybox{width:100%;min-height:140px;border:1px solid var(--line);border
         <h2>Result</h2>
         <div id="c-out"></div>
       </div>
+    </div>
+<div class="panel" style="margin-top:16px">
+      <h2>Mortgage</h2>
+      <p class="lede">Monthly payment and cash needed upfront for the price above. Rate, term and bank fees are examples: change them to the bank's offer.</p>
+      <div class="grid2"><div class="fgrid">
+        <div class="field"><label for="k-down">Down payment (%)</label><input id="k-down" inputmode="decimal" value="20"></div>
+        <div class="field"><label for="k-rate">Interest rate (% a year)</label><input id="k-rate" inputmode="decimal" value="4.5"></div>
+        <div class="field"><label for="k-years">Term (years)</label><input id="k-years" inputmode="numeric" value="25"></div>
+        <div class="field"><label for="k-arr">Bank arrangement fee (% of loan)</label><input id="k-arr" inputmode="decimal" value="1"></div>
+        <div class="field"><label for="k-reg">Mortgage registration (% of loan)</label><input id="k-reg" inputmode="decimal" value="0.25"></div>
+        <div class="field"><label for="k-val">Valuation fee (AED)</label><input id="k-val" inputmode="numeric" value="3000"></div>
+      </div><div id="k-out"></div></div>
     </div>
   </section>
 
@@ -270,8 +354,15 @@ textarea.copybox{width:100%;min-height:140px;border:1px solid var(--line);border
         <textarea class="copybox" id="csv-text" readonly aria-label="CSV export"></textarea>
       </div>
     </div>
+<div class="panel" style="margin-top:16px">
+      <h2>Backup &amp; restore</h2>
+      <p class="lede">Your listings, clients, shortlist and price updates are stored on this iPad only. Copy a backup from time to time and keep it in Notes or email it to yourself. To move to another device, paste the backup here and restore it.</p>
+      <div class="actions"><button class="btn" id="bk-copy">Copy backup</button><button class="btn primary" id="bk-restore">Restore from pasted backup</button></div>
+      <textarea class="copybox" id="bk-text" aria-label="Backup data" placeholder="Paste a backup here to restore it"></textarea>
+    </div>
   </section>
 </main>
+<div id="present" hidden role="dialog" aria-modal="true" aria-label="Client presentation"></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -402,11 +493,16 @@ const costs=p=>{const d=p*FEES.dld;return{dld:d,total:p+d+FEES.trustee+FEES.admi
 
 let mine=store.get("orla.mine",[]);
 let starred=new Set(store.get("orla.star",[]));
-const state={deal:"all",type:"",bld:"",sort:"price-asc",q:"",sel:store.get("orla.sel",null)};
+let ovr=store.get("orla.ovr",{});
+let clients=store.get("orla.clients",[]);
+const STATUS=["Available","Reserved","Under offer","Sold","Rented"];
+const isDone=o=>o.avail==="Sold"||o.avail==="Rented";
+const state={deal:"all",type:"",bld:"",sort:"price-asc",q:"",max:"",hide:true,client:null,sel:store.get("orla.sel",null)};
 
 function mineToOffer(m){return{id:m.id,b:+m.b,beds:+m.beds,deal:m.deal,title:(m.unit?"Unit "+m.unit+" · ":"")+TYPE[+m.beds],price:m.deal==="sale"?+m.price:undefined,rent:m.deal==="rent"?+m.price:undefined,
   size:m.size?+m.size:null,floor:m.floor||"On request",view:m.view||"On request",furn:m.furn,status:m.status,agent:m.agent,hl:m.notes||"",mine:true,owner:m.owner,ownerPhone:m.phone,date:m.date,src:"Added on this device"}}
-const all=()=>OFFERS.concat(mine.map(mineToOffer));
+const applyOvr=o=>{const v=ovr[o.id]||{};return Object.assign({},o,v.price?{price:v.price}:{},v.rent?{rent:v.rent}:{},{avail:v.avail||"Available",edited:!!ovr[o.id]})};
+const all=()=>OFFERS.concat(mine.map(mineToOffer)).map(applyOvr);
 const keyPrice=o=>o.deal==="rent"?o.rent:o.price;
 function priceLine(o){
   if(o.deal==="rent")return{big:aed(o.rent),sub:"per year"};
@@ -418,6 +514,7 @@ function pills(o){
   if(o.deal!=="rent")h+='<span class="pill sale">Sale</span>';
   if(o.deal!=="sale")h+='<span class="pill rent">Rent</span>';
   if(o.mine)h+='<span class="pill mine">Mine</span>';
+  if(o.avail!=="Available")h+=`<span class="pill st ${isDone(o)?"done":""}">${esc(o.avail)}</span>`;
   if(o.check)h+='<span class="pill check">Check price</span>';
   return h;
 }
@@ -435,7 +532,7 @@ function cardHTML(o,cur){
 /* ---------------- Offers view ---------------- */
 function filtered(){
   const q=state.q.trim().toLowerCase();
-  let l=all().filter(o=>(state.deal==="all"||o.deal===state.deal||o.deal==="both")&&(state.type===""||o.beds===+state.type)&&(state.bld===""||o.b===+state.bld)&&
+  let l=all().filter(o=>(state.deal==="all"||o.deal===state.deal||o.deal==="both")&&(state.type===""||o.beds===+state.type)&&(state.bld===""||o.b===+state.bld)&&(!state.hide||!isDone(o))&&(!state.max||((state.deal==="rent"||o.deal==="rent")?(o.rent||0)<=+state.max:(o.price||0)<=+state.max))&&
     (!q||[o.title,o.view,o.floor,o.furn,BLD[o.b],AGENTS[o.agent]?.name,o.hl].join(" ").toLowerCase().includes(q)));
   const pk=o=>state.deal==="rent"?(o.rent??Infinity):keyPrice(o);
   const s={"price-asc":(a,b)=>pk(a)-pk(b),"price-desc":(a,b)=>pk(b)-pk(a),"size-desc":(a,b)=>(b.size||0)-(a.size||0),"bld":(a,b)=>a.b-b.b||a.beds-b.beds}[state.sort];
@@ -494,6 +591,7 @@ function renderDetail(){
     <div class="dbody">
       <div class="actions">
         <button class="btn primary" id="d-star">${starred.has(o.id)?"★ On shortlist":"☆ Add to shortlist"}</button>
+        <button class="btn" id="d-present">Present to client</button>
         <button class="btn" id="d-copy">Copy offer text</button>
         <a class="btn" href="${wa}" target="_blank" rel="noopener">Share on WhatsApp</a>
         ${o.deal!=="rent"?'<button class="btn" id="d-calc">Open in calculator</button>':""}
@@ -504,12 +602,20 @@ function renderDetail(){
       <div class="cols"><div><h4>Unit details</h4>${facts.map(f=>kv(f[0],f[1])).join("")}</div>${money}</div>
       ${inv||mkt?`<div class="cols">${inv}${mkt}</div>`:""}
       <div><h4>The building</h4><p class="hl" style="margin-bottom:8px">${esc(TOWER[o.b])}</p><div class="chips">${AMEN[o.b].map(x=>'<span class="chip">'+esc(x)+'</span>').join("")}</div></div>
+      <details class="edit"><summary>Update price &amp; status${o.edited?" (updated by you)":""}</summary><div class="fgrid">
+        <div class="field"><label for="e-st">Status</label><select id="e-st">${STATUS.map(s=>`<option${s===o.avail?" selected":""}>${s}</option>`).join("")}</select></div>
+        ${o.deal!=="rent"?`<div class="field"><label for="e-price">Sale price (AED)</label><input id="e-price" inputmode="numeric" value="${fmt(o.price)}"></div>`:""}
+        ${o.deal!=="sale"?`<div class="field"><label for="e-rent">Rent (AED / yr)</label><input id="e-rent" inputmode="numeric" value="${fmt(o.rent)}"></div>`:""}
+        <div class="wide actions"><button class="btn primary" id="e-save">Save changes</button>${o.edited?'<button class="btn" id="e-reset">Restore original figures</button>':""}</div></div></details>
       <div class="agent"><div class="who"><b>${esc(a.name)}</b><span>Orla Properties L.L.C · BRN 41837</span></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="phone num">${esc(a.phone)}</span><button class="btn" id="d-phone">Copy number</button></div></div>
       <p class="src">Source: ${esc(o.src)}. Drive times approx.: Dubai Mall 7 min · Business Bay Metro 7 min · DIFC 12 min · DXB 16 min.</p>
     </div></article>`;
   $("#d-star").onclick=()=>{toggleStar(o.id)};
   $("#d-copy").onclick=()=>copy(offerText(o));
   $("#d-phone").onclick=()=>copy(a.phone);
+  $("#d-present").onclick=()=>openPresent(filtered().map(x=>x.id),o.id);
+  $("#e-save").onclick=()=>{const v={avail:$("#e-st").value};if($("#e-price"))v.price=nv("#e-price")||undefined;if($("#e-rent"))v.rent=nv("#e-rent")||undefined;ovr[o.id]=v;store.set("orla.ovr",ovr);renderAll();toast("Offer updated")};
+  const er=$("#e-reset");if(er)er.onclick=()=>{delete ovr[o.id];store.set("orla.ovr",ovr);renderAll();toast("Original figures restored")};
   const dc=$("#d-calc");if(dc)dc.onclick=()=>{loadCalc(o.id);show("calc")};
   const dd=$("#d-del");if(dd)dd.onclick=()=>{if(dd.dataset.armed){mine=mine.filter(m=>m.id!==o.id);store.set("orla.mine",mine);starred.delete(o.id);saveStar();renderAll();toast("Listing deleted")}else{dd.dataset.armed=1;dd.textContent="Tap again to delete"}};
 }
@@ -521,7 +627,8 @@ function renderShort(){
   const l=all().filter(o=>starred.has(o.id));
   $("#cnt-short").textContent=l.length;
   $("#shortlist").innerHTML=l.length?l.map(o=>cardHTML(o,false)).join(""):'<div class="empty">No offers yet. Open an offer and tap “Add to shortlist”.</div>';
-  $("#short-text").value=l.length?"Hi, here are the Peninsula options we discussed:\n\n"+l.map(offerText).join("\n\n———\n\n"):"";
+  const cl=clients.find(c=>c.id===state.client);
+  $("#short-text").value=l.length?"Hi"+(cl?" "+cl.name.split(" ")[0]:"")+", here are the Peninsula options we discussed:\n\n"+l.map(offerText).join("\n\n———\n\n"):"";
 }
 
 /* ---------------- Calculator ---------------- */
@@ -536,6 +643,9 @@ function calc(){
    <div style="margin-top:14px">${kv("Resale after "+(X*100)+"% exit commission",aed(RS*(1-X)))}${kv("Resale gain over total cost",aed(gain))}${kv("Rent collected ("+M+" months)",aed(rentIn))}${SV?kv("Service charges ("+M+" months)","− "+aed(svc)):""}</div>
    <div class="tiles">${tile("Total return",aed(ret),ret>=0?"pos":"neg")}${tile("Return on cost",total?(ret/total*100).toFixed(1)+"%":"—",ret>=0?"pos":"neg")}</div>
    <p class="src" style="margin-top:12px">Estimates only. Mortgage costs and market changes are not included.</p>`;
+  const DP=nv("#k-down")/100,mr=nv("#k-rate")/100/12,n=nv("#k-years")*12,loan=P*(1-DP),pay=mr&&n?loan*mr/(1-Math.pow(1+mr,-n)):(n?loan/n:0),bank=loan*nv("#k-arr")/100+loan*nv("#k-reg")/100+nv("#k-val"),cash=P*DP+dld+FEES.trustee+FEES.admin+bank;
+  $("#k-out").innerHTML=`${kv("Loan amount",aed(loan))}${kv("Down payment",aed(P*DP))}${kv("DLD, trustee and admin fees",aed(dld+FEES.trustee+FEES.admin))}${kv("Bank, registration and valuation fees",aed(bank))}${kv("Cash needed upfront",aed(cash),"total")}
+   <div class="tiles">${tile("Monthly payment",aed(pay))}${tile("Rent covers",R&&pay?Math.round(R/12/pay*100)+"% of it":"—",R/12>=pay?"pos":"")}</div>`;
 }
 
 /* ---------------- Market ---------------- */
@@ -572,6 +682,96 @@ $("#mine-form").addEventListener("submit",e=>{e.preventDefault();
   mine.push(m);store.set("orla.mine",mine);e.target.reset();$("#m-date").valueAsDate=new Date();renderAll();toast("Listing saved");
 });
 
+/* ---------------- Dashboard ---------------- */
+const today=()=>new Date().toISOString().slice(0,10);
+const isDue=c=>c.follow&&c.follow<=today()&&c.status!=="Closed"&&c.status!=="Lost";
+function renderDash(){
+  const A=all(),act=A.filter(o=>!isDone(o)),sale=act.filter(o=>o.deal!=="rent"),rent=act.filter(o=>o.deal!=="sale");
+  const ys=sale.map(o=>{const r=o.inv?.rent||(o.deal==="both"?o.rent:null);return r?r/o.price:null}).filter(Boolean);
+  const due=clients.filter(isDue).sort((a,b)=>a.follow.localeCompare(b.follow));
+  const closed=A.length-act.length,checks=act.filter(o=>o.check);
+  const kpi=(l,v,s)=>`<div class="kpi"><span>${l}</span><b class="num">${v}</b><small>${s}</small></div>`;
+  const go=(o,t)=>`<button class="btn sm" data-id="${esc(o.id)}">P${o.b} · ${t}</button>`;
+  const best=[0,1,2,3].map(b=>[TYPE[b],sale.filter(o=>o.beds===b).sort((x,y)=>x.price-y.price)[0],rent.filter(o=>o.beds===b).sort((x,y)=>x.rent-y.rent)[0]]);
+  $("#dash").innerHTML=`<div class="kpis">${kpi("Active offers",act.length,`${sale.length} for sale · ${rent.length} for rent`)}${kpi("Sale stock value","AED "+short(sale.reduce((s,o)=>s+o.price,0)),"total asking price")}${kpi("Average gross yield",ys.length?(ys.reduce((a,b)=>a+b,0)/ys.length*100).toFixed(1)+"%":"—",`${ys.length} sale offers with rent data`)}${kpi("Follow-ups due",due.length,`${clients.length} client${clients.length===1?"":"s"} · ${closed} offer${closed===1?"":"s"} closed`)}</div>
+   <div class="grid2">
+    <div class="panel"><h2>Follow-ups due</h2><p class="lede">Clients with a follow-up date of today or earlier.</p><div class="list">${due.length?due.map(clientRow).join(""):'<div class="empty">Nothing due. Add clients and follow-up dates in the Clients tab.</div>'}</div></div>
+    <div class="panel"><h2>Best entry price by type</h2><p class="lede">Cheapest active offer in each category. Tap one to open it.</p><div class="tablewrap"><table><tr><th>Type</th><th>For sale</th><th>For rent</th></tr>${best.map(r=>`<tr><td>${r[0]}</td><td>${r[1]?go(r[1],short(r[1].price)):"—"}</td><td>${r[2]?go(r[2],short(r[2].rent)+" / yr"):"—"}</td></tr>`).join("")}</table></div></div>
+   </div>
+   ${checks.length?`<div class="panel"><h2>Figures to confirm</h2><p class="lede">${checks.length} offers have prices or details that differ between your decks and flyers. Open one, confirm with the owner, then use “Update price &amp; status”.</p><div class="list">${checks.map(o=>cardHTML(o,false)).join("")}</div></div>`:""}`;
+}
+
+/* ---------------- Clients ---------------- */
+function matches(c){return all().filter(o=>!isDone(o)&&(c.beds===""||c.beds==null||o.beds===+c.beds)&&(c.intent==="Rent"?(o.deal!=="sale"&&(!c.budget||o.rent<=c.budget)):(o.deal!=="rent"&&(!c.budget||o.price<=c.budget))))}
+function clientRow(c){
+  return `<div class="crow"><div style="min-width:0"><h3>${esc(c.name)} <span class="pill st">${esc(c.status)}</span></h3>
+    <div class="meta">${esc(c.intent)}${c.beds!==""&&c.beds!=null?" · "+TYPE[+c.beds]:""}${c.budget?" · up to "+aed(c.budget):""}${c.phone?" · "+esc(c.phone):""}</div>
+    <div class="meta">${c.follow?`<span class="${isDue(c)?"due":""}">Follow up ${esc(c.follow)}</span> · `:""}${(c.short||[]).length} saved offers · ${matches(c).length} matching offers</div></div>
+    <div class="actions"><button class="btn" data-cid="${esc(c.id)}" data-act="match">Show matches</button><button class="btn" data-cid="${esc(c.id)}" data-act="load">Open shortlist</button><button class="btn" data-cid="${esc(c.id)}" data-act="edit">Edit</button></div></div>`;
+}
+function renderClients(){
+  const key=c=>(c.status==="Closed"||c.status==="Lost")?"9":(c.follow||"8");
+  const l=[...clients].sort((a,b)=>key(a).localeCompare(key(b)));
+  $("#cnt-clients").textContent=clients.length;
+  $("#cl-lede").textContent=clients.length?`${clients.length} clients, next follow-up first.`:"No clients yet.";
+  $("#cl-list").innerHTML=l.length?l.map(clientRow).join(""):'<div class="empty">Add your first client with the form.</div>';
+  const sel=$("#short-client");sel.innerHTML='<option value="">No client selected</option>'+clients.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("");sel.value=state.client||"";
+}
+function resetClientForm(){$("#cl-form").reset();$("#cl-id").value="";$("#cl-title").textContent="Add a client";const d=$("#cl-del");d.hidden=true;delete d.dataset.armed;d.textContent="Delete client"}
+function editClient(c){show("clients");resetClientForm();$("#cl-id").value=c.id;$("#cl-name").value=c.name;$("#cl-phone").value=c.phone||"";$("#cl-intent").value=c.intent;$("#cl-beds").value=c.beds??"";$("#cl-budget").value=c.budget?fmt(c.budget):"";$("#cl-status").value=c.status;$("#cl-follow").value=c.follow||"";$("#cl-source").value=c.source||"";$("#cl-notes").value=c.notes||"";$("#cl-title").textContent="Edit "+c.name;$("#cl-del").hidden=false}
+$("#cl-form").addEventListener("submit",e=>{e.preventDefault();const g=id=>$(id).value.trim();if(!g("#cl-name")){toast("Enter a name");return}
+  const id=g("#cl-id")||"c-"+Date.now(),old=clients.find(c=>c.id===id);
+  const c={id,name:g("#cl-name"),phone:g("#cl-phone"),intent:g("#cl-intent"),beds:g("#cl-beds"),budget:parseFloat(g("#cl-budget").replace(/[^0-9.]/g,""))||0,status:g("#cl-status"),follow:g("#cl-follow"),source:g("#cl-source"),notes:g("#cl-notes"),short:old?.short||[]};
+  clients=old?clients.map(x=>x.id===id?c:x):clients.concat(c);store.set("orla.clients",clients);resetClientForm();renderAll();toast(old?"Client updated":"Client saved")});
+$("#cl-new").onclick=resetClientForm;
+$("#cl-del").onclick=()=>{const b=$("#cl-del");if(!b.dataset.armed){b.dataset.armed=1;b.textContent="Tap again to delete";return}const id=$("#cl-id").value;clients=clients.filter(c=>c.id!==id);if(state.client===id)state.client=null;store.set("orla.clients",clients);resetClientForm();renderAll();toast("Client deleted")};
+function syncFilters(){document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.deal===state.deal));$("#f-type").value=state.type;$("#f-bld").value=state.bld;$("#f-max").value=state.max?fmt(+state.max):""}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)return;const c=clients.find(x=>x.id===b.dataset.cid);if(!c)return;
+  if(b.dataset.act==="edit")editClient(c);
+  if(b.dataset.act==="load"){state.client=c.id;starred=new Set(c.short||[]);saveStar();renderAll();show("shortlist")}
+  if(b.dataset.act==="match"){state.deal=c.intent==="Rent"?"rent":"sale";state.type=c.beds??"";state.max=c.budget?String(c.budget):"";state.bld="";state.q="";$("#f-q").value="";syncFilters();renderList();show("offers")}});
+$("#short-client").onchange=e=>{state.client=e.target.value||null;renderShort()};
+$("#short-save").onclick=()=>{const c=clients.find(x=>x.id===state.client);if(!c){toast("Choose a client first");return}c.short=[...starred];store.set("orla.clients",clients);renderAll();toast("Shortlist saved to "+c.name)};
+
+/* ---------------- Present mode ---------------- */
+let pres={ids:[],i:0};
+function openPresent(ids,id){if(!ids.length){toast("Nothing to present");return}pres={ids,i:Math.max(0,ids.indexOf(id))};$("#present").hidden=false;document.body.style.overflow="hidden";try{const r=document.documentElement.requestFullscreen?.();r&&r.catch(()=>{})}catch(e){}renderPresent()}
+function closePresent(){$("#present").hidden=true;document.body.style.overflow="";try{if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}catch(e){}}
+function stepPresent(d){const i=pres.i+d;if(i<0||i>=pres.ids.length)return;pres.i=i;renderPresent();$("#present").scrollTop=0}
+function renderPresent(){
+  const o=all().find(x=>x.id===pres.ids[pres.i]);if(!o){closePresent();return}
+  const p=priceLine(o),a=AGENTS[o.agent]||AGENTS.talal;
+  const f=[["Unit",TYPE[o.beds]],["Size",o.size?fmt(o.size)+" sq ft":"On request"],["Floor",o.floor],["View",o.view],["Bathrooms",String(o.baths??"—")],["Furnishing",o.furn&&o.furn!=="—"?o.furn:"On request"],["Status",o.avail==="Available"?(o.status||"Ready"):o.avail]];
+  f.push(o.parking?["Parking",o.parking]:o.cheques?["Cheques",o.cheques]:["Community","The Peninsula"]);
+  let money="";
+  if(o.deal!=="rent"){const c=costs(o.price);money+=`<div class="panel"><h4>Total purchase cost</h4>${kv("Price",aed(o.price))}${kv("DLD registration (4%)",aed(c.dld))}${kv("Trustee office fee",aed(FEES.trustee))}${kv("Admin fee",aed(FEES.admin))}${kv("Total cost",aed(c.total),"total")}</div>`}
+  if(o.deal!=="sale"){const dep=parseFloat(o.deposit||"5")/100;money+=`<div class="panel"><h4>Rent</h4>${kv("Annual rent",aed(o.rent))}${kv("Monthly equivalent",aed(o.rent/12))}${kv("Security deposit ("+(dep*100)+"%)",aed(o.rent*dep))}${kv("Cheques",o.cheques||"On request")}</div>`}
+  $("#present").innerHTML=`<div class="pbar"><button class="btn" id="p-close">Close</button><span class="num" style="font-size:13px;color:#CFC8BF">${pres.i+1} of ${pres.ids.length}</span><div style="display:flex;gap:8px"><button class="btn" id="p-prev" ${pres.i===0?"disabled":""}>‹ Previous</button><button class="btn" id="p-next" ${pres.i===pres.ids.length-1?"disabled":""}>Next ›</button></div></div>
+   <div class="pwrap">
+    <div class="phero"><div><div class="eyebrow">${esc(BLD[o.b].toUpperCase())} · BUSINESS BAY · ${o.deal==="rent"?"FOR RENT":o.deal==="both"?"FOR SALE OR RENT":"FOR SALE"}</div><h1>${esc(o.title)}</h1></div><div class="big num"><b>${esc(p.big)}</b><span>${esc(p.sub)}</span></div></div>
+    ${o.hl?`<p class="hl" style="font-size:17px">${esc(o.hl)}</p>`:""}
+    <div class="pfacts">${f.map(x=>`<div class="pfact"><span>${esc(x[0])}</span><b>${esc(x[1])}</b></div>`).join("")}</div>
+    <div class="grid2">${money}<div class="panel"><h4>The building</h4><p class="hl" style="margin-bottom:10px">${esc(TOWER[o.b])}</p><div class="chips">${AMEN[o.b].map(x=>'<span class="chip">'+esc(x)+'</span>').join("")}</div></div></div>
+    <div class="pdist"><div><b>7 min</b><span>Dubai Mall &amp; Burj Khalifa</span></div><div><b>7 min</b><span>Business Bay Metro</span></div><div><b>12 min</b><span>DIFC</span></div><div><b>16 min</b><span>DXB Airport</span></div></div>
+    <div class="agent"><div class="who"><b>${esc(a.name)}</b><span>Orla Properties L.L.C · Licensed broker · BRN 41837</span></div><span class="phone num">${esc(a.phone)}</span></div>
+    <p class="src">Prices and availability subject to confirmation. Drive times approximate.</p>
+   </div>`;
+  $("#p-close").onclick=closePresent;$("#p-prev").onclick=()=>stepPresent(-1);$("#p-next").onclick=()=>stepPresent(1);
+}
+(()=>{let x0=null;const P=$("#present");P.addEventListener("touchstart",e=>{x0=e.touches[0].clientX},{passive:true});P.addEventListener("touchend",e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>70)stepPresent(dx<0?1:-1)},{passive:true})})();
+$("#present-short").onclick=()=>openPresent(all().filter(o=>starred.has(o.id)).map(o=>o.id));
+
+/* ---------------- Backup & theme ---------------- */
+$("#bk-copy").onclick=()=>{const t=JSON.stringify({app:"peninsula-offers",v:1,at:new Date().toISOString(),mine,clients,ovr,starred:[...starred]});$("#bk-text").value=t;copy(t,$("#bk-text"))};
+$("#bk-restore").onclick=()=>{const b=$("#bk-restore");let d;try{d=JSON.parse($("#bk-text").value)}catch(e){toast("Paste a backup first");return}if(!d||d.app!=="peninsula-offers"){toast("That isn't a Peninsula Offers backup");return}
+  if(!b.dataset.armed){b.dataset.armed=1;b.textContent="Tap again to replace the data on this device";return}
+  delete b.dataset.armed;b.textContent="Restore from pasted backup";mine=d.mine||[];clients=d.clients||[];ovr=d.ovr||{};starred=new Set(d.starred||[]);
+  store.set("orla.mine",mine);store.set("orla.clients",clients);store.set("orla.ovr",ovr);saveStar();renderAll();toast("Backup restored")};
+let theme=store.get("orla.theme","auto");
+function applyTheme(){if(theme==="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.setAttribute("data-theme",theme);$("#theme").textContent="Theme: "+{auto:"Auto",light:"Light",dark:"Dark"}[theme]}
+$("#theme").onclick=()=>{theme={auto:"light",light:"dark",dark:"auto"}[theme];store.set("orla.theme",theme);applyTheme()};
+if(theme!=="auto")applyTheme();
+
 /* ---------------- Wiring ---------------- */
 function show(v){document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.view===v));document.querySelectorAll(".view").forEach(s=>s.hidden=s.id!=="view-"+v);store.set("orla.tab",v);window.scrollTo(0,0)}
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>show(t.dataset.view));
@@ -580,8 +780,10 @@ $("#f-type").onchange=e=>{state.type=e.target.value;renderList()};
 $("#f-bld").onchange=e=>{state.bld=e.target.value;renderList()};
 $("#f-sort").onchange=e=>{state.sort=e.target.value;renderList()};
 $("#f-q").oninput=e=>{state.q=e.target.value;renderList()};
-function onCard(e){const c=e.target.closest(".card");if(!c)return;state.sel=c.dataset.id;show("offers");renderList();if(matchMedia("(max-width:860px)").matches)$("#detail").scrollIntoView({behavior:"smooth"})}
-["#list","#shortlist","#mine-list"].forEach(s=>$(s).addEventListener("click",onCard));
+$("#f-max").oninput=e=>{state.max=e.target.value.replace(/[^0-9]/g,"");renderList()};
+$("#f-hide").onchange=e=>{state.hide=e.target.checked;renderList()};
+function onCard(e){if(e.target.closest("[data-act]"))return;const c=e.target.closest("[data-id]");if(!c)return;state.sel=c.dataset.id;show("offers");renderList();if(matchMedia("(max-width:860px)").matches)$("#detail").scrollIntoView({behavior:"smooth"})}
+["#list","#shortlist","#mine-list","#dash"].forEach(s=>$(s).addEventListener("click",onCard));
 $("#copy-short").onclick=()=>{const t=$("#short-text").value;t?copy(t,$("#short-text")):toast("Shortlist is empty")};
 $("#clear-short").onclick=()=>{starred.clear();saveStar();renderList();renderShort()};
 $("#copy-csv").onclick=()=>{const t=$("#csv-text").value;t?copy(t,$("#csv-text")):toast("No listings to export")};
@@ -589,9 +791,9 @@ const pick=$("#c-pick");OFFERS.filter(o=>o.deal!=="rent").forEach(o=>pick.insert
 pick.onchange=()=>pick.value&&loadCalc(pick.value);
 document.querySelectorAll("#view-calc input").forEach(i=>i.addEventListener("input",calc));
 try{$("#m-date").valueAsDate=new Date()}catch(e){}
-function renderAll(){renderList();renderShort();renderMine()}
+function renderAll(){renderList();renderShort();renderMine();renderClients();renderDash()}
 renderAll();renderMarket();loadCalc("p3-studio-410");
-show(store.get("orla.tab","offers"));
+show(store.get("orla.tab","dash"));
 if("serviceWorker" in navigator&&location.protocol==="https:"&&!/claude|claudeusercontent/.test(location.host)){navigator.serviceWorker.register("sw.js").catch(()=>{})}
 </script>
 </body>
