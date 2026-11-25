@@ -170,6 +170,9 @@ textarea.copybox{width:100%;min-height:140px;border:1px solid var(--line);border
 .pill.agent{background:#3A3532;color:#fff}
 .notice{background:var(--accent-soft);border:1px solid var(--accent);border-radius:12px;padding:12px 16px;font-size:14.5px;white-space:pre-line}
 .notice b{font-family:var(--display);color:var(--accent-ink);display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:2px}
+td .btn.sm+.btn.sm{margin-left:6px}
+.pill.pending{background:var(--warn-soft);color:var(--warn)}
+.pill.ok{background:var(--good-soft);color:var(--good)}
 .glinks{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:-4px}
 .glinks button{background:none;border:0;color:var(--accent-ink);font-weight:600;padding:8px 0;min-height:40px}
 td select{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-height:38px}
@@ -251,7 +254,7 @@ details.edit .fgrid{margin-top:10px}
     <button class="tab" role="tab" id="tab-calc" data-view="calc" aria-selected="false">Deal calculator</button>
     <button class="tab" role="tab" id="tab-market" data-view="market" aria-selected="false">Market data</button>
     <button class="tab" role="tab" id="tab-mine" data-view="mine" aria-selected="false">My listings</button>
-    <button class="tab" role="tab" id="tab-admin" data-view="admin" aria-selected="false" hidden>Admin</button>
+    <button class="tab" role="tab" id="tab-admin" data-view="admin" aria-selected="false" hidden>Admin<span class="count num" id="cnt-pending" hidden>0</span></button>
   </nav>
 </header>
 
@@ -422,6 +425,7 @@ details.edit .fgrid{margin-top:10px}
   <section class="view" id="view-admin" hidden>
     <div class="stack">
       <div class="panel"><h2>Admin</h2><p class="lede" id="ad-access" style="margin:0"></p></div>
+      <div class="panel" id="ad-users-panel" hidden><h2>Users</h2><p class="lede">New accounts wait here until you approve them. Approved agents browse offers and keep their own clients. Block someone to remove their access straight away.</p><div class="tablewrap"><table id="ad-users"></table></div></div>
       <div class="grid2">
         <div class="panel"><h2>Team announcement</h2><p class="lede">Shown at the top of everyone's dashboard. Leave it empty to hide it.</p>
           <div class="field"><label for="ad-notice">Announcement</label><textarea id="ad-notice" rows="3"></textarea></div>
@@ -464,7 +468,7 @@ details.edit .fgrid{margin-top:10px}
       <div class="panel"><h2>Agents</h2><p class="lede">Names and numbers shown on offers, presentations and messages. Clear a name to remove that agent.</p>
         <div class="stack" id="ad-agents"></div>
         <div class="actions" style="margin-top:10px"><button class="btn" id="ad-agent-add">Add agent</button><button class="btn primary" id="ad-agents-save">Save agents</button></div></div>
-      <div class="panel" id="ad-users-panel" hidden><h2>Users</h2><p class="lede">Everyone who has registered. Agents browse offers and keep their own clients. Deactivate someone to block their access straight away.</p><div class="tablewrap"><table id="ad-users"></table></div></div>
+      
       <div class="panel" id="ad-log-panel"><h2>Activity</h2><p class="lede">The latest 50 changes admins made to offers and settings.</p><div class="tablewrap"><table id="ad-log"></table></div></div>
     </div>
   </section>
@@ -794,7 +798,7 @@ $("#mine-form").addEventListener("submit",e=>{e.preventDefault();
 /* ---------------- Dashboard ---------------- */
 const today=()=>new Date().toISOString().slice(0,10);
 const isDue=c=>c.follow&&c.follow<=today()&&c.status!=="Closed"&&c.status!=="Lost";
-function renderDash(){
+function renderDash(){setTimeout(()=>{const dp=$("#dash-pending");if(dp)dp.onclick=()=>{show("admin");setTimeout(()=>$("#ad-users-panel").scrollIntoView({behavior:"smooth"}),300)}});
   const A=all(),act=A.filter(o=>!isDone(o)),sale=act.filter(o=>o.deal!=="rent"),rent=act.filter(o=>o.deal!=="sale");
   const ys=sale.map(o=>{const r=o.inv?.rent||(o.deal==="both"?o.rent:null);return r?r/o.price:null}).filter(Boolean);
   const due=clients.filter(isDue).sort((a,b)=>a.follow.localeCompare(b.follow));
@@ -802,7 +806,7 @@ function renderDash(){
   const kpi=(l,v,s)=>`<div class="kpi"><span>${l}</span><b class="num">${v}</b><small>${s}</small></div>`;
   const go=(o,t)=>`<button class="btn sm" data-id="${esc(o.id)}">P${o.b} · ${t}</button>`;
   const best=[0,1,2,3].map(b=>[TYPE[b],sale.filter(o=>o.beds===b).sort((x,y)=>x.price-y.price)[0],rent.filter(o=>o.beds===b).sort((x,y)=>x.rent-y.rent)[0]]);
-  $("#dash").innerHTML=`${settings.notice?`<div class="notice"><b>Announcement</b>${esc(settings.notice)}</div>`:""}<div class="kpis">${kpi("Active offers",act.length,`${sale.length} for sale · ${rent.length} for rent`)}${kpi("Sale stock value","AED "+short(sale.reduce((s,o)=>s+o.price,0)),"total asking price")}${kpi("Average gross yield",ys.length?(ys.reduce((a,b)=>a+b,0)/ys.length*100).toFixed(1)+"%":"—",`${ys.length} sale offers with rent data`)}${kpi("Follow-ups due",due.length,`${clients.length} client${clients.length===1?"":"s"} · ${closed} offer${closed===1?"":"s"} closed`)}</div>
+  $("#dash").innerHTML=`${SUPA&&isAdmin&&pendingCount()?`<button class="notice" style="text-align:left;width:100%;cursor:pointer" id="dash-pending"><b>Waiting for approval</b>${pendingCount()} new ${pendingCount()===1?"account is":"accounts are"} waiting for you to approve. Open Admin › Users.</button>`:""}${settings.notice?`<div class="notice"><b>Announcement</b>${esc(settings.notice)}</div>`:""}<div class="kpis">${kpi("Active offers",act.length,`${sale.length} for sale · ${rent.length} for rent`)}${kpi("Sale stock value","AED "+short(sale.reduce((s,o)=>s+o.price,0)),"total asking price")}${kpi("Average gross yield",ys.length?(ys.reduce((a,b)=>a+b,0)/ys.length*100).toFixed(1)+"%":"—",`${ys.length} sale offers with rent data`)}${kpi("Follow-ups due",due.length,`${clients.length} client${clients.length===1?"":"s"} · ${closed} offer${closed===1?"":"s"} closed`)}</div>
    <div class="grid2">
     <div class="panel"><h2>Follow-ups due</h2><p class="lede">Clients with a follow-up date of today or earlier.</p><div class="list">${due.length?due.map(clientRow).join(""):'<div class="empty">Nothing due. Add clients and follow-up dates in the Clients tab.</div>'}</div></div>
     <div class="panel"><h2>Best entry price by type</h2><p class="lede">Cheapest active offer in each category. Tap one to open it.</p><div class="tablewrap"><table><tr><th>Type</th><th>For sale</th><th>For rent</th></tr>${best.map(r=>`<tr><td>${r[0]}</td><td>${r[1]?go(r[1],short(r[1].price)):"—"}</td><td>${r[2]?go(r[2],short(r[2].rent)+" / yr"):"—"}</td></tr>`).join("")}</table></div></div>
@@ -956,7 +960,7 @@ $("#sec-lockmin").onchange=e=>{store.set("orla.lockmin",+e.target.value);bump()}
 /* ---------------- Admin backend ---------------- */
 let agentDraft=[];
 function renderAdmin(){$("#tab-admin").hidden=!isAdmin;renderSecurity();if(!isAdmin)return;
-  $("#ad-access").textContent=SUPA?"You're the admin. Anyone can register with their email and a password; they join as agents once they confirm their email. Agents can browse offers and keep their own clients but can't change offers or settings. Deactivate a user below to block their access.":CLOUD?"You're an admin because you have Edit access to this app. Changes you make here reach the whole team straight away. To add people, use Share: Edit access makes someone an admin, Contributor access makes them an agent who can browse offers and keep their own clients, and Viewer access lets them browse only.":"This copy runs only on this device, so whoever unlocks it with the PIN is the admin. Changes stay on this device; use Backup to copy them elsewhere.";
+  $("#ad-access").textContent=SUPA?"You're the admin. Anyone can register with their email and a password. After they confirm their email, their account waits for your approval in Users below; nobody sees any data until you approve them. Approved agents can browse offers and keep their own clients but can't change offers or settings.":CLOUD?"You're an admin because you have Edit access to this app. Changes you make here reach the whole team straight away. To add people, use Share: Edit access makes someone an admin, Contributor access makes them an agent who can browse offers and keep their own clients, and Viewer access lets them browse only.":"This copy runs only on this device, so whoever unlocks it with the PIN is the admin. Changes stay on this device; use Backup to copy them elsewhere.";
   const l=[...OFFERS].sort((a,b)=>a.b-b.b||a.beds-b.beds||(keyPrice(a)||0)-(keyPrice(b)||0));
   $("#ad-offers-lede").textContent=l.length+" offers. Change a status here, or tap Edit to change everything about an offer.";
   $("#ad-table").innerHTML='<tr><th>Offer</th><th>Deal</th><th class="r">Price</th><th class="r">Rent / yr</th><th>Status</th><th></th></tr>'+l.map(o=>`<tr><td><b>P${o.b}</b> · ${esc(TYPE[o.beds])} · ${esc(o.title)}${o.check?' <span class="pill check">Check</span>':""}</td><td>${o.deal==="both"?"Sale or rent":o.deal==="rent"?"Rent":"Sale"}</td><td class="r">${o.deal!=="rent"&&o.price?fmt(o.price):"—"}</td><td class="r">${o.deal!=="sale"&&o.rent?fmt(o.rent):"—"}</td><td><select data-st="${esc(o.id)}" aria-label="Status">${STATUS.map(x=>`<option${x===(o.avail||"Available")?" selected":""}>${x}</option>`).join("")}</select></td><td><button class="btn sm" data-edit="${esc(o.id)}">Edit</button></td></tr>`).join("");
@@ -1007,7 +1011,8 @@ function setAuthGate(mode,email){closePresent();$("#gate").hidden=false;authMode
     signup:["Create your account","Register with your email. We'll send you a link to confirm it."],
     forgot:["Reset your password","Enter your email and we'll send you a link to set a new password."],
     reset:["Set a new password","Choose a new password of at least 8 characters."],
-    sent:["Check your email","We sent a confirmation link to "+(email||"your email")+". Open it on this device to finish registering."],
+    sent:["Check your email","We sent a confirmation link to "+(email||"your email")+". Open it to confirm your email. The admin then approves your account before you can sign in."],
+    pending:["Waiting for approval","Your account "+(email?"("+email+") ":"")+"is registered. The admin needs to approve it before you can open the app. Check back later."],
     "sent-reset":["Check your email","If an account exists for "+(email||"that email")+", we've sent a link to set a new password."]}[mode];
   $("#gate-title").textContent=T[0];$("#gate-msg").textContent=T[1];$("#gate-msg").hidden=false;
   const f={signin:["g-email","g-pass"],signup:["g-name","g-email","g-pass","g-pass2"],forgot:["g-email"],reset:["g-pass","g-pass2"]}[mode]||[];
@@ -1017,10 +1022,13 @@ function setAuthGate(mode,email){closePresent();$("#gate").hidden=false;authMode
   $("#g-pass-label").textContent=(mode==="signup"||mode==="reset")?"Password (at least 8 characters)":"Password";
   $("#g-pass").setAttribute("autocomplete",mode==="signin"?"current-password":"new-password");
   $("#gate-err").textContent="";$("#g-pass").value="";$("#g-pass2").value="";if(email)$("#g-email").value=email;
-  const L={signin:[["signup","Create an account"],["forgot","Forgot password?"]],signup:[["signin","I already have an account"]],forgot:[["signin","Back to sign in"]],sent:[["signin","Back to sign in"]],"sent-reset":[["signin","Back to sign in"]]}[mode]||[];
+  const L={signin:[["signup","Create an account"],["forgot","Forgot password?"]],signup:[["signin","I already have an account"]],forgot:[["signin","Back to sign in"]],sent:[["signin","Back to sign in"]],"sent-reset":[["signin","Back to sign in"]],pending:[["recheck","Check again"],["signout","Sign out"]]}[mode]||[];
   $("#g-links").innerHTML=L.map(([m,t])=>`<button type="button" data-auth="${m}">${t}</button>`).join("");
   if(f[0])setTimeout(()=>{try{$("#"+f[0]).focus()}catch(e){}},60)}
-$("#g-links").addEventListener("click",e=>{const b=e.target.closest("[data-auth]");if(b)setAuthGate(b.dataset.auth,$("#g-email").value.trim())});
+$("#g-links").addEventListener("click",async e=>{const b=e.target.closest("[data-auth]");if(!b)return;const m=b.dataset.auth;
+  if(m==="signout"){try{await sb.auth.signOut()}catch(x){}setAuthGate("signin");return}
+  if(m==="recheck"){b.disabled=true;await enterSupa();b.disabled=false;return}
+  setAuthGate(m,$("#g-email").value.trim())});
 function authError(e){const m=String(e&&e.message||e||"");
   if(/invalid login credentials/i.test(m))return "Wrong email or password.";
   if(/email not confirmed/i.test(m))return "Confirm your email first: open the link we sent you.";
@@ -1043,19 +1051,25 @@ async function loadOffers(){const {data,error}=await sb.from("offers").select("i
   OFFERS=(data||[]).map(r=>Object.assign({},r.data,{id:r.id}));store.set("orla.cache.offers",OFFERS);migrateOvr();renderAll();if(!$("#c-pick").value){const f=OFFERS.find(o=>o.deal!=="rent"&&o.price);if(f)loadCalc(f.id)}}
 async function loadSettings(){const {data,error}=await sb.from("settings").select("data").eq("id","app").maybeSingle();const x=error?store.get("orla.cache.settings",{}):(data?data.data:{});if(!error)store.set("orla.cache.settings",x);applySettings(x);renderAll();renderMarket();calc()}
 async function loadLog(){if(!SUPA||!isAdmin)return;const {data}=await sb.from("activity").select("at,by_email,text").order("at",{ascending:false}).limit(50);logRows=(data||[]).map(r=>({at:r.at,who:r.by_email,text:r.text}));renderLog()}
-async function loadUsers(){if(!SUPA||!isAdmin)return;const {data,error}=await sb.from("profiles").select("id,email,full_name,role,active,created_at").order("created_at",{ascending:true});if(error){toast("Users couldn't be loaded");return}usersList=data||[];renderUsers()}
-function renderUsers(){$("#ad-users").innerHTML='<tr><th>Name</th><th>Email</th><th>Role</th><th>Registered</th><th>Access</th></tr>'+usersList.map(u=>`<tr><td>${esc(u.full_name||"—")}</td><td>${esc(u.email)}</td><td>${u.role==="admin"?"Admin":"Agent"}</td><td>${esc(new Date(u.created_at).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}))}</td><td>${u.id===uid?"You":`<button class="btn sm" data-uact="${esc(u.id)}">${u.active?"Deactivate":"Reactivate"}</button>`}${u.active?"":' <span class="pill st done">Blocked</span>'}</td></tr>`).join("")}
-$("#ad-users").addEventListener("click",async e=>{const b=e.target.closest("[data-uact]");if(!b)return;const u=usersList.find(x=>x.id===b.dataset.uact);if(!u)return;
-  if(u.active&&!b.dataset.armed){b.dataset.armed=1;b.textContent="Tap again to block";return}
-  const {error}=await sb.from("profiles").update({active:!u.active}).eq("id",u.id);if(error){toast("Couldn't change access");return}
-  logAct((u.active?"Deactivated ":"Reactivated ")+u.email);toast(u.active?"User blocked":"User reactivated");loadUsers()});
+async function loadUsers(){if(!SUPA||!isAdmin)return;const {data,error}=await sb.from("profiles").select("id,email,full_name,role,status,created_at").order("created_at",{ascending:true});if(error){toast("Users couldn't be loaded");return}usersList=data||[];renderUsers();renderDash()}
+const pendingCount=()=>usersList.filter(u=>u.status==="pending").length;
+function renderUsers(){const n=pendingCount(),c=$("#cnt-pending");c.hidden=!n;c.textContent=n;
+  const order={pending:0,active:1,blocked:2},l=[...usersList].sort((a,b)=>order[a.status]-order[b.status]);
+  const pill=x=>x==="pending"?'<span class="pill pending">Waiting</span>':x==="active"?'<span class="pill ok">Approved</span>':'<span class="pill st done">Blocked</span>';
+  const btns=u=>u.id===uid?"You":u.status==="pending"?`<button class="btn sm primary" data-uact="${esc(u.id)}" data-to="active">Approve</button><button class="btn sm" data-uact="${esc(u.id)}" data-to="blocked">Decline</button>`:u.status==="active"?`<button class="btn sm" data-uact="${esc(u.id)}" data-to="blocked">Block</button>`:`<button class="btn sm" data-uact="${esc(u.id)}" data-to="active">Approve</button>`;
+  $("#ad-users").innerHTML='<tr><th>Name</th><th>Email</th><th>Role</th><th>Registered</th><th>Status</th><th></th></tr>'+l.map(u=>`<tr><td>${esc(u.full_name||"—")}</td><td>${esc(u.email)}</td><td>${u.role==="admin"?"Admin":"Agent"}</td><td>${esc(new Date(u.created_at).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}))}</td><td>${pill(u.status)}</td><td>${btns(u)}</td></tr>`).join("")}
+$("#ad-users").addEventListener("click",async e=>{const b=e.target.closest("[data-uact]");if(!b)return;const u=usersList.find(x=>x.id===b.dataset.uact);if(!u)return;const to=b.dataset.to;
+  if(to==="blocked"&&u.status==="active"&&!b.dataset.armed){b.dataset.armed=1;b.textContent="Tap again to block";return}
+  const {error}=await sb.from("profiles").update({status:to}).eq("id",u.id);if(error){toast("Couldn't change access");return}
+  const verb=to==="active"?"Approved ":u.status==="pending"?"Declined ":"Blocked ";logAct(verb+u.email);toast(verb.trim()+": "+u.email);loadUsers()});
 $("#signout").onclick=async()=>{try{await sb.auth.signOut()}catch(e){}["orla.mine","orla.clients","orla.star","orla.cache.offers","orla.cache.profile","orla.cache.settings"].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});try{sessionStorage.removeItem("orla.open")}catch(e){}location.reload()};
 async function enterSupa(session){if(entering||uid)return;entering=true;
   try{if(!session)session=(await sb.auth.getSession()).data.session;if(!session){setAuthGate("signin");return}
-    let {data:p,error}=await sb.from("profiles").select("id,email,full_name,role,active").eq("id",session.user.id).maybeSingle();
+    let {data:p,error}=await sb.from("profiles").select("id,email,full_name,role,status").eq("id",session.user.id).maybeSingle();
     if(error){const c=store.get("orla.cache.profile",null);if(c&&c.id===session.user.id)p=c}
     if(!p){setAuthGate("signin");$("#gate-err").textContent=error?"Can't reach the sign-in service. Check your connection.":"Your account couldn't be loaded. Ask the admin to check the database setup.";return}
-    if(!p.active){await sb.auth.signOut();setAuthGate("signin");$("#gate-err").textContent="This account has been deactivated. Contact the admin.";return}
+    if(p.status==="pending"){try{localStorage.removeItem("orla.cache.profile")}catch(x){}setAuthGate("pending",p.email);return}
+    if(p.status!=="active"){try{localStorage.removeItem("orla.cache.profile")}catch(x){}await sb.auth.signOut();setAuthGate("signin");$("#gate-err").textContent="This account doesn't have access. Contact the admin.";return}
     store.set("orla.cache.profile",p);uid=p.id;profile=p;isAdmin=p.role==="admin";meInfo={name:p.full_name||p.email,avatarUrl:initialsAvatar(p.full_name||p.email)};
     const owner=store.get("orla.localOwner",null),{data:st}=await sb.from("user_state").select("data").eq("user_id",uid).maybeSingle();
     if(st&&st.data){mine=st.data.mine||[];clients=st.data.clients||[];starred=new Set(st.data.starred||[]);store.set("orla.mine",mine);store.set("orla.clients",clients);store.set("orla.star",[...starred])}
@@ -1063,9 +1077,9 @@ async function enterSupa(session){if(entering||uid)return;entering=true;
     else if(mine.length||clients.length||starred.size)persist();
     store.set("orla.localOwner",uid);
     await Promise.all([loadSettings(),loadOffers()]);
-    $("#signout").hidden=false;startApp();
-    sb.channel("orla-live").on("postgres_changes",{event:"*",schema:"public",table:"offers"},()=>{clearTimeout(liveT);liveT=setTimeout(loadOffers,400)}).on("postgres_changes",{event:"*",schema:"public",table:"settings"},()=>loadSettings()).subscribe();
-    document.addEventListener("visibilitychange",()=>{if(!document.hidden&&uid){loadOffers();loadSettings()}});
+    $("#signout").hidden=false;startApp();if(isAdmin)loadUsers();
+    sb.channel("orla-live").on("postgres_changes",{event:"*",schema:"public",table:"offers"},()=>{clearTimeout(liveT);liveT=setTimeout(loadOffers,400)}).on("postgres_changes",{event:"*",schema:"public",table:"settings"},()=>loadSettings()).on("postgres_changes",{event:"*",schema:"public",table:"profiles"},()=>{if(isAdmin)loadUsers()}).subscribe();
+    document.addEventListener("visibilitychange",()=>{if(!document.hidden&&uid){loadOffers();loadSettings();if(isAdmin)loadUsers()}});
     if(store.get("orla.pin",null)&&!sessionOpen())setGate("pin");else unlock();
   }finally{entering=false}}
 async function bootSupa(){OFFERS=[];applySettings({});startApp();

@@ -3,8 +3,9 @@
 -- 1. On the "insert into public.app_config" line below, replace admin@your-company.com
 --    with the email address of the one admin account.
 -- 2. In Supabase, open SQL Editor, paste this whole file and press Run.
--- 3. Straight afterwards, register in the app with that same email: that account becomes the admin.
---    Everyone else who registers becomes an agent. There can only ever be one admin.
+-- 3. Straight afterwards, register in the app with that same email: that account becomes the admin
+--    and is approved automatically. Everyone else who registers becomes an agent and waits until
+--    the admin approves them in Admin › Users. There can only ever be one admin.
 -- Running the file again is safe: it keeps existing data.
 
 create table if not exists public.app_config (key text primary key, value text not null);
@@ -18,18 +19,31 @@ create table if not exists public.profiles (
   email text not null,
   full_name text not null default '',
   role text not null default 'agent' check (role in ('admin', 'agent')),
-  active boolean not null default true,
+  status text not null default 'pending' check (status in ('pending', 'active', 'blocked')),
   created_at timestamptz not null default now()
 );
+-- Upgrade from the first version of this script, which used active true/false instead of status
+do $$ begin
+  if exists (select 1 from information_schema.columns
+             where table_schema = 'public' and table_name = 'profiles' and column_name = 'active') then
+    alter table public.profiles add column if not exists status text;
+    update public.profiles set status = case when active then 'active' else 'blocked' end where status is null;
+    alter table public.profiles alter column status set default 'pending', alter column status set not null;
+    alter table public.profiles add constraint profiles_status_check check (status in ('pending', 'active', 'blocked'));
+    alter table public.profiles drop column active;
+  end if;
+end $$;
 create unique index if not exists profiles_only_one_admin on public.profiles (role) where role = 'admin';
 
 create or replace function public.handle_new_user() returns trigger
 language plpgsql security definer set search_path = public as $$
+declare is_admin_email boolean;
 begin
-  insert into public.profiles (id, email, full_name, role)
+  is_admin_email := lower(new.email) = (select value from public.app_config where key = 'admin_email');
+  insert into public.profiles (id, email, full_name, role, status)
   values (new.id, lower(new.email), coalesce(new.raw_user_meta_data->>'full_name', ''),
-          case when lower(new.email) = (select value from public.app_config where key = 'admin_email')
-               then 'admin' else 'agent' end);
+          case when is_admin_email then 'admin' else 'agent' end,
+          case when is_admin_email then 'active' else 'pending' end);
   return new;
 end $$;
 drop trigger if exists on_auth_user_created on auth.users;
@@ -38,11 +52,11 @@ create trigger on_auth_user_created after insert on auth.users
 
 create or replace function public.is_active() returns boolean
 language sql stable security definer set search_path = public as $$
-  select exists (select 1 from public.profiles where id = auth.uid() and active)
+  select exists (select 1 from public.profiles where id = auth.uid() and status = 'active')
 $$;
 create or replace function public.is_admin() returns boolean
 language sql stable security definer set search_path = public as $$
-  select exists (select 1 from public.profiles where id = auth.uid() and role = 'admin' and active)
+  select exists (select 1 from public.profiles where id = auth.uid() and role = 'admin' and status = 'active')
 $$;
 
 -- Data -----------------------------------------------------------------------
@@ -84,7 +98,7 @@ drop policy if exists "admin changes access" on public.profiles;
 create policy "admin changes access" on public.profiles
   for update using (public.is_admin() and id <> auth.uid()) with check (public.is_admin());
 revoke insert, update, delete on public.profiles from anon, authenticated;
-grant update (active) on public.profiles to authenticated;   -- only the active flag, never the role
+grant update (status) on public.profiles to authenticated;   -- only the approval status, never the role
 
 drop policy if exists "active users read offers" on public.offers;
 create policy "active users read offers" on public.offers for select using (public.is_active());
@@ -105,10 +119,10 @@ drop policy if exists "own private data" on public.user_state;
 create policy "own private data" on public.user_state for all
   using (user_id = auth.uid() and public.is_active()) with check (user_id = auth.uid() and public.is_active());
 
--- Live updates for offers and settings
-do $$ begin
-  alter publication supabase_realtime add table public.offers, public.settings;
-exception when others then null; end $$;
+-- Live updates (offers, settings, and new registrations for the admin)
+do $$ begin alter publication supabase_realtime add table public.offers;   exception when others then null; end $$;
+do $$ begin alter publication supabase_realtime add table public.settings; exception when others then null; end $$;
+do $$ begin alter publication supabase_realtime add table public.profiles; exception when others then null; end $$;
 
 -- Starting data, from the Nov 2026 decks and flyers ---------------------------
 insert into public.settings (id, data) values ('app', $j${"agents":{"talal":{"name":"Talal Al Deraawi","phone":"+971 50 120 9933"},"giulia":{"name":"Giulia Perego","phone":"+971 58 217 4063"},"blendjana":{"name":"Blendjana","phone":"+971 58 832 7743"}},"fees":{"dld":0.04,"trustee":5250,"admin":5000},"notice":""}$j$::jsonb)

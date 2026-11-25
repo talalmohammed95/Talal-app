@@ -8,11 +8,12 @@ The app is in `app/`. It's a single `index.html` with no build step.
 
 | | Who | What they can do |
 | --- | --- | --- |
-| **Admin** | One account only: the email you put in `supabase/setup.sql` | Everything, plus the Admin tab: add, edit and delete offers, statuses, fees, agents, the team announcement, users (block or reactivate) and the activity log |
-| **Agent** | Anyone who registers with their email and confirms it | Browse offers, present them, keep their own private clients, shortlists and listings |
+| **Admin** | One account only: the email you put in `supabase/setup.sql` | Everything, plus the Admin tab: approve or decline new accounts, block users, add, edit and delete offers, statuses, fees, agents, the team announcement and the activity log |
+| **Agent** | Anyone who registers, confirms their email and is approved by the admin | Browse offers, present them, keep their own private clients, shortlists and listings |
 
-- Registration is open. New users confirm their email from a link before they can sign in, and they can reset a forgotten password by email.
-- The database enforces the rules, not just the app. Only the admin can change offers or settings. Nobody can promote themselves. A second admin is impossible. A blocked user sees nothing.
+- Anyone can register, but nobody gets in without the admin's approval. A new user confirms their email from a link, then sees **Waiting for approval** until the admin taps **Approve** in Admin › Users. The Admin tab and the dashboard show how many accounts are waiting. Declined or blocked users can't sign in.
+- Forgotten passwords are reset by email.
+- The database enforces the rules, not just the app. Only the admin can change offers or settings. Nobody can promote themselves. A second admin is impossible. Pending, declined and blocked users see nothing.
 - Each device can also add a PIN lock (My listings › Login & security).
 
 ## Set it up (about 15 minutes)
@@ -22,9 +23,11 @@ The app is in `app/`. It's a single `index.html` with no build step.
 3. **Email sending.** Supabase's built-in email only sends to members of your Supabase team, and only a few emails an hour. For open registration, set your own SMTP under **Authentication › Emails › SMTP Settings**. Any provider works, for example Bird, Resend, SendGrid or your Google Workspace. Keep **Confirm email** switched on under **Authentication › Sign In / Providers › Email**.
 4. **Allowed web addresses.** Under **Authentication › URL Configuration**, set **Site URL** to the address where the app is hosted, for example `https://talalmohammed95.github.io/Talal-app/app/`. Add the same address to **Redirect URLs**. The confirmation and password-reset links return there.
 5. **Connect the app.** Under **Project Settings › API**, copy the **Project URL** and the **anon public** key into `app/config.js`, then commit. The anon key is meant to be public; the access rules protect the data.
-6. **Register the admin first.** Open the app, tap **Create an account** and register with the admin email, then confirm it from your inbox. That account becomes the admin. Everyone else who registers becomes an agent.
+6. **Register the admin first.** Open the app, tap **Create an account** and register with the admin email, then confirm it from your inbox. That account becomes the admin and is approved automatically. Everyone else who registers waits for your approval.
 
-Then share the app's address with your agents so they can register.
+Then share the app's address with your agents. Once they've registered, approve them in Admin › Users.
+
+Already ran an earlier version of `setup.sql`? Run the new one too. It upgrades the database in place: everyone who already had access keeps it.
 
 ## Run it on an iPad
 
