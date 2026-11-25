@@ -16,21 +16,30 @@
 <style>
 /* Layout: broker console. Top bar with tabs; on iPad a two-pane split (offer list | offer detail), stacked on phones. */
 :root{
-  --bg:#F7F4F0; --surface:#FFFFFF; --sunk:#EFEAE3; --fg:#1F1D1B; --muted:#635D56; --line:#E3DDD4;
-  --accent:#F28C28; --accent-ink:#B4430B; --accent-soft:#FFF1E2; --bar:#1F1D1B; --bar-fg:#FFFFFF;
-  --good:#1F7A4D; --good-soft:#E3F3EA; --warn:#9A5B00; --warn-soft:#FDF1D8; --rent:#2459A8; --rent-soft:#E6EEFA;
+  --bg:#F5F2ED; --surface:#FFFFFF; --sunk:#EFEAE3; --raised:#FBF9F6; --fg:#1C1A18; --muted:#5F5850; --faint:#857D74; --line:#E3DDD4; --line-strong:#CBC2B6;
+  --accent:#F28C28; --accent-ink:#A8420E; --accent-soft:#FFEEDC; --bar:#1C1A18; --bar-2:#2F2B28; --bar-fg:#FFFFFF; --bar-muted:#C4BCB2;
+  --good:#1A7346; --good-soft:#E2F2E9; --warn:#8F5400; --warn-soft:#FCEFD5; --bad:#B42318; --bad-soft:#FDE7E5; --rent:#1F5FB8; --rent-soft:#E5EEFB;
+  --s-sale:#f47230; --s-rent:#257de0; --d-below:#257de0; --d-above:#ec4647;
+  --q1:#84b9f3; --q2:#519ced; --q3:#257de0; --q4:#1b64be; --q5:#0f4a96;
+  --shadow:0 1px 2px rgba(28,26,24,.05),0 6px 16px rgba(28,26,24,.06);
   --display:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif;
   --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
   --r:10px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#151312; --surface:#1F1C1A; --sunk:#2A2623; --fg:#F2EEE9; --muted:#B0A89F; --line:#36312D;
-  --accent:#F59A3E; --accent-ink:#FFB36B; --accent-soft:#3A2717; --bar:#0E0D0C; --bar-fg:#F2EEE9;
-  --good:#5FCB93; --good-soft:#17311F; --warn:#F1BE5A; --warn-soft:#352812; --rent:#8DB4F0; --rent-soft:#1A2638; color-scheme:dark}}
+  --bg:#110F0E; --surface:#1A1816; --sunk:#24211E; --raised:#201D1B; --fg:#F3EFEA; --muted:#B3AA9F; --faint:#8E867D; --line:#302C28; --line-strong:#4A433D;
+  --accent:#F59A3E; --accent-ink:#FFB26E; --accent-soft:#3A2614; --bar:#0B0A09; --bar-2:#24211E; --bar-fg:#F3EFEA; --bar-muted:#A69E95;
+  --good:#5FCB93; --good-soft:#15301F; --warn:#F1BE5A; --warn-soft:#33260F; --bad:#FF8A80; --bad-soft:#3A1715; --rent:#8DB4F0; --rent-soft:#17243A;
+  --s-sale:#e76624; --s-rent:#338ced; --d-below:#338ced; --d-above:#eb6263;
+  --q1:#9dc8f7; --q2:#6aabf1; --q3:#338ced; --q4:#2370cd; --q5:#1757ac;
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 8px 22px rgba(0,0,0,.35); color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#151312; --surface:#1F1C1A; --sunk:#2A2623; --fg:#F2EEE9; --muted:#B0A89F; --line:#36312D;
-  --accent:#F59A3E; --accent-ink:#FFB36B; --accent-soft:#3A2717; --bar:#0E0D0C; --bar-fg:#F2EEE9;
-  --good:#5FCB93; --good-soft:#17311F; --warn:#F1BE5A; --warn-soft:#352812; --rent:#8DB4F0; --rent-soft:#1A2638; color-scheme:dark}
+  --bg:#110F0E; --surface:#1A1816; --sunk:#24211E; --raised:#201D1B; --fg:#F3EFEA; --muted:#B3AA9F; --faint:#8E867D; --line:#302C28; --line-strong:#4A433D;
+  --accent:#F59A3E; --accent-ink:#FFB26E; --accent-soft:#3A2614; --bar:#0B0A09; --bar-2:#24211E; --bar-fg:#F3EFEA; --bar-muted:#A69E95;
+  --good:#5FCB93; --good-soft:#15301F; --warn:#F1BE5A; --warn-soft:#33260F; --bad:#FF8A80; --bad-soft:#3A1715; --rent:#8DB4F0; --rent-soft:#17243A;
+  --s-sale:#e76624; --s-rent:#338ced; --d-below:#338ced; --d-above:#eb6263;
+  --q1:#9dc8f7; --q2:#6aabf1; --q3:#338ced; --q4:#2370cd; --q5:#1757ac;
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 8px 22px rgba(0,0,0,.35); color-scheme:dark}
 *{box-sizing:border-box}
 html,body{height:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
@@ -150,6 +159,55 @@ tr:last-child td{border-bottom:0}
 .toast.show{opacity:1}
 textarea.copybox{width:100%;min-height:140px;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);font-size:13px}
 [hidden]{display:none!important}
+.panel,.kpi,.detail{box-shadow:var(--shadow)}
+.card{box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.card:hover{border-color:var(--line-strong)}
+.themeseg{display:flex;background:var(--bar-2);border-radius:999px;padding:3px;gap:2px}
+.themeseg button{background:none;border:0;color:var(--bar-muted);font-size:12px;font-weight:600;padding:6px 11px;border-radius:999px;min-height:32px}
+.themeseg button[aria-pressed="true"]{background:var(--accent);color:#1C1A18}
+.ph{margin:0 0 4px;font-family:var(--display);font-size:17px;font-weight:800}
+.grid2{align-items:start}
+.grid3{align-items:start;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:980px){.grid3{grid-template-columns:minmax(0,1fr)}}
+.chartbox{width:100%;min-height:40px}
+.chart{display:block;max-width:100%;height:auto;overflow:visible;font-variant-numeric:tabular-nums}
+.chart text{fill:var(--muted);font-size:12px;font-family:var(--body)}
+.chart text.lbl{fill:var(--fg);font-weight:600}
+.chart .hit{cursor:pointer}
+.legend{display:flex;gap:6px 16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:10px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.legend i.dash{height:2px;width:16px;border-radius:0;vertical-align:3px}
+.legend i.tick{width:2px;height:12px;border-radius:0;vertical-align:-2px}
+.tview{margin-top:10px;font-size:13px}.tview summary{color:var(--muted);cursor:pointer;min-height:30px}
+#tip{position:fixed;z-index:60;pointer-events:none;background:var(--fg);color:var(--bg);padding:7px 10px;border-radius:8px;font-size:12.5px;line-height:1.4;max-width:280px;white-space:pre-line;box-shadow:var(--shadow);opacity:0;transition:opacity .12s;left:0;top:0}
+#tip.on{opacity:1}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:680px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.metric{background:var(--sunk);border-radius:10px;padding:10px 12px;min-width:0}
+.metric span{display:block;font-size:12px;color:var(--muted)}
+.metric b{display:block;font-family:var(--display);font-size:18px;font-weight:800;margin:2px 0}
+.metric small{display:block;font-size:11.5px;color:var(--muted)}
+.metric.below b{color:var(--rent)}.metric.above b{color:var(--bad)}
+.vchip{display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.vchip.below{background:var(--rent-soft);color:var(--rent)}.vchip.above{background:var(--bad-soft);color:var(--bad)}.vchip.at{background:var(--sunk);color:var(--muted)}
+.dsec{border-top:1px solid var(--line);padding-top:14px}
+.dsec h4{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tagrow{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 2px}
+.tag{font-size:12px;padding:3px 9px;border-radius:999px;background:var(--sunk);color:var(--fg)}
+details.more{border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+details.more>summary{padding:10px 12px;font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:8px;min-height:44px}
+details.more>summary .count{background:var(--accent);color:#1C1A18;border-radius:999px;font-size:11px;padding:1px 7px}
+details.more .fgrid{padding:0 12px 12px}
+.checks{display:flex;flex-wrap:wrap;gap:4px 14px}
+.fchips{display:flex;flex-wrap:wrap;gap:6px}
+.fchips:empty{display:none}
+.fchip{display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);color:var(--accent-ink);border:0;border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:600;min-height:32px}
+.fchip span{font-size:15px;line-height:1}
+.fchip.clear{background:none;color:var(--muted);text-decoration:underline}
+.pill.below{background:var(--rent-soft);color:var(--rent)}.pill.above{background:var(--bad-soft);color:var(--bad)}
+.kpi.accent{border-color:var(--accent)}
+.kpi small.up{color:var(--bad)}.kpi small.down{color:var(--rent)}
+
 .gate{position:fixed;inset:0;z-index:40;background:var(--bar);display:flex;align-items:center;justify-content:center;overflow-y:auto;padding:max(24px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(24px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .gate:not([hidden])~header.top,.gate:not([hidden])~main{display:none}
 .gcard{width:100%;max-width:420px;background:var(--surface);color:var(--fg);border-radius:18px;padding:28px 26px;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
@@ -243,11 +301,12 @@ details.edit .fgrid{margin-top:10px}
 <header class="top">
   <div class="brandrow">
     <div class="brand"><b>ORLA</b><span>Peninsula Offers</span><small>Business Bay · Nov 2026</small></div>
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="userchip" id="userchip"></span><button class="themebtn" id="theme" aria-label="Switch between automatic, light and dark theme">Theme: Auto</button><button class="themebtn" id="lock">Lock</button><button class="themebtn" id="signout" hidden>Sign out</button></div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="userchip" id="userchip"></span><div class="themeseg" id="themeseg" role="group" aria-label="Theme"><button data-theme="auto" aria-pressed="true">Auto</button><button data-theme="light" aria-pressed="false">Light</button><button data-theme="dark" aria-pressed="false">Dark</button></div><button class="themebtn" id="lock">Lock</button><button class="themebtn" id="signout" hidden>Sign out</button></div>
   </div>
   <nav class="tabs" role="tablist" aria-label="Sections">
     <button class="tab" role="tab" id="tab-dash" data-view="dash" aria-selected="true">Dashboard</button>
     <button class="tab" role="tab" id="tab-offers" data-view="offers" aria-selected="false">Offers<span class="count num" id="cnt-offers"></span></button>
+    <button class="tab" role="tab" id="tab-analysis" data-view="analysis" aria-selected="false">Analysis</button>
     <button class="tab" role="tab" id="tab-shortlist" data-view="shortlist" aria-selected="false">Client shortlist<span class="count num" id="cnt-short">0</span></button>
     <button class="tab" role="tab" id="tab-clients" data-view="clients" aria-selected="false">Clients<span class="count num" id="cnt-clients">0</span></button>
     <button class="tab" role="tab" id="tab-calc" data-view="calc" aria-selected="false">Deal calculator</button>
@@ -275,13 +334,30 @@ details.edit .fgrid{margin-top:10px}
             <select id="f-bld" aria-label="Building"><option value="">All buildings</option><option value="1">Peninsula One</option><option value="2">Peninsula Two</option><option value="3">Peninsula Three</option><option value="4">Peninsula Four</option><option value="5">Peninsula Five</option></select>
           </div>
           <div class="frow">
-            <select id="f-sort" aria-label="Sort"><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="size-desc">Size: largest first</option><option value="bld">Building</option></select>
+            <select id="f-sort" aria-label="Sort"><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="psf-asc">Price per sq ft: lowest</option><option value="value">Best value vs market</option><option value="yield-desc">Gross yield: highest</option><option value="size-desc">Size: largest first</option><option value="bld">Building</option></select>
             <input id="f-q" type="search" placeholder="Search view, floor, agent…" aria-label="Search">
           </div>
-          <div class="frow">
-            <input id="f-max" inputmode="numeric" placeholder="Max price or rent (AED)" aria-label="Maximum price or rent">
-            <label class="tog"><input type="checkbox" id="f-hide" checked> Hide sold &amp; rented</label>
-          </div>
+          <details class="more" id="f-more"><summary>More filters <span class="count num" id="f-count" hidden>0</span></summary>
+            <div class="fgrid">
+              <div class="field"><label for="f-pmin">Min price or rent (AED)</label><input id="f-pmin" data-f="pmin" data-num="1" inputmode="numeric"></div>
+              <div class="field"><label for="f-pmax">Max price or rent (AED)</label><input id="f-pmax" data-f="pmax" data-num="1" inputmode="numeric"></div>
+              <div class="field"><label for="f-smin">Min size (sq ft)</label><input id="f-smin" data-f="smin" data-num="1" inputmode="numeric"></div>
+              <div class="field"><label for="f-smax">Max size (sq ft)</label><input id="f-smax" data-f="smax" data-num="1" inputmode="numeric"></div>
+              <div class="field"><label for="f-view">View</label><select id="f-view" data-f="view"><option value="">Any view</option><option value="burj">Burj Khalifa</option><option value="canal">Dubai Canal</option><option value="skyline">Skyline</option><option value="park">Park</option><option value="community">Community</option></select></div>
+              <div class="field"><label for="f-furn">Furnishing</label><select id="f-furn" data-f="furn"><option value="">Any</option><option value="furnished">Furnished</option><option value="fitted">Fitted</option><option value="unfurnished">Unfurnished</option></select></div>
+              <div class="field"><label for="f-band">Floor</label><select id="f-band" data-f="band"><option value="">Any floor</option><option value="low">Low (1–10)</option><option value="mid">Mid (11–25)</option><option value="high">High (26+)</option></select></div>
+              <div class="field"><label for="f-avail">Status</label><select id="f-avail" data-f="avail"><option value="">Any status</option><option value="Available">Available</option><option value="Reserved">Reserved</option><option value="Under offer">Under offer</option><option value="Sold">Sold</option><option value="Rented">Rented</option></select></div>
+              <div class="field"><label for="f-agent">Agent</label><select id="f-agent" data-f="agent"><option value="">Any agent</option></select></div>
+              <div class="field"><label for="f-ymin">Min gross yield (%)</label><input id="f-ymin" data-f="ymin" inputmode="decimal" placeholder="e.g. 6"></div>
+              <div class="wide checks">
+                <label class="tog"><input type="checkbox" id="f-value" data-f="value"> Below market only</label>
+                <label class="tog"><input type="checkbox" id="f-check" data-f="checkOnly"> Figures to confirm</label>
+                <label class="tog"><input type="checkbox" id="f-star" data-f="starOnly"> Shortlisted only</label>
+                <label class="tog"><input type="checkbox" id="f-hide" data-f="hide" checked> Hide sold &amp; rented</label>
+              </div>
+            </div>
+          </details>
+          <div class="fchips" id="f-chips"></div>
         </div>
         <p class="summary num" id="summary"></p>
         <div class="list" id="list"></div>
@@ -289,6 +365,8 @@ details.edit .fgrid{margin-top:10px}
       <div id="detail"></div>
     </div>
   </section>
+
+  <section class="view" id="view-analysis" hidden><div class="stack" id="analysis"></div></section>
 
   <!-- SHORTLIST -->
   <section class="view" id="view-shortlist" hidden>
@@ -473,6 +551,7 @@ details.edit .fgrid{margin-top:10px}
   </section>
 </main>
 <div id="present" hidden role="dialog" aria-modal="true" aria-label="Client presentation"></div>
+<div id="tip" role="tooltip"></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -607,11 +686,12 @@ let ovr=store.get("orla.ovr",null);
 let clients=store.get("orla.clients",[]);
 const STATUS=["Available","Reserved","Under offer","Sold","Rented"];
 const isDone=o=>o.avail==="Sold"||o.avail==="Rented";
-const state={deal:"all",type:"",bld:"",sort:"price-asc",q:"",max:"",hide:true,client:null,sel:store.get("orla.sel",null)};
+const FDEF={deal:"all",type:"",bld:"",sort:"price-asc",q:"",pmin:"",pmax:"",smin:"",smax:"",view:"",furn:"",band:"",avail:"",agent:"",ymin:"",value:false,checkOnly:false,starOnly:false,hide:true};
+const state=Object.assign({},FDEF,store.get("orla.filters",{}),{client:null,sel:store.get("orla.sel",null)});
 
 function mineToOffer(m){return{id:m.id,b:+m.b,beds:+m.beds,deal:m.deal,title:(m.unit?"Unit "+m.unit+" · ":"")+TYPE[+m.beds],price:m.deal==="sale"?+m.price:undefined,rent:m.deal==="rent"?+m.price:undefined,
   size:m.size?+m.size:null,floor:m.floor||"On request",view:m.view||"On request",furn:m.furn,status:m.status,agent:m.agent,hl:m.notes||"",mine:true,owner:m.owner,ownerPhone:m.phone,date:m.date,src:"Added on this device"}}
-const all=()=>OFFERS.concat(mine.map(mineToOffer)).map(o=>o.avail?o:Object.assign({},o,{avail:"Available"}));
+const all=()=>OFFERS.concat(mine.map(mineToOffer)).map(enrich);
 const agentOf=o=>AGENTS[o.agent]||Object.values(AGENTS)[0]||{name:"Orla Properties",phone:""};
 const dldLabel=()=>"DLD registration ("+(+(FEES.dld*100).toFixed(2))+"%)";
 const keyPrice=o=>o.deal==="rent"?o.rent:o.price;
@@ -626,6 +706,8 @@ function pills(o){
   if(o.deal!=="sale")h+='<span class="pill rent">Rent</span>';
   if(o.mine)h+='<span class="pill mine">Mine</span>';
   if(o.avail!=="Available")h+=`<span class="pill st ${isDone(o)?"done":""}">${esc(o.avail)}</span>`;
+  if(o.x&&o.x.value==='below')h+='<span class="pill below">Below market</span>';
+  if(o.x&&o.x.value==='above')h+='<span class="pill above">Above market</span>';
   if(o.check)h+='<span class="pill check">Check price</span>';
   return h;
 }
@@ -634,22 +716,29 @@ function cardHTML(o,cur){
   return `<button class="card" data-id="${esc(o.id)}" aria-current="${cur}">
     <div class="tower" aria-hidden="true"><b>P${o.b}</b><i>${o.beds===0?"STU":o.beds+"BR"}</i></div>
     <div style="min-width:0"><h3>${starred.has(o.id)?'<span class="star" aria-label="Shortlisted">★</span> ':""}${esc(o.title)}</h3>
-      <div class="meta">${esc(BLD[o.b])} · ${o.size?fmt(o.size)+" sq ft":"size on request"} · ${esc(o.floor)}</div>
+      <div class="meta">${esc(BLD[o.b])} · ${o.size?fmt(o.size)+" sq ft":"size on request"} · ${esc(o.floor)}${o.x&&o.x.psf?" · AED "+fmt(o.x.psf)+"/sq ft":""}</div>
       <div class="pills">${pills(o)}</div></div>
     <div class="p num">${esc(o.deal==="rent"?short(o.rent):short(o.price))}<small>${o.deal==="rent"?"AED / yr":"AED"}</small></div>
   </button>`;
 }
 
 /* ---------------- Offers view ---------------- */
+function priceOf(o){return (state.deal==="rent"||o.deal==="rent")?o.rent:o.price}
 function filtered(){
-  const q=state.q.trim().toLowerCase();
-  let l=all().filter(o=>(state.deal==="all"||o.deal===state.deal||o.deal==="both")&&(state.type===""||o.beds===+state.type)&&(state.bld===""||o.b===+state.bld)&&(!state.hide||!isDone(o))&&(!state.max||((state.deal==="rent"||o.deal==="rent")?(o.rent||0)<=+state.max:(o.price||0)<=+state.max))&&
-    (!q||[o.title,o.view,o.floor,o.furn,BLD[o.b],AGENTS[o.agent]?.name,o.hl].join(" ").toLowerCase().includes(q)));
+  const F=state,q=String(F.q||"").trim().toLowerCase();
+  const l=all().filter(o=>(F.deal==="all"||o.deal===F.deal||o.deal==="both")&&(F.type===""||o.beds===+F.type)&&(F.bld===""||o.b===+F.bld)&&(!F.hide||!isDone(o))
+    &&(!F.pmin||(priceOf(o)||0)>=+F.pmin)&&(!F.pmax||(priceOf(o)||Infinity)<=+F.pmax)
+    &&(!F.smin||(o.size||0)>=+F.smin)&&(!F.smax||(o.size&&o.size<=+F.smax))
+    &&(!F.view||o.x.views.includes(F.view))&&(!F.furn||o.x.furn===F.furn)&&(!F.band||o.x.band===F.band)&&(!F.avail||o.avail===F.avail)&&(!F.agent||o.agent===F.agent)
+    &&(!F.ymin||(o.x.gy&&o.x.gy*100>=+F.ymin))&&(!F.value||o.x.value==="below")&&(!F.checkOnly||o.check)&&(!F.starOnly||starred.has(o.id))
+    &&(!q||[o.title,o.view,o.floor,o.furn,BLD[o.b],AGENTS[o.agent]?.name,o.hl].join(" ").toLowerCase().includes(q)));
   const pk=o=>state.deal==="rent"?(o.rent??Infinity):keyPrice(o);
-  const s={"price-asc":(a,b)=>pk(a)-pk(b),"price-desc":(a,b)=>pk(b)-pk(a),"size-desc":(a,b)=>(b.size||0)-(a.size||0),"bld":(a,b)=>a.b-b.b||a.beds-b.beds}[state.sort];
-  return l.sort(s);
+  const S={"price-asc":(a,b)=>pk(a)-pk(b),"price-desc":(a,b)=>pk(b)-pk(a),"size-desc":(a,b)=>(b.size||0)-(a.size||0),"bld":(a,b)=>a.b-b.b||a.beds-b.beds,
+    "psf-asc":(a,b)=>((a.x.psf||a.x.rpsf)??Infinity)-((b.x.psf||b.x.rpsf)??Infinity),"yield-desc":(a,b)=>(b.x.gy??-1)-(a.x.gy??-1),"value":(a,b)=>(a.x.ref??9)-(b.x.ref??9)};
+  return l.sort(S[state.sort]||S["price-asc"]);
 }
 function renderList(){
+  renderChips();saveFilters();
   const l=filtered();
   if(!l.find(o=>o.id===state.sel))state.sel=l[0]?.id??null;
   const sale=l.filter(o=>o.deal!=="rent").length,rent=l.filter(o=>o.deal!=="sale").length;
@@ -676,24 +765,40 @@ function renderDetail(){
   const o=all().find(x=>x.id===state.sel),el=$("#detail");
   if(!o){el.innerHTML='<div class="empty">Pick an offer to see its details.</div>';return}
   store.set("orla.sel",o.id);
-  const p=priceLine(o),a=agentOf(o);
-  const facts=[["Unit type",TYPE[o.beds]],["Size",o.size?fmt(o.size)+" sq ft ("+(o.size*0.092903).toFixed(1)+" m²)":"On request"]];
-  if(o.balcony)facts.push(["Balcony",o.balcony+" sq ft"]);
-  facts.push(["Floor",o.floor],["View",o.view],["Bathrooms",String(o.baths??"—")],["Furnishing",o.furn||"—"],["Status",o.status||"—"]);
-  if(o.parking)facts.push(["Parking",o.parking]);
-  if(o.cheques)facts.push(["Cheques",o.cheques]);
-  if(o.deposit)facts.push(["Security deposit",o.deposit]);
-  if(o.owner)facts.push(["Owner / client",o.owner]);
-  if(o.ownerPhone)facts.push(["Owner phone",o.ownerPhone]);
-  if(o.date)facts.push(["Date listed",o.date]);
+  const p=priceLine(o),a=agentOf(o),x=o.x,dep=parseFloat(o.deposit||"5")/100;
+  const metric=(l,v,sub,cls="")=>`<div class="metric ${cls}"><span>${esc(l)}</span><b class="num">${esc(v)}</b><small>${esc(sub)}</small></div>`;
+  const vcls=d=>d==null?"":d<-0.03?"below":d>0.03?"above":"";
+  let M="";
+  if(o.deal!=="rent")M=metric("Price per sq ft",x.psf?aed(x.psf):"—",x.mS?"Registered avg "+aed(x.mS.psf):"No registered sales")
+    +metric("Vs building average",pct(x.vs),x.mS?x.mS.deals+" sales, "+x.mS.period:"No market data",vcls(x.vs))
+    +metric("Gross yield",x.gy?(x.gy*100).toFixed(1)+"%":"—",x.rentFor?aed(x.rentFor)+" / yr"+(x.rentSrc==="market"?" (avg lease)":""):"No rent estimate")
+    +metric("Mortgage estimate",aed(x.mort)+" / mo",`${MORT.down*100}% down · ${(MORT.rate*100).toFixed(1)}% · ${MORT.years} yrs`);
+  else M=metric("Monthly rent",aed(o.rent/12),o.cheques?o.cheques+" cheque"+(o.cheques==="1"?"":"s"):"Cheques on request")
+    +metric("Rent per sq ft",x.rpsf?aed(x.rpsf):"—",o.size?fmt(o.size)+" sq ft":"Size on request")
+    +metric("Vs building average",pct(x.vsR),x.mR&&x.mR.avg?"Avg lease "+aed(x.mR.avg):"No registered leases",vcls(x.vsR))
+    +metric("Security deposit",aed(o.rent*dep),(dep*100)+"% of annual rent");
+  const pos=o.deal!=="rent"&&x.psf&&x.mS?{v:x.psf,m:x.mS.psf,f:v=>"AED "+fmt(v),t:"Asking price per sq ft against the building's registered average"}:(x.vsR!=null?{v:o.rent,m:x.mR.avg,f:v=>short(v),t:"Annual rent against the building's average registered lease"}:null);
+  const tags=x.views.map(v=>`<span class="tag">${esc(VIEWS[v])}</span>`).join("")+(x.band?`<span class="tag">${esc(BAND[x.band])}</span>`:"")+(x.furn?`<span class="tag">${esc(FURN[x.furn])}</span>`:"");
+  const unit=[["Unit type",TYPE[o.beds]],["Size",o.size?fmt(o.size)+" sq ft · "+(o.size*0.092903).toFixed(1)+" m²":"On request"]];
+  if(o.balcony)unit.push(["Balcony",o.balcony+" sq ft"]);
+  unit.push(["Bathrooms",String(o.baths??"—")],["Floor",o.floor||"On request"],["View",o.view||"On request"],["Furnishing",o.furn||"—"],["Handover",o.status||"—"],["Availability",o.avail]);
+  if(o.parking)unit.push(["Parking",o.parking]);
+  if(o.owner)unit.push(["Owner / client",o.owner]);
+  if(o.ownerPhone)unit.push(["Owner phone",o.ownerPhone]);
+  if(o.date)unit.push(["Date listed",o.date]);
   let money="";
-  if(o.deal!=="rent"){const c=costs(o.price);money=`<div><h4>Total purchase cost</h4>${kv("Price",aed(o.price))}${kv(dldLabel(),aed(c.dld))}${kv("Trustee office fee",aed(FEES.trustee))}${kv("Admin fee",aed(FEES.admin))}${kv("Total cost",aed(c.total),"total")}</div>`}
-  else{const dep=parseFloat(o.deposit||"5")/100;money=`<div><h4>Rent</h4>${kv("Annual rent",aed(o.rent))}${kv("Monthly equivalent",aed(o.rent/12))}${kv("Security deposit ("+(dep*100)+"%)",aed(o.rent*dep))}${o.size?kv("Rent per sq ft",aed(o.rent/o.size)):""}${kv("Rent per year",aed(o.rent),"total")}</div>`}
-  let inv="";const r=o.inv?.rent||(o.deal==="both"?o.rent:null);
-  if(o.deal!=="rent"&&r){const c=costs(o.price);let rows=kv("Expected rent",aed(r)+" / yr")+kv("Gross yield on price",(r/o.price*100).toFixed(1)+"%");
-    if(o.inv?.resale){const be=c.total/0.98,gain=o.inv.resale*0.98-c.total;rows+=kv("Break-even resale (2% exit)",aed(Math.round(be/1000)*1000))+kv("Resale target",aed(o.inv.resale))+kv("12-month return (resale + rent)",aed(gain+r)+" · "+((gain+r)/c.total*100).toFixed(1)+"%","total")}
-    inv=`<div class="boxed"><h4>Investor view</h4>${rows}</div>`}
-  const mkt=o.market?`<div class="boxed"><h4>Market check</h4>${o.market.map(m=>kv(m[0],m[1])).join("")}</div>`:"";
+  if(o.deal!=="rent"){const c=costs(o.price);money+=`<div><h4>Purchase cost</h4>${kv("Price",aed(o.price))}${kv(dldLabel(),aed(c.dld))}${kv("Trustee office fee",aed(FEES.trustee))}${kv("Admin fee",aed(FEES.admin))}${kv("Total cost",aed(c.total),"total")}</div>`}
+  if(o.deal!=="sale")money+=`<div><h4>Rent and payment</h4>${kv("Annual rent",aed(o.rent))}${kv("Monthly equivalent",aed(o.rent/12))}${kv("Cheques",o.cheques||"On request")}${kv("Security deposit ("+(dep*100)+"%)",aed(o.rent*dep))}${kv("Rent per year",aed(o.rent),"total")}</div>`;
+  let inv="";
+  if(o.deal!=="rent"&&x.rentFor){const c=costs(o.price);let rows=kv("Rent used",aed(x.rentFor)+" / yr"+(x.rentSrc==="market"?" (avg lease)":""))+kv("Gross yield on price",(x.gy*100).toFixed(1)+"%")+kv("Gross yield on total cost",(x.rentFor/c.total*100).toFixed(1)+"%")+kv("Mortgage, "+MORT.down*100+"% down",aed(x.mort)+" / mo")+kv("Cash upfront",aed(o.price*MORT.down+c.total-o.price));
+    if(o.inv&&o.inv.resale){const be=c.total/0.98,gain=o.inv.resale*0.98-c.total;rows+=kv("Break-even resale (2% exit)",aed(Math.round(be/1000)*1000))+kv("Resale target",aed(o.inv.resale))+kv("12-month return (resale + rent)",aed(gain+x.rentFor)+" · "+((gain+x.rentFor)/c.total*100).toFixed(1)+"%","total")}
+    inv=`<div><h4>Investment</h4>${rows}</div>`}
+  let mrows="";
+  if(x.mS)mrows+=kv("Registered sales",x.mS.deals+" · "+x.mS.period)+(x.mS.avg?kv("Average sale price",aed(x.mS.avg)):"")+kv("Average price per sq ft",aed(x.mS.psf))+(x.mS.lo?kv("Sale price range",short(x.mS.lo)+" – "+short(x.mS.hi)):"")+(x.mS.note?kv("Note",x.mS.note):"");
+  if(x.mR)mrows+=(x.mR.deals?kv("Registered leases",x.mR.deals+" · "+x.mR.period):"")+(x.mR.avg?kv("Average annual rent",aed(x.mR.avg)):"")+(x.mR.lo?kv("Rent range",short(x.mR.lo)+" – "+short(x.mR.hi)):"")+(x.mR.note?kv("Note",x.mR.note):"");
+  if(o.market)mrows+=o.market.map(m=>kv(m[0],m[1])).join("");
+  const comp=COMPS.find(c=>c.t.startsWith(BLD[o.b])&&((o.beds===0&&/Studio/.test(c.t))||(o.beds>0&&c.t.includes(o.beds+" Bed"))));
+  const compT=comp&&o.deal!=="rent"?`<div class="tablewrap" style="margin-top:8px"><table><tr><th>Recent sale</th><th class="r">Size</th><th class="r">Price</th><th class="r">/ sq ft</th></tr>${comp.rows.map(r=>`<tr><td>${r[0]}</td><td class="r">${fmt(r[1])}</td><td class="r">${fmt(r[2])}</td><td class="r">${fmt(r[2]/r[1])}</td></tr>`).join("")}</table></div>`:"";
   const check=o.check?`<div class="notes"><b>Figures to confirm</b><ul>${o.check.map(c=>"<li>"+esc(c)+"</li>").join("")}</ul></div>`:"";
   const wa="https://wa.me/?text="+encodeURIComponent(offerText(o));
   el.innerHTML=`<article class="detail">
@@ -708,19 +813,23 @@ function renderDetail(){
         ${o.deal!=="rent"?'<button class="btn" id="d-calc">Open in calculator</button>':""}
         ${o.mine?'<button class="btn" id="d-del">Delete listing</button>':""}
       </div>
+      <div class="metrics">${M}</div>
+      ${pos?`<div><h4>Market position ${valueChip(x)}</h4>${chartSlot("detail-pos",W=>chartVsMarket([{label:"This offer",v:pos.v,m:pos.m}],W,{compact:true,fmt:pos.f,label:pos.t}))}${legend([["var(--fg)","Building average","tick"],[x.value==="above"?"var(--d-above)":x.value==="below"?"var(--d-below)":"var(--faint)","This offer"]])}</div>`:""}
       ${o.hl?`<p class="hl">${esc(o.hl)}</p>`:""}
       ${check}
-      <div class="cols"><div><h4>Unit details</h4>${facts.map(f=>kv(f[0],f[1])).join("")}</div>${money}</div>
-      ${inv||mkt?`<div class="cols">${inv}${mkt}</div>`:""}
-      <div><h4>The building</h4><p class="hl" style="margin-bottom:8px">${esc(TOWER[o.b])}</p><div class="chips">${AMEN[o.b].map(x=>'<span class="chip">'+esc(x)+'</span>').join("")}</div></div>
+      <div class="dsec"><h4>Unit</h4>${tags?`<div class="tagrow">${tags}</div>`:""}<div class="cols"><div>${unit.slice(0,Math.ceil(unit.length/2)).map(f=>kv(f[0],f[1])).join("")}</div><div>${unit.slice(Math.ceil(unit.length/2)).map(f=>kv(f[0],f[1])).join("")}</div></div></div>
+      <div class="dsec"><div class="cols">${money}${inv}</div></div>
+      ${mrows||compT?`<div class="dsec"><h4>Market in ${esc(BLD[o.b])} · ${esc(TYPE[o.beds])}</h4>${mrows}${compT}</div>`:""}
+      <div class="dsec"><h4>The building</h4><p class="hl" style="margin-bottom:8px">${esc(TOWER[o.b])}</p><div class="chips">${AMEN[o.b].map(t=>'<span class="chip">'+esc(t)+'</span>').join("")}</div></div>
       ${isAdmin&&!o.mine?`<details class="edit"><summary>Admin: update price &amp; status</summary><div class="fgrid">
         <div class="field"><label for="e-st">Status</label><select id="e-st">${STATUS.map(s=>`<option${s===o.avail?" selected":""}>${s}</option>`).join("")}</select></div>
         ${o.deal!=="rent"?`<div class="field"><label for="e-price">Sale price (AED)</label><input id="e-price" inputmode="numeric" value="${fmt(o.price)}"></div>`:""}
         ${o.deal!=="sale"?`<div class="field"><label for="e-rent">Rent (AED / yr)</label><input id="e-rent" inputmode="numeric" value="${fmt(o.rent)}"></div>`:""}
         <div class="wide actions"><button class="btn primary" id="e-save">Save for everyone</button><button class="btn" id="e-full">Edit all details</button></div></div></details>`:""}
       <div class="agent"><div class="who"><b>${esc(a.name)}</b><span>Orla Properties L.L.C · BRN 41837</span></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="phone num">${esc(a.phone)}</span><button class="btn" id="d-phone">Copy number</button></div></div>
-      <p class="src">Source: ${esc(o.src)}. Drive times approx.: Dubai Mall 7 min · Business Bay Metro 7 min · DIFC 12 min · DXB 16 min.</p>
+      <p class="src">Source: ${esc(o.src)}. Market: DLD-registered deals, Aug–Nov 2026. Drive times approx.: Dubai Mall 7 min · Business Bay Metro 7 min · DIFC 12 min · DXB 16 min.</p>
     </div></article>`;
+  fillCharts(el);
   $("#d-star").onclick=()=>{toggleStar(o.id)};
   $("#d-copy").onclick=()=>copy(offerText(o));
   $("#d-phone").onclick=()=>copy(a.phone);
@@ -762,22 +871,31 @@ function calc(){
 
 /* ---------------- Market ---------------- */
 function renderMarket(){
+  const sRows=MKT.sale.map(m=>`<tr><td>${esc(BLD[m.b])}</td><td>${esc(TYPE[m.beds])}</td><td class="r">${m.deals}</td><td>${esc(m.period)}</td><td class="r">${m.avg?fmt(m.avg):"—"}</td><td class="r">${fmt(m.psf)}</td><td>${esc(m.note||(m.lo?"Range "+short(m.lo)+" – "+short(m.hi):""))}</td></tr>`).join("");
+  const rRows=MKT.rent.map(m=>`<tr><td>${esc(BLD[m.b])}</td><td>${esc(TYPE[m.beds])}</td><td class="r">${m.deals||"—"}</td><td>${esc(m.period)}</td><td class="r">${m.avg?fmt(m.avg):"—"}</td><td>${esc((m.lo?"Range "+short(m.lo)+" – "+short(m.hi)+(m.note?" · ":""):"")+(m.note||""))}</td></tr>`).join("");
+  const psfBars=[...MKT.sale].sort((a,b)=>b.psf-a.psf).map(m=>({label:BLD[m.b].replace("Peninsula ","P. ")+" · "+TYPE[m.beds],v:m.psf,text:"AED "+fmt(m.psf),tip:`${BLD[m.b]} · ${TYPE[m.beds]}\n${m.deals} registered sales (${m.period})\nAED ${fmt(m.psf)} / sq ft`}));
+  const rentBars=MKT.rent.filter(m=>m.avg).sort((a,b)=>b.avg-a.avg).map(m=>({label:BLD[m.b].replace("Peninsula ","P. ")+" · "+TYPE[m.beds],v:m.avg,text:short(m.avg)+" / yr",tip:`${BLD[m.b]} · ${TYPE[m.beds]}\n${m.deals} registered leases (${m.period})\nAverage AED ${fmt(m.avg)} / yr`}));
+  const mYield=MKT.sale.filter(m=>m.avg).map(m=>{const r=MKT.rent.find(z=>z.b===m.b&&z.beds===m.beds&&z.avg);return r?[BLD[m.b],TYPE[m.beds],fmt(m.avg),fmt(r.avg),(r.avg/m.avg*100).toFixed(1)+"%"]:null}).filter(Boolean);
   const comps=COMPS.map(c=>{const avg=c.rows.reduce((s,r)=>s+r[2]/r[1],0)/c.rows.length;
-    return `<div class="panel"><h2 style="font-size:16px">${esc(c.t)}</h2><div class="tablewrap"><table><tr><th>Date</th><th class="r">Size (sq ft)</th><th class="r">Price (AED)</th><th class="r">AED / sq ft</th></tr>
+    return `<div class="panel"><h3 class="ph">${esc(c.t)}</h3><div class="tablewrap"><table><tr><th>Date</th><th class="r">Size (sq ft)</th><th class="r">Price (AED)</th><th class="r">AED / sq ft</th></tr>
     ${c.rows.map(r=>`<tr><td>${r[0]}</td><td class="r">${fmt(r[1])}</td><td class="r">${fmt(r[2])}</td><td class="r">${fmt(r[2]/r[1])}</td></tr>`).join("")}
     <tr class="this"><td>Our offer</td><td class="r">${fmt(c.mine[0])}</td><td class="r">${fmt(c.mine[1])}</td><td class="r">${fmt(c.mine[1]/c.mine[0])}</td></tr></table></div>
     <p class="src" style="margin-top:8px">Average sold: AED ${fmt(avg)} / sq ft</p></div>`}).join("");
   $("#market").innerHTML=`
-   <div class="panel"><h2>Registered sales by building</h2><p class="lede">DLD-registered deals, Aug–Nov 2026, as quoted on your flyers.</p>
-    <div class="tablewrap"><table><tr><th>Building</th><th>Type</th><th>Sales</th><th>Average price</th><th class="r">Avg AED / sq ft</th><th>Notes</th></tr>
-    ${SALES_MKT.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td class="r">${r[4]}</td><td>${r[5]}</td></tr>`).join("")}</table></div></div>
-   <div class="panel"><h2>Registered rents by building</h2><p class="lede">DLD-registered leases and current Bayut listings, Aug–Nov 2026.</p>
-    <div class="tablewrap"><table><tr><th>Building</th><th>Type</th><th>Leases</th><th>Average rent / yr</th><th>Range</th></tr>
-    ${RENT_MKT.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`).join("")}</table></div></div>
-   <div><h4 style="margin:4px 2px 10px">Last 3 registered sales vs our investor offers</h4><div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">${comps}</div></div>
+   <div class="grid2">
+     <div class="panel"><h3 class="ph">Registered sale price per sq ft</h3><p class="lede">Average of DLD-registered sales by building and type.</p>${chartSlot("mk-psf",W=>chartBars(psfBars,W,{label:"Registered sale price per sq ft",color:"var(--s-sale)",lw:170}))}</div>
+     <div class="panel"><h3 class="ph">Registered annual rent</h3><p class="lede">Average of DLD-registered leases by building and type.</p>${chartSlot("mk-rent",W=>chartBars(rentBars,W,{label:"Registered annual rent",color:"var(--s-rent)",lw:170}))}</div>
+   </div>
+   <div class="panel"><h2>Registered sales</h2><p class="lede">DLD-registered deals, Aug–Nov 2026, as quoted on your flyers.</p>
+    <div class="tablewrap"><table><tr><th>Building</th><th>Type</th><th class="r">Sales</th><th>Period</th><th class="r">Average price</th><th class="r">AED / sq ft</th><th>Notes</th></tr>${sRows}</table></div></div>
+   <div class="panel"><h2>Registered rents</h2><p class="lede">DLD-registered leases and current listings, Aug–Nov 2026.</p>
+    <div class="tablewrap"><table><tr><th>Building</th><th>Type</th><th class="r">Leases</th><th>Period</th><th class="r">Average rent / yr</th><th>Notes</th></tr>${rRows}</table></div></div>
+   ${mYield.length?`<div class="panel"><h2>Market gross yield</h2><p class="lede">Average registered rent divided by average registered sale price, where both are known.</p>
+    <div class="tablewrap"><table><tr><th>Building</th><th>Type</th><th class="r">Avg sale (AED)</th><th class="r">Avg rent / yr (AED)</th><th class="r">Gross yield</th></tr>${mYield.map(r=>`<tr>${r.map((c,i)=>`<td${i>1?' class="r"':""}>${esc(c)}</td>`).join("")}</tr>`).join("")}</table></div></div>`:""}
+   <div><h4 style="margin:4px 2px 10px">Last 3 registered sales against our investor offers</h4><div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">${comps}</div></div>
    <div class="panel"><h2>Investor strategy</h2><p class="lede" style="margin:0">Buy at entry level, rent while you hold (6.3%–6.6% gross yield), then resell at the target after 12–18 months. A quick flip within a few months barely covers the 4% DLD fee and AED 10,250 in other fees.</p></div>`;
+  fillCharts($("#market"));
 }
-
 /* ---------------- My listings ---------------- */
 function renderMine(){
   $("#mine-lede").textContent=mine.length?`${mine.length} saved on this device.`:"Nothing saved yet.";
@@ -798,21 +916,51 @@ $("#mine-form").addEventListener("submit",e=>{e.preventDefault();
 const today=()=>new Date().toISOString().slice(0,10);
 const isDue=c=>c.follow&&c.follow<=today()&&c.status!=="Closed"&&c.status!=="Lost";
 function renderDash(){setTimeout(()=>{const dp=$("#dash-pending");if(dp)dp.onclick=()=>{show("admin");setTimeout(()=>$("#ad-users-panel").scrollIntoView({behavior:"smooth"}),300)}});
-  const A=all(),act=A.filter(o=>!isDone(o)),sale=act.filter(o=>o.deal!=="rent"),rent=act.filter(o=>o.deal!=="sale");
-  const ys=sale.map(o=>{const r=o.inv?.rent||(o.deal==="both"?o.rent:null);return r?r/o.price:null}).filter(Boolean);
-  const due=clients.filter(isDue).sort((a,b)=>a.follow.localeCompare(b.follow));
+  const A=all(),act=A.filter(o=>!isDone(o)),sale=act.filter(o=>o.deal!=="rent"&&o.price),rent=act.filter(o=>o.deal!=="sale"&&o.rent);
+  const ys=sale.filter(o=>o.x.gy),avgY=ys.length?ys.reduce((s,o)=>s+o.x.gy,0)/ys.length:null;
+  const sz=sale.filter(o=>o.size),askPsf=sz.length?sz.reduce((s,o)=>s+o.price,0)/sz.reduce((s,o)=>s+o.size,0):null;
+  const mm=sale.filter(o=>o.x.vs!=null),avgVs=mm.length?mm.reduce((s,o)=>s+o.x.vs,0)/mm.length:null;
+  const below=act.filter(o=>o.x.value==="below").length,priced=act.filter(o=>o.x.ref!=null).length;
+  const due=clients.filter(isDue).sort((a,b)=>a.follow.localeCompare(b.follow)),openC=clients.filter(c=>c.status!=="Closed"&&c.status!=="Lost");
   const closed=A.length-act.length,checks=act.filter(o=>o.check);
-  const kpi=(l,v,s)=>`<div class="kpi"><span>${l}</span><b class="num">${v}</b><small>${s}</small></div>`;
+  const kpi=(l,v,sm,cls="")=>`<div class="kpi"><span>${l}</span><b class="num">${v}</b><small class="${cls}">${sm}</small></div>`;
   const go=(o,t)=>`<button class="btn sm" data-id="${esc(o.id)}">P${o.b} · ${t}</button>`;
   const best=[0,1,2,3].map(b=>[TYPE[b],sale.filter(o=>o.beds===b).sort((x,y)=>x.price-y.price)[0],rent.filter(o=>o.beds===b).sort((x,y)=>x.rent-y.rent)[0]]);
-  $("#dash").innerHTML=`${SRV&&isAdmin&&pendingCount()?`<button class="notice" style="text-align:left;width:100%;cursor:pointer" id="dash-pending"><b>Waiting for approval</b>${pendingCount()} new ${pendingCount()===1?"account is":"accounts are"} waiting for you to approve. Open Admin › Users.</button>`:""}${settings.notice?`<div class="notice"><b>Announcement</b>${esc(settings.notice)}</div>`:""}<div class="kpis">${kpi("Active offers",act.length,`${sale.length} for sale · ${rent.length} for rent`)}${kpi("Sale stock value","AED "+short(sale.reduce((s,o)=>s+o.price,0)),"total asking price")}${kpi("Average gross yield",ys.length?(ys.reduce((a,b)=>a+b,0)/ys.length*100).toFixed(1)+"%":"—",`${ys.length} sale offers with rent data`)}${kpi("Follow-ups due",due.length,`${clients.length} client${clients.length===1?"":"s"} · ${closed} offer${closed===1?"":"s"} closed`)}</div>
-   <div class="grid2">
-    <div class="panel"><h2>Follow-ups due</h2><p class="lede">Clients with a follow-up date of today or earlier.</p><div class="list">${due.length?due.map(clientRow).join(""):'<div class="empty">Nothing due. Add clients and follow-up dates in the Clients tab.</div>'}</div></div>
-    <div class="panel"><h2>Best entry price by type</h2><p class="lede">Cheapest active offer in each category. Tap one to open it.</p><div class="tablewrap"><table><tr><th>Type</th><th>For sale</th><th>For rent</th></tr>${best.map(r=>`<tr><td>${r[0]}</td><td>${r[1]?go(r[1],short(r[1].price)):"—"}</td><td>${r[2]?go(r[2],short(r[2].rent)+" / yr"):"—"}</td></tr>`).join("")}</table></div></div>
+  const blds=[1,2,3,4,5].map(b=>({label:BLD[b],v:{sale:sale.filter(o=>o.b===b).length,rent:rent.filter(o=>o.b===b).length}})).filter(r=>r.v.sale+r.v.rent);
+  const st=STATUS.map(s=>({label:s,v:A.filter(o=>o.avail===s).length})).filter(r=>r.v).map(r=>({...r,text:String(r.v),tip:`${r.label}: ${r.v} offer${r.v===1?"":"s"}`}));
+  const vsRows=sale.filter(o=>o.x.psf&&o.x.mS).sort((a,b)=>a.x.vs-b.x.vs).map(o=>({label:shortLabel(o),v:o.x.psf,m:o.x.mS.psf,id:o.id}));
+  const STAGES=["New","Contacted","Viewing booked","Offer made","Closed"],SC=["var(--q1)","var(--q2)","var(--q3)","var(--q4)","var(--q5)"];
+  const pipe=STAGES.map((s,i)=>({label:s,v:clients.filter(c=>c.status===s).length,color:SC[i]})).map(r=>({...r,text:String(r.v),tip:`${r.label}: ${r.v} client${r.v===1?"":"s"}`}));
+  const lost=clients.filter(c=>c.status==="Lost").length;
+  $("#dash").innerHTML=`${SRV&&isAdmin&&pendingCount()?`<button class="notice" style="text-align:left;width:100%;cursor:pointer" id="dash-pending"><b>Waiting for approval</b>${pendingCount()} new ${pendingCount()===1?"account is":"accounts are"} waiting for you to approve. Open Admin › Users.</button>`:""}${settings.notice?`<div class="notice"><b>Announcement</b>${esc(settings.notice)}</div>`:""}
+   <div class="kpis">
+    ${kpi("Active offers",act.length,`${sale.length} for sale · ${rent.length} for rent`)}
+    ${kpi("Sale stock value","AED "+short(sale.reduce((s,o)=>s+o.price,0)),"total asking price")}
+    ${kpi("Annual rent roll","AED "+short(rent.reduce((s,o)=>s+o.rent,0)),"if every rental lets at asking")}
+    ${kpi("Asking price / sq ft",askPsf?"AED "+fmt(askPsf):"—",avgVs!=null?pct(avgVs)+" vs registered sales":"no market match",avgVs>0.03?"up":avgVs<-0.03?"down":"")}
+    ${kpi("Average gross yield",avgY?(avgY*100).toFixed(1)+"%":"—",`across ${ys.length} sale offers`)}
+    ${kpi("Below market",below,`of ${priced} offers with market data`)}
+    ${kpi("Open clients",openC.length,`${due.length} follow-up${due.length===1?"":"s"} due`,due.length?"up":"")}
+    ${kpi("Closed offers",closed,"sold or rented")}
    </div>
-   ${checks.length?`<div class="panel"><h2>Figures to confirm</h2><p class="lede">${checks.length} offers have prices or details that differ between your decks and flyers. Open one, confirm with the owner, then use “Update price &amp; status”.</p><div class="list">${checks.map(o=>cardHTML(o,false)).join("")}</div></div>`:""}`;
+   <div class="grid2">
+    <div class="panel"><h3 class="ph">Stock by building</h3><p class="lede">Active offers for sale and for rent. An offer for sale or rent counts in both.</p>${chartSlot("d-bld",W=>chartStack(blds,[{k:"sale",label:"For sale",short:"sale",c:"var(--s-sale)"},{k:"rent",label:"For rent",short:"rent",c:"var(--s-rent)"}],W,{label:"Active offers by building"}))}${legend([["var(--s-sale)","For sale"],["var(--s-rent)","For rent"]])}</div>
+    <div class="panel"><h3 class="ph">Offers by status</h3><p class="lede">Every offer, including sold and rented.</p>${chartSlot("d-status",W=>chartBars(st,W,{label:"Offers by status",color:"var(--q3)",lw:110}))}</div>
+   </div>
+   <div class="panel"><h3 class="ph">Asking price per sq ft against the market</h3><p class="lede">Each sale offer against the average registered sale for the same building and type. Tap an offer to open it.</p>
+     ${chartSlot("d-vs",W=>chartVsMarket(vsRows,W,{fmt:v=>fmt(v),label:"Asking price per sq ft against the registered average"}))}
+     ${legend([["var(--fg)","Registered average","tick"],["var(--d-below)","Below market"],["var(--faint)","Within 3%"],["var(--d-above)","Above market"]])}
+     ${tableToggle("",["Offer","Asking AED / sq ft","Registered AED / sq ft","Difference"],vsRows.map(r=>[r.label,fmt(r.v),fmt(r.m),pct(r.v/r.m-1)]))}</div>
+   <div class="grid2">
+    <div class="panel"><h3 class="ph">Client pipeline</h3><p class="lede">Clients at each stage${lost?` · ${lost} lost`:""}. Add and update clients in the Clients tab.</p>${clients.length?chartSlot("d-pipe",W=>chartBars(pipe,W,{label:"Clients by stage",lw:120})):'<div class="empty">No clients yet.</div>'}</div>
+    <div class="panel"><h3 class="ph">Follow-ups due</h3><p class="lede">Clients with a follow-up date of today or earlier.</p><div class="list">${due.length?due.map(clientRow).join(""):'<div class="empty">Nothing due. Add clients and follow-up dates in the Clients tab.</div>'}</div></div>
+   </div>
+   <div class="grid2">
+    <div class="panel"><h3 class="ph">Best entry price by type</h3><p class="lede">Cheapest active offer in each category. Tap one to open it.</p><div class="tablewrap"><table><tr><th>Type</th><th>For sale</th><th>For rent</th></tr>${best.map(r=>`<tr><td>${r[0]}</td><td>${r[1]?go(r[1],short(r[1].price)):"—"}</td><td>${r[2]?go(r[2],short(r[2].rent)+" / yr"):"—"}</td></tr>`).join("")}</table></div></div>
+    ${checks.length?`<div class="panel"><h3 class="ph">Figures to confirm</h3><p class="lede">${checks.length} offers have prices or details that differ between your decks and flyers. Confirm with the owner, then update the offer.</p><div class="list">${checks.map(o=>cardHTML(o,false)).join("")}</div></div>`:""}
+   </div>`;
+  fillCharts($("#dash"));
 }
-
 /* ---------------- Clients ---------------- */
 function matches(c){return all().filter(o=>!isDone(o)&&(c.beds===""||c.beds==null||o.beds===+c.beds)&&(c.intent==="Rent"?(o.deal!=="sale"&&(!c.budget||o.rent<=c.budget)):(o.deal!=="rent"&&(!c.budget||o.price<=c.budget))))}
 function clientRow(c){
@@ -837,11 +985,12 @@ $("#cl-form").addEventListener("submit",e=>{e.preventDefault();const g=id=>$(id)
   clients=old?clients.map(x=>x.id===id?c:x):clients.concat(c);persist();resetClientForm();renderAll();toast(old?"Client updated":"Client saved")});
 $("#cl-new").onclick=resetClientForm;
 $("#cl-del").onclick=()=>{const b=$("#cl-del");if(!b.dataset.armed){b.dataset.armed=1;b.textContent="Tap again to delete";return}const id=$("#cl-id").value;clients=clients.filter(c=>c.id!==id);if(state.client===id)state.client=null;persist();resetClientForm();renderAll();toast("Client deleted")};
-function syncFilters(){document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.deal===state.deal));$("#f-type").value=state.type;$("#f-bld").value=state.bld;$("#f-max").value=state.max?fmt(+state.max):""}
+function syncFilters(){document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x.dataset.deal===state.deal));$("#f-type").value=state.type;$("#f-bld").value=state.bld;$("#f-sort").value=state.sort;$("#f-q").value=state.q||"";fillAgentFilter();
+  document.querySelectorAll("[data-f]").forEach(el=>{const v=state[el.dataset.f];if(el.type==="checkbox")el.checked=!!v;else el.value=el.dataset.num&&v?fmt(+v):(v??"")});saveFilters()}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)return;const c=clients.find(x=>x.id===b.dataset.cid);if(!c)return;
   if(b.dataset.act==="edit")editClient(c);
   if(b.dataset.act==="load"){state.client=c.id;starred=new Set(c.short||[]);saveStar();renderAll();show("shortlist")}
-  if(b.dataset.act==="match"){state.deal=c.intent==="Rent"?"rent":"sale";state.type=c.beds??"";state.max=c.budget?String(c.budget):"";state.bld="";state.q="";$("#f-q").value="";syncFilters();renderList();show("offers")}});
+  if(b.dataset.act==="match"){state.deal=c.intent==="Rent"?"rent":"sale";state.type=c.beds??"";state.pmax=c.budget?String(c.budget):"";state.pmin="";state.bld="";state.q="";$("#f-q").value="";syncFilters();renderList();show("offers")}});
 $("#short-client").onchange=e=>{state.client=e.target.value||null;renderShort()};
 $("#short-save").onclick=()=>{const c=clients.find(x=>x.id===state.client);if(!c){toast("Choose a client first");return}c.short=[...starred];persist();renderAll();toast("Shortlist saved to "+c.name)};
 
@@ -873,6 +1022,180 @@ function renderPresent(){
 (()=>{let x0=null;const P=$("#present");P.addEventListener("touchstart",e=>{x0=e.touches[0].clientX},{passive:true});P.addEventListener("touchend",e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>70)stepPresent(dx<0?1:-1)},{passive:true})})();
 $("#present-short").onclick=()=>openPresent(all().filter(o=>starred.has(o.id)).map(o=>o.id));
 
+/* ---------------- Structured market data (DLD-registered deals, Aug–Nov 2026, from the flyers) ---------------- */
+const MKT={
+  sale:[
+    {b:3,beds:0,deals:4,period:"last 90 days",avg:1167500,psf:2723,lo:1120000,hi:1200000},
+    {b:3,beds:1,deals:5,period:"last 90 days",avg:1888000,psf:2787},
+    {b:3,beds:2,deals:1,period:"last 90 days",avg:2525000,psf:2672},
+    {b:2,beds:1,deals:3,period:"Oct–Nov",psf:2541,note:"Listed AED 1.50M – 2.00M"},
+    {b:4,beds:1,deals:7,period:"last 90 days",psf:2647,note:"Most sales were 830–860 sq ft"},
+    {b:5,beds:2,deals:2,period:"Nov",avg:3250000,psf:2534,note:"Same-size sale (1,307 sq ft) at AED 3.25M"}
+  ],
+  rent:[
+    {b:3,beds:0,deals:2,period:"last 90 days",avg:80000,lo:75000,hi:85000},
+    {b:3,beds:1,deals:6,period:"last 90 days",avg:113833,lo:95000,hi:140000},
+    {b:3,beds:2,deals:2,period:"last 90 days",avg:148500,lo:135000,hi:162000},
+    {b:4,beds:0,deals:6,period:"Oct–Nov",avg:85833,lo:73000,hi:100000,note:"Listed AED 75k – 128k"},
+    {b:4,beds:1,deals:3,period:"last 90 days",avg:128333,note:"Listed AED 105k – 180k"},
+    {b:5,beds:0,deals:8,period:"Oct–Nov",avg:88750,note:"Listed AED 75k – 120k; mostly unfurnished"},
+    {b:1,beds:3,deals:0,period:"current listings",note:"Simplexes listed AED 320k – 380k"}
+  ]
+};
+const MORT={down:.2,rate:.045,years:25};
+const mortgage=p=>{const r=MORT.rate/12,n=MORT.years*12,L=p*(1-MORT.down);return L*r/(1-Math.pow(1+r,-n))};
+const pct=v=>v==null?"—":(v>0?"+":v<0?"−":"")+Math.abs(v*100).toFixed(1)+"%";
+const BAND={low:"Low floor (1–10)",mid:"Mid floor (11–25)",high:"High floor (26+)"};
+const VIEWS={burj:"Burj Khalifa",canal:"Dubai Canal",skyline:"Skyline",park:"Park",community:"Community"};
+const FURN={furnished:"Furnished",fitted:"Fitted",unfurnished:"Unfurnished"};
+function floorBand(f){const s=String(f||""),m=s.match(/(\d+)/);if(m){const n=+m[1];return n<=10?"low":n<=25?"mid":"high"}if(/high/i.test(s))return "high";if(/mid/i.test(s))return "mid";if(/low|podium/i.test(s))return "low";return ""}
+function viewTags(v){const s=String(v||"").toLowerCase(),t=[];if(/burj/.test(s))t.push("burj");if(/canal|water/.test(s))t.push("canal");if(/skyline/.test(s))t.push("skyline");if(/park/.test(s))t.push("park");if(/community/.test(s))t.push("community");return t}
+function furnCat(f){const s=String(f||"").toLowerCase();if(/unfurnished/.test(s))return "unfurnished";if(/furnished/.test(s))return "furnished";if(/fitted/.test(s))return "fitted";return ""}
+// Adds calculated fields to an offer, under o.x, without changing the stored offer.
+function enrich(o){
+  const mS=MKT.sale.find(m=>m.b===o.b&&m.beds===o.beds)||null,mR=MKT.rent.find(m=>m.b===o.b&&m.beds===o.beds)||null;
+  const hasSale=o.deal!=="rent"&&o.price>0,hasRent=o.deal!=="sale"&&o.rent>0;
+  const psf=hasSale&&o.size?o.price/o.size:null,rpsf=hasRent&&o.size?o.rent/o.size:null;
+  const own=(o.inv&&o.inv.rent)||(hasRent?o.rent:null);
+  const rentFor=hasSale?(own||(mR&&mR.avg)||null):null,rentSrc=own?"offer":rentFor?"market":"";
+  const gy=hasSale&&rentFor?rentFor/o.price:null;
+  const vs=psf&&mS&&mS.psf?psf/mS.psf-1:null,vsR=hasRent&&mR&&mR.avg?o.rent/mR.avg-1:null;
+  const ref=o.deal==="rent"?vsR:(vs!=null?vs:vsR);
+  return Object.assign({},o,{avail:o.avail||"Available",x:{psf,rpsf,rentFor,rentSrc,gy,vs,vsR,ref,
+    value:ref==null?"":ref<-0.03?"below":ref>0.03?"above":"at",mS,mR,band:floorBand(o.floor),views:viewTags(o.view),furn:furnCat(o.furn),
+    mort:hasSale?mortgage(o.price):null}});
+}
+const valueChip=x=>x.value==="below"?`<span class="vchip below">${pct(x.ref)} below market</span>`.replace("−",""):x.value==="above"?`<span class="vchip above">${pct(x.ref)} above market</span>`.replace("+",""):x.value==="at"?'<span class="vchip at">At market</span>':"";
+
+/* ---------------- Filters ---------------- */
+const FLABEL={pmin:v=>"From "+short(+v),pmax:v=>"Up to "+short(+v),smin:v=>"From "+fmt(+v)+" sq ft",smax:v=>"Up to "+fmt(+v)+" sq ft",
+  view:v=>VIEWS[v]+" view",furn:v=>FURN[v],band:v=>BAND[v],avail:v=>v,agent:v=>(AGENTS[v]&&AGENTS[v].name)||v,ymin:v=>"Yield "+v+"%+",
+  value:()=>"Below market",checkOnly:()=>"Figures to confirm",starOnly:()=>"Shortlisted",type:v=>TYPE[+v],bld:v=>BLD[+v],q:v=>"“"+v+"”",hide:()=>"Showing sold & rented"};
+function activeFilters(){return Object.keys(FLABEL).filter(k=>k==="hide"?state.hide===false:state[k]!==""&&state[k]!==false&&state[k]!=null)}
+function saveFilters(){const f={};Object.keys(FDEF).forEach(k=>f[k]=state[k]);store.set("orla.filters",f)}
+function renderChips(){const act=activeFilters(),n=act.filter(k=>!["type","bld","q"].includes(k)).length,c=$("#f-count");if(c){c.hidden=!n;c.textContent=n}
+  $("#f-chips").innerHTML=act.length?act.map(k=>`<button class="fchip" data-clear="${k}" aria-label="Remove filter: ${esc(FLABEL[k](state[k]))}">${esc(FLABEL[k](state[k]))}<span aria-hidden="true">×</span></button>`).join("")+'<button class="fchip clear" data-clear="*">Clear all</button>':""}
+function fillAgentFilter(){const s=$("#f-agent");if(!s)return;const v=state.agent;s.innerHTML='<option value="">Any agent</option>'+Object.entries(AGENTS).map(([k,a])=>`<option value="${esc(k)}">${esc(a.name)}</option>`).join("");s.value=v||""}
+
+/* ---------------- Charts (inline SVG, colours from theme tokens) ---------------- */
+const CH=new Map();
+function chartSlot(name,fn){CH.set(name,fn);return `<div class="chartbox" data-chart="${name}"></div>`}
+function drawChart(el){const fn=CH.get(el.dataset.chart);if(!fn||!el.clientWidth)return;const W=Math.max(260,Math.floor(el.clientWidth));el.innerHTML=fn(W);el.dataset.w=W}
+function fillCharts(root){(root||document).querySelectorAll("[data-chart]").forEach(drawChart)}
+addEventListener("resize",()=>{clearTimeout(fillCharts.t);fillCharts.t=setTimeout(()=>document.querySelectorAll("[data-chart]").forEach(el=>{if(Math.abs((+el.dataset.w||0)-el.clientWidth)>16)drawChart(el)}),150)});
+function nice(lo,hi,n=4){if(!(hi>lo))hi=lo+1;const raw=(hi-lo)/n,mag=Math.pow(10,Math.floor(Math.log10(raw))),e=raw/mag,step=(e>=7.5?10:e>=3.5?5:e>=1.5?2:1)*mag,t=[];
+  for(let v=Math.floor(lo/step)*step;v<=Math.ceil(hi/step)*step+step*1e-9;v+=step)t.push(+v.toFixed(6));return t}
+const trunc=(s,n)=>{s=String(s);return s.length>n?s.slice(0,Math.max(1,n-1))+"…":s};
+const svgOpen=(W,H,label)=>`<svg class="chart" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(label)}">`;
+const idAttr=id=>id?` data-id="${esc(id)}" class="hit"`:"";
+const legend=items=>`<div class="legend">${items.map(([c,l,shape])=>`<span><i class="${shape||""}" style="background:${c}"></i>${esc(l)}</span>`).join("")}</div>`;
+// Horizontal bars, one series. rows: {label, v, text, tip, id, color}
+function chartBars(rows,W,o={}){
+  if(!rows.length)return '<p class="src">No data yet.</p>';
+  const lw=Math.min(o.lw||160,Math.round(W*.42)),rw=W-lw-76,rh=24,g=10,H=rows.length*(rh+g)-g+2,max=Math.max(...rows.map(r=>r.v))||1;
+  let s=svgOpen(W,H,o.label||"Bar chart");
+  rows.forEach((r,i)=>{const y=i*(rh+g),w=Math.max(3,r.v/max*rw);
+    s+=`<text x="0" y="${y+rh/2+4}" class="lbl${r.id?" hit":""}"${r.id?` data-id="${esc(r.id)}"`:""}>${esc(trunc(r.label,Math.floor(lw/6.8)))}</text>`;
+    s+=`<rect x="${lw}" y="${y}" width="${w}" height="${rh}" rx="4" style="fill:${r.color||o.color||"var(--s-rent)"}" data-tip="${esc(r.tip||r.label+": "+r.text)}"${idAttr(r.id)}/>`;
+    s+=`<text x="${lw+w+6}" y="${y+rh/2+4}">${esc(r.text)}</text>`});
+  return s+"</svg>"}
+// Stacked horizontal bars. rows: {label, v:{key:n}}, keys: [{k,label,c}]
+function chartStack(rows,keys,W,o={}){
+  if(!rows.length)return '<p class="src">No data yet.</p>';
+  const lw=Math.min(140,Math.round(W*.34)),rw=W-lw-90,rh=24,g=10,H=rows.length*(rh+g)-g+2;
+  const tot=r=>keys.reduce((s,k)=>s+(r.v[k.k]||0),0),max=Math.max(1,...rows.map(tot));
+  let s=svgOpen(W,H,o.label||"Stacked bar chart");
+  rows.forEach((r,i)=>{const y=i*(rh+g);let cx=lw;
+    s+=`<text x="0" y="${y+rh/2+4}" class="lbl">${esc(trunc(r.label,Math.floor(lw/6.8)))}</text>`;
+    keys.forEach(k=>{const v=r.v[k.k]||0;if(!v)return;const w=v/max*rw;s+=`<rect x="${cx}" y="${y}" width="${Math.max(2,w-2)}" height="${rh}" rx="4" style="fill:${k.c}" data-tip="${esc(r.label+"\n"+v+" "+k.label.toLowerCase())}"/>`;cx+=w});
+    s+=`<text x="${cx+6}" y="${y+rh/2+4}">${esc(keys.map(k=>(r.v[k.k]||0)+" "+k.short).join(" · "))}</text>`});
+  return s+"</svg>"}
+// Asking value against the market average, one row per offer. rows: {label, v, m, id}
+function chartVsMarket(rows,W,o={}){
+  if(!rows.length)return '<p class="src">No offers with market data yet.</p>';
+  const f=o.fmt||(v=>fmt(v)),lw=o.compact?0:Math.min(200,Math.round(W*.38)),rh=o.compact?34:28,top=6,axis=22,H=rows.length*rh+top+axis;
+  const vals=rows.flatMap(r=>[r.v,r.m]);let lo=Math.min(...vals),hi=Math.max(...vals);const pad=(hi-lo)*.15||hi*.06;lo-=pad;hi+=pad;
+  const x0=lw+10,x1=W-62,X=v=>x0+(v-lo)/(hi-lo)*(x1-x0);
+  let s=svgOpen(W,H,o.label||"Asking price compared with the market average");
+  nice(lo,hi,W<420?3:4).filter(t=>t>=lo&&t<=hi).forEach(t=>{s+=`<line x1="${X(t)}" x2="${X(t)}" y1="${top}" y2="${H-axis}" style="stroke:var(--line)" stroke-width="1"/><text x="${X(t)}" y="${H-6}" text-anchor="middle">${esc(f(t))}</text>`});
+  rows.forEach((r,i)=>{const y=top+i*rh+rh/2,d=r.v/r.m-1,c=d<-0.03?"var(--d-below)":d>0.03?"var(--d-above)":"var(--faint)";
+    if(lw)s+=`<text x="0" y="${y+4}" class="lbl${r.id?" hit":""}"${r.id?` data-id="${esc(r.id)}"`:""}>${esc(trunc(r.label,Math.floor(lw/6.6)))}</text>`;
+    s+=`<line x1="${X(r.m)}" x2="${X(r.v)}" y1="${y}" y2="${y}" style="stroke:var(--line-strong)" stroke-width="2"/>`;
+    s+=`<line x1="${X(r.m)}" x2="${X(r.m)}" y1="${y-9}" y2="${y+9}" style="stroke:var(--fg)" stroke-width="2" data-tip="${esc("Market average: "+f(r.m))}"/>`;
+    s+=`<circle cx="${X(r.v)}" cy="${y}" r="7" style="fill:${c};stroke:var(--surface)" stroke-width="2" data-tip="${esc(r.label+"\nAsking: "+f(r.v)+"\nMarket average: "+f(r.m)+"\n"+pct(d)+" vs market")}"${idAttr(r.id)}/>`;
+    s+=`<text x="${W-2}" y="${y+4}" text-anchor="end" class="lbl">${esc(pct(d))}</text>`});
+  return s+"</svg>"}
+// Bars either side of zero. rows: {label, d, id, tip}
+function chartDiverge(rows,W,o={}){
+  if(!rows.length)return '<p class="src">No offers with market data yet.</p>';
+  const lw=Math.min(190,Math.round(W*.38)),rh=24,g=8,axis=20,H=rows.length*(rh+g)-g+axis+4,m=Math.max(.05,...rows.map(r=>Math.abs(r.d)));
+  const cx=lw+(W-lw)/2,sc=((W-lw)/2-52)/m;
+  let s=svgOpen(W,H,o.label||"Difference from market average");
+  s+=`<line x1="${cx}" x2="${cx}" y1="0" y2="${H-axis}" style="stroke:var(--line-strong)" stroke-width="1"/><text x="${cx-6}" y="${H-4}" text-anchor="end">← Below market</text><text x="${cx+6}" y="${H-4}">Above market →</text>`;
+  rows.forEach((r,i)=>{const y=i*(rh+g),w=Math.max(3,Math.abs(r.d)*sc),x=r.d<0?cx-w:cx,c=r.d<-0.03?"var(--d-below)":r.d>0.03?"var(--d-above)":"var(--faint)";
+    s+=`<text x="0" y="${y+rh/2+4}" class="lbl${r.id?" hit":""}"${r.id?` data-id="${esc(r.id)}"`:""}>${esc(trunc(r.label,Math.floor(lw/6.8)))}</text>`;
+    s+=`<rect x="${x}" y="${y}" width="${w}" height="${rh}" rx="4" style="fill:${c}" data-tip="${esc(r.tip||r.label+": "+pct(r.d))}"${idAttr(r.id)}/>`;
+    s+=r.d<0?`<text x="${x-6}" y="${y+rh/2+4}" text-anchor="end">${esc(pct(r.d))}</text>`:`<text x="${x+w+6}" y="${y+rh/2+4}">${esc(pct(r.d))}</text>`});
+  return s+"</svg>"}
+// Size against price. points: {x, y, label, id}
+function chartScatter(pts,W,o={}){
+  if(!pts.length)return '<p class="src">No offers with a size and price yet.</p>';
+  const H=Math.round(Math.min(380,Math.max(250,W*.52))),L=56,R=18,T=14,B=42;
+  const xt=nice(0,Math.max(...pts.map(p=>p.x))*1.06,W<480?4:5),yt=nice(0,Math.max(...pts.map(p=>p.y))*1.06,5),xm=xt[xt.length-1],ym=yt[yt.length-1];
+  const X=v=>L+v/xm*(W-L-R),Y=v=>T+(1-v/ym)*(H-T-B);
+  let s=svgOpen(W,H,o.label||"Size against price");
+  yt.forEach(t=>{s+=`<line x1="${L}" x2="${W-R}" y1="${Y(t)}" y2="${Y(t)}" style="stroke:var(--line)" stroke-width="1"/><text x="${L-8}" y="${Y(t)+4}" text-anchor="end">${t?esc(short(t)):"0"}</text>`});
+  xt.forEach(t=>{s+=`<text x="${X(t)}" y="${H-B+18}" text-anchor="middle">${esc(fmt(t))}</text>`});
+  s+=`<text x="${(L+W-R)/2}" y="${H-4}" text-anchor="middle">Size (sq ft)</text>`;
+  if(o.avgPsf){const xe=Math.min(xm,ym/o.avgPsf);s+=`<line x1="${X(0)}" y1="${Y(0)}" x2="${X(xe)}" y2="${Y(o.avgPsf*xe)}" style="stroke:var(--faint)" stroke-width="2" stroke-dasharray="6 5"/>`}
+  pts.forEach(p=>{s+=`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="7" style="fill:${p.color||"var(--s-sale)"};stroke:var(--surface)" stroke-width="2" data-tip="${esc(p.tip||p.label)}"${idAttr(p.id)}/>`});
+  return s+"</svg>"}
+// Tooltip for any element with data-tip
+document.addEventListener("pointerover",e=>{const tip=$("#tip");if(!tip)return;const t=e.target.closest&&e.target.closest("[data-tip]");if(t){tip.textContent=t.getAttribute("data-tip");tip.classList.add("on")}else tip.classList.remove("on")});
+document.addEventListener("pointermove",e=>{const tip=$("#tip");if(!tip||!tip.classList.contains("on"))return;tip.style.left=Math.max(8,Math.min(e.clientX+14,innerWidth-tip.offsetWidth-8))+"px";tip.style.top=Math.max(8,Math.min(e.clientY+16,innerHeight-tip.offsetHeight-8))+"px"});
+document.addEventListener("scroll",()=>{const tip=$("#tip");if(tip)tip.classList.remove("on")},{passive:true});
+const tableToggle=(title,head,rows)=>`<details class="tview"><summary>Show as table</summary><div class="tablewrap"><table><tr>${head.map((h,i)=>`<th${i?' class="r"':""}>${esc(h)}</th>`).join("")}</tr>${rows.map(r=>`<tr>${r.map((c,i)=>`<td${i?' class="r"':""}>${esc(c)}</td>`).join("")}</tr>`).join("")}</table></div></details>`;
+const shortLabel=o=>`P${o.b} · ${o.beds===0?"Studio":o.beds+"BR"} · ${o.title}`;
+
+/* ---------------- Analysis ---------------- */
+function renderAnalysis(){
+  const el=$("#analysis");if(!el)return;
+  const A=all().filter(o=>!isDone(o)),sale=A.filter(o=>o.deal!=="rent"&&o.price),rent=A.filter(o=>o.deal!=="sale"&&o.rent);
+  const pts=sale.filter(o=>o.size).map(o=>({x:o.size,y:o.price,id:o.id,label:shortLabel(o),tip:`${shortLabel(o)}\n${fmt(o.size)} sq ft · ${aed(o.price)}\n${aed(o.x.psf)} / sq ft`}));
+  const avgPsf=pts.length?Math.round(pts.reduce((s,p)=>s+p.y,0)/pts.reduce((s,p)=>s+p.x,0)):0;
+  const yRows=sale.filter(o=>o.x.gy).sort((a,b)=>b.x.gy-a.x.gy).map(o=>({label:shortLabel(o),v:o.x.gy*100,text:(o.x.gy*100).toFixed(1)+"%"+(o.x.rentSrc==="market"?" *":""),id:o.id,
+    tip:`${shortLabel(o)}\nGross yield ${(o.x.gy*100).toFixed(1)}%\nRent ${aed(o.x.rentFor)} / yr (${o.x.rentSrc==="market"?"building average lease":"this offer's rent estimate"})`}));
+  const vRows=A.filter(o=>o.x.ref!=null).sort((a,b)=>a.x.ref-b.x.ref).map(o=>({label:shortLabel(o),d:o.x.ref,id:o.id,
+    tip:`${shortLabel(o)}\n${pct(o.x.ref)} vs ${o.deal==="rent"?"average registered rent":"average registered price per sq ft"}`}));
+  // Price per sq ft by building
+  const blds=[...new Set(sale.map(o=>o.b))].sort();
+  const psfRows=blds.map(b=>{const l=sale.filter(o=>o.b===b&&o.size),ask=l.length?l.reduce((s,o)=>s+o.price,0)/l.reduce((s,o)=>s+o.size,0):null;
+    const ms=MKT.sale.filter(m=>m.b===b),mk=ms.length?ms.reduce((s,m)=>s+m.psf*m.deals,0)/ms.reduce((s,m)=>s+m.deals,0):null;
+    return [BLD[b],String(l.length),ask?fmt(ask):"—",mk?fmt(mk):"—",ask&&mk?pct(ask/mk-1):"—"]});
+  // Buy or rent, per unit type
+  const brRows=[0,1,2,3].map(t=>{const s=sale.filter(o=>o.beds===t).sort((a,b)=>a.price-b.price)[0],r=rent.filter(o=>o.beds===t).sort((a,b)=>a.rent-b.rent)[0];
+    if(!s&&!r)return null;const ms=s?mortgage(s.price):null,mr=r?r.rent/12:null;
+    return [TYPE[t],s?aed(s.price):"—",ms?aed(ms):"—",s?aed(s.price*MORT.down+costs(s.price).total-s.price):"—",r?aed(mr):"—",ms&&mr?(ms<mr?"Buying costs "+aed(mr-ms)+" less a month":"Renting costs "+aed(ms-mr)+" less a month"):"—"]}).filter(Boolean);
+  el.innerHTML=`
+   <div class="panel"><h2>Analysis</h2><p class="lede" style="margin:0">How your active offers compare with each other and with registered deals in the same buildings. Tap any dot, bar or name to open that offer. Market figures are DLD-registered deals, Aug–Nov 2026.</p></div>
+   <div class="panel"><h3 class="ph">Size against price</h3><p class="lede">Each dot is an offer for sale. Dots below the dashed line are cheaper per sq ft than your average asking price.</p>
+     ${chartSlot("an-scatter",W=>chartScatter(pts,W,{avgPsf}))}
+     ${legend([["var(--s-sale)","Offer for sale"],["var(--faint)","Average asking price, AED "+fmt(avgPsf)+" / sq ft","dash"]])}
+     ${tableToggle("Size against price",["Offer","Size (sq ft)","Price (AED)","AED / sq ft"],sale.filter(o=>o.size).map(o=>[shortLabel(o),fmt(o.size),fmt(o.price),fmt(o.x.psf)]))}</div>
+   <div class="grid2">
+     <div class="panel"><h3 class="ph">Gross yield</h3><p class="lede">Annual rent divided by price. * uses the building's average registered rent, because the offer has no rent estimate of its own.</p>
+       ${chartSlot("an-yield",W=>chartBars(yRows,W,{label:"Gross yield by offer",color:"var(--s-rent)",lw:190}))}</div>
+     <div class="panel"><h3 class="ph">Value against the market</h3><p class="lede">Sale offers against the building's average registered price per sq ft; rentals against the average registered rent for the same type.</p>
+       ${chartSlot("an-value",W=>chartDiverge(vRows,W))}
+       ${legend([["var(--d-below)","More than 3% below market"],["var(--faint)","Within 3%"],["var(--d-above)","More than 3% above market"]])}</div>
+   </div>
+   <div class="panel"><h3 class="ph">Price per sq ft by building</h3><p class="lede">Your average asking price per sq ft against the average registered sale in the same building.</p>
+     <div class="tablewrap"><table><tr><th>Building</th><th class="r">Offers</th><th class="r">Asking AED / sq ft</th><th class="r">Registered AED / sq ft</th><th class="r">Difference</th></tr>${psfRows.map(r=>`<tr>${r.map((c,i)=>`<td${i?' class="r"':""}>${esc(c)}</td>`).join("")}</tr>`).join("")}</table></div></div>
+   <div class="panel"><h3 class="ph">Buy or rent: monthly cost by unit type</h3><p class="lede">The cheapest offer of each type. Mortgage at ${MORT.down*100}% down, ${(MORT.rate*100).toFixed(1)}% interest over ${MORT.years} years, before service charges. Cash upfront = down payment plus DLD, trustee and admin fees.</p>
+     <div class="tablewrap"><table><tr><th>Type</th><th class="r">Cheapest sale</th><th class="r">Mortgage / month</th><th class="r">Cash upfront</th><th class="r">Cheapest rent / month</th><th class="r">Difference</th></tr>${brRows.map(r=>`<tr>${r.map((c,i)=>`<td${i?' class="r"':""}>${esc(c)}</td>`).join("")}</tr>`).join("")}</table></div></div>`;
+  fillCharts(el);
+}
+
 /* ---------------- Backup & theme ---------------- */
 $("#bk-copy").onclick=()=>{const t=JSON.stringify(Object.assign({app:"peninsula-offers",v:2,at:new Date().toISOString(),mine,clients,starred:[...starred]},CLOUD?{}:{offers:OFFERS,settings}));$("#bk-text").value=t;copy(t,$("#bk-text"))};
 $("#bk-restore").onclick=()=>{const b=$("#bk-restore");let d;try{d=JSON.parse($("#bk-text").value)}catch(e){toast("Paste a backup first");return}if(!d||d.app!=="peninsula-offers"){toast("That isn't a Peninsula Offers backup");return}
@@ -882,9 +1205,11 @@ $("#bk-restore").onclick=()=>{const b=$("#bk-restore");let d;try{d=JSON.parse($(
   if(!CLOUD&&d.settings){store.set("orla.settings",d.settings);applySettings(d.settings)}
   saveStar();renderAll();renderMarket();toast("Backup restored")};
 let theme=store.get("orla.theme","auto");
-function applyTheme(){if(theme==="auto")document.documentElement.removeAttribute("data-theme");else document.documentElement.setAttribute("data-theme",theme);$("#theme").textContent="Theme: "+{auto:"Auto",light:"Light",dark:"Dark"}[theme]}
-$("#theme").onclick=()=>{theme={auto:"light",light:"dark",dark:"auto"}[theme];store.set("orla.theme",theme);applyTheme()};
-if(theme!=="auto")applyTheme();
+function applyTheme(){const r=document.documentElement;
+  if(theme==="auto"){if(r.dataset.themeBy==="app"){r.removeAttribute("data-theme");delete r.dataset.themeBy}}else{r.setAttribute("data-theme",theme);r.dataset.themeBy="app"}
+  document.querySelectorAll("#themeseg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.theme===theme)))}
+document.querySelectorAll("#themeseg button").forEach(b=>b.onclick=()=>{theme=b.dataset.theme;store.set("orla.theme",theme);applyTheme()});
+applyTheme();
 
 /* ---------------- Sign-in, roles and storage ---------------- */
 const CLOUD=!!(window.claude&&typeof window.claude.use==="function");
@@ -901,7 +1226,7 @@ function persist(){store.set("orla.mine",mine);store.set("orla.clients",clients)
   if(!(CLOUD&&uid&&cloudReady))return;clearTimeout(saveT);saveT=setTimeout(async()=>{lastAt=new Date().toISOString();
     try{await db.doc("data/users/"+uid+"/state").set({mine,clients,starred:[...starred],at:lastAt})}catch(e){if(!warnedRO){warnedRO=true;toast("Saved on this device only: your access lets you browse but not save")}}},700)}
 async function logAct(text){if(SRV){if(uid&&isAdmin){try{await api("admin/activity",{text:String(text).slice(0,300)})}catch(e){}loadLog()}return}if(!CLOUD||!db)return;try{await db.collection("log").add({at:new Date().toISOString(),by:uid,text:String(text).slice(0,300)})}catch(e){}}
-function cleanOffer(o){const c=JSON.parse(JSON.stringify(o));delete c.id;delete c.mine;return c}
+function cleanOffer(o){const c=JSON.parse(JSON.stringify(o));delete c.id;delete c.mine;delete c.x;return c}
 async function saveOffer(o,label){
   if(SRV){try{await api("admin/offers",{id:o.id,data:cleanOffer(o)},"PUT")}catch(e){toast(e.message);return false}logAct(label);await loadAll();return true}
   if(CLOUD){try{await db.collection("offers").doc(o.id).set(cleanOffer(o));logAct(label)}catch(e){toast(e&&e.code==="quota_exceeded"?"Storage is full. Delete old offers first.":"Couldn't save. Only admins can change offers.");return false}}
@@ -1102,7 +1427,7 @@ async function bootServer(){OFFERS=[];applySettings({});startApp();setAuthGate("
 /* ---------------- Start-up ---------------- */
 function startApp(){const ch=$("#userchip");
   if(meInfo){ch.innerHTML=`<img alt="" src="${esc(meInfo.avatarUrl)}"><span></span>`;ch.querySelector("span").textContent=(meInfo.name||"You")+" · "+(isAdmin?"Admin":"Agent")}else ch.textContent="Admin · this device";
-  renderAll();renderMarket();const first=OFFERS.find(o=>o.deal!=="rent"&&o.price);if(first&&!pick.value)loadCalc(first.id);else calc();show(store.get("orla.tab","dash"))}
+  syncFilters();renderAll();renderMarket();const first=OFFERS.find(o=>o.deal!=="rent"&&o.price);if(first&&!pick.value)loadCalc(first.id);else calc();show(store.get("orla.tab","dash"))}
 async function boot(){
   if(SRV){bootServer();return}
   if(!CLOUD){const saved=store.get("orla.offers",null);if(Array.isArray(saved))OFFERS=saved;applySettings(store.get("orla.settings",{}));migrateOvr();startApp();if(sessionOpen()&&store.get("orla.pin",null))unlock();else lock();return}
@@ -1122,17 +1447,17 @@ async function boot(){
   if(sessionOpen()&&!store.get("orla.pin",null))unlock();else lock()}
 
 /* ---------------- Wiring ---------------- */
-function show(v){if(v==="admin"&&!isAdmin)v="dash";if(v==="admin"&&SRV){loadUsers();loadLog()}document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.view===v));document.querySelectorAll(".view").forEach(s=>s.hidden=s.id!=="view-"+v);store.set("orla.tab",v);window.scrollTo(0,0)}
+function show(v){if(v==="admin"&&!isAdmin)v="dash";if(v==="admin"&&SRV){loadUsers();loadLog()}document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.view===v));document.querySelectorAll(".view").forEach(s=>s.hidden=s.id!=="view-"+v);store.set("orla.tab",v);window.scrollTo(0,0);requestAnimationFrame(()=>fillCharts($("#view-"+v)))}
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>show(t.dataset.view));
 document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{state.deal=b.dataset.deal;document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x===b));renderList()});
 $("#f-type").onchange=e=>{state.type=e.target.value;renderList()};
 $("#f-bld").onchange=e=>{state.bld=e.target.value;renderList()};
 $("#f-sort").onchange=e=>{state.sort=e.target.value;renderList()};
 $("#f-q").oninput=e=>{state.q=e.target.value;renderList()};
-$("#f-max").oninput=e=>{state.max=e.target.value.replace(/[^0-9]/g,"");renderList()};
-$("#f-hide").onchange=e=>{state.hide=e.target.checked;renderList()};
+document.querySelectorAll("[data-f]").forEach(el=>el.addEventListener(el.type==="checkbox"?"change":"input",()=>{const k=el.dataset.f;state[k]=el.type==="checkbox"?el.checked:(el.dataset.num?el.value.replace(/[^0-9]/g,""):el.value.trim());saveFilters();renderList()}));
+$("#f-chips").addEventListener("click",e=>{const b=e.target.closest("[data-clear]");if(!b)return;const k=b.dataset.clear;if(k==="*")Object.keys(FDEF).forEach(f=>{if(f!=="deal"&&f!=="sort")state[f]=FDEF[f]});else state[k]=FDEF[k];syncFilters();renderList()});
 function onCard(e){if(e.target.closest("[data-act]"))return;const c=e.target.closest("[data-id]");if(!c)return;state.sel=c.dataset.id;show("offers");renderList();if(matchMedia("(max-width:860px)").matches)$("#detail").scrollIntoView({behavior:"smooth"})}
-["#list","#shortlist","#mine-list","#dash"].forEach(s=>$(s).addEventListener("click",onCard));
+["#list","#shortlist","#mine-list","#dash","#analysis"].forEach(s=>$(s).addEventListener("click",onCard));
 $("#copy-short").onclick=()=>{const t=$("#short-text").value;t?copy(t,$("#short-text")):toast("Shortlist is empty")};
 $("#clear-short").onclick=()=>{starred.clear();saveStar();renderList();renderShort()};
 $("#copy-csv").onclick=()=>{const t=$("#csv-text").value;t?copy(t,$("#csv-text")):toast("No listings to export")};
@@ -1141,7 +1466,7 @@ function fillPick(){const cur=pick.value;pick.innerHTML='<option value="">Custom
 pick.onchange=()=>pick.value&&loadCalc(pick.value);
 document.querySelectorAll("#view-calc input").forEach(i=>i.addEventListener("input",calc));
 try{$("#m-date").valueAsDate=new Date()}catch(e){}
-function renderAll(){renderList();renderShort();renderMine();renderClients();renderDash();fillPick();renderAdmin()}
+function renderAll(){fillAgentFilter();renderList();renderShort();renderMine();renderClients();renderDash();renderAnalysis();fillPick();renderAdmin()}
 boot();
 if("serviceWorker" in navigator&&location.protocol==="https:"&&!/claude|claudeusercontent/.test(location.host)){navigator.serviceWorker.register("sw.js").catch(()=>{})}
 </script>
