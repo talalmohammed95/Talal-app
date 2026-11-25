@@ -1,0 +1,27 @@
+name: Check build
+on:
+  push:
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build without Supabase (device-only mode)
+        run: ALLOW_LOCAL_MODE=1 npm run build
+      - name: Build with Supabase settings
+        run: npm run build
+        env:
+          SUPABASE_URL: https://example.supabase.co
+          SUPABASE_ANON_KEY: example-anon-key
+      - name: Starting offers are not published when accounts are on
+        run: "! grep -q 'p3-studio-410' dist/index.html"
+      - name: App script parses
+        run: |
+          node -e '
+            const h=require("fs").readFileSync("dist/index.html","utf8");
+            const s=[...h.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m=>m[1]).join("\n");
+            new Function(s); console.log("script OK");'
