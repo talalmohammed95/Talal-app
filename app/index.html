@@ -216,7 +216,6 @@ details.edit .fgrid{margin-top:10px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 <script src="config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 </head>
 <body>
 
@@ -806,7 +805,7 @@ function renderDash(){setTimeout(()=>{const dp=$("#dash-pending");if(dp)dp.oncli
   const kpi=(l,v,s)=>`<div class="kpi"><span>${l}</span><b class="num">${v}</b><small>${s}</small></div>`;
   const go=(o,t)=>`<button class="btn sm" data-id="${esc(o.id)}">P${o.b} · ${t}</button>`;
   const best=[0,1,2,3].map(b=>[TYPE[b],sale.filter(o=>o.beds===b).sort((x,y)=>x.price-y.price)[0],rent.filter(o=>o.beds===b).sort((x,y)=>x.rent-y.rent)[0]]);
-  $("#dash").innerHTML=`${SUPA&&isAdmin&&pendingCount()?`<button class="notice" style="text-align:left;width:100%;cursor:pointer" id="dash-pending"><b>Waiting for approval</b>${pendingCount()} new ${pendingCount()===1?"account is":"accounts are"} waiting for you to approve. Open Admin › Users.</button>`:""}${settings.notice?`<div class="notice"><b>Announcement</b>${esc(settings.notice)}</div>`:""}<div class="kpis">${kpi("Active offers",act.length,`${sale.length} for sale · ${rent.length} for rent`)}${kpi("Sale stock value","AED "+short(sale.reduce((s,o)=>s+o.price,0)),"total asking price")}${kpi("Average gross yield",ys.length?(ys.reduce((a,b)=>a+b,0)/ys.length*100).toFixed(1)+"%":"—",`${ys.length} sale offers with rent data`)}${kpi("Follow-ups due",due.length,`${clients.length} client${clients.length===1?"":"s"} · ${closed} offer${closed===1?"":"s"} closed`)}</div>
+  $("#dash").innerHTML=`${SRV&&isAdmin&&pendingCount()?`<button class="notice" style="text-align:left;width:100%;cursor:pointer" id="dash-pending"><b>Waiting for approval</b>${pendingCount()} new ${pendingCount()===1?"account is":"accounts are"} waiting for you to approve. Open Admin › Users.</button>`:""}${settings.notice?`<div class="notice"><b>Announcement</b>${esc(settings.notice)}</div>`:""}<div class="kpis">${kpi("Active offers",act.length,`${sale.length} for sale · ${rent.length} for rent`)}${kpi("Sale stock value","AED "+short(sale.reduce((s,o)=>s+o.price,0)),"total asking price")}${kpi("Average gross yield",ys.length?(ys.reduce((a,b)=>a+b,0)/ys.length*100).toFixed(1)+"%":"—",`${ys.length} sale offers with rent data`)}${kpi("Follow-ups due",due.length,`${clients.length} client${clients.length===1?"":"s"} · ${closed} offer${closed===1?"":"s"} closed`)}</div>
    <div class="grid2">
     <div class="panel"><h2>Follow-ups due</h2><p class="lede">Clients with a follow-up date of today or earlier.</p><div class="list">${due.length?due.map(clientRow).join(""):'<div class="empty">Nothing due. Add clients and follow-up dates in the Clients tab.</div>'}</div></div>
     <div class="panel"><h2>Best entry price by type</h2><p class="lede">Cheapest active offer in each category. Tap one to open it.</p><div class="tablewrap"><table><tr><th>Type</th><th>For sale</th><th>For rent</th></tr>${best.map(r=>`<tr><td>${r[0]}</td><td>${r[1]?go(r[1],short(r[1].price)):"—"}</td><td>${r[2]?go(r[2],short(r[2].rent)+" / yr"):"—"}</td></tr>`).join("")}</table></div></div>
@@ -890,31 +889,31 @@ if(theme!=="auto")applyTheme();
 /* ---------------- Sign-in, roles and storage ---------------- */
 const CLOUD=!!(window.claude&&typeof window.claude.use==="function");
 const CFG=window.ORLA_CONFIG||{};
-const SUPA=!CLOUD&&!!(CFG.supabaseUrl&&CFG.supabaseAnonKey);
-let sb=null,profile=null,authMode=null,entering=false,recovering=false,liveT=null,usersList=[];
-let db=null,uapi=null,uid=null,meInfo=null,isAdmin=!CLOUD&&!SUPA,settings={},cloudReady=false,lastAt=null,saveT=null,warnedRO=false,logRows=[];
+const SRV=!CLOUD&&!!CFG.api;
+let profile=null,authMode=null,entering=false,recovering=false,liveT=null,usersList=[];
+let db=null,uapi=null,uid=null,meInfo=null,isAdmin=!CLOUD&&!SRV,settings={},cloudReady=false,lastAt=null,saveT=null,warnedRO=false,logRows=[];
 const SEED_AGENTS=JSON.parse(JSON.stringify(AGENTS)),SEED_FEES=Object.assign({},FEES);
 function applySettings(x){settings=x||{};Object.keys(AGENTS).forEach(k=>delete AGENTS[k]);Object.assign(AGENTS,settings.agents&&Object.keys(settings.agents).length?settings.agents:SEED_AGENTS);Object.assign(FEES,SEED_FEES,settings.fees||{});
   if(document.activeElement?.id!=="c-dld")$("#c-dld").value=+(FEES.dld*100).toFixed(3);
   const opts=Object.entries(AGENTS).map(([k,a])=>`<option value="${esc(k)}">${esc(a.name)}</option>`).join("");["#m-agent","#o-agent"].forEach(id=>{const el=$(id),v=el.value;el.innerHTML=opts;if(v&&AGENTS[v])el.value=v})}
 function persist(){store.set("orla.mine",mine);store.set("orla.clients",clients);store.set("orla.star",[...starred]);
-  if(SUPA){if(!uid)return;clearTimeout(saveT);saveT=setTimeout(async()=>{const {error}=await sb.from("user_state").upsert({user_id:uid,data:{mine,clients,starred:[...starred]},updated_at:new Date().toISOString()});if(error&&!warnedRO){warnedRO=true;toast("Couldn't sync your data. It's kept on this device.")}},700);return}
+  if(SRV){if(!uid)return;clearTimeout(saveT);saveT=setTimeout(async()=>{try{await api("data/state",{data:{mine,clients,starred:[...starred]}},"PUT")}catch(e){if(!warnedRO){warnedRO=true;toast("Couldn't sync your data. It's kept on this device.")}}},700);return}
   if(!(CLOUD&&uid&&cloudReady))return;clearTimeout(saveT);saveT=setTimeout(async()=>{lastAt=new Date().toISOString();
     try{await db.doc("data/users/"+uid+"/state").set({mine,clients,starred:[...starred],at:lastAt})}catch(e){if(!warnedRO){warnedRO=true;toast("Saved on this device only: your access lets you browse but not save")}}},700)}
-async function logAct(text){if(SUPA){if(uid){await sb.from("activity").insert({by:uid,by_email:profile.email,text:String(text).slice(0,300)});loadLog()}return}if(!CLOUD||!db)return;try{await db.collection("log").add({at:new Date().toISOString(),by:uid,text:String(text).slice(0,300)})}catch(e){}}
+async function logAct(text){if(SRV){if(uid&&isAdmin){try{await api("admin/activity",{text:String(text).slice(0,300)})}catch(e){}loadLog()}return}if(!CLOUD||!db)return;try{await db.collection("log").add({at:new Date().toISOString(),by:uid,text:String(text).slice(0,300)})}catch(e){}}
 function cleanOffer(o){const c=JSON.parse(JSON.stringify(o));delete c.id;delete c.mine;return c}
 async function saveOffer(o,label){
-  if(SUPA){const {error}=await sb.from("offers").upsert({id:o.id,data:cleanOffer(o),updated_by:uid,updated_at:new Date().toISOString()});if(error){toast("Couldn't save. Only the admin can change offers.");return false}logAct(label);await loadOffers();return true}
+  if(SRV){try{await api("admin/offers",{id:o.id,data:cleanOffer(o)},"PUT")}catch(e){toast(e.message);return false}logAct(label);await loadAll();return true}
   if(CLOUD){try{await db.collection("offers").doc(o.id).set(cleanOffer(o));logAct(label)}catch(e){toast(e&&e.code==="quota_exceeded"?"Storage is full. Delete old offers first.":"Couldn't save. Only admins can change offers.");return false}}
   else{const c=Object.assign(cleanOffer(o),{id:o.id}),i=OFFERS.findIndex(x=>x.id===o.id);if(i>=0)OFFERS[i]=c;else OFFERS.push(c);store.set("orla.offers",OFFERS);renderAll()}
   return true}
 async function removeOffer(id,label){
-  if(SUPA){const {error}=await sb.from("offers").delete().eq("id",id);if(error){toast("Couldn't delete. Only the admin can change offers.");return false}logAct(label);await loadOffers();starred.delete(id);saveStar();return true}
+  if(SRV){try{await api("admin/offers/delete",{id})}catch(e){toast(e.message);return false}logAct(label);starred.delete(id);saveStar();await loadAll();return true}
   if(CLOUD){try{await db.collection("offers").doc(id).delete();logAct(label)}catch(e){toast("Couldn't delete. Only admins can change offers.");return false}}
   else{OFFERS=OFFERS.filter(o=>o.id!==id);store.set("orla.offers",OFFERS);renderAll()}
   starred.delete(id);saveStar();return true}
 async function saveSettings(patch,label){const x=Object.assign({},settings,patch);
-  if(SUPA){const {error}=await sb.from("settings").upsert({id:"app",data:x,updated_at:new Date().toISOString()});if(error){toast("Couldn't save. Only the admin can change settings.");return false}logAct(label);await loadSettings();return true}
+  if(SRV){try{await api("admin/settings",{data:x},"PUT")}catch(e){toast(e.message);return false}logAct(label);await loadAll();return true}
   if(CLOUD){try{await db.doc("settings/app").set(x);logAct(label)}catch(e){toast("Couldn't save. Only admins can change settings.");return false}}
   else{store.set("orla.settings",x);applySettings(x);renderAll();renderMarket()}
   return true}
@@ -928,9 +927,9 @@ async function pinHash(p){try{const b=await crypto.subtle.digest("SHA-256",new T
 function setGate(mode){gateMode=mode;authMode=null;authFields([]);$("#g-links").innerHTML="";$("#gate-go").hidden=false;closePresent();$("#gate").hidden=false;
   const T={loading:["Sign in","Checking your sign-in…"],
     signedout:["Sign-in required","Open this app while signed in to claude.ai, with an account it has been shared with. Ask the owner for access if you don't have it."],
-    continue:["Welcome",CLOUD?"You're signed in with your claude.ai account.":SUPA?"You're signed in"+(profile?" as "+profile.email:"")+".":""],
+    continue:["Welcome",CLOUD?"You're signed in with your claude.ai account.":SRV?"You're signed in"+(profile?" as "+profile.email:"")+".":""],
     pin:["Enter your PIN","This device is locked."],
-    create:["Create your PIN",(CLOUD||SUPA)?"Choose a 4 to 12 digit PIN to lock the app on this device.":"This copy of the app lives on this device. Choose a 4 to 12 digit PIN; you'll enter it to open the app."]}[mode];
+    create:["Create your PIN",(CLOUD||SRV)?"Choose a 4 to 12 digit PIN to lock the app on this device.":"This copy of the app lives on this device. Choose a 4 to 12 digit PIN; you'll enter it to open the app."]}[mode];
   $("#gate-title").textContent=T[0];$("#gate-msg").textContent=T[1];$("#gate-msg").hidden=!T[1];
   $("#gate-form").hidden=mode==="loading"||mode==="signedout";$("#gate-pin-wrap").hidden=mode==="continue";$("#gate-pin2-wrap").hidden=mode!=="create";
   $("#gate-pin").value="";$("#gate-pin2").value="";$("#gate-err").textContent="";
@@ -939,7 +938,7 @@ function setGate(mode){gateMode=mode;authMode=null;authFields([]);$("#g-links").
   $("#gate-who").hidden=!meInfo;
   if(meInfo){$("#gate-avatar").src=meInfo.avatarUrl;$("#gate-name").textContent=meInfo.name||"Signed in";const r=$("#gate-role");r.textContent=isAdmin?"Admin":"Agent";r.className="pill "+(isAdmin?"admin":"agent")}
   if(mode==="pin"||mode==="create")setTimeout(()=>{try{$("#gate-pin").focus()}catch(e){}},60)}
-function lock(){try{sessionStorage.removeItem("orla.open")}catch(e){}clearTimeout(idleT);const pin=store.get("orla.pin",null);setGate(pin?"pin":(CLOUD||SUPA)?"continue":"create")}
+function lock(){try{sessionStorage.removeItem("orla.open")}catch(e){}clearTimeout(idleT);const pin=store.get("orla.pin",null);setGate(pin?"pin":(CLOUD||SRV)?"continue":"create")}
 function unlock(){$("#gate").hidden=true;try{sessionStorage.setItem("orla.open","1")}catch(e){}bump()}
 function bump(){clearTimeout(idleT);const m=+store.get("orla.lockmin",15);if(m&&store.get("orla.pin",null)&&$("#gate").hidden)idleT=setTimeout(lock,m*60000)}
 ["pointerdown","keydown","scroll"].forEach(ev=>addEventListener(ev,bump,{passive:true}));
@@ -951,8 +950,8 @@ $("#gate-form").addEventListener("submit",async e=>{e.preventDefault();if(authMo
   else{const f=store.get("orla.fails",0)+1;store.set("orla.fails",f);$("#gate-pin").value="";if(f>=5){store.set("orla.fails",0);store.set("orla.wait",Date.now()+60000);err.textContent="Too many attempts. Try again in 60 seconds."}else err.textContent="Wrong PIN. "+(5-f)+" attempts left."}});
 $("#lock").onclick=lock;$("#sec-lock").onclick=lock;
 function renderSecurity(){const has=!!store.get("orla.pin",null);
-  $("#sec-lede").textContent=(SUPA?"You're signed in as "+(profile?profile.email:"")+" ("+(isAdmin?"admin":"agent")+"). A PIN adds a quick lock on this device, handy on a shared iPad. ":CLOUD?"You sign in with your claude.ai account"+(meInfo?.name?" ("+meInfo.name+")":"")+" as "+(isAdmin?"an admin":"an agent")+". A PIN adds a lock on this device, handy on a shared iPad. ":"This copy of the app opens with a PIN on this device. ")+(has?"A PIN is set.":"No PIN is set.");
-  $("#sec-clear").hidden=!(CLOUD||SUPA)||!has;$("#sec-lockmin").value=String(store.get("orla.lockmin",15))}
+  $("#sec-lede").textContent=(SRV?"You're signed in as "+(profile?profile.email:"")+" ("+(isAdmin?"admin":"agent")+"). A PIN adds a quick lock on this device, handy on a shared iPad. ":CLOUD?"You sign in with your claude.ai account"+(meInfo?.name?" ("+meInfo.name+")":"")+" as "+(isAdmin?"an admin":"an agent")+". A PIN adds a lock on this device, handy on a shared iPad. ":"This copy of the app opens with a PIN on this device. ")+(has?"A PIN is set.":"No PIN is set.");
+  $("#sec-clear").hidden=!(CLOUD||SRV)||!has;$("#sec-lockmin").value=String(store.get("orla.lockmin",15))}
 $("#sec-save").onclick=async()=>{const p=$("#sec-pin").value.trim();if(!/^\d{4,12}$/.test(p)){toast("Use 4 to 12 digits");return}if(p!==$("#sec-pin2").value.trim()){toast("The two PINs don't match");return}store.set("orla.pin",await pinHash(p));$("#sec-pin").value="";$("#sec-pin2").value="";renderSecurity();bump();toast("PIN saved")};
 $("#sec-clear").onclick=()=>{try{localStorage.removeItem("orla.pin")}catch(e){}renderSecurity();toast("PIN removed")};
 $("#sec-lockmin").onchange=e=>{store.set("orla.lockmin",+e.target.value);bump()};
@@ -960,7 +959,7 @@ $("#sec-lockmin").onchange=e=>{store.set("orla.lockmin",+e.target.value);bump()}
 /* ---------------- Admin backend ---------------- */
 let agentDraft=[];
 function renderAdmin(){$("#tab-admin").hidden=!isAdmin;renderSecurity();if(!isAdmin)return;
-  $("#ad-access").textContent=SUPA?"You're the admin. Anyone can register with their email and a password. After they confirm their email, their account waits for your approval in Users below; nobody sees any data until you approve them. Approved agents can browse offers and keep their own clients but can't change offers or settings.":CLOUD?"You're an admin because you have Edit access to this app. Changes you make here reach the whole team straight away. To add people, use Share: Edit access makes someone an admin, Contributor access makes them an agent who can browse offers and keep their own clients, and Viewer access lets them browse only.":"This copy runs only on this device, so whoever unlocks it with the PIN is the admin. Changes stay on this device; use Backup to copy them elsewhere.";
+  $("#ad-access").textContent=SRV?"You're the admin. Anyone can register with their email and a password. After they confirm their email, their account waits for your approval in Users below; nobody sees any data until you approve them. Approved agents can browse offers and keep their own clients but can't change offers or settings.":CLOUD?"You're an admin because you have Edit access to this app. Changes you make here reach the whole team straight away. To add people, use Share: Edit access makes someone an admin, Contributor access makes them an agent who can browse offers and keep their own clients, and Viewer access lets them browse only.":"This copy runs only on this device, so whoever unlocks it with the PIN is the admin. Changes stay on this device; use Backup to copy them elsewhere.";
   const l=[...OFFERS].sort((a,b)=>a.b-b.b||a.beds-b.beds||(keyPrice(a)||0)-(keyPrice(b)||0));
   $("#ad-offers-lede").textContent=l.length+" offers. Change a status here, or tap Edit to change everything about an offer.";
   $("#ad-table").innerHTML='<tr><th>Offer</th><th>Deal</th><th class="r">Price</th><th class="r">Rent / yr</th><th>Status</th><th></th></tr>'+l.map(o=>`<tr><td><b>P${o.b}</b> · ${esc(TYPE[o.beds])} · ${esc(o.title)}${o.check?' <span class="pill check">Check</span>':""}</td><td>${o.deal==="both"?"Sale or rent":o.deal==="rent"?"Rent":"Sale"}</td><td class="r">${o.deal!=="rent"&&o.price?fmt(o.price):"—"}</td><td class="r">${o.deal!=="sale"&&o.rent?fmt(o.rent):"—"}</td><td><select data-st="${esc(o.id)}" aria-label="Status">${STATUS.map(x=>`<option${x===(o.avail||"Available")?" selected":""}>${x}</option>`).join("")}</select></td><td><button class="btn sm" data-edit="${esc(o.id)}">Edit</button></td></tr>`).join("");
@@ -968,7 +967,7 @@ function renderAdmin(){$("#tab-admin").hidden=!isAdmin;renderSecurity();if(!isAd
   if(a!=="ad-notice")$("#ad-notice").value=settings.notice||"";
   if(!["ad-dld","ad-trustee","ad-admin"].includes(a)){$("#ad-dld").value=+(FEES.dld*100).toFixed(3);$("#ad-trustee").value=fmt(FEES.trustee);$("#ad-admin").value=fmt(FEES.admin)}
   if(!$("#ad-agents").contains(document.activeElement)){agentDraft=Object.entries(AGENTS).map(([k,x])=>({k,name:x.name,phone:x.phone}));drawAgents()}
-  $("#ad-log-panel").hidden=!(CLOUD||SUPA);$("#ad-users-panel").hidden=!SUPA}
+  $("#ad-log-panel").hidden=!(CLOUD||SRV);$("#ad-users-panel").hidden=!SRV}
 function drawAgents(){$("#ad-agents").innerHTML=agentDraft.map((x,i)=>`<div class="fgrid"><div class="field"><label for="ag-n${i}">Name</label><input id="ag-n${i}" data-ai="${i}" data-af="name" value="${esc(x.name)}"></div><div class="field"><label for="ag-p${i}">Phone</label><input id="ag-p${i}" data-ai="${i}" data-af="phone" inputmode="tel" value="${esc(x.phone)}"></div></div>`).join("")}
 $("#ad-agents").addEventListener("input",e=>{const t=e.target;if(t.dataset.ai!=null)agentDraft[+t.dataset.ai][t.dataset.af]=t.value});
 $("#ad-agent-add").onclick=()=>{agentDraft.push({k:"a"+Date.now().toString(36),name:"",phone:""});drawAgents();$("#ag-n"+(agentDraft.length-1)).focus()};
@@ -997,23 +996,31 @@ $("#ad-form").addEventListener("submit",async e=>{e.preventDefault();const g=k=>
   const ch=g("#o-check").split("\n").map(x=>x.trim()).filter(Boolean);o.check=ch.length?ch:null;
   if(await saveOffer(o,(id?"Edited ":"Added ")+BLD[o.b]+" · "+o.title)){$("#ad-form-panel").hidden=true;toast(id?"Offer saved":"Offer added")}});
 $("#o-del").onclick=async()=>{const d=$("#o-del"),id=$("#o-id").value,o=OFFERS.find(x=>x.id===id);if(!o)return;if(!d.dataset.armed){d.dataset.armed=1;d.textContent="Tap again to delete";return}if(await removeOffer(id,"Deleted "+BLD[o.b]+" · "+o.title)){$("#ad-form-panel").hidden=true;toast("Offer deleted")}};
-async function renderLog(){if(!(CLOUD||SUPA)||!isAdmin)return;const ids=[...new Set(logRows.map(r=>r.by).filter(Boolean))];let ps={};try{ps=ids.length&&uapi?await uapi.profiles(ids):{}}catch(e){}
+async function renderLog(){if(!(CLOUD||SRV)||!isAdmin)return;const ids=[...new Set(logRows.map(r=>r.by).filter(Boolean))];let ps={};try{ps=ids.length&&uapi?await uapi.profiles(ids):{}}catch(e){}
   $("#ad-log").innerHTML=logRows.length?'<tr><th>When</th><th>Who</th><th>Change</th></tr>'+logRows.map(r=>`<tr><td>${esc(new Date(r.at).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}))}</td><td>${esc(r.who||(ps[r.by]&&ps[r.by].name)||"Someone")}</td><td style="white-space:normal;min-width:260px">${esc(r.text)}</td></tr>`).join(""):'<tr><td>No changes yet.</td></tr>'}
 
-/* ---------------- Email sign-in (Supabase) ---------------- */
+/* ---------------- Email sign-in (own server + PostgreSQL) ---------------- */
+const API=String(CFG.api||"/api").replace(/\/+$/,"");let emailOn=true,resetToken=null,pollT=null;
+async function api(path,body,method){let r;
+  try{r=await fetch(API+"/"+path,{method:method||(body?"POST":"GET"),credentials:"same-origin",headers:body?{"Content-Type":"application/json","X-Orla":"1"}:{},body:body?JSON.stringify(body):undefined})}
+  catch(e){const x=new Error("Can't reach the server. Check your connection.");x.offline=true;throw x}
+  let j={};try{j=await r.json()}catch(e){}
+  if(!r.ok){const x=new Error(j.error||"Something went wrong. Try again.");x.status=r.status;x.code=j.code;throw x}
+  return j}
 const here=()=>location.origin+location.pathname;
 function authFields(show){["g-name","g-email","g-pass","g-pass2"].forEach(k=>{$("#"+k+"-wrap").hidden=!show.includes(k)})}
 function initialsAvatar(n){const i=String(n||"?").split(/[\s@._-]+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("").replace(/[^A-Z0-9]/g,"");
   return "data:image/svg+xml,"+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" rx="32" fill="#F28C28"/><text x="32" y="41" font-family="Arial,sans-serif" font-size="24" font-weight="700" text-anchor="middle" fill="#1F1D1B">${i||"?"}</text></svg>`)}
 function setAuthGate(mode,email){closePresent();$("#gate").hidden=false;authMode=mode;gateMode="auth";
-  const T={loading:["Sign in","Connecting…"],offline:["Can't connect","The sign-in service can't be reached. Check your internet connection and open the app again."],
+  const T={loading:["Sign in","Connecting…"],offline:["Can't connect","The server can't be reached. Check your internet connection and open the app again."],
     signin:["Sign in","Use the email and password you registered with."],
-    signup:["Create your account","Register with your email. We'll send you a link to confirm it."],
+    signup:["Create your account",emailOn?"Register with your email. We'll send you a link to confirm it, then the admin approves your account.":"Register with your email. The admin approves your account before you can open the app."],
     forgot:["Reset your password","Enter your email and we'll send you a link to set a new password."],
+    "forgot-nomail":["Reset your password","Ask the admin for a password reset link. They can make one for you in Admin › Users."],
     reset:["Set a new password","Choose a new password of at least 8 characters."],
-    sent:["Check your email","We sent a confirmation link to "+(email||"your email")+". Open it to confirm your email. The admin then approves your account before you can sign in."],
-    pending:["Waiting for approval","Your account "+(email?"("+email+") ":"")+"is registered. The admin needs to approve it before you can open the app. Check back later."],
-    "sent-reset":["Check your email","If an account exists for "+(email||"that email")+", we've sent a link to set a new password."]}[mode];
+    sent:["Check your email","We sent a confirmation link to "+(email||"your email")+". Open it to confirm your email. The admin then approves your account."],
+    "sent-reset":["Check your email","If an account exists for "+(email||"that email")+", we've sent a link to set a new password. It works for 1 hour."],
+    pending:["Waiting for approval","Your account "+(email?"("+email+") ":"")+"is registered. The admin needs to approve it before you can open the app. Check back later."]}[mode];
   $("#gate-title").textContent=T[0];$("#gate-msg").textContent=T[1];$("#gate-msg").hidden=false;
   const f={signin:["g-email","g-pass"],signup:["g-name","g-email","g-pass","g-pass2"],forgot:["g-email"],reset:["g-pass","g-pass2"]}[mode]||[];
   authFields(f);$("#gate-pin-wrap").hidden=true;$("#gate-pin2-wrap").hidden=true;$("#gate-who").hidden=true;
@@ -1022,78 +1029,82 @@ function setAuthGate(mode,email){closePresent();$("#gate").hidden=false;authMode
   $("#g-pass-label").textContent=(mode==="signup"||mode==="reset")?"Password (at least 8 characters)":"Password";
   $("#g-pass").setAttribute("autocomplete",mode==="signin"?"current-password":"new-password");
   $("#gate-err").textContent="";$("#g-pass").value="";$("#g-pass2").value="";if(email)$("#g-email").value=email;
-  const L={signin:[["signup","Create an account"],["forgot","Forgot password?"]],signup:[["signin","I already have an account"]],forgot:[["signin","Back to sign in"]],sent:[["signin","Back to sign in"]],"sent-reset":[["signin","Back to sign in"]],pending:[["recheck","Check again"],["signout","Sign out"]]}[mode]||[];
+  const back=[["signin","Back to sign in"]];
+  const L={signin:[["signup","Create an account"],[emailOn?"forgot":"forgot-nomail","Forgot password?"]],signup:[["signin","I already have an account"]],forgot:back,"forgot-nomail":back,sent:back,"sent-reset":back,pending:[["recheck","Check again"],["signout","Sign out"]]}[mode]||[];
   $("#g-links").innerHTML=L.map(([m,t])=>`<button type="button" data-auth="${m}">${t}</button>`).join("");
   if(f[0])setTimeout(()=>{try{$("#"+f[0]).focus()}catch(e){}},60)}
 $("#g-links").addEventListener("click",async e=>{const b=e.target.closest("[data-auth]");if(!b)return;const m=b.dataset.auth;
-  if(m==="signout"){try{await sb.auth.signOut()}catch(x){}setAuthGate("signin");return}
-  if(m==="recheck"){b.disabled=true;await enterSupa();b.disabled=false;return}
+  if(m==="signout"){try{await api("auth/logout",{})}catch(x){}setAuthGate("signin");return}
+  if(m==="recheck"){b.disabled=true;await enterServer();b.disabled=false;return}
   setAuthGate(m,$("#g-email").value.trim())});
-function authError(e){const m=String(e&&e.message||e||"");
-  if(/invalid login credentials/i.test(m))return "Wrong email or password.";
-  if(/email not confirmed/i.test(m))return "Confirm your email first: open the link we sent you.";
-  if(/already registered|already been registered/i.test(m))return "An account with this email already exists. Sign in instead.";
-  if(/rate limit|too many/i.test(m))return "Too many attempts. Wait a few minutes and try again.";
-  if(/failed to fetch|network/i.test(m))return "Can't reach the sign-in service. Check your connection.";
-  return m||"Something went wrong. Try again."}
 async function authSubmit(){const err=$("#gate-err"),go=$("#gate-go"),em=$("#g-email").value.trim().toLowerCase(),pw=$("#g-pass").value;err.textContent="";
-  const need=(c,m)=>{if(!c)throw {message:m}};go.disabled=true;
+  const need=(c,m)=>{if(!c)throw new Error(m)};go.disabled=true;
   try{
-    if(authMode==="signin"){need(/^\S+@\S+\.\S+$/.test(em),"Enter your email address.");need(pw,"Enter your password.");const {error}=await sb.auth.signInWithPassword({email:em,password:pw});if(error)throw error;await enterSupa()}
+    if(authMode==="signin"){need(/^\S+@\S+\.\S+$/.test(em),"Enter your email address.");need(pw,"Enter your password.");const r=await api("auth/login",{email:em,password:pw});await enterServer(r.user)}
     else if(authMode==="signup"){const nm=$("#g-name").value.trim();need(nm,"Enter your full name.");need(/^\S+@\S+\.\S+$/.test(em),"Enter a valid email address.");need(pw.length>=8,"Use at least 8 characters for your password.");need(pw===$("#g-pass2").value,"The two passwords don't match.");
-      const {data,error}=await sb.auth.signUp({email:em,password:pw,options:{data:{full_name:nm},emailRedirectTo:here()}});if(error)throw error;
-      if(data&&data.session)await enterSupa();else setAuthGate("sent",em)}
-    else if(authMode==="forgot"){need(/^\S+@\S+\.\S+$/.test(em),"Enter your email address.");const {error}=await sb.auth.resetPasswordForEmail(em,{redirectTo:here()});if(error)throw error;setAuthGate("sent-reset",em)}
-    else if(authMode==="reset"){need(pw.length>=8,"Use at least 8 characters for your password.");need(pw===$("#g-pass2").value,"The two passwords don't match.");const {error}=await sb.auth.updateUser({password:pw});if(error)throw error;recovering=false;toast("Password updated");await enterSupa()}
-  }catch(e){err.textContent=authError(e)}finally{go.disabled=false}}
-async function loadOffers(){const {data,error}=await sb.from("offers").select("id,data");
-  if(error){const c=store.get("orla.cache.offers",null);if(c&&!OFFERS.length){OFFERS=c;renderAll()}toast("Offline: showing the offers saved on this device");return}
-  OFFERS=(data||[]).map(r=>Object.assign({},r.data,{id:r.id}));store.set("orla.cache.offers",OFFERS);migrateOvr();renderAll();if(!$("#c-pick").value){const f=OFFERS.find(o=>o.deal!=="rent"&&o.price);if(f)loadCalc(f.id)}}
-async function loadSettings(){const {data,error}=await sb.from("settings").select("data").eq("id","app").maybeSingle();const x=error?store.get("orla.cache.settings",{}):(data?data.data:{});if(!error)store.set("orla.cache.settings",x);applySettings(x);renderAll();renderMarket();calc()}
-async function loadLog(){if(!SUPA||!isAdmin)return;const {data}=await sb.from("activity").select("at,by_email,text").order("at",{ascending:false}).limit(50);logRows=(data||[]).map(r=>({at:r.at,who:r.by_email,text:r.text}));renderLog()}
-async function loadUsers(){if(!SUPA||!isAdmin)return;const {data,error}=await sb.from("profiles").select("id,email,full_name,role,status,created_at").order("created_at",{ascending:true});if(error){toast("Users couldn't be loaded");return}usersList=data||[];renderUsers();renderDash()}
+      const r=await api("auth/register",{name:nm,email:em,password:pw});if(r.needsVerification)setAuthGate("sent",em);else await enterServer(r.user)}
+    else if(authMode==="forgot"){need(/^\S+@\S+\.\S+$/.test(em),"Enter your email address.");await api("auth/forgot",{email:em});setAuthGate("sent-reset",em)}
+    else if(authMode==="reset"){need(pw.length>=8,"Use at least 8 characters for your password.");need(pw===$("#g-pass2").value,"The two passwords don't match.");const r=await api("auth/reset",{token:resetToken,password:pw});resetToken=null;toast("Password updated");await enterServer(r.user)}
+  }catch(e){err.textContent=e.message}finally{go.disabled=false}}
+async function loadAll(first){
+  try{const d=await api("data/all");
+    OFFERS=(d.offers||[]).map(r=>Object.assign({},r.data,{id:r.id}));store.set("orla.cache.offers",OFFERS);
+    applySettings(d.settings||{});store.set("orla.cache.settings",d.settings||{});
+    if(first){const owner=store.get("orla.localOwner",null);
+      if(d.state){mine=d.state.mine||[];clients=d.state.clients||[];starred=new Set(d.state.starred||[]);store.set("orla.mine",mine);store.set("orla.clients",clients);store.set("orla.star",[...starred])}
+      else if(owner&&owner!==uid){mine=[];clients=[];starred=new Set();persist()}
+      else if(mine.length||clients.length||starred.size)persist();
+      store.set("orla.localOwner",uid)}
+    migrateOvr()}
+  catch(e){if(e.status===401||e.status===403){location.reload();return}
+    if(first){OFFERS=store.get("orla.cache.offers",[]);applySettings(store.get("orla.cache.settings",{}))}
+    if(first||!loadAll.warned){loadAll.warned=true;toast("Offline: showing what's saved on this device")}}
+  renderAll();renderMarket();calc();if(!$("#c-pick").value){const f=OFFERS.find(o=>o.deal!=="rent"&&o.price);if(f)loadCalc(f.id)}}
+const loadOffers=()=>loadAll(),loadSettings=()=>loadAll();
+async function loadLog(){if(!SRV||!isAdmin)return;try{const d=await api("admin/activity");logRows=(d.rows||[]).map(r=>({at:r.at,who:r.by_email,text:r.text}));renderLog()}catch(e){}}
+async function loadUsers(){if(!SRV||!isAdmin)return;try{const d=await api("admin/users");usersList=d.users||[];renderUsers();renderDash()}catch(e){toast("Users couldn't be loaded")}}
 const pendingCount=()=>usersList.filter(u=>u.status==="pending").length;
 function renderUsers(){const n=pendingCount(),c=$("#cnt-pending");c.hidden=!n;c.textContent=n;
   const order={pending:0,active:1,blocked:2},l=[...usersList].sort((a,b)=>order[a.status]-order[b.status]);
-  const pill=x=>x==="pending"?'<span class="pill pending">Waiting</span>':x==="active"?'<span class="pill ok">Approved</span>':'<span class="pill st done">Blocked</span>';
-  const btns=u=>u.id===uid?"You":u.status==="pending"?`<button class="btn sm primary" data-uact="${esc(u.id)}" data-to="active">Approve</button><button class="btn sm" data-uact="${esc(u.id)}" data-to="blocked">Decline</button>`:u.status==="active"?`<button class="btn sm" data-uact="${esc(u.id)}" data-to="blocked">Block</button>`:`<button class="btn sm" data-uact="${esc(u.id)}" data-to="active">Approve</button>`;
-  $("#ad-users").innerHTML='<tr><th>Name</th><th>Email</th><th>Role</th><th>Registered</th><th>Status</th><th></th></tr>'+l.map(u=>`<tr><td>${esc(u.full_name||"—")}</td><td>${esc(u.email)}</td><td>${u.role==="admin"?"Admin":"Agent"}</td><td>${esc(new Date(u.created_at).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}))}</td><td>${pill(u.status)}</td><td>${btns(u)}</td></tr>`).join("")}
+  const pill=u=>u.status==="pending"?'<span class="pill pending">Waiting</span>'+(emailOn&&!u.email_verified?' <span class="pill st">Email not confirmed</span>':""):u.status==="active"?'<span class="pill ok">Approved</span>':'<span class="pill st done">Blocked</span>';
+  const btn=(u,to,t,cls="")=>`<button class="btn sm ${cls}" data-uact="${esc(u.id)}" data-to="${to}">${t}</button>`;
+  const btns=u=>u.id===uid?"You":(u.status==="pending"?btn(u,"active","Approve","primary")+btn(u,"blocked","Decline"):u.status==="active"?btn(u,"blocked","Block")+btn(u,"reset","Reset link"):btn(u,"active","Approve"));
+  $("#ad-users").innerHTML='<tr><th>Name</th><th>Email</th><th>Role</th><th>Registered</th><th>Status</th><th></th></tr>'+l.map(u=>`<tr><td>${esc(u.full_name||"—")}</td><td>${esc(u.email)}</td><td>${u.role==="admin"?"Admin":"Agent"}</td><td>${esc(new Date(u.created_at).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}))}</td><td>${pill(u)}</td><td>${btns(u)}</td></tr>`).join("")}
 $("#ad-users").addEventListener("click",async e=>{const b=e.target.closest("[data-uact]");if(!b)return;const u=usersList.find(x=>x.id===b.dataset.uact);if(!u)return;const to=b.dataset.to;
-  if(to==="blocked"&&u.status==="active"&&!b.dataset.armed){b.dataset.armed=1;b.textContent="Tap again to block";return}
-  const {error}=await sb.from("profiles").update({status:to}).eq("id",u.id);if(error){toast("Couldn't change access");return}
-  const verb=to==="active"?"Approved ":u.status==="pending"?"Declined ":"Blocked ";logAct(verb+u.email);toast(verb.trim()+": "+u.email);loadUsers()});
-$("#signout").onclick=async()=>{try{await sb.auth.signOut()}catch(e){}["orla.mine","orla.clients","orla.star","orla.cache.offers","orla.cache.profile","orla.cache.settings"].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});try{sessionStorage.removeItem("orla.open")}catch(e){}location.reload()};
-async function enterSupa(session){if(entering||uid)return;entering=true;
-  try{if(!session)session=(await sb.auth.getSession()).data.session;if(!session){setAuthGate("signin");return}
-    let {data:p,error}=await sb.from("profiles").select("id,email,full_name,role,status").eq("id",session.user.id).maybeSingle();
-    if(error){const c=store.get("orla.cache.profile",null);if(c&&c.id===session.user.id)p=c}
-    if(!p){setAuthGate("signin");$("#gate-err").textContent=error?"Can't reach the sign-in service. Check your connection.":"Your account couldn't be loaded. Ask the admin to check the database setup.";return}
-    if(p.status==="pending"){try{localStorage.removeItem("orla.cache.profile")}catch(x){}setAuthGate("pending",p.email);return}
-    if(p.status!=="active"){try{localStorage.removeItem("orla.cache.profile")}catch(x){}await sb.auth.signOut();setAuthGate("signin");$("#gate-err").textContent="This account doesn't have access. Contact the admin.";return}
-    store.set("orla.cache.profile",p);uid=p.id;profile=p;isAdmin=p.role==="admin";meInfo={name:p.full_name||p.email,avatarUrl:initialsAvatar(p.full_name||p.email)};
-    const owner=store.get("orla.localOwner",null),{data:st}=await sb.from("user_state").select("data").eq("user_id",uid).maybeSingle();
-    if(st&&st.data){mine=st.data.mine||[];clients=st.data.clients||[];starred=new Set(st.data.starred||[]);store.set("orla.mine",mine);store.set("orla.clients",clients);store.set("orla.star",[...starred])}
-    else if(owner&&owner!==uid){mine=[];clients=[];starred=new Set();persist()}
-    else if(mine.length||clients.length||starred.size)persist();
-    store.set("orla.localOwner",uid);
-    await Promise.all([loadSettings(),loadOffers()]);
+  try{
+    if(to==="reset"){const r=await api("admin/users/reset-link",{id:u.id});const box=$("#ad-csv-text");box.hidden=false;box.value="Password reset link for "+u.email+" (works for 24 hours):\n"+r.url;await copy(box.value,box);logAct("Made a password reset link for "+u.email);return}
+    if(to==="blocked"&&u.status==="active"&&!b.dataset.armed){b.dataset.armed=1;b.textContent="Tap again to block";return}
+    await api("admin/users/status",{id:u.id,status:to});
+    const verb=to==="active"?"Approved ":u.status==="pending"?"Declined ":"Blocked ";logAct(verb+u.email);toast(verb.trim()+": "+u.email);loadUsers()
+  }catch(x){toast(x.message)}});
+$("#signout").onclick=async()=>{try{await api("auth/logout",{})}catch(e){}["orla.mine","orla.clients","orla.star","orla.cache.offers","orla.cache.profile","orla.cache.settings"].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});try{sessionStorage.removeItem("orla.open")}catch(e){}location.reload()};
+async function enterServer(u){if(entering)return;entering=true;
+  try{
+    if(!u){try{u=(await api("auth/me")).user}
+      catch(e){if(e.status===401){setAuthGate("signin");return}const c=store.get("orla.cache.profile",null);if(e.offline&&c)u=c;else{setAuthGate(e.offline?"offline":"signin");if(!e.offline)$("#gate-err").textContent=e.message;return}}}
+    if(u.status==="pending"){try{localStorage.removeItem("orla.cache.profile")}catch(x){}setAuthGate("pending",u.email);return}
+    if(u.status!=="active"){try{localStorage.removeItem("orla.cache.profile")}catch(x){}setAuthGate("signin");$("#gate-err").textContent="This account doesn't have access. Contact the admin.";return}
+    store.set("orla.cache.profile",u);uid=u.id;profile=u;isAdmin=u.role==="admin";meInfo={name:u.name||u.email,avatarUrl:initialsAvatar(u.name||u.email)};
+    await loadAll(true);
     $("#signout").hidden=false;startApp();if(isAdmin)loadUsers();
-    sb.channel("orla-live").on("postgres_changes",{event:"*",schema:"public",table:"offers"},()=>{clearTimeout(liveT);liveT=setTimeout(loadOffers,400)}).on("postgres_changes",{event:"*",schema:"public",table:"settings"},()=>loadSettings()).on("postgres_changes",{event:"*",schema:"public",table:"profiles"},()=>{if(isAdmin)loadUsers()}).subscribe();
-    document.addEventListener("visibilitychange",()=>{if(!document.hidden&&uid){loadOffers();loadSettings();if(isAdmin)loadUsers()}});
+    clearInterval(pollT);pollT=setInterval(()=>{if(!document.hidden&&uid){loadAll();if(isAdmin)loadUsers()}},30000);
+    if(!enterServer.vis){enterServer.vis=true;document.addEventListener("visibilitychange",()=>{if(!document.hidden&&uid){loadAll();if(isAdmin)loadUsers()}})}
     if(store.get("orla.pin",null)&&!sessionOpen())setGate("pin");else unlock();
   }finally{entering=false}}
-async function bootSupa(){OFFERS=[];applySettings({});startApp();
-  if(!window.supabase||!window.supabase.createClient){setAuthGate("offline");return}
-  sb=window.supabase.createClient(CFG.supabaseUrl,CFG.supabaseAnonKey);setAuthGate("loading");
-  sb.auth.onAuthStateChange((ev,session)=>{if(ev==="PASSWORD_RECOVERY"){recovering=true;setTimeout(()=>setAuthGate("reset"));return}if(ev==="SIGNED_IN"&&session&&!uid&&!recovering&&!authMode)setTimeout(()=>enterSupa(session))});
-  const {data}=await sb.auth.getSession();if(recovering)return;if(data&&data.session)enterSupa(data.session);else setAuthGate("signin")}
+async function bootServer(){OFFERS=[];applySettings({});startApp();setAuthGate("loading");
+  try{emailOn=!!(await api("auth/config")).emailEnabled}catch(e){}
+  const qs=new URLSearchParams(location.search),vt=qs.get("verify"),rt=qs.get("reset");
+  if(vt||rt)history.replaceState(null,"",location.pathname);
+  if(rt){resetToken=rt;setAuthGate("reset");return}
+  if(vt){try{const r=await api("auth/verify",{token:vt});toast("Email confirmed");await enterServer(r.user)}catch(e){setAuthGate("signin");$("#gate-err").textContent=e.message}return}
+  await enterServer()}
 
 /* ---------------- Start-up ---------------- */
 function startApp(){const ch=$("#userchip");
   if(meInfo){ch.innerHTML=`<img alt="" src="${esc(meInfo.avatarUrl)}"><span></span>`;ch.querySelector("span").textContent=(meInfo.name||"You")+" · "+(isAdmin?"Admin":"Agent")}else ch.textContent="Admin · this device";
   renderAll();renderMarket();const first=OFFERS.find(o=>o.deal!=="rent"&&o.price);if(first&&!pick.value)loadCalc(first.id);else calc();show(store.get("orla.tab","dash"))}
 async function boot(){
-  if(SUPA){bootSupa();return}
+  if(SRV){bootServer();return}
   if(!CLOUD){const saved=store.get("orla.offers",null);if(Array.isArray(saved))OFFERS=saved;applySettings(store.get("orla.settings",{}));migrateOvr();startApp();if(sessionOpen()&&store.get("orla.pin",null))unlock();else lock();return}
   setGate("loading");
   const [u,d]=await Promise.all([claude.use("user"),claude.use("db")]);uapi=u;db=d;
@@ -1111,7 +1122,7 @@ async function boot(){
   if(sessionOpen()&&!store.get("orla.pin",null))unlock();else lock()}
 
 /* ---------------- Wiring ---------------- */
-function show(v){if(v==="admin"&&!isAdmin)v="dash";if(v==="admin"&&SUPA){loadUsers();loadLog()}document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.view===v));document.querySelectorAll(".view").forEach(s=>s.hidden=s.id!=="view-"+v);store.set("orla.tab",v);window.scrollTo(0,0)}
+function show(v){if(v==="admin"&&!isAdmin)v="dash";if(v==="admin"&&SRV){loadUsers();loadLog()}document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.view===v));document.querySelectorAll(".view").forEach(s=>s.hidden=s.id!=="view-"+v);store.set("orla.tab",v);window.scrollTo(0,0)}
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>show(t.dataset.view));
 document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{state.deal=b.dataset.deal;document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x===b));renderList()});
 $("#f-type").onchange=e=>{state.type=e.target.value;renderList()};
