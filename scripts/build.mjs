@@ -10,7 +10,7 @@
 //
 // Locally: DATABASE_URL=postgres://... ADMIN_EMAIL=you@company.com npm run build
 // Device-only version without a server (PIN lock, data on the device): ALLOW_LOCAL_MODE=1 npm run build
-import { cpSync, rmSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { cpSync, rmSync, readFileSync, writeFileSync, mkdirSync, renameSync } from "node:fs";
 
 const env = process.env;
 const onVercel = !!env.VERCEL;
@@ -73,19 +73,23 @@ if (dbUrl) {
 }
 
 // ---------- build the app ----------
+// Website at /, the app at /app/, shared files (icons, manifest, service worker, config) at the root.
 rmSync("dist", { recursive: true, force: true });
 cpSync("app", "dist", { recursive: true });
+mkdirSync("dist/app", { recursive: true });
+renameSync("dist/index.html", "dist/app/index.html");
+cpSync("site/index.html", "dist/index.html");
 writeFileSync("dist/config.js",
   "// Generated at build time. Do not edit.\nwindow.ORLA_CONFIG = " + JSON.stringify(dbUrl ? { api: "/api" } : {}) + ";\n");
 
 // With accounts on, offers come only from the database: don't publish the starting offers in the page source.
-let html = readFileSync("dist/index.html", "utf8");
+let html = readFileSync("dist/app/index.html", "utf8");
 if (dbUrl) {
   const a = html.indexOf("/*SEED*/"), b = html.indexOf("/*END*/");
   if (a < 0 || b < a) { console.error("✖ Couldn't find the starting-offers markers in app/index.html."); process.exit(1); }
   html = html.slice(0, a + "/*SEED*/".length) + "[]" + html.slice(b);
 }
-writeFileSync("dist/index.html", html);
+writeFileSync("dist/app/index.html", html);
 
 // A new cache name for every deploy, so installed iPad apps pick up updates.
 const version = (env.VERCEL_GIT_COMMIT_SHA || String(Date.now())).slice(0, 12);
@@ -100,7 +104,7 @@ function writeSetupPage(items) {
   mkdirSync("dist", { recursive: true });
   // Unregisters any service worker from an earlier deploy so the setup page isn't hidden behind a cached app.
   writeFileSync("dist/sw.js", "self.addEventListener('install',()=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(self.registration.unregister()));\n");
-  writeFileSync("dist/index.html", `<!doctype html>
+  const page = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Peninsula Offers: finish setup</title><meta name="robots" content="noindex">
 <style>
@@ -120,5 +124,8 @@ li b{display:block}li span{color:var(--muted);font-size:15px}code{background:rgb
 <li><b>Redeploy</b><span>Deployments › ⋯ › Redeploy. The database tables and the 20 starting offers are set up automatically.</span></li></ol>
 <p class="last">Then open this address again and register with the admin email first.</p>
 </main></body></html>
-`);
+`;
+  writeFileSync("dist/index.html", page);
+  mkdirSync("dist/app", { recursive: true });
+  writeFileSync("dist/app/index.html", page);
 }

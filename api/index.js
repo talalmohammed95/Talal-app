@@ -15,10 +15,10 @@ class HttpError extends Error {
 const fail = (status, message, code) => { throw new HttpError(status, message, code); };
 
 // ---------- request helpers ----------
-function send(res, status, body) {
+function send(res, status, body, cache) {
   res.statusCode = status;
   res.setHeader("Content-Type", "application/json; charset=utf-8");
-  res.setHeader("Cache-Control", "no-store");
+  res.setHeader("Cache-Control", cache || "no-store");
   res.end(JSON.stringify(body));
 }
 
@@ -29,7 +29,7 @@ async function readBody(req) {
     return req.body;
   }
   const chunks = []; let size = 0;
-  for await (const c of req) { size += c.length; if (size > 1e6) fail(413, "Request too large."); chunks.push(c); }
+  for await (const c of req) { size += c.length; if (size > 3e6) fail(413, "Request too large."); chunks.push(c); }
   const text = Buffer.concat(chunks).toString();
   return text ? JSON.parse(text) : {};
 }
@@ -72,7 +72,23 @@ async function limit(key, max, seconds) {
 }
 
 // ---------- sessions and users ----------
-const publicUser = u => ({ id: u.id, email: u.email, name: u.name, role: u.role, status: u.status, emailVerified: u.email_verified });
+const publicUser = u => ({ id: u.id, email: u.email, name: u.name, role: u.role, status: u.status, emailVerified: u.email_verified, company: u.company || "", phone: u.phone || "" });
+
+// Roles: admin and agent (the Orla team) see everything. Brokers (agents at other agencies) and clients
+// never receive unit numbers, owner details or internal notes: they're removed here, on the server.
+const ROLES = ["agent", "broker", "client"];
+const ROLE_NAME = { admin: "Admin", agent: "Orla team agent", broker: "External agent", client: "Buyer or tenant" };
+const isTeam = u => u && (u.role === "admin" || u.role === "agent");
+const TEAM_ONLY = ["unit", "owner", "ownerPhone", "notes", "check", "internal"];
+function forRole(data, user) {
+  if (isTeam(user)) return data;
+  const d = { ...data };
+  for (const k of TEAM_ONLY) delete d[k];
+  if (typeof d.title === "string") d.title = d.title.replace(/\bunit\s*[#no.]*\s*\d+[a-z]?\b\s*[·,-]?\s*/gi, "").trim();
+  return d;
+}
+const PUBLIC_FIELDS = ["b", "beds", "deal", "title", "price", "rent", "size", "floor", "view", "furn", "baths", "status", "avail", "hl", "photos", "plan", "balcony", "cheques"];
+const forPublic = data => Object.fromEntries(PUBLIC_FIELDS.filter(k => data[k] !== undefined).map(k => [k, data[k]]));
 
 async function currentUser(req) {
   const token = cookies(req)[COOKIE];
@@ -112,7 +128,7 @@ const requireAdmin = c => { requireActive(c); if (c.user.role !== "admin") fail(
 async function sendVerification(req, u) {
   const token = await makeToken(u.id, "verify", 48);
   return trySendMail(u.email, "Confirm your email for Peninsula Offers",
-    `Hi ${u.name || ""},\n\nConfirm your email to finish registering for Peninsula Offers:\n${appUrl(req)}/?verify=${token}\n\n` +
+    `Hi ${u.name || ""},\n\nConfirm your email to finish registering for Peninsula Offers:\n${appUrl(req)}/app/?verify=${token}\n\n` +
     `After that, the admin approves your account. This link works for 48 hours.\n\nIf you didn't register, ignore this email.\n\nOrla Properties`);
 }
 
@@ -120,8 +136,9 @@ async function notifyAdminOfNewUser(req, u) {
   if (u.role === "admin") return;
   const { rows } = await q("select email from users where role = 'admin' and status = 'active'");
   if (rows[0]) await trySendMail(rows[0].email, "New account waiting for approval",
-    `${u.name || u.email} (${u.email}) registered for Peninsula Offers and is waiting for your approval.\n\n` +
-    `Approve or decline them in Admin › Users:\n${appUrl(req)}/\n`);
+    `${u.name || u.email} (${u.email}) registered for Peninsula Offers as: ${ROLE_NAME[u.role] || u.role}` +
+    `${u.company ? ", " + u.company : ""}${u.phone ? ", " + u.phone : ""}. They're waiting for your approval.\n\n` +
+    `Approve or decline them in Admin › Users:\n${appUrl(req)}/app/\n`);
 }
 
 // Price, rent and status changes, kept per offer for days on market and price history.
@@ -148,6 +165,8 @@ const routes = {
 
   "POST auth/register": async c => {
     const name = str(c.body.name, 100), email = checkEmail(c.body.email), password = checkNewPassword(c.body.password);
+    const role = ROLES.includes(c.body.role) ? c.body.role : "client", company = str(c.body.company, 120), phone = str(c.body.phone, 40);
+    if (role === "broker" && !company) fail(400, "Enter the name of your agency.", "no_company");
     if (!name) fail(400, "Enter your full name.", "no_name");
     await limit("register:" + c.ip, 10, 3600);
     const isAdmin = !!ADMIN_EMAIL && email === ADMIN_EMAIL;
@@ -155,9 +174,9 @@ const routes = {
     let user;
     try {
       ({ rows: [user] } = await q(
-        `insert into users (email, name, pass_hash, role, status, email_verified)
-         values ($1, $2, $3, $4, $5, $6) returning *`,
-        [email, name, await hashPassword(password), isAdmin ? "admin" : "agent", isAdmin ? "active" : "pending", !emailOn]));
+        `insert into users (email, name, pass_hash, role, status, email_verified, company, phone)
+         values ($1, $2, $3, $4, $5, $6, $7, $8) returning *`,
+        [email, name, await hashPassword(password), isAdmin ? "admin" : role, isAdmin ? "active" : "pending", !emailOn, company, phone]));
     } catch (e) {
       if (e.code === "23505" && /only_one_admin/.test(e.constraint || "")) fail(409, "The admin account already exists.", "admin_exists");
       if (e.code === "23505") fail(409, "An account with this email already exists. Sign in instead.", "exists");
@@ -208,7 +227,7 @@ const routes = {
     if (user && mailEnabled()) {
       const token = await makeToken(user.id, "reset", 1);
       await trySendMail(email, "Reset your Peninsula Offers password",
-        `Set a new password here (the link works for 1 hour):\n${appUrl(c.req)}/?reset=${token}\n\nIf you didn't ask for this, ignore this email.\n\nOrla Properties`);
+        `Set a new password here (the link works for 1 hour):\n${appUrl(c.req)}/app/?reset=${token}\n\nIf you didn't ask for this, ignore this email.\n\nOrla Properties`);
     }
     return { ok: true }; // same answer either way, so it doesn't reveal who has an account
   },
@@ -230,7 +249,7 @@ const routes = {
       q("select data from settings where id = 'app'"),
       q("select data from user_state where user_id = $1", [c.user.id])
     ]);
-    return { offers: offers.rows, settings: settings.rows[0]?.data || {}, state: state.rows[0]?.data || null };
+    return { offers: offers.rows.map(r => ({ ...r, data: forRole(r.data, c.user) })), settings: settings.rows[0]?.data || {}, state: state.rows[0]?.data || null };
   },
 
   "PUT data/state": async c => {
@@ -273,7 +292,7 @@ const routes = {
 
   "GET admin/users": async c => {
     requireAdmin(c);
-    const { rows } = await q("select id, email, name as full_name, role, status, email_verified, created_at from users order by created_at");
+    const { rows } = await q("select id, email, name as full_name, role, status, email_verified, created_at, company, phone from users order by created_at");
     return { users: rows };
   },
 
@@ -288,8 +307,49 @@ const routes = {
     if (status === "blocked") await q("delete from sessions where user_id = $1", [user.id]);
     if (status === "active" && user.status !== "active")
       await trySendMail(user.email, "Your Peninsula Offers account is approved",
-        `Hi ${user.name || ""},\n\nThe admin has approved your account. Sign in here:\n${appUrl(c.req)}/\n\nOrla Properties`);
+        `Hi ${user.name || ""},\n\nThe admin has approved your account. Sign in here:\n${appUrl(c.req)}/app/\n\nOrla Properties`);
     return { ok: true };
+  },
+
+  "POST admin/users/role": async c => {
+    requireAdmin(c);
+    const role = c.body.role;
+    if (!ROLES.includes(role)) fail(400, "Invalid role.");
+    const { rows: [user] } = await q("select * from users where id = $1", [String(c.body.id || "")]);
+    if (!user) fail(404, "User not found.");
+    if (user.role === "admin") fail(400, "The admin's role can't be changed.");
+    await q("update users set role = $2 where id = $1", [user.id, role]);
+    return { ok: true };
+  },
+
+  // Available homes for the public website: no unit numbers, owners, agents or internal notes.
+  "GET public/offers": async c => {
+    const { rows } = await q("select id, data from offers order by id");
+    c.cache = "public, max-age=60, s-maxage=60";
+    return { offers: rows.filter(r => !["Sold", "Rented"].includes(r.data.avail)).map(r => ({ id: r.id, ...forPublic(r.data) })) };
+  },
+
+  // Photos and floor plans: the admin uploads them already resized in the browser.
+  "POST admin/media": async c => {
+    requireAdmin(c);
+    const mime = String(c.body.mime || "");
+    if (!["image/webp", "image/jpeg", "image/png"].includes(mime)) fail(400, "Use a JPEG, PNG or WebP image.");
+    const buf = Buffer.from(String(c.body.data || ""), "base64");
+    if (!buf.length || buf.length > 2e6) fail(400, "That image is too large. Use one under 2 MB.");
+    const { rows: [m] } = await q("insert into media (mime, data, by_user) values ($1, $2, $3) returning id", [mime, buf, c.user.id]);
+    return { url: "/api/media?id=" + m.id };
+  },
+
+  "GET media": async c => {
+    const id = new URL(c.req.url, "http://localhost").searchParams.get("id") || "";
+    if (!/^[0-9a-f-]{36}$/.test(id)) fail(404, "Not found.");
+    const { rows: [m] } = await q("select mime, data from media where id = $1", [id]);
+    if (!m) fail(404, "Not found.");
+    c.res.statusCode = 200;
+    c.res.setHeader("Content-Type", m.mime);
+    c.res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    c.res.end(m.data);
+    return RAW;
   },
 
   "POST admin/users/reset-link": async c => {
@@ -297,7 +357,7 @@ const routes = {
     const { rows: [user] } = await q("select id from users where id = $1", [String(c.body.id || "")]);
     if (!user) fail(404, "User not found.");
     const token = await makeToken(user.id, "reset", 24);
-    return { url: `${appUrl(c.req)}/?reset=${token}` };
+    return { url: `${appUrl(c.req)}/app/?reset=${token}` };
   },
 
   "GET data/history": async c => {
@@ -320,6 +380,8 @@ const routes = {
   }
 };
 
+const RAW = Symbol("raw");
+
 export default async function handler(req, res) {
   try {
     if (!dbUrl()) fail(503, "The database isn't connected. Set DATABASE_URL.", "no_db");
@@ -336,8 +398,9 @@ export default async function handler(req, res) {
       if (!body || typeof body !== "object") body = {};
     }
     const user = await currentUser(req);
-    const out = await fn({ req, res, body, user, ip: clientIp(req) });
-    send(res, 200, out || { ok: true });
+    const c = { req, res, body, user, ip: clientIp(req) };
+    const out = await fn(c);
+    if (out !== RAW) send(res, 200, out || { ok: true }, c.cache);
   } catch (e) {
     if (e instanceof HttpError) return send(res, e.status, { error: e.message, code: e.code });
     console.error(e);

@@ -1,6 +1,9 @@
 # Peninsula Offers
 
-Orla Properties' app for every Peninsula (Business Bay) sale and rental offer from the Nov 2026 decks and flyers. It includes a dashboard, client presentations, a client tracker, deal and mortgage calculators, market data, sign-in with admin approval and an admin backend.
+Orla Properties' website and app for every Peninsula (Business Bay) sale and rental offer from the Nov 2026 decks and flyers.
+
+- **The website** (`/`) presents the community, with a photo slideshow, the five buildings, a gallery, available homes, market data with its sources, and three ways to register.
+- **The app** (`/app/`) has photos and floor plans for every offer, client presentations, a "3 options" request wizard, a client tracker, deal and mortgage calculators, market data, sign-in with admin approval and an admin backend.
 
 Built entirely on open-source software:
 - **PostgreSQL** database. Any Postgres works: Neon through Vercel Storage (free), Railway, or your own server.
@@ -8,7 +11,8 @@ Built entirely on open-source software:
 - **Front end:** one static page in `app/`, with no framework.
 
 ```
-app/         the app (index.html, icons, service worker)
+site/        the public website (served at /)
+app/         the app (served at /app/), icons, service worker; app/img holds the photos, renders and floor plans
 api/         the backend: sign-in, approval, offers, settings (one Vercel Function)
 lib/         database connection, tables, password hashing, email, starting offers
 scripts/     build.mjs (Vercel build) and dev.mjs (run it on your computer)
@@ -19,9 +23,13 @@ scripts/     build.mjs (Vercel build) and dev.mjs (run it on your computer)
 | | Who | What they can do |
 | --- | --- | --- |
 | **Admin** | One account only: the address in `ADMIN_EMAIL` | Everything, plus the Admin tab: approve or decline new accounts, block users, make password-reset links, add, edit and delete offers, statuses, fees, agents, the team announcement and the activity log |
-| **Agent** | Anyone who registers and is approved by the admin | Browse and present offers, and keep their own private clients, shortlists and listings |
+| **Orla team agent** | Registers as "On the Orla Properties team"; the admin approves | Everything except Admin: all offers including unit numbers, analysis, reports, clients, presentations |
+| **External agent** | Registers as "An agent at another agency" with their agency name | The simple showroom: photos, floor plans, prices, costs, market data, the 3-options wizard and presentations. **Never receives unit numbers, owner details or internal notes**: the server removes them |
+| **Client** | Registers as "Buying or renting a home" | The same showroom as external agents, with "Ask about this home" buttons that open WhatsApp to the listing agent |
 
 - Anyone can register with their name, email and a password of at least 8 characters. With email turned on, they first confirm their email from a link.
+- The admin can change anyone's role in Admin › Users. Unit numbers are entered in Admin › Edit offer › Unit number.
+- After signing in, everyone except the admin is asked "What are you looking for?" (buy or rent, type, purpose, budget) and gets three options: premium, balanced and best value, ready to present or send on WhatsApp. **Find 3 options** in the top bar opens it any time.
 - Every new account waits for the admin's approval. They see **Waiting for approval** until you tap **Approve** in Admin › Users. With email on, you get an email when someone is waiting, and they get one when you approve them. Declined or blocked users can't sign in, and blocking someone signs them out everywhere.
 - Forgot a password? With email on, a reset link is sent by email. Without email, the admin taps **Reset link** in Admin › Users and sends the link, for example on WhatsApp.
 - **Security, enforced by the server:**
@@ -30,6 +38,12 @@ scripts/     build.mjs (Vercel build) and dev.mjs (run it on your computer)
   - Repeated sign-in attempts are rate-limited.
   - Only the admin can change offers or settings, there can only be one admin, and pending or blocked accounts get no data.
 - Each device can also add a PIN lock (My listings › Login & security).
+
+## Photos and floor plans
+
+Each offer shows a photo gallery with a full-screen viewer, and its floor plan where one exists. The photos come from the flyers' developer renders (Select Group) and from photos of the actual units, and are labelled as one or the other. The list of which photos belong to which offer is the `MEDIA` table in `app/index.html`. Offers without their own photos show the standard photos for their building.
+
+To change an offer's photos, open Admin › Edit offer › Photos and floor plan: upload photos or a floor plan (they're resized on the device and stored in the database), pick from the photo library, set the cover, or go back to the default photos.
 
 ## Deploy on Vercel (free)
 
