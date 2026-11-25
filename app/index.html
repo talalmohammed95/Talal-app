@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Peninsula Offers</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Peninsula">
+<meta name="theme-color" content="#1F1D1B">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: broker console. Top bar with tabs; on iPad a two-pane split (offer list | offer detail), stacked on phones. */
+:root{
+  --bg:#F7F4F0; --surface:#FFFFFF; --sunk:#EFEAE3; --fg:#1F1D1B; --muted:#635D56; --line:#E3DDD4;
+  --accent:#F28C28; --accent-ink:#B4430B; --accent-soft:#FFF1E2; --bar:#1F1D1B; --bar-fg:#FFFFFF;
+  --good:#1F7A4D; --good-soft:#E3F3EA; --warn:#9A5B00; --warn-soft:#FDF1D8; --rent:#2459A8; --rent-soft:#E6EEFA;
+  --display:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#151312; --surface:#1F1C1A; --sunk:#2A2623; --fg:#F2EEE9; --muted:#B0A89F; --line:#36312D;
+  --accent:#F59A3E; --accent-ink:#FFB36B; --accent-soft:#3A2717; --bar:#0E0D0C; --bar-fg:#F2EEE9;
+  --good:#5FCB93; --good-soft:#17311F; --warn:#F1BE5A; --warn-soft:#352812; --rent:#8DB4F0; --rent-soft:#1A2638; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#151312; --surface:#1F1C1A; --sunk:#2A2623; --fg:#F2EEE9; --muted:#B0A89F; --line:#36312D;
+  --accent:#F59A3E; --accent-ink:#FFB36B; --accent-soft:#3A2717; --bar:#0E0D0C; --bar-fg:#F2EEE9;
+  --good:#5FCB93; --good-soft:#17311F; --warn:#F1BE5A; --warn-soft:#352812; --rent:#8DB4F0; --rent-soft:#1A2638; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bar)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bar);color:var(--bar-fg);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px 0}
+.brandrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px;min-width:0}
+.brand b{font-family:var(--display);font-weight:800;letter-spacing:.14em;font-size:13px;color:var(--accent)}
+.brand span{font-family:var(--display);font-weight:700;font-size:18px;white-space:nowrap}
+.brand small{color:#B8B0A6;font-size:12px}
+.tabs{display:flex;gap:4px;margin-top:8px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{background:none;border:0;color:#CFC8BF;font-family:var(--display);font-weight:600;font-size:14px;padding:10px 14px 12px;border-bottom:3px solid transparent;white-space:nowrap;min-height:44px}
+.tab[aria-selected="true"]{color:#fff;border-bottom-color:var(--accent)}
+.tab .count{font-size:11px;background:#3A3532;color:#fff;border-radius:999px;padding:1px 7px;margin-left:6px}
+
+main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 32px;max-width:1400px;margin:0 auto}
+.view[hidden]{display:none!important}
+
+/* Offers split */
+.split{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:860px){.split{grid-template-columns:minmax(0,1fr)}}
+.filters{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.seg{display:flex;background:var(--sunk);border-radius:999px;padding:3px;gap:2px}
+.seg button{flex:1;border:0;background:none;border-radius:999px;padding:8px 10px;font-weight:600;font-size:13px;color:var(--muted);min-height:38px}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.frow{display:flex;gap:8px;flex-wrap:wrap}
+.frow select,.frow input{flex:1;min-width:120px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 10px;min-height:42px}
+.summary{font-size:13px;color:var(--muted);margin:2px 2px 8px}
+.list{display:flex;flex-direction:column;gap:8px}
+.card{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;text-align:left;width:100%}
+.card[aria-current="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+.tower{width:52px;height:52px;border-radius:8px;background:var(--sunk);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--display);line-height:1}
+.tower b{font-size:20px;font-weight:800;color:var(--accent-ink)}
+.tower i{font-style:normal;font-size:9px;letter-spacing:.12em;color:var(--muted);margin-top:3px}
+.card h3{margin:0;font-family:var(--display);font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .meta{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .p{text-align:right;font-family:var(--display);font-weight:700;font-size:15px;white-space:nowrap}
+.card .p small{display:block;font-family:var(--body);font-weight:500;font-size:11.5px;color:var(--muted)}
+.pills{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}
+.pill{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:999px}
+.pill.sale{background:var(--accent-soft);color:var(--accent-ink)}
+.pill.rent{background:var(--rent-soft);color:var(--rent)}
+.pill.check{background:var(--warn-soft);color:var(--warn)}
+.pill.mine{background:var(--good-soft);color:var(--good)}
+.star{color:var(--accent)}
+
+/* Detail */
+.detail{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;position:sticky;top:calc(env(safe-area-inset-top,0px) + 112px)}
+@media (max-width:860px){.detail{position:static}}
+.dhead{background:var(--bar);color:var(--bar-fg);padding:18px 22px 20px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:flex-end}
+.dhead .eyebrow{font-family:var(--display);font-size:11.5px;font-weight:700;letter-spacing:.16em;color:var(--accent)}
+.dhead h2{margin:4px 0 0;font-family:var(--display);font-size:clamp(22px,3vw,30px);font-weight:800;line-height:1.1;text-wrap:balance}
+.dhead .big{text-align:right}
+.dhead .big b{display:block;font-family:var(--display);font-size:clamp(24px,3.4vw,34px);font-weight:800;color:var(--accent);line-height:1}
+.dhead .big span{font-size:13px;color:#CFC8BF}
+.dbody{padding:18px 22px 22px;display:flex;flex-direction:column;gap:20px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:9px 14px;font-weight:600;font-size:14px;min-height:44px;display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--fg)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#1F1D1B}
+.btn:active{transform:translateY(1px)}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+@media (max-width:620px){.cols{grid-template-columns:minmax(0,1fr)}}
+h4{margin:0 0 6px;font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--accent-ink);text-transform:uppercase}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.kv:last-child{border-bottom:0}
+.kv span:first-child{color:var(--muted)}
+.kv span:last-child{font-weight:600;text-align:right}
+.kv.total{border-top:2px solid var(--fg);border-bottom:0;margin-top:2px}
+.kv.total span{font-weight:800;color:var(--fg);font-family:var(--display)}
+.boxed{background:var(--accent-soft);border-radius:10px;padding:12px 16px}
+.hl{margin:0;font-size:14.5px;line-height:1.55;max-width:68ch}
+.notes{background:var(--warn-soft);color:var(--fg);border-radius:10px;padding:12px 16px;font-size:13.5px}
+.notes b{color:var(--warn)}
+.notes ul{margin:6px 0 0;padding-left:18px}
+.agent{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--sunk);border-radius:10px;padding:12px 16px}
+.agent .who b{display:block;font-family:var(--display)}
+.agent .who span{font-size:12.5px;color:var(--muted)}
+.phone{font-family:var(--display);font-weight:700;font-size:16px;user-select:all;-webkit-user-select:all}
+.src{font-size:12px;color:var(--muted);margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--bg)}
+
+/* Generic panels */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.panel h2{margin:0 0 4px;font-family:var(--display);font-size:20px;font-weight:800}
+.panel .lede{margin:0 0 14px;color:var(--muted);font-size:14px;max-width:70ch}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:860px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:12.5px;font-weight:600;color:var(--muted)}
+.field input,.field select,.field textarea{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:44px;width:100%}
+.fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:520px){.fgrid{grid-template-columns:minmax(0,1fr)}}
+.fgrid .wide{grid-column:1/-1}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px}
+.tile{background:var(--sunk);border-radius:10px;padding:12px 14px}
+.tile span{display:block;font-size:12px;color:var(--muted)}
+.tile b{font-family:var(--display);font-size:20px;font-weight:800}
+.tile.pos b{color:var(--good)} .tile.neg b{color:#C2352B}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;font-variant-numeric:tabular-nums}
+th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--sunk);font-weight:700}
+td.r,th.r{text-align:right}
+tr.this td{background:var(--accent-soft);font-weight:700}
+tr:last-child td{border-bottom:0}
+.stack{display:flex;flex-direction:column;gap:16px}
+.empty{padding:28px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:600;font-size:14px;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none;max-width:calc(100% - 32px)}
+.toast.show{opacity:1}
+textarea.copybox{width:100%;min-height:140px;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);font-size:13px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brandrow">
+    <div class="brand"><b>ORLA</b><span>Peninsula Offers</span><small>Business Bay · Nov 2026</small></div>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" id="tab-offers" data-view="offers" aria-selected="true">Offers<span class="count num" id="cnt-offers"></span></button>
+    <button class="tab" role="tab" id="tab-shortlist" data-view="shortlist" aria-selected="false">Client shortlist<span class="count num" id="cnt-short">0</span></button>
+    <button class="tab" role="tab" id="tab-calc" data-view="calc" aria-selected="false">Deal calculator</button>
+    <button class="tab" role="tab" id="tab-market" data-view="market" aria-selected="false">Market data</button>
+    <button class="tab" role="tab" id="tab-mine" data-view="mine" aria-selected="false">Add listing</button>
+  </nav>
+</header>
+
+<main>
+  <!-- OFFERS -->
+  <section class="view" id="view-offers">
+    <div class="split">
+      <div>
+        <div class="filters">
+          <div class="seg" role="group" aria-label="Deal type">
+            <button data-deal="all" aria-pressed="true">All</button>
+            <button data-deal="sale" aria-pressed="false">For sale</button>
+            <button data-deal="rent" aria-pressed="false">For rent</button>
+          </div>
+          <div class="frow">
+            <select id="f-type" aria-label="Unit type"><option value="">All unit types</option><option value="0">Studio</option><option value="1">1 bedroom</option><option value="2">2 bedroom</option><option value="3">3 bedroom</option></select>
+            <select id="f-bld" aria-label="Building"><option value="">All buildings</option><option value="1">Peninsula One</option><option value="2">Peninsula Two</option><option value="3">Peninsula Three</option><option value="4">Peninsula Four</option><option value="5">Peninsula Five</option></select>
+          </div>
+          <div class="frow">
+            <select id="f-sort" aria-label="Sort"><option value="price-asc">Price: low to high</option><option value="price-desc">Price: high to low</option><option value="size-desc">Size: largest first</option><option value="bld">Building</option></select>
+            <input id="f-q" type="search" placeholder="Search view, floor, agent…" aria-label="Search">
+          </div>
+        </div>
+        <p class="summary num" id="summary"></p>
+        <div class="list" id="list"></div>
+      </div>
+      <div id="detail"></div>
+    </div>
+  </section>
+
+  <!-- SHORTLIST -->
+  <section class="view" id="view-shortlist" hidden>
+    <div class="panel stack">
+      <div>
+        <h2>Client shortlist</h2>
+        <p class="lede">Star offers in the Offers tab to collect them here, then copy one WhatsApp-ready message with all of them for your client.</p>
+      </div>
+      <div class="list" id="shortlist"></div>
+      <div class="actions"><button class="btn primary" id="copy-short">Copy message for client</button><button class="btn" id="clear-short">Clear shortlist</button></div>
+      <textarea class="copybox" id="short-text" readonly aria-label="Shortlist message"></textarea>
+    </div>
+  </section>
+
+  <!-- CALCULATOR -->
+  <section class="view" id="view-calc" hidden>
+    <div class="grid2">
+      <div class="panel">
+        <h2>Deal calculator</h2>
+        <p class="lede">Purchase costs, yield and resale return, using the same fees as your decks: 4% DLD registration, AED 5,250 trustee office fee and AED 5,000 admin fee.</p>
+        <div class="fgrid">
+          <div class="field wide"><label for="c-pick">Load an offer</label><select id="c-pick"><option value="">Custom figures</option></select></div>
+          <div class="field"><label for="c-price">Purchase price (AED)</label><input id="c-price" inputmode="numeric" value="1229000"></div>
+          <div class="field"><label for="c-size">Size (sq ft)</label><input id="c-size" inputmode="numeric" value="410"></div>
+          <div class="field"><label for="c-rent">Expected rent (AED / yr)</label><input id="c-rent" inputmode="numeric" value="78000"></div>
+          <div class="field"><label for="c-resale">Resale target (AED)</label><input id="c-resale" inputmode="numeric" value="1350000"></div>
+          <div class="field"><label for="c-exit">Exit commission (%)</label><input id="c-exit" inputmode="decimal" value="2"></div>
+          <div class="field"><label for="c-months">Rent months collected</label><input id="c-months" inputmode="numeric" value="12"></div>
+          <div class="field"><label for="c-svc">Service charge (AED / sq ft / yr)</label><input id="c-svc" inputmode="decimal" value="0"></div>
+          <div class="field"><label for="c-dld">DLD fee (%)</label><input id="c-dld" inputmode="decimal" value="4"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Result</h2>
+        <div id="c-out"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARKET -->
+  <section class="view" id="view-market" hidden>
+    <div class="stack" id="market"></div>
+  </section>
+
+  <!-- MY LISTINGS -->
+  <section class="view" id="view-mine" hidden>
+    <div class="grid2">
+      <div class="panel">
+        <h2>Add a listing</h2>
+        <p class="lede">Same columns as your “Peninsula 3 Listings” sheet. Listings you add are saved on this iPad only and show up in Offers with a “Mine” tag.</p>
+        <form id="mine-form" class="fgrid" autocomplete="off">
+          <div class="field"><label for="m-unit">Unit no.</label><input id="m-unit" placeholder="e.g. 3305"></div>
+          <div class="field"><label for="m-bld">Building</label><select id="m-bld"><option value="3">Peninsula Three</option><option value="1">Peninsula One</option><option value="2">Peninsula Two</option><option value="4">Peninsula Four</option><option value="5">Peninsula Five</option></select></div>
+          <div class="field"><label for="m-type">Type</label><select id="m-type"><option value="0">Studio</option><option value="1">1 Bedroom</option><option value="2">2 Bedroom</option><option value="3">3 Bedroom</option></select></div>
+          <div class="field"><label for="m-deal">Sale / Rent</label><select id="m-deal"><option value="sale">Sale</option><option value="rent">Rent</option></select></div>
+          <div class="field"><label for="m-floor">Floor</label><input id="m-floor" placeholder="e.g. 33rd"></div>
+          <div class="field"><label for="m-view">View</label><input id="m-view" placeholder="e.g. Canal & Burj"></div>
+          <div class="field"><label for="m-size">Size (sq ft)</label><input id="m-size" inputmode="numeric"></div>
+          <div class="field"><label for="m-price">Price (AED, or rent per year)</label><input id="m-price" inputmode="numeric" required></div>
+          <div class="field"><label for="m-status">Status</label><select id="m-status"><option>Ready</option><option>Vacant</option><option>Tenanted</option><option>Off-plan</option></select></div>
+          <div class="field"><label for="m-furn">Furnishing</label><select id="m-furn"><option>Unfurnished</option><option>Fully fitted</option><option>Fully furnished</option></select></div>
+          <div class="field"><label for="m-owner">Owner / client</label><input id="m-owner"></div>
+          <div class="field"><label for="m-phone">Owner phone</label><input id="m-phone" inputmode="tel"></div>
+          <div class="field"><label for="m-agent">Agent</label><select id="m-agent"><option value="talal">Talal Al Deraawi</option><option value="giulia">Giulia Perego</option><option value="blendjana">Blendjana</option></select></div>
+          <div class="field"><label for="m-date">Date listed</label><input id="m-date" type="date"></div>
+          <div class="field wide"><label for="m-notes">Notes</label><textarea id="m-notes" rows="2"></textarea></div>
+          <div class="wide actions"><button class="btn primary" type="submit">Save listing</button></div>
+        </form>
+      </div>
+      <div class="panel stack">
+        <div><h2>My listings</h2><p class="lede" id="mine-lede">Saved on this device.</p></div>
+        <div class="list" id="mine-list"></div>
+        <div><h4>Export</h4><p class="src">Copy as CSV and paste into your Peninsula 3 Listings sheet.</p></div>
+        <div class="actions"><button class="btn" id="copy-csv">Copy as CSV</button></div>
+        <textarea class="copybox" id="csv-text" readonly aria-label="CSV export"></textarea>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ---------------- Data extracted from your decks and flyers (Nov 2026) ---------------- */
+const AGENTS={
+  talal:{name:"Talal Al Deraawi",phone:"+971 50 120 9933"},
+  giulia:{name:"Giulia Perego",phone:"+971 58 217 4063"},
+  blendjana:{name:"Blendjana",phone:"+971 58 832 7743"}
+};
+const BLD={1:"Peninsula One",2:"Peninsula Two",3:"Peninsula Three",4:"Peninsula Four",5:"Peninsula Five"};
+const TYPE=["Studio","1 Bedroom","2 Bedroom","3 Bedroom"];
+const TOWER={
+  1:"Low-rise waterfront residences on the Peninsula promenade along Dubai Canal, steps from cafés, parks and RTA water taxis.",
+  2:"36-storey tower by Select Group with views over Burj Khalifa, the Downtown skyline and the Dubai Canal.",
+  3:"49-floor waterfront tower by Select Group with skyline, canal and Burj Khalifa views.",
+  4:"Two 52-floor towers (The Plaza) by Select Group plus low-rise waterfront lofts, at the heart of the Peninsula.",
+  5:"The Signature Collection: a 36-storey waterfront tower with 2.9 m ceilings and 180° water views."
+};
+const AMEN={
+  1:["Canal promenade","Parks & gardens","Cafés & restaurants","RTA water taxi","Business Bay Metro"],
+  2:["Outdoor pool","Gym (2,066 sq ft)","Co-working area","EV charging","Community mall next door","Jacuzzi, sauna & steam"],
+  3:["Lap, leisure & kids pools","Fully equipped gym","Co-working space","Yoga deck","Viewing deck, floor 50","Tennis, padel & running track"],
+  4:["Swimming pool","Kids pool","Gym","Sauna","Landscaped BBQ area","Waterside dining & retail"],
+  5:["Swimming pool","Gym","Community mall","Canal promenade","Water taxi"]
+};
+// deal: sale | rent | both. price = sale price, rent = annual rent.
+const OFFERS=[
+ {id:"p3-studio-410",b:3,beds:0,deal:"sale",title:"Studio, mid floor",price:1229000,size:410,floor:"Mid floor",view:"On request",furn:"Fully fitted",baths:1,status:"Ready",agent:"talal",
+  hl:"Lowest entry price in the Peninsula. Studios here sold for AED 1.12M–1.20M in Sep–Oct and are listed from AED 1.19M to 1.48M. Rents run AED 70k–100k.",
+  inv:{rent:78000,resale:1350000},src:"Investor Selection deck"},
+ {id:"p3-studio-425-sale",b:3,beds:0,deal:"sale",title:"Studio apartment",price:1190000,size:425,floor:"On request",view:"On request",furn:"—",baths:1,status:"Ready",agent:"talal",
+  hl:"Special sale offer, priced from the lowest Bayut / Property Finder listing for this type (22 Nov 2026).",
+  market:[["Recent sales registered","4 in last 90 days"],["Average sold price","AED 1,167,500"],["Average sold / sq ft","AED 2,723"],["This unit vs average","+2%"],["Est. gross rental yield","6.7%"]],src:"Sale_Studio flyer"},
+ {id:"p3-studio-f6",b:3,beds:0,deal:"both",title:"Studio, 6th floor",price:1209000,rent:75000,size:null,floor:"6th",view:"On request",furn:"Unfurnished",baths:1,status:"Ready",agent:"talal",
+  hl:"Available to buy or to rent. Best rent in the studio selection.",
+  market:[["Studios sold, last 90 days","4"],["Average sold price","AED 1,167,500"],["Sold price range","AED 1.12M – 1.20M"],["Average studio rent","AED 80,000 / yr"],["Gross yield at these prices","6.20%"]],
+  check:["Size is blank on the flyer ([SIZE] placeholder).","Flyer says unfurnished; the Studios for Rent deck says fully fitted."],src:"SaleOrRent_Studio_F6 flyer · Studios for Rent deck"},
+ {id:"p3-studio-69",b:3,beds:0,deal:"rent",title:"Studio apartment",rent:69900,size:425,floor:"On request",view:"On request",furn:"Unfurnished",baths:1,status:"Ready",agent:"talal",
+  hl:"Special rental offer, 13% under the registered average rent for studios in the tower.",
+  market:[["Recent leases registered","2 in last 90 days"],["Average registered rent","AED 80,000 / yr"],["Range","AED 75,000 – 85,000"],["This unit vs average","−13%"]],src:"Main flyer"},
+ {id:"p3-studio-33",b:3,beds:0,deal:"rent",title:"Studio, 33rd floor",rent:78000,size:null,floor:"33rd",view:"On request",furn:"Fully fitted",baths:1,status:"Ready",cheques:"1–2",deposit:"5%",agent:"talal",
+  hl:"33rd-floor studio priced just under the most common asking rent in the tower (AED 80,000).",src:"Studios for Rent deck"},
+ {id:"p3-1bed-674",b:3,beds:1,deal:"sale",title:"1 bed Type D, skyline view",price:1850000,size:674,balcony:90,floor:"On request",view:"Skyline & partial Burj",furn:"Fully fitted",baths:1,status:"Ready",agent:"giulia",
+  hl:"In a 49-floor waterfront tower with pools, padel, co-working and a 50th-floor viewing deck. 584 sq ft internal + 90 sq ft balcony.",
+  market:[["Recent sales registered","5 in last 90 days"],["Average sold price","AED 1,888,000"],["Average sold / sq ft","AED 2,787"],["This unit vs average","−2%"],["Est. gross rental yield","6.2%"]],src:"1 Bedroom deck · Giulia_P3 flyer"},
+ {id:"p3-1bed-685-sale",b:3,beds:1,deal:"sale",title:"1 bedroom apartment",price:1641000,size:685,floor:"On request",view:"On request",furn:"—",baths:1,status:"Ready",agent:"talal",
+  hl:"Special sale offer, 13% under the registered average sale price for 1-beds in the tower.",
+  market:[["Recent sales registered","5 in last 90 days"],["Average sold price","AED 1,888,000"],["Average sold / sq ft","AED 2,787"],["This unit vs average","−13%"],["Est. gross rental yield","6.9%"]],src:"Sale_1Bed flyer"},
+ {id:"p3-1bed-685-rent",b:3,beds:1,deal:"rent",title:"1 bedroom apartment",rent:94900,size:685,floor:"On request",view:"On request",furn:"On request",baths:1,status:"Ready",agent:"talal",
+  hl:"Special rental offer, 17% under the registered average 1-bed rent in the tower.",
+  market:[["Recent leases registered","6 in last 90 days"],["Average registered rent","AED 113,833 / yr"],["Range","AED 95,000 – 140,000"],["This unit vs average","−17%"]],src:"Rent_1Bed flyer"},
+ {id:"p3-2bed-945",b:3,beds:2,deal:"sale",title:"2 bedroom apartment",price:2499000,size:945,floor:"On request",view:"On request",furn:"—",baths:2,status:"Ready",agent:"talal",
+  hl:"Special sale offer, in line with the last registered 2-bed sale in the tower.",
+  market:[["Recent sales registered","1 in last 90 days"],["Average sold price","AED 2,525,000"],["Average sold / sq ft","AED 2,672"],["This unit vs average","−1%"],["Est. gross rental yield","5.9%"]],src:"Sale_2Bed flyer"},
+ {id:"p3-2bed-1011",b:3,beds:2,deal:"sale",title:"Corner 2 bed, Burj & canal",price:3200000,size:1011,floor:"44th",view:"Full Burj & canal, corner",furn:"Fully fitted",baths:3,status:"Ready",agent:"talal",
+  hl:"44th-floor corner unit with full Burj Khalifa and full Dubai Canal views, the large layout with a third bathroom. Best entry price of the 2-bed selection.",
+  inv:{rent:220000},src:"2 Bedroom deck"},
+ {id:"p3-2bed-925-rent",b:3,beds:2,deal:"rent",title:"2 bed, high floor",rent:159900,size:925,floor:"High floor",view:"Canal & Burj Khalifa",furn:"—",baths:2,status:"Ready",agent:"talal",
+  hl:"Special rental offer on a high floor with canal and Burj Khalifa views.",
+  market:[["Recent leases registered","2 in last 90 days"],["Average registered rent","AED 148,500 / yr"],["Range","AED 135,000 – 162,000"],["This unit vs average","+8%"]],src:"Rent_2Bed flyer"},
+ {id:"p2-1bed-688",b:2,beds:1,deal:"sale",title:"Upgraded 1 bed Type TA",price:1799000,size:688,balcony:81,floor:"On request",view:"Park & canal",furn:"Fully fitted",baths:1,status:"Ready",agent:"giulia",
+  hl:"Real photos: lit feature wall, built-in shelving and an upgraded kitchen with breakfast bar, ready to move in. 607 sq ft internal + 81 sq ft balcony.",
+  inv:{rent:115000,resale:1990000},
+  market:[["1-bed sales registered","3 (Oct – Nov)"],["Average sold / sq ft","AED 2,541"],["This unit","AED 2,615 / sq ft"],["1-beds listed now","AED 1.50M – 2.00M"],["Est. gross rental yield","6.0%"]],
+  check:["Investor Selection deck lists this unit at AED 1,819,000 (others say AED 1,799,000)."],src:"1 Bedroom deck · Giulia_P2 flyer · Investor deck"},
+ {id:"p2-studio-80",b:2,beds:0,deal:"rent",title:"Studio with balcony",rent:80000,size:null,floor:"On request",view:"On request",furn:"Fully fitted",baths:1,status:"Ready",deposit:"5%",agent:"talal",
+  hl:"Pool, gym, jacuzzi, sauna, steam room and kids play area, with the Peninsula community mall downstairs.",src:"Studios for Rent deck"},
+ {id:"p4-1bed-553",b:4,beds:1,deal:"both",title:"Furnished 1 bed, The Plaza",price:1725000,rent:115000,size:553,floor:"Low / mid floor",view:"Community",furn:"Fully furnished",baths:1,status:"Ready",cheques:"1",agent:"talal",
+  hl:"Available to buy or to rent. A compact, fully furnished home in the twin 52-floor Plaza towers. Also offered by Blendjana (+971 58 832 7743).",
+  inv:{rent:115000,resale:1850000},
+  market:[["1-beds sold, last 90 days","7"],["Average sold / sq ft","AED 2,647"],["This unit (sale)","AED 3,119 / sq ft"],["Average 1-bed rent","AED 128,333 / yr"],["Gross yield at these prices","6.67%"]],
+  check:["Investor Selection deck lists AED 1,745,000; flyers and 1 Bedroom deck say AED 1,725,000.","Floor shown as “Low floor” on flyers and “Mid floor” in the decks."],src:"1 Bedroom deck · SaleOrRent_P4 flyers · Investor deck"},
+ {id:"p4-1bed-861",b:4,beds:1,deal:"rent",title:"Corner 1 bed, Burj view",rent:150000,size:861,balcony:140,floor:"24th",view:"Burj Khalifa, canal & skyline",furn:"Fully fitted kitchen",baths:"1 + guest WC",parking:"1 space",status:"Ready",deposit:"5%",agent:"giulia",
+  hl:"Real photos: a large corner layout with floor-to-ceiling glazing and a 13 m² balcony.",
+  market:[["1-bed leases (90 days)","3"],["Average registered rent","AED 128,333 / yr"],["Average rent / sq ft","AED 146"],["This unit","AED 174 / sq ft"],["1-beds listed now","AED 105k – 180k"]],src:"1 Bedroom deck · Giulia_P4 flyer"},
+ {id:"p4-studio-100",b:4,beds:0,deal:"rent",title:"Furnished, upgraded studio",rent:100000,size:null,floor:"6th · Tower B",view:"Skyline",furn:"Fully furnished, upgraded",baths:1,status:"Ready to move in",cheques:"1 to 4",deposit:"5%",agent:"talal",
+  hl:"Move-in ready: fully furnished and upgraded, with skyline views and flexible payment in up to 4 cheques.",
+  market:[["Studio leases (Oct – Nov)","6"],["Average registered rent","AED 85,833 / yr"],["Registered range","AED 73k – 100k"],["Studios listed now","AED 75k – 128k"]],src:"Studios for Rent deck · Talal_P4 flyer"},
+ {id:"p4-2bed-1453",b:4,beds:2,deal:"sale",title:"2 bed, full canal view",price:4700000,size:1453,floor:"39th · Tower A",view:"Full canal",furn:"Fully fitted",baths:3,parking:"2 spaces",status:"Handover next week",agent:"talal",
+  hl:"The largest 2-bed in the selection, with two parking spaces and an unobstructed canal view from a high floor. Also offered by Blendjana.",
+  check:["Blendjana's flyer shows AED 4,600,000; the 2 Bedroom deck shows AED 4,700,000."],src:"2 Bedroom deck · Blendjana_P4 flyer"},
+ {id:"p5-2bed-1307",b:5,beds:2,deal:"sale",title:"2 bed, canal & skyline",price:4600000,size:1307,floor:"14th",view:"Canal & skyline",furn:"Fully furnished",baths:3,status:"Ready",agent:"talal",
+  hl:"Newest building in the community, with 2.9 m ceilings, 180° water views and open sightlines to Burj Khalifa.",
+  market:[["2-bed sales registered (Nov)","2"],["Same-size sale (1,307 sq ft)","AED 3,250,000"],["Average sold / sq ft","AED 2,534"],["Est. gross rental yield","4.4%"]],
+  check:["Talal_P5 flyer shows AED 4,500,000 and “fully fitted”; the 2 Bedroom deck shows AED 4,600,000 and “fully furnished”."],src:"2 Bedroom deck · Talal_P5 flyer"},
+ {id:"p5-studio-120",b:5,beds:0,deal:"rent",title:"Furnished studio, Burj view",rent:120000,size:null,floor:"28th",view:"Burj Khalifa facing",furn:"Fully furnished",baths:1,status:"Ready",cheques:"1",deposit:"10%",agent:"giulia",
+  hl:"DTCM holiday-home approved with a SIRA-compliant smart lock, in the newest Peninsula tower. Price non-negotiable.",
+  market:[["Studio leases (Oct – Nov)","8"],["Average registered rent","AED 88,750 / yr"],["Studios listed now","AED 75k – 120k"]],
+  check:["Deposit is 10% on Giulia's flyer and 5% in the Studios for Rent deck."],src:"Studios for Rent deck · Giulia_P5 flyer"},
+ {id:"p1-3bed-maid",b:1,beds:3,deal:"rent",title:"3 bed + maid, waterfront",rent:340000,size:null,floor:"Podium",view:"Dubai Canal",furn:"Fully furnished",baths:"—",status:"Ready",cheques:"1",deposit:"10%",agent:"giulia",
+  hl:"Podium waterfront residence facing the canal, 11% under a comparable 3-bed listing. Price non-negotiable.",
+  market:[["Simplexes listed now","AED 320k – 380k"],["Comparable 3-bed listed","AED 380,000"],["vs comparable listing","−11%"]],src:"Giulia_P1 flyer"}
+];
+const COMPS=[
+ {t:"Peninsula Three · Studios",rows:[["8 Oct 2026",422,1200000],["25 Sep 2026",427,1150000],["23 Sep 2026",420,1200000]],mine:[410,1229000]},
+ {t:"Peninsula Four · 1 Beds",rows:[["13 Nov 2026",831,2235000],["13 Nov 2026",859,2385000],["12 Nov 2026",861,2250000]],mine:[553,1745000]},
+ {t:"Peninsula Two · 1 Beds",rows:[["4 Nov 2026",630,1200000],["6 Oct 2026",630,1650000],["1 Oct 2026",671,1515000]],mine:[688,1819000]}
+];
+const SALES_MKT=[
+ ["Peninsula Three","Studio","4 (90 days)","AED 1,167,500","2,723","1.12M – 1.20M"],
+ ["Peninsula Three","1 Bed","5 (90 days)","AED 1,888,000","2,787","—"],
+ ["Peninsula Three","2 Bed","1 (90 days)","AED 2,525,000","2,672","—"],
+ ["Peninsula Two","1 Bed","3 (Oct–Nov)","—","2,541","listed 1.50M – 2.00M"],
+ ["Peninsula Four","1 Bed","7 (90 days)","—","2,647","most 830–860 sq ft"],
+ ["Peninsula Five","2 Bed","2 (Nov)","AED 3,250,000 (1,307 sq ft)","2,534","—"]
+];
+const RENT_MKT=[
+ ["Peninsula Three","Studio","2 (90 days)","AED 80,000","75k – 85k"],
+ ["Peninsula Three","1 Bed","6 (90 days)","AED 113,833","95k – 140k"],
+ ["Peninsula Three","2 Bed","2 (90 days)","AED 148,500","135k – 162k"],
+ ["Peninsula Four","Studio","6 (Oct–Nov)","AED 85,833","73k – 100k · listed 75k – 128k"],
+ ["Peninsula Four","1 Bed","3 (90 days)","AED 128,333","listed 105k – 180k"],
+ ["Peninsula Five","Studio","8 (Oct–Nov)","AED 88,750","listed 75k – 120k"],
+ ["Peninsula One","3 Bed simplex","—","—","listed 320k – 380k"]
+];
+const FEES={dld:.04,trustee:5250,admin:5000};
+
+/* ---------------- Helpers ---------------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=n=>Math.round(n).toLocaleString("en-US");
+const aed=n=>"AED "+fmt(n);
+const short=n=>n>=1e6?(n/1e6).toFixed(n%1e6===0?0:2).replace(/0$/,"")+"M":Math.round(n/1000)+"k";
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove("show"),1800)}
+async function copy(text,box){try{await navigator.clipboard.writeText(text);toast("Copied")}catch(e){if(box){box.value=text;box.focus();box.select()}toast("Select the text and copy it")}}
+const costs=p=>{const d=p*FEES.dld;return{dld:d,total:p+d+FEES.trustee+FEES.admin}};
+
+let mine=store.get("orla.mine",[]);
+let starred=new Set(store.get("orla.star",[]));
+const state={deal:"all",type:"",bld:"",sort:"price-asc",q:"",sel:store.get("orla.sel",null)};
+
+function mineToOffer(m){return{id:m.id,b:+m.b,beds:+m.beds,deal:m.deal,title:(m.unit?"Unit "+m.unit+" · ":"")+TYPE[+m.beds],price:m.deal==="sale"?+m.price:undefined,rent:m.deal==="rent"?+m.price:undefined,
+  size:m.size?+m.size:null,floor:m.floor||"On request",view:m.view||"On request",furn:m.furn,status:m.status,agent:m.agent,hl:m.notes||"",mine:true,owner:m.owner,ownerPhone:m.phone,date:m.date,src:"Added on this device"}}
+const all=()=>OFFERS.concat(mine.map(mineToOffer));
+const keyPrice=o=>o.deal==="rent"?o.rent:o.price;
+function priceLine(o){
+  if(o.deal==="rent")return{big:aed(o.rent),sub:"per year"};
+  if(o.deal==="both")return{big:aed(o.price),sub:"or rent "+aed(o.rent)+" / yr"};
+  return{big:aed(o.price),sub:o.size?"AED "+fmt(o.price/o.size)+" / sq ft":"for sale"};
+}
+function pills(o){
+  let h="";
+  if(o.deal!=="rent")h+='<span class="pill sale">Sale</span>';
+  if(o.deal!=="sale")h+='<span class="pill rent">Rent</span>';
+  if(o.mine)h+='<span class="pill mine">Mine</span>';
+  if(o.check)h+='<span class="pill check">Check price</span>';
+  return h;
+}
+function cardHTML(o,cur){
+  const p=priceLine(o);
+  return `<button class="card" data-id="${esc(o.id)}" aria-current="${cur}">
+    <div class="tower" aria-hidden="true"><b>P${o.b}</b><i>${o.beds===0?"STU":o.beds+"BR"}</i></div>
+    <div style="min-width:0"><h3>${starred.has(o.id)?'<span class="star" aria-label="Shortlisted">★</span> ':""}${esc(o.title)}</h3>
+      <div class="meta">${esc(BLD[o.b])} · ${o.size?fmt(o.size)+" sq ft":"size on request"} · ${esc(o.floor)}</div>
+      <div class="pills">${pills(o)}</div></div>
+    <div class="p num">${esc(o.deal==="rent"?short(o.rent):short(o.price))}<small>${o.deal==="rent"?"AED / yr":"AED"}</small></div>
+  </button>`;
+}
+
+/* ---------------- Offers view ---------------- */
+function filtered(){
+  const q=state.q.trim().toLowerCase();
+  let l=all().filter(o=>(state.deal==="all"||o.deal===state.deal||o.deal==="both")&&(state.type===""||o.beds===+state.type)&&(state.bld===""||o.b===+state.bld)&&
+    (!q||[o.title,o.view,o.floor,o.furn,BLD[o.b],AGENTS[o.agent]?.name,o.hl].join(" ").toLowerCase().includes(q)));
+  const pk=o=>state.deal==="rent"?(o.rent??Infinity):keyPrice(o);
+  const s={"price-asc":(a,b)=>pk(a)-pk(b),"price-desc":(a,b)=>pk(b)-pk(a),"size-desc":(a,b)=>(b.size||0)-(a.size||0),"bld":(a,b)=>a.b-b.b||a.beds-b.beds}[state.sort];
+  return l.sort(s);
+}
+function renderList(){
+  const l=filtered();
+  if(!l.find(o=>o.id===state.sel))state.sel=l[0]?.id??null;
+  const sale=l.filter(o=>o.deal!=="rent").length,rent=l.filter(o=>o.deal!=="sale").length;
+  $("#summary").textContent=`${l.length} offers · ${sale} for sale · ${rent} for rent`;
+  $("#list").innerHTML=l.length?l.map(o=>cardHTML(o,o.id===state.sel)).join(""):'<div class="empty">No offers match these filters.</div>';
+  $("#cnt-offers").textContent=all().length;
+  renderDetail();
+}
+function kv(k,v,cls=""){return `<div class="kv ${cls}"><span>${esc(k)}</span><span class="num">${esc(v)}</span></div>`}
+function offerText(o){
+  const a=AGENTS[o.agent]||AGENTS.talal,p=priceLine(o);
+  let t=`*${BLD[o.b]} – ${TYPE[o.beds]}* (${o.deal==="rent"?"for rent":o.deal==="both"?"for sale or rent":"for sale"})\n`;
+  t+=`${o.title}\n💰 ${p.big}${p.sub?" ("+p.sub+")":""}\n`;
+  if(o.size)t+=`📐 ${fmt(o.size)} sq ft\n`;
+  t+=`🏢 Floor: ${o.floor} · View: ${o.view}\n`;
+  if(o.furn&&o.furn!=="—")t+=`🛋 ${o.furn}\n`;
+  if(o.deal!=="rent"){const c=costs(o.price);t+=`Total with fees: ${aed(c.total)} (4% DLD ${aed(c.dld)} + AED 10,250 trustee & admin)\n`}
+  if(o.cheques)t+=`Cheques: ${o.cheques}\n`;
+  t+=`Business Bay, on the Dubai Canal · 7 min to Dubai Mall\n`;
+  t+=`\n${a.name} · Orla Properties · BRN 41837\n${a.phone}`;
+  return t;
+}
+function renderDetail(){
+  const o=all().find(x=>x.id===state.sel),el=$("#detail");
+  if(!o){el.innerHTML='<div class="empty">Pick an offer to see its details.</div>';return}
+  store.set("orla.sel",o.id);
+  const p=priceLine(o),a=AGENTS[o.agent]||AGENTS.talal;
+  const facts=[["Unit type",TYPE[o.beds]],["Size",o.size?fmt(o.size)+" sq ft ("+(o.size*0.092903).toFixed(1)+" m²)":"On request"]];
+  if(o.balcony)facts.push(["Balcony",o.balcony+" sq ft"]);
+  facts.push(["Floor",o.floor],["View",o.view],["Bathrooms",String(o.baths??"—")],["Furnishing",o.furn||"—"],["Status",o.status||"—"]);
+  if(o.parking)facts.push(["Parking",o.parking]);
+  if(o.cheques)facts.push(["Cheques",o.cheques]);
+  if(o.deposit)facts.push(["Security deposit",o.deposit]);
+  if(o.owner)facts.push(["Owner / client",o.owner]);
+  if(o.ownerPhone)facts.push(["Owner phone",o.ownerPhone]);
+  if(o.date)facts.push(["Date listed",o.date]);
+  let money="";
+  if(o.deal!=="rent"){const c=costs(o.price);money=`<div><h4>Total purchase cost</h4>${kv("Price",aed(o.price))}${kv("DLD registration (4%)",aed(c.dld))}${kv("Trustee office fee",aed(FEES.trustee))}${kv("Admin fee",aed(FEES.admin))}${kv("Total cost",aed(c.total),"total")}</div>`}
+  else{const dep=parseFloat(o.deposit||"5")/100;money=`<div><h4>Rent</h4>${kv("Annual rent",aed(o.rent))}${kv("Monthly equivalent",aed(o.rent/12))}${kv("Security deposit ("+(dep*100)+"%)",aed(o.rent*dep))}${o.size?kv("Rent per sq ft",aed(o.rent/o.size)):""}${kv("Rent per year",aed(o.rent),"total")}</div>`}
+  let inv="";const r=o.inv?.rent||(o.deal==="both"?o.rent:null);
+  if(o.deal!=="rent"&&r){const c=costs(o.price);let rows=kv("Expected rent",aed(r)+" / yr")+kv("Gross yield on price",(r/o.price*100).toFixed(1)+"%");
+    if(o.inv?.resale){const be=c.total/0.98,gain=o.inv.resale*0.98-c.total;rows+=kv("Break-even resale (2% exit)",aed(Math.round(be/1000)*1000))+kv("Resale target",aed(o.inv.resale))+kv("12-month return (resale + rent)",aed(gain+r)+" · "+((gain+r)/c.total*100).toFixed(1)+"%","total")}
+    inv=`<div class="boxed"><h4>Investor view</h4>${rows}</div>`}
+  const mkt=o.market?`<div class="boxed"><h4>Market check</h4>${o.market.map(m=>kv(m[0],m[1])).join("")}</div>`:"";
+  const check=o.check?`<div class="notes"><b>Figures to confirm</b><ul>${o.check.map(c=>"<li>"+esc(c)+"</li>").join("")}</ul></div>`:"";
+  const wa="https://wa.me/?text="+encodeURIComponent(offerText(o));
+  el.innerHTML=`<article class="detail">
+    <div class="dhead"><div><div class="eyebrow">${esc(BLD[o.b].toUpperCase())} · ${o.deal==="rent"?"FOR RENT":o.deal==="both"?"FOR SALE OR RENT":"FOR SALE"}</div><h2>${esc(o.title)}</h2></div>
+      <div class="big num"><b>${esc(p.big)}</b><span>${esc(p.sub)}</span></div></div>
+    <div class="dbody">
+      <div class="actions">
+        <button class="btn primary" id="d-star">${starred.has(o.id)?"★ On shortlist":"☆ Add to shortlist"}</button>
+        <button class="btn" id="d-copy">Copy offer text</button>
+        <a class="btn" href="${wa}" target="_blank" rel="noopener">Share on WhatsApp</a>
+        ${o.deal!=="rent"?'<button class="btn" id="d-calc">Open in calculator</button>':""}
+        ${o.mine?'<button class="btn" id="d-del">Delete listing</button>':""}
+      </div>
+      ${o.hl?`<p class="hl">${esc(o.hl)}</p>`:""}
+      ${check}
+      <div class="cols"><div><h4>Unit details</h4>${facts.map(f=>kv(f[0],f[1])).join("")}</div>${money}</div>
+      ${inv||mkt?`<div class="cols">${inv}${mkt}</div>`:""}
+      <div><h4>The building</h4><p class="hl" style="margin-bottom:8px">${esc(TOWER[o.b])}</p><div class="chips">${AMEN[o.b].map(x=>'<span class="chip">'+esc(x)+'</span>').join("")}</div></div>
+      <div class="agent"><div class="who"><b>${esc(a.name)}</b><span>Orla Properties L.L.C · BRN 41837</span></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="phone num">${esc(a.phone)}</span><button class="btn" id="d-phone">Copy number</button></div></div>
+      <p class="src">Source: ${esc(o.src)}. Drive times approx.: Dubai Mall 7 min · Business Bay Metro 7 min · DIFC 12 min · DXB 16 min.</p>
+    </div></article>`;
+  $("#d-star").onclick=()=>{toggleStar(o.id)};
+  $("#d-copy").onclick=()=>copy(offerText(o));
+  $("#d-phone").onclick=()=>copy(a.phone);
+  const dc=$("#d-calc");if(dc)dc.onclick=()=>{loadCalc(o.id);show("calc")};
+  const dd=$("#d-del");if(dd)dd.onclick=()=>{if(dd.dataset.armed){mine=mine.filter(m=>m.id!==o.id);store.set("orla.mine",mine);starred.delete(o.id);saveStar();renderAll();toast("Listing deleted")}else{dd.dataset.armed=1;dd.textContent="Tap again to delete"}};
+}
+function toggleStar(id){starred.has(id)?starred.delete(id):starred.add(id);saveStar();renderList();renderShort()}
+function saveStar(){store.set("orla.star",[...starred]);$("#cnt-short").textContent=starred.size}
+
+/* ---------------- Shortlist ---------------- */
+function renderShort(){
+  const l=all().filter(o=>starred.has(o.id));
+  $("#cnt-short").textContent=l.length;
+  $("#shortlist").innerHTML=l.length?l.map(o=>cardHTML(o,false)).join(""):'<div class="empty">No offers yet. Open an offer and tap “Add to shortlist”.</div>';
+  $("#short-text").value=l.length?"Hi, here are the Peninsula options we discussed:\n\n"+l.map(offerText).join("\n\n———\n\n"):"";
+}
+
+/* ---------------- Calculator ---------------- */
+const nv=id=>parseFloat(String($(id).value).replace(/[^0-9.\-]/g,""))||0;
+function loadCalc(id){const o=all().find(x=>x.id===id);if(!o)return;$("#c-pick").value=id;$("#c-price").value=fmt(o.price);$("#c-size").value=o.size||"";$("#c-rent").value=fmt(o.inv?.rent||o.rent||0);$("#c-resale").value=fmt(o.inv?.resale||Math.round(o.price*1.08/1000)*1000);calc()}
+function calc(){
+  const P=nv("#c-price"),S=nv("#c-size"),R=nv("#c-rent"),RS=nv("#c-resale"),X=nv("#c-exit")/100,M=nv("#c-months"),SV=nv("#c-svc"),D=nv("#c-dld")/100;
+  const dld=P*D,total=P+dld+FEES.trustee+FEES.admin,be=total/(1-X),rentIn=R*M/12,svc=SV*S*M/12,gain=RS*(1-X)-total,ret=gain+rentIn-svc;
+  const tile=(l,v,c="")=>`<div class="tile ${c}"><span>${l}</span><b class="num">${v}</b></div>`;
+  $("#c-out").innerHTML=`${kv("Price",aed(P))}${kv("DLD registration ("+(D*100)+"%)",aed(dld))}${kv("Trustee office fee",aed(FEES.trustee))}${kv("Admin fee",aed(FEES.admin))}${kv("Total cost",aed(total),"total")}
+   <div class="tiles">${tile("Price / sq ft",S?aed(P/S):"—")}${tile("Gross yield",P?(R/P*100).toFixed(2)+"%":"—")}${tile("Net yield on cost",total?((R-SV*S)/total*100).toFixed(2)+"%":"—")}${tile("Break-even resale",aed(Math.round(be/1000)*1000))}</div>
+   <div style="margin-top:14px">${kv("Resale after "+(X*100)+"% exit commission",aed(RS*(1-X)))}${kv("Resale gain over total cost",aed(gain))}${kv("Rent collected ("+M+" months)",aed(rentIn))}${SV?kv("Service charges ("+M+" months)","− "+aed(svc)):""}</div>
+   <div class="tiles">${tile("Total return",aed(ret),ret>=0?"pos":"neg")}${tile("Return on cost",total?(ret/total*100).toFixed(1)+"%":"—",ret>=0?"pos":"neg")}</div>
+   <p class="src" style="margin-top:12px">Estimates only. Mortgage costs and market changes are not included.</p>`;
+}
+
+/* ---------------- Market ---------------- */
+function renderMarket(){
+  const comps=COMPS.map(c=>{const avg=c.rows.reduce((s,r)=>s+r[2]/r[1],0)/c.rows.length;
+    return `<div class="panel"><h2 style="font-size:16px">${esc(c.t)}</h2><div class="tablewrap"><table><tr><th>Date</th><th class="r">Size (sq ft)</th><th class="r">Price (AED)</th><th class="r">AED / sq ft</th></tr>
+    ${c.rows.map(r=>`<tr><td>${r[0]}</td><td class="r">${fmt(r[1])}</td><td class="r">${fmt(r[2])}</td><td class="r">${fmt(r[2]/r[1])}</td></tr>`).join("")}
+    <tr class="this"><td>Our offer</td><td class="r">${fmt(c.mine[0])}</td><td class="r">${fmt(c.mine[1])}</td><td class="r">${fmt(c.mine[1]/c.mine[0])}</td></tr></table></div>
+    <p class="src" style="margin-top:8px">Average sold: AED ${fmt(avg)} / sq ft</p></div>`}).join("");
+  $("#market").innerHTML=`
+   <div class="panel"><h2>Registered sales by building</h2><p class="lede">DLD-registered deals, Aug–Nov 2026, as quoted on your flyers.</p>
+    <div class="tablewrap"><table><tr><th>Building</th><th>Type</th><th>Sales</th><th>Average price</th><th class="r">Avg AED / sq ft</th><th>Notes</th></tr>
+    ${SALES_MKT.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td class="r">${r[4]}</td><td>${r[5]}</td></tr>`).join("")}</table></div></div>
+   <div class="panel"><h2>Registered rents by building</h2><p class="lede">DLD-registered leases and current Bayut listings, Aug–Nov 2026.</p>
+    <div class="tablewrap"><table><tr><th>Building</th><th>Type</th><th>Leases</th><th>Average rent / yr</th><th>Range</th></tr>
+    ${RENT_MKT.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`).join("")}</table></div></div>
+   <div><h4 style="margin:4px 2px 10px">Last 3 registered sales vs our investor offers</h4><div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">${comps}</div></div>
+   <div class="panel"><h2>Investor strategy</h2><p class="lede" style="margin:0">Buy at entry level, rent while you hold (6.3%–6.6% gross yield), then resell at the target after 12–18 months. A quick flip within a few months barely covers the 4% DLD fee and AED 10,250 in other fees.</p></div>`;
+}
+
+/* ---------------- My listings ---------------- */
+function renderMine(){
+  $("#mine-lede").textContent=mine.length?`${mine.length} saved on this device.`:"Nothing saved yet.";
+  $("#mine-list").innerHTML=mine.length?mine.map(m=>cardHTML(mineToOffer(m),false)).join(""):'<div class="empty">Listings you add appear here and in Offers.</div>';
+  const head=["Unit No.","Type","Floor","View","Size (sq ft)","Sale / Rent","Price (AED)","AED per sq ft","Status","Furnishing","Owner / Client","Owner Phone","Date Listed","Notes"];
+  const q=v=>{v=String(v??"");return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  $("#csv-text").value=mine.length?[head.join(",")].concat(mine.map(m=>[m.unit,TYPE[m.beds],m.floor,m.view,m.size,m.deal==="sale"?"Sale":"Rent",m.price,m.size&&m.price?Math.round(m.price/m.size):"",m.status,m.furn,m.owner,m.phone,m.date,m.notes].map(q).join(","))).join("\n"):"";
+}
+$("#mine-form").addEventListener("submit",e=>{e.preventDefault();
+  const g=id=>$(id).value.trim();
+  const price=parseFloat(g("#m-price").replace(/[^0-9.]/g,""));
+  if(!price){toast("Enter a price");$("#m-price").focus();return}
+  const m={id:"mine-"+Date.now(),unit:g("#m-unit"),b:g("#m-bld"),beds:g("#m-type"),deal:g("#m-deal"),floor:g("#m-floor"),view:g("#m-view"),size:g("#m-size").replace(/[^0-9.]/g,""),price,status:g("#m-status"),furn:g("#m-furn"),owner:g("#m-owner"),phone:g("#m-phone"),agent:g("#m-agent"),date:g("#m-date"),notes:g("#m-notes")};
+  mine.push(m);store.set("orla.mine",mine);e.target.reset();$("#m-date").valueAsDate=new Date();renderAll();toast("Listing saved");
+});
+
+/* ---------------- Wiring ---------------- */
+function show(v){document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.view===v));document.querySelectorAll(".view").forEach(s=>s.hidden=s.id!=="view-"+v);store.set("orla.tab",v);window.scrollTo(0,0)}
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>show(t.dataset.view));
+document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{state.deal=b.dataset.deal;document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",x===b));renderList()});
+$("#f-type").onchange=e=>{state.type=e.target.value;renderList()};
+$("#f-bld").onchange=e=>{state.bld=e.target.value;renderList()};
+$("#f-sort").onchange=e=>{state.sort=e.target.value;renderList()};
+$("#f-q").oninput=e=>{state.q=e.target.value;renderList()};
+function onCard(e){const c=e.target.closest(".card");if(!c)return;state.sel=c.dataset.id;show("offers");renderList();if(matchMedia("(max-width:860px)").matches)$("#detail").scrollIntoView({behavior:"smooth"})}
+["#list","#shortlist","#mine-list"].forEach(s=>$(s).addEventListener("click",onCard));
+$("#copy-short").onclick=()=>{const t=$("#short-text").value;t?copy(t,$("#short-text")):toast("Shortlist is empty")};
+$("#clear-short").onclick=()=>{starred.clear();saveStar();renderList();renderShort()};
+$("#copy-csv").onclick=()=>{const t=$("#csv-text").value;t?copy(t,$("#csv-text")):toast("No listings to export")};
+const pick=$("#c-pick");OFFERS.filter(o=>o.deal!=="rent").forEach(o=>pick.insertAdjacentHTML("beforeend",`<option value="${o.id}">${esc(BLD[o.b]+" · "+o.title+" · "+short(o.price))}</option>`));
+pick.onchange=()=>pick.value&&loadCalc(pick.value);
+document.querySelectorAll("#view-calc input").forEach(i=>i.addEventListener("input",calc));
+try{$("#m-date").valueAsDate=new Date()}catch(e){}
+function renderAll(){renderList();renderShort();renderMine()}
+renderAll();renderMarket();loadCalc("p3-studio-410");
+show(store.get("orla.tab","offers"));
+if("serviceWorker" in navigator&&location.protocol==="https:"&&!/claude|claudeusercontent/.test(location.host)){navigator.serviceWorker.register("sw.js").catch(()=>{})}
+</script>
+</body>
+</html>
