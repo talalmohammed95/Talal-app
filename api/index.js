@@ -1,5 +1,6 @@
 // The app's backend: accounts, admin approval and data, on PostgreSQL.
 // Vercel runs this as one serverless function; vercel.json routes /api/* here.
+import crypto from "node:crypto";
 import { q, dbUrl } from "../lib/db.js";
 import { ensureSchema } from "../lib/schema.js";
 import { hashPassword, checkPassword, newToken, sha256 } from "../lib/auth.js";
@@ -339,6 +340,27 @@ const routes = {
     if (user.role === "admin") fail(400, "The admin's role can't be changed.");
     await q("update users set role = $2 where id = $1", [user.id, role]);
     return { ok: true };
+  },
+
+  // The admin creates an approved account and gets a password to send the person.
+  "POST admin/users/create": async c => {
+    requireAdmin(c);
+    const name = str(c.body.name, 100), email = checkEmail(c.body.email);
+    if (!name) fail(400, "Enter their full name.", "no_name");
+    const role = ROLES.includes(c.body.role) ? c.body.role : "agent", key = str(c.body.agentKey, 40);
+    if (key && !/^[A-Za-z0-9_-]+$/.test(key)) fail(400, "Invalid agent.");
+    const ABC = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const password = c.body.password ? checkNewPassword(c.body.password)
+      : Array.from(crypto.randomBytes(12), b => ABC[b % ABC.length]).join("");
+    try {
+      await q(`insert into users (email, name, pass_hash, role, status, email_verified, company, agent_key)
+               values ($1, $2, $3, $4, 'active', true, $5, $6)`,
+        [email, name, await hashPassword(password), role, str(c.body.company, 120), role === "agent" ? key : ""]);
+    } catch (e) {
+      if (e.code === "23505") fail(409, "An account with this email already exists. Use Reset link on their row instead.", "exists");
+      throw e;
+    }
+    return { email, password, url: appUrl(c.req) + "/app/" };
   },
 
   "POST admin/users/agent": async c => {

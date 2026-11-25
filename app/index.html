@@ -830,7 +830,17 @@ body.lbopen{overflow:hidden}
   <section class="view" id="view-admin" hidden>
     <div class="stack">
       <div class="panel"><h2>Admin</h2><p class="lede" id="ad-access" style="margin:0"></p></div>
-      <div class="panel" id="ad-users-panel" hidden><h2>Users</h2><p class="lede">New accounts wait here until you approve them. Approved agents browse offers and keep their own clients. Block someone to remove their access straight away.</p><div class="tablewrap"><table id="ad-users"></table></div></div>
+      <div class="panel" id="ad-users-panel" hidden><h2>Users</h2><p class="lede">New accounts wait here until you approve them. Approved agents browse offers and keep their own clients. Block someone to remove their access straight away.</p><div class="tablewrap"><table id="ad-users"></table></div>
+        <h4 style="margin-top:18px">Create an account</h4><p class="lede">For your agents or anyone you want to invite. The account is approved straight away and you get a password to send them.</p>
+        <form id="nu-form" class="fgrid" autocomplete="off">
+          <div class="field"><label for="nu-name">Full name</label><input id="nu-name" autocomplete="off"></div>
+          <div class="field"><label for="nu-email">Email (their username)</label><input id="nu-email" type="email" inputmode="email" autocapitalize="off" spellcheck="false" autocomplete="off"></div>
+          <div class="field"><label for="nu-role">Account type</label><select id="nu-role"><option value="agent">Orla team agent</option><option value="broker">External agent</option><option value="client">Client</option></select></div>
+          <div class="field" id="nu-agent-wrap"><label for="nu-agent">Offers listed under</label><select id="nu-agent"></select></div>
+          <div class="field"><label for="nu-pass">Password (leave empty to generate one)</label><input id="nu-pass" autocomplete="new-password"></div>
+          <div class="wide actions"><button class="btn primary" type="submit">Create account</button></div>
+        </form>
+        <div id="nu-done" class="ocard" hidden style="margin-top:12px"></div></div>
       <div class="grid2">
         <div class="panel"><h2>Team announcement</h2><p class="lede">Shown at the top of everyone's dashboard. Leave it empty to hide it.</p>
           <div class="field"><label for="ad-notice">Announcement</label><textarea id="ad-notice" rows="3"></textarea></div>
@@ -1832,7 +1842,7 @@ function renderAdmin(){$("#tab-admin").hidden=!isAdmin;$("#sheet-admin").hidden=
   if(a!=="ad-notice")$("#ad-notice").value=settings.notice||"";
   if(!["ad-dld","ad-trustee","ad-admin"].includes(a)){$("#ad-dld").value=+(FEES.dld*100).toFixed(3);$("#ad-trustee").value=fmt(FEES.trustee);$("#ad-admin").value=fmt(FEES.admin)}
   if(!$("#ad-agents").contains(document.activeElement)){agentDraft=Object.entries(AGENTS).map(([k,x])=>({k,name:x.name,phone:x.phone}));drawAgents()}
-  $("#ad-log-panel").hidden=!(CLOUD||SRV);$("#ad-users-panel").hidden=!SRV;renderMarketEditor();renderOwnTable()}
+  $("#ad-log-panel").hidden=!(CLOUD||SRV);$("#ad-users-panel").hidden=!SRV;renderMarketEditor();renderOwnTable();if(document.activeElement?.id!=="nu-agent")fillNuAgent()}
 function drawAgents(){$("#ad-agents").innerHTML=agentDraft.map((x,i)=>`<div class="fgrid"><div class="field"><label for="ag-n${i}">Name</label><input id="ag-n${i}" data-ai="${i}" data-af="name" value="${esc(x.name)}"></div><div class="field"><label for="ag-p${i}">Phone</label><input id="ag-p${i}" data-ai="${i}" data-af="phone" inputmode="tel" value="${esc(x.phone)}"></div></div>`).join("")}
 $("#ad-agents").addEventListener("input",e=>{const t=e.target;if(t.dataset.ai!=null)agentDraft[+t.dataset.ai][t.dataset.af]=t.value});
 $("#ad-agent-add").onclick=()=>{agentDraft.push({k:"a"+Date.now().toString(36),name:"",phone:""});drawAgents();$("#ag-n"+(agentDraft.length-1)).focus()};
@@ -2232,6 +2242,17 @@ $("#own-save").onclick=async()=>{const rows=[...document.querySelectorAll("#own-
     if(await saveOffer(nx,"Updated unit and owner details: "+BLD[o.b]+" · "+o.title))n++;else failed++}}
   finally{$("#own-save").disabled=false}
   ownDirty=false;renderOwnTable(true);toast(failed?`Saved ${n}, ${failed} couldn't be saved`:n?`Saved ${n} offer${n===1?"":"s"}`:"Nothing changed")};
+
+/* ---------------- Admin: create an account ---------------- */
+function fillNuAgent(){const el=$("#nu-agent"),v=el.value;el.innerHTML='<option value="">None</option>'+Object.entries(AGENTS).map(([k,a])=>`<option value="${esc(k)}">${esc(a.name)}</option>`).join("");el.value=v}
+$("#nu-role").onchange=()=>{$("#nu-agent-wrap").hidden=$("#nu-role").value!=="agent"};
+$("#nu-name").addEventListener("input",()=>{const f=$("#nu-name").value.trim().split(/\s+/)[0].toLowerCase();fillNuAgent();const k=Object.keys(AGENTS).find(k=>String(AGENTS[k].name).split(" ")[0].toLowerCase()===f);if(k)$("#nu-agent").value=k});
+$("#nu-form").addEventListener("submit",async e=>{e.preventDefault();const role=$("#nu-role").value;
+  try{const r=await api("admin/users/create",{name:$("#nu-name").value.trim(),email:$("#nu-email").value.trim(),role,agentKey:role==="agent"?$("#nu-agent").value:"",password:$("#nu-pass").value||undefined});
+    const nm=$("#nu-name").value.trim(),msg=`Hi ${nm.split(" ")[0]}, your Peninsula Offers account is ready.\n\nSign in here: ${r.url}\nEmail: ${r.email}\nPassword: ${r.password}\n\nYou can add it to your home screen from the browser's Share menu.`;
+    const d=$("#nu-done");d.hidden=false;d.innerHTML=`<div class="ow"><span class="ok">Account created</span><b>${esc(nm)}</b><span class="num">${esc(r.email)}</span><span class="num">Password: ${esc(r.password)}</span><small>Send these now: the password isn't shown again. They can sign in straight away.</small></div><div class="actions"><button class="btn primary" type="button" id="nu-copy">${ic("copy")}Copy message</button><a class="btn" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(msg)}">${ic("chat")}Send on WhatsApp</a></div>`;
+    $("#nu-copy").onclick=()=>copy(msg);logAct("Created an account for "+r.email);$("#nu-form").reset();$("#nu-agent-wrap").hidden=false;loadUsers()}
+  catch(x){toast(x.message)}});
 
 /* ---------------- Start-up ---------------- */
 function startApp(){if(!SRV)setRole(isAdmin?"admin":"team");updateAcct();const ch=$("#userchip");
