@@ -681,6 +681,13 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
 .lk{align-self:flex-start;font-size:11px!important;font-weight:800;padding:2px 9px;border-radius:999px;color:#fff!important}.lk.viewing{background:var(--good)}.lk.details{background:var(--rent)}
 .lead .actions{display:flex;gap:6px;flex-wrap:wrap}
 @media (max-width:620px){.lead{grid-template-columns:minmax(0,1fr)}}
+.futbox{border:1.5px dashed var(--line-strong);border-radius:14px;padding:12px 14px;background:var(--bg)}
+.mh{margin:14px 0 6px;font:800 12px var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--accent-ink)}.mh.due{color:var(--bad)}.mh:first-child{margin-top:0}
+.rem{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--bg);margin-bottom:8px}
+.rem.due{border-color:var(--bad);background:var(--bad-soft)}
+.rw{display:flex;flex-direction:column;gap:3px;min-width:0}.rw b{font:700 14.5px var(--display)}.rw span{font-size:13px;color:var(--muted)}
+.rk{align-self:flex-start;font-size:11.5px!important;font-weight:800;padding:2px 9px;border-radius:999px;background:var(--sunk);color:var(--fg)!important}.rem.due .rk{background:var(--bad);color:#fff!important}
+.rem .actions{display:flex;gap:6px;flex-wrap:wrap}
 </style>
 <script src="/config.js"></script>
 </head>
@@ -879,7 +886,7 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
   <section class="view" id="view-mine" hidden>
     <div class="grid2">
       <div class="panel">
-        <h2>Add a listing</h2>
+        <h2>Add a unit</h2>
         <p class="lede" id="mine-form-lede">Your own units, with the owner's details. Only you and the admin can see them. They show up in your Offers with a “Mine” tag.</p>
         <form id="mine-form" class="fgrid" autocomplete="off"><input type="hidden" id="m-id">
           <div class="field"><label for="m-unit">Unit no.</label><input id="m-unit" placeholder="e.g. 3305"></div>
@@ -889,20 +896,24 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
           <div class="field"><label for="m-floor">Floor</label><input id="m-floor" placeholder="e.g. 33rd"></div>
           <div class="field"><label for="m-view">View</label><input id="m-view" placeholder="e.g. Canal & Burj"></div>
           <div class="field"><label for="m-size">Size (sq ft)</label><input id="m-size" inputmode="numeric"></div>
-          <div class="field"><label for="m-price">Price (AED, or rent per year)</label><input id="m-price" inputmode="numeric" required></div>
+          <div class="field"><label for="m-price">Price (AED, or rent per year)</label><input id="m-price" inputmode="numeric"></div>
           <div class="field"><label for="m-status">Status</label><select id="m-status"><option>Ready</option><option>Vacant</option><option>Tenanted</option><option>Off-plan</option></select></div>
           <div class="field"><label for="m-furn">Furnishing</label><select id="m-furn"><option>Unfurnished</option><option>Fully fitted</option><option>Fully furnished</option></select></div>
           <div class="field"><label for="m-owner">Owner's name</label><input id="m-owner" autocomplete="off"></div>
           <div class="field"><label for="m-phone">Owner's phone</label><input id="m-phone" inputmode="tel" autocomplete="off" placeholder="+971 …"></div>
           <div class="field"><label for="m-agent">Agent</label><select id="m-agent"><option value="talal">Talal Al Deraawi</option><option value="giulia">Giulia Perego</option><option value="blendjana">Blendjana</option></select></div>
           <div class="field"><label for="m-date">Date listed</label><input id="m-date" type="date"></div>
+          <div class="field wide futbox"><label class="tog"><input type="checkbox" id="m-future"> Future listing: not on the market yet</label>
+            <div class="fgrid" style="margin-top:8px"><div class="field" id="m-avail-wrap"><label for="m-avail">Available from</label><input id="m-avail" type="date"></div>
+            <div class="field"><label for="m-remind">Remind me on</label><input id="m-remind" type="date"></div>
+            <div class="field wide"><label for="m-rnote">Reminder</label><input id="m-rnote" placeholder="e.g. Call the owner to confirm the tenant is leaving"></div></div></div>
           <div class="field wide" id="m-online-wrap"><label>Listed on</label><div class="plats" id="m-online"></div><p class="src" style="margin:4px 0 0">Tick each platform it's live on, or Off market. It counts towards the team goal once it's live on every platform.</p></div>
           <div class="field wide"><label for="m-notes">Notes</label><textarea id="m-notes" rows="2"></textarea></div>
           <div class="wide actions"><button class="btn primary" type="submit" id="m-save">Save listing</button><button class="btn" type="button" id="m-cancel" hidden>Cancel editing</button></div>
         </form>
       </div>
       <div class="panel stack">
-        <div><h2>My listings</h2><p class="lede" id="mine-lede">Saved on this device.</p></div>
+        <div><h2>My units</h2><p class="lede" id="mine-lede">Saved on this device.</p></div>
         <div class="list" id="mine-list"></div>
         <div><h4>Export</h4><p class="src">Copy as CSV and paste into your Peninsula 3 Listings sheet.</p></div>
         <div class="actions"><button class="btn" id="copy-csv">Copy as CSV</button></div>
@@ -1160,7 +1171,7 @@ const FDEF={deal:"all",type:"",bld:"",sort:"price-asc",q:"",pmin:"",pmax:"",smin
 const state=Object.assign({},FDEF,store.get("orla.filters",{}),{client:null,sel:store.get("orla.sel",null)});
 
 function mineToOffer(m){return{id:m.id,b:+m.b,beds:+m.beds,deal:m.deal,title:(m.unit?"Unit "+m.unit+" · ":"")+TYPE[+m.beds],price:m.deal==="sale"?+m.price:undefined,rent:m.deal==="rent"?+m.price:undefined,
-  size:m.size?+m.size:null,floor:m.floor||"On request",view:m.view||"On request",furn:m.furn,status:m.status,agent:m.agent,hl:m.notes||"",mine:true,unit:m.unit||null,owner:m.owner,ownerPhone:m.phone,date:m.date,by:m._by||null,own:m._own!==false,shared:m.sharedOffer||null,shareTo:m.shareTo,shareNote:m.shareNote,src:SRV?(m._by?"Added by "+(m._by.name||m._by.email):"Added by you"):"Added on this device"}}
+  size:m.size?+m.size:null,floor:m.floor||"On request",view:m.view||"On request",furn:m.furn,status:m.status,agent:m.agent,hl:m.notes||"",mine:true,future:!!m.future,unit:m.unit||null,owner:m.owner,ownerPhone:m.phone,date:m.date,by:m._by||null,own:m._own!==false,shared:m.sharedOffer||null,shareTo:m.shareTo,shareNote:m.shareNote,src:SRV?(m._by?"Added by "+(m._by.name||m._by.email):"Added by you"):"Added on this device"}}
 // A unit an agent has shared shows once, as its shared offer.
 const all=()=>{const live=new Set(OFFERS.map(o=>o.id));return OFFERS.concat(mine.concat(teamListings).filter(m=>!(m.sharedOffer&&live.has(m.sharedOffer))).map(mineToOffer)).map(enrich)};
 const agentOf=o=>AGENTS[o.agent]||Object.values(AGENTS)[0]||{name:"Orla Properties",phone:""};
@@ -1175,6 +1186,7 @@ function pills(o){
   let h="";
   if(o.deal!=="rent")h+='<span class="pill sale">Sale</span>';
   if(o.deal!=="sale")h+='<span class="pill rent">Rent</span>';
+  if(o.mine&&o.future)h+='<span class="pill pending">Coming soon</span>';
   if(o.mine&&o.shared)h+='<span class="pill ok">Shared</span>';
   if(o.mine)h+=`<span class="pill mine">${o.by?esc(String(o.by.name||o.by.email||"Agent").split(" ")[0]):"Mine"}</span>`;
   if(o.avail!=="Available")h+=`<span class="pill st ${isDone(o)?"done":""}">${esc(o.avail)}</span>`;
@@ -1386,7 +1398,7 @@ function renderMine(){
   const tp=$("#team-listings-panel");tp.hidden=!(SRV&&isAdmin);
   if(SRV&&isAdmin){const g={};teamListings.forEach(m=>{const k=m._by?m._by.id:"?";(g[k]=g[k]||{by:m._by,l:[]}).l.push(m)});const groups=Object.values(g).sort((a,b)=>String(a.by&&a.by.name).localeCompare(String(b.by&&b.by.name)));
     $("#team-listings").innerHTML=groups.length?groups.map(x=>`<div><h4>${esc((x.by&&(x.by.name||x.by.email))||"Agent")} · ${x.l.length} unit${x.l.length===1?"":"s"}</h4><div class="list">${x.l.map(m=>cardHTML(enrich(mineToOffer(m)),false)).join("")}</div></div>`).join(""):'<div class="empty">No agent has added a unit yet.</div>'}
-  $("#mine-list").innerHTML=mine.length?mine.map(m=>cardHTML(mineToOffer(m),false)).join(""):'<div class="empty">Listings you add appear here and in Offers.</div>';
+  $("#mine-list").innerHTML=mineSections();
   const head=["Unit No.","Type","Floor","View","Size (sq ft)","Sale / Rent","Price (AED)","AED per sq ft","Status","Furnishing","Owner / Client","Owner Phone","Date Listed","Notes"];
   const q=v=>{v=String(v??"");return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
   $("#csv-text").value=mine.length?[head.join(",")].concat(mine.map(m=>[m.unit,TYPE[m.beds],m.floor,m.view,m.size,m.deal==="sale"?"Sale":"Rent",m.price,m.size&&m.price?Math.round(m.price/m.size):"",m.status,m.furn,m.owner,m.phone,m.date,m.notes].map(q).join(","))).join("\n"):"";
@@ -1394,8 +1406,9 @@ function renderMine(){
 $("#mine-form").addEventListener("submit",async e=>{e.preventDefault();
   const g=id=>$(id).value.trim();
   const price=parseFloat(g("#m-price").replace(/[^0-9.]/g,""));
-  if(!price){toast("Enter a price");$("#m-price").focus();return}
-  const m={id:g("#m-id")||"l-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),unit:g("#m-unit"),b:g("#m-bld"),beds:g("#m-type"),deal:g("#m-deal"),floor:g("#m-floor"),view:g("#m-view"),size:g("#m-size").replace(/[^0-9.]/g,""),price,status:g("#m-status"),furn:g("#m-furn"),owner:g("#m-owner"),phone:g("#m-phone"),agent:g("#m-agent"),date:g("#m-date"),notes:g("#m-notes"),online:onlineFromForm()};
+  if(!price&&!$("#m-future").checked){toast("Enter a price");$("#m-price").focus();return}
+  if($("#m-future").checked&&!g("#m-remind")){toast("Pick a reminder date");$("#m-remind").focus();return}
+  const m={id:g("#m-id")||"l-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),unit:g("#m-unit"),b:g("#m-bld"),beds:g("#m-type"),deal:g("#m-deal"),floor:g("#m-floor"),view:g("#m-view"),size:g("#m-size").replace(/[^0-9.]/g,""),price,status:g("#m-status"),furn:g("#m-furn"),owner:g("#m-owner"),phone:g("#m-phone"),agent:g("#m-agent"),date:g("#m-date"),notes:g("#m-notes"),online:onlineFromForm(),future:$("#m-future").checked||undefined,availableFrom:g("#m-avail")||undefined,remindAt:g("#m-remind")||undefined,remindNote:g("#m-rnote")||undefined};
   if(SRV){const prev=mine.concat(teamListings).find(x=>x.id===m.id)||{};const{id,...data}=Object.assign({},prev,m);delete data._by;delete data._own;try{await api("data/listings",{id,data},"PUT")}catch(x){toast(x.message);return}await loadListings()}
   else{const i=mine.findIndex(x=>x.id===m.id);if(i>=0)mine[i]=m;else mine.push(m);persist()}
   const was=!!g("#m-id");resetMineForm();renderAll();toast(was?"Listing updated":"Listing saved");
@@ -1404,7 +1417,7 @@ function resetMineForm(){$("#mine-form").reset();drawOnlineBoxes({});$("#m-id").
 $("#m-cancel").onclick=resetMineForm;
 function editListing(id){const m=mine.concat(teamListings).find(x=>x.id===id);if(!m)return;show("mine");
   const set=(k,v)=>{$(k).value=v??""};set("#m-id",m.id);set("#m-unit",m.unit);set("#m-bld",m.b);set("#m-type",m.beds);set("#m-deal",m.deal);set("#m-floor",m.floor);set("#m-view",m.view);set("#m-size",m.size);set("#m-price",m.price?fmt(m.price):"");
-  set("#m-status",m.status);set("#m-furn",m.furn);set("#m-owner",m.owner);set("#m-phone",m.phone);if(AGENTS[m.agent])set("#m-agent",m.agent);set("#m-date",m.date);set("#m-notes",m.notes);drawOnlineBoxes(m.online||{});
+  set("#m-status",m.status);set("#m-furn",m.furn);set("#m-owner",m.owner);set("#m-phone",m.phone);if(AGENTS[m.agent])set("#m-agent",m.agent);set("#m-date",m.date);set("#m-notes",m.notes);$("#m-future").checked=!!m.future;set("#m-avail",m.availableFrom);set("#m-remind",m.remindAt);set("#m-rnote",m.remindNote);drawOnlineBoxes(m.online||{});
   $("#m-save").textContent="Save changes";$("#m-cancel").hidden=false;setTimeout(()=>{$("#mine-form").scrollIntoView({behavior:"smooth",block:"start"});$("#m-owner").focus({preventScroll:true})},60)}
 // Each agent's own units live on the server. Units saved before (in the agent's private app data) move there once.
 async function loadListings(){if(!SRV||!isTeam())return;
@@ -1423,7 +1436,7 @@ const today=()=>new Date().toISOString().slice(0,10);
 const isDue=c=>c.follow&&c.follow<=today()&&c.status!=="Closed"&&c.status!=="Lost";
 function renderDash(){if(!isTeam()){renderShowroom();return}clearInterval(heroT);renderTeamDash();
   const myl=renderMyListings();if(myl){const r=$("#dash").children[0];if(r)r.insertAdjacentHTML("afterend",myl);else $("#dash").insertAdjacentHTML("afterbegin",myl)}
-  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+leadsHTML())}
+  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+leadsHTML()+remindersHTML())}
 // The top achiever: first in the team ranking (online, then units), once they have a unit.
 let topPub=null;
 async function loadTop(){try{topPub=(await api("public/top")).top}catch(e){}}
@@ -2509,7 +2522,7 @@ async function renderTeam(){const el=$("#team");if(!SRV){el.innerHTML='<div clas
         <td><div class="gprog" style="min-width:110px" title="${a.online} online, ${a.partly} on some platforms"><i class="on" style="width:${Math.min(100,a.online/g.target*100)}%"></i><i class="pt" style="width:${Math.min(100,a.partly/g.target*100)}%"></i></div><span class="stat ${p.status}" style="margin-top:6px;display:inline-block">${p.status==="done"?"Goal reached":p.status==="ok"?"On track":"Behind"}</span></td></tr>`}).join("")}
       <tr class="total"><td></td><td>Team total</td><td class="c num">${ag.reduce((x,a)=>x+a.listings,0)}</td><td class="c num">${ag.reduce((x,a)=>x+a.forSale,0)}</td><td class="c num">${ag.reduce((x,a)=>x+a.forRent,0)}</td><td class="c num">${tot}</td><td class="c num">${ag.reduce((x,a)=>x+a.offMarket,0)}</td><td class="c num">${Math.max(0,goalT-tot)}</td><td></td></tr></table></div></div>
   <div class="panel"><h2>Units by agent</h2><p class="lede">Every unit each of us has, with its floor. Unit numbers and owners stay with the listing agent.</p><div class="stack">${ag.map(a=>unitsByAgent(a,g,photo)).join("")}</div></div>
-  <div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Your listings</h2><p class="lede">Tick each platform once the listing is live there.${isAdmin?" You can tick for every agent.":" Only you and the admin can change these."}</p></div><button class="btn primary" data-goto-mine>${ic("list")}Add a listing</button></div>
+  <div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Your listings</h2><p class="lede">Tick each platform once the listing is live there.${isAdmin?" You can tick for every agent.":" Only you and the admin can change these."}</p></div><button class="btn primary" data-goto-mine>${ic("list")}Add a unit</button></div>
     <div class="stack" id="team-own">${myOffers.length?`<h4 style="margin:4px 0 0">${isAdmin?"Team offers":"Your offers"} · ${myOffers.length}</h4>`+myOffers.map(offRow).join("")+(own.length?`<h4 style="margin:8px 0 0">${isAdmin?"Your own units":"Your own units"} · ${own.length}</h4>`:""):""}${own.length?own.map(m=>{const o=mineToOffer(m);return `<div class="ochk" data-lst="${esc(m.id)}"><div><b>${o.unit?"Unit "+esc(o.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(TYPE[o.beds])}</b><span class="s">${esc(o.deal==="rent"?aed(o.rent)+" / yr":aed(o.price))}${isOnline(m,g)?" · counts towards the goal":""}</span></div>${plats(m.online,"data-tog")}</div>`}).join(""):(myOffers.length?"":'<div class="empty">No listings yet. Add your units in Listings, then tick the platforms they\'re live on.</div>')}</div></div>
   ${isAdmin?`<div class="panel"><h2>Goal settings</h2><p class="lede">Only you can change these. Everyone on the team sees the result.</p><div class="fgrid">
     <div class="field"><label for="gl-target">Listings per agent</label><input id="gl-target" inputmode="numeric" value="${g.target}"></div>
@@ -2558,6 +2571,43 @@ function leadsHTML(){if(!leads.length)return"";const open=leads.filter(l=>!l.don
         <span>${o?`<button class="lnk" data-id="${esc(o.id)}">${esc(BLD[o.b]+" · "+TYPE[o.beds]+" · "+o.title)}</button>`:esc(l.title||l.offer_id)}${isAdmin&&AGENTS[l.agent_key]?" · for "+esc(AGENTS[l.agent_key].name.split(" ")[0]):""} · ${ago(l.at)}</span></div>
         <div class="actions">${ph?`<a class="btn sm primary" href="${esc(waTo(ph,msg))}" target="_blank" rel="noopener">${ic("chat")}WhatsApp</a><a class="btn sm" href="tel:+${esc(ph)}">${ic("phone")}Call</a>`:l.email?`<a class="btn sm" href="mailto:${esc(l.email)}">Email</a>`:""}<button class="btn sm" data-lead-done="${l.id}" data-v="${l.done?0:1}">${l.done?"Reopen":"Done"}</button></div></div>`}).join("")}</div></div>`}
 $("#dash").addEventListener("click",async e=>{const b=e.target.closest("[data-lead-done]");if(!b)return;b.disabled=true;try{await api("team/leads/done",{id:+b.dataset.leadDone,done:b.dataset.v==="1"});await loadLeads();renderDash()}catch(x){toast(x.message);b.disabled=false}});
+
+/* ---------------- Future listings and reminders ---------------- */
+const todayISO=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+const dShort=d=>d?new Date(d+"T12:00:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}):"";
+const isDueR=m=>m.remindAt&&m.remindAt<=todayISO();
+function reminderRow(m){const o=mineToOffer(m),due=isDueR(m),late=due&&m.remindAt<todayISO();
+  return `<div class="rem${due?" due":""}" data-rem="${esc(m.id)}"><div class="rw"><span class="rk">${late?"Overdue":due?"Today":dShort(m.remindAt)}</span>
+    <b>${o.unit?"Unit "+esc(o.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(TYPE[o.beds])}${m.future?' <span class="pill pending">Coming soon</span>':""}</b>
+    <span>${esc(m.remindNote||"Follow up on this unit")}${m.availableFrom?" · available from "+esc(dShort(m.availableFrom)):""}${m.owner?" · owner: "+esc(m.owner):""}</span></div>
+    <div class="actions">${m.phone?`<a class="btn sm primary" href="tel:${esc(telOf(m.phone))}">${ic("phone")}Call owner</a>`:""}<button class="btn sm" data-ics="${esc(m.id)}">${ic("calendar")}Add to calendar</button><button class="btn sm" data-snooze="${esc(m.id)}">+1 week</button>${m.future?`<button class="btn sm" data-golive="${esc(m.id)}">It's live now</button>`:""}<button class="btn sm" data-rdone="${esc(m.id)}">Done</button><button class="btn sm" data-id="${esc(m.id)}">Open</button></div></div>`}
+function mineSections(){if(!mine.length)return'<div class="empty">Listings you add appear here and in Offers. Add future listings too, with a reminder.</div>';
+  const due=mine.filter(isDueR).sort((a,b)=>a.remindAt.localeCompare(b.remindAt)),fut=mine.filter(m=>m.future&&!isDueR(m)).sort((a,b)=>String(a.remindAt||"9").localeCompare(String(b.remindAt||"9")));
+  const later=mine.filter(m=>!m.future&&m.remindAt&&!isDueR(m)),cur=mine.filter(m=>!m.future);
+  let h="";
+  if(due.length)h+=`<h4 class="mh due">Reminders due · ${due.length}</h4>`+due.map(reminderRow).join("");
+  if(fut.length)h+=`<h4 class="mh">Future listings · ${fut.length}</h4>`+fut.map(reminderRow).join("");
+  if(later.length)h+=`<h4 class="mh">Upcoming reminders · ${later.length}</h4>`+later.map(reminderRow).join("");
+  h+=`<h4 class="mh">Current units · ${cur.length}</h4>`+(cur.length?cur.map(m=>cardHTML(mineToOffer(m),false)).join(""):'<div class="empty">No current units yet.</div>');
+  return h}
+async function saveMine(m,msg){const{id,...data}=m;delete data._by;delete data._own;
+  if(SRV){try{await api("data/listings",{id,data},"PUT")}catch(x){toast(x.message);return}await loadListings()}else{const i=mine.findIndex(x=>x.id===id);if(i>=0)mine[i]=m;persist()}
+  renderAll();if(msg)toast(msg)}
+function icsFor(m){const o=mineToOffer(m),d=(m.remindAt||todayISO()).replace(/-/g,""),nd=new Date(m.remindAt+"T12:00:00");nd.setDate(nd.getDate()+1);
+  const d2=nd.getFullYear()+String(nd.getMonth()+1).padStart(2,"0")+String(nd.getDate()).padStart(2,"0"),x=t=>String(t||"").replace(/[\\,;]/g,c=>"\\"+c).replace(/\n/g,"\\n");
+  const title=`Peninsula: ${o.unit?"unit "+o.unit+", ":""}${BLD[o.b]} ${TYPE[o.beds]}`;
+  return ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Orla Properties//Peninsula//EN","BEGIN:VEVENT","UID:"+m.id+"-"+d+"@peninsula","DTSTAMP:"+new Date().toISOString().replace(/[-:]/g,"").slice(0,15)+"Z",
+    "DTSTART;VALUE=DATE:"+d,"DTEND;VALUE=DATE:"+d2,"SUMMARY:"+x(title),"DESCRIPTION:"+x((m.remindNote||"Follow up on this unit")+(m.owner?"\nOwner: "+m.owner:"")+(m.phone?"\nPhone: "+m.phone:"")+(m.availableFrom?"\nAvailable from: "+m.availableFrom:"")),
+    "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+x(title),"TRIGGER:PT9H","END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n")}
+document.addEventListener("click",async e=>{const t=e.target.closest("[data-ics],[data-snooze],[data-rdone],[data-golive]");if(!t)return;e.stopPropagation();
+  const id=t.dataset.ics||t.dataset.snooze||t.dataset.rdone||t.dataset.golive,m=mine.find(x=>x.id===id);if(!m)return;
+  if(t.dataset.ics){const blob=new Blob([icsFor(m)],{type:"text/calendar"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="peninsula-reminder.ics";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000);return}
+  t.disabled=true;
+  if(t.dataset.snooze){const d=new Date((m.remindAt&&m.remindAt>todayISO()?m.remindAt:todayISO())+"T12:00:00");d.setDate(d.getDate()+7);await saveMine(Object.assign({},m,{remindAt:d.toISOString().slice(0,10)}),"Reminder moved to "+dShort(d.toISOString().slice(0,10)))}
+  if(t.dataset.rdone){const n=Object.assign({},m);delete n.remindAt;await saveMine(n,"Reminder done")}
+  if(t.dataset.golive){const n=Object.assign({},m);delete n.future;delete n.remindAt;await saveMine(n,"It's a current unit now. Tick the platforms once it's online.")}},true);
+function remindersHTML(){const due=mine.filter(isDueR),soon=mine.filter(m=>m.remindAt&&!isDueR(m)&&(Date.parse(m.remindAt)-Date.now())<3*864e5);if(!due.length&&!soon.length)return"";
+  return `<div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Reminders${due.length?` <span class="count num">${due.length}</span>`:""}</h2><p class="lede">Future listings and follow-ups from My units.</p></div><button class="btn" data-goto="mine">${ic("list")}My units</button></div><div class="stack">${due.concat(soon).map(reminderRow).join("")}</div></div>`}
 
 /* ---------------- Start-up ---------------- */
 function startApp(){if(!SRV)setRole(isAdmin?"admin":"team");updateAcct();const ch=$("#userchip");

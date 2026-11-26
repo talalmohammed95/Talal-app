@@ -193,6 +193,7 @@ async function teamStats() {
   const blank = k => ({ key: k, name: agents[k] ? agents[k].name : k, phone: agents[k] ? agents[k].phone || "" : "", listings: 0, online: 0, partly: 0, offMarket: 0, forSale: 0, forRent: 0, platforms: {}, onlineDates: [], lastAdded: null, units: [] });
   for (const k of Object.keys(agents)) by[k] = blank(k);
   for (const r of rows) {
+    if (r.data.future) continue; // future listings count once they're on the market
     const k = r.data.agent || r.agent_key || "";
     if (!k) continue;
     const a = by[k] || (by[k] = { ...blank(k), name: agents[k] ? agents[k].name : r.name });
