@@ -825,6 +825,14 @@ body.guest .tab[data-view="chat"]{display:none!important}
 .wkcard{width:min(720px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--surface);border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
 .wkhead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .wktext{margin:0;white-space:pre-wrap;font:14px/1.6 var(--body,Inter,system-ui,sans-serif);background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+#pace{position:fixed;inset:0;z-index:85;background:rgba(15,12,10,.6);display:grid;place-items:center;padding:16px}#pace[hidden]{display:none}
+.pccard{width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--surface);border-radius:24px;padding:22px;display:flex;flex-direction:column;gap:10px;box-shadow:0 24px 70px rgba(0,0,0,.4)}
+.pchero{display:flex}.pchero span{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font:800 28px var(--display);color:#fff;background:var(--good)}.pchero.behind span{background:var(--bad)}.pchero.close span{background:var(--warn)}.pchero.done span{background:#1C1A18;color:#F7A94E}
+.pcbar{position:relative;height:12px;border-radius:9px;background:var(--sunk);margin-top:6px}.pcbar i{position:absolute;left:0;top:0;bottom:0;border-radius:9px;background:var(--primary)}.pcbar em{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1px;background:var(--fg);border-radius:2px}
+.pcgroups{display:flex;flex-direction:column;gap:10px}.pcg{border-radius:14px;padding:10px 12px;background:var(--bg);border:1px solid var(--line)}.pcg>b{display:block;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.pcg.behind{border-color:var(--bad);background:var(--bad-soft)}.pcg.behind>b{color:var(--bad)}.pcg.close>b{color:var(--warn)}.pcg.track>b,.pcg.done>b{color:var(--good)}
+.pcrow{display:flex;gap:10px;align-items:center;width:100%;background:none;border:0;padding:5px 0;text-align:left;cursor:pointer;color:inherit;font:inherit}.pcrow img{width:34px;height:34px;border-radius:50%}.pcrow b{display:block;font:700 14px var(--display)}.pcrow small{font-size:12.5px;color:var(--muted)}
+.th-pace{margin:6px 0 0;font-weight:700;font-size:14px}.th-pace.behind{color:#FF9B8F}.th-pace.close{color:#FFD27A}.th-pace.track,.th-pace.done{color:#9BE3B5}
 </style>
 <script src="/config.js"></script>
 </head>
@@ -1128,7 +1136,7 @@ body.guest .tab[data-view="chat"]{display:none!important}
         <form id="nu-form" class="fgrid" autocomplete="off">
           <div class="field"><label for="nu-name">Full name</label><input id="nu-name" autocomplete="off"></div>
           <div class="field"><label for="nu-email">Email (their username)</label><input id="nu-email" type="email" inputmode="email" autocapitalize="off" spellcheck="false" autocomplete="off"></div>
-          <div class="field"><label for="nu-role">Account type</label><select id="nu-role"><option value="agent">Orla team agent</option><option value="ceo">CEO (sees the team, view only)</option><option value="broker">External agent</option><option value="client">Client</option></select></div>
+          <div class="field"><label for="nu-role">Account type</label><select id="nu-role"><option value="agent">Orla team agent</option><option value="ceo">CEO</option><option value="broker">External agent</option><option value="client">Client</option></select></div>
           <div class="field" id="nu-agent-wrap"><label for="nu-agent">Offers listed under</label><select id="nu-agent"></select></div>
           <div class="field"><label for="nu-pass">Password (leave empty to generate one)</label><input id="nu-pass" autocomplete="new-password"></div>
           <div class="wide actions"><button class="btn primary" type="submit">Create account</button></div>
@@ -1663,6 +1671,7 @@ function teamHero(){const h=new Date().getHours(),first=((meInfo&&meInfo.name)||
     <p class="kick">Good ${h<12?"morning":h<18?"afternoon":"evening"}${first?", "+esc(first):""}${isTop?' <span class="topstar">★</span>':""}</p>
     <h2>${isTop?"You're the team's top achiever. Well done!":"Here's your day at the Peninsula."}</h2>
     ${top&&!isTop?`<p class="th-top"><span class="topstar">★</span> Top achiever: <b>${esc(top.name.split(" ")[0])}</b> with ${top.listings} unit${top.listings===1?"":"s"}${top.online?" · "+top.online+" online":""}</p>`:""}
+    ${me&&!isCEO()?`<p class="th-pace ${paceOf(me.online,g).status}">${esc(paceLine(paceOf(me.online,g)))}</p>`:""}
     <div class="th-stats">${stat(units,"your units")}${stat((me?me.online:0)+"<small>/"+g.target+"</small>","online, team goal")}${rank?stat("#"+rank,"team ranking"):""}${stat(days,"days left")}</div>
     <div class="th-cta"><button class="btn primary big" data-find>${ic("star")}New client request</button><button class="btn big ghost aicta" data-goto="assist">${ic("spark")}AI assistant</button><button class="btn big ghost" data-invite>${ic("users")}Invite a client</button><button class="btn big ghost" data-goto="mine">${ic("list")}Add a unit</button><button class="btn big ghost" data-goto-team>${ic("target")}Team performance</button><button class="btn big ghost" data-goto="docs">${ic("folder")}Brochures &amp; plans</button></div></div></section>`}
 function renderMyListings(){const k=myKey();const l=OFFERS.filter(o=>k&&AGENTS[k]&&o.agent===k&&(o.teamUnit||o.fromListing)).concat(SRV?mine.map(mineToOffer):[]).map(enrich).sort((a,b)=>a.b-b.b||a.beds-b.beds);if(!l.length)return"";
@@ -2310,7 +2319,7 @@ async function loadAll(first){
       else if(owner&&owner!==uid){mine=[];clients=[];starred=new Set();persist()}
       else if(mine.length||clients.length||starred.size)persist();
       store.set("orla.localOwner",uid)}
-    migrateOvr();if(!isTeam())await loadTop();if(isTeam()){await loadListings();await loadPerf(true);await loadLeads();await loadTasks();if(isAdmin||isCEO())loadWeekly();if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
+    migrateOvr();if(!isTeam())await loadTop();if(isTeam()){await loadListings();await loadPerf(true);await loadLeads();await loadTasks();if(isAdmin||isCEO())loadWeekly();setTimeout(paceModal,700);if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
   catch(e){if(e.status===401||e.status===403){location.reload();return}
     if(first){OFFERS=store.get("orla.cache.offers",[]);applySettings(store.get("orla.cache.settings",{}))}
     if(first||!loadAll.warned){loadAll.warned=true;toast("Offline: showing what's saved on this device")}}
@@ -3212,8 +3221,8 @@ function ceoHome(){const h=new Date().getHours(),first=((meInfo&&meInfo.name)||"
     <div class="th-stats">${stat(sum("listings"),"team units")}${stat(sum("online")+"<small>/"+goal+"</small>","online, team goal")}${stat(L.reduce((t,x)=>t+x.week,0),"client requests this week")}${stat(days,"days left")}</div>
     <div class="th-cta"><button class="btn primary big" data-weekly>${ic("file")}Weekly summary</button><button class="btn big ghost" data-goto="team">${ic("target")}Team performance</button><button class="btn big ghost" data-goto="chat">${ic("chat2")}Team chat</button><button class="btn big ghost" data-goto="assist">${ic("spark")}AI assistant</button><button class="btn big ghost" data-goto="train">${ic("spark")}Train the AI</button><button class="btn big ghost" data-goto="offers">${ic("building")}All offers</button></div></div></section>${leadsHTML()}
   ${weeklyPanel()}<div class="panel"><h2>The team</h2><p class="lede">Tap an agent to see their units, how they're registered, and their tasks. Units, platforms, client requests (last 30 days) and clients invited to the website, per agent. Goal: ${g.target} listings each online on ${esc(g.platforms.map(p=>p.n).join(" and "))} by ${esc(new Date(g.deadline+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"long"}))}.</p>
-    <div class="tablewrap"><table class="ceotab"><tr><th>Agent</th><th>Units</th><th>Online</th><th>Partly</th><th>Off market</th><th>Requests</th><th>Invited</th><th>Goal</th></tr>${ag.map(a=>{const l=lead(a.key),v=inv(a),pc=Math.min(100,Math.round(a.online/g.target*100));
-      return `<tr class="rvlink" data-review="${esc(a.key)}"><td><b>${esc(a.name)}</b>${top&&top.key===a.key?' <span class="topstar">★</span>':""}</td><td>${a.listings}</td><td>${a.online}</td><td>${a.partly}</td><td>${a.offMarket}</td><td>${l.all||0}${l.open?` <small class="src">(${l.open} open)</small>`:""}</td><td>${v.sent}${v.sent?` <small class="src">(${v.in} in)</small>`:""}</td><td><div class="gbar"><i style="width:${pc}%"></i></div><small class="src">${pc}%</small></td></tr>`}).join("")}</table></div></div>
+    <div class="tablewrap"><table class="ceotab"><tr><th>Agent</th><th>Units</th><th>Online</th><th>Partly</th><th>Off market</th><th>Requests</th><th>Invited</th><th>Pace</th><th>Goal</th></tr>${ag.map(a=>{const l=lead(a.key),v=inv(a),pc=Math.min(100,Math.round(a.online/g.target*100));
+      return `<tr class="rvlink" data-review="${esc(a.key)}"><td><b>${esc(a.name)}</b>${top&&top.key===a.key?' <span class="topstar">★</span>':""}</td><td>${a.listings}</td><td>${a.online}</td><td>${a.partly}</td><td>${a.offMarket}</td><td>${l.all||0}${l.open?` <small class="src">(${l.open} open)</small>`:""}</td><td>${v.sent}${v.sent?` <small class="src">(${v.in} in)</small>`:""}</td><td>${pacePill(paceOf(a.online,g))}</td><td><div class="gbar"><i style="width:${pc}%"></i></div><small class="src">${pc}%</small></td></tr>`}).join("")}</table></div></div>
   <div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Team chat</h2><p class="lede">The latest messages.</p></div><button class="btn" data-goto="chat">${ic("chat2")}Open the chat</button></div>
     <div class="stack">${last.length?last.map(m=>`<div class="ivrow"><div><b>${esc(m.name)}</b><span>${esc(m.text.slice(0,160))}</span></div><span class="src">${esc(chatWhen(m.at))}</span></div>`).join(""):'<div class="empty">No messages yet.</div>'}</div></div>
   ${overview?`<div class="panel"><h2>Offers</h2><p class="lede">${overview.offers.available} homes available: ${overview.offers.sale} for sale, ${overview.offers.rent} for rent.</p></div>`:""}`}
@@ -3335,6 +3344,35 @@ function openWeekly(i){const l=wkList();if(!l.length){toast("The first summary i
   el.hidden=false;document.body.classList.add("lbopen")}
 document.addEventListener("click",async e=>{if(e.target.closest("[data-weekly]")){openWeekly(0);return}
   const b=e.target.closest("[data-weekly-send]");if(!b)return;b.disabled=true;try{const r=await api("team/weekly/send",{});toast(r.emailed?`Emailed to ${r.emailed} ${r.emailed===1?"person":"people"}`:"Saved. Email isn't set up, so use Share on WhatsApp.");await loadWeekly()}catch(x){toast(x.message)}finally{b.disabled=false}});
+
+/* ---------------- Pace to the goal: a message on the first visit of the day ---------------- */
+const PACE={behind:["Behind","bad"],close:["Close","pending"],track:["On track","ok"],done:["Goal reached","ok"]};
+function paceOf(online,g){const DAY=864e5,start=Date.parse((g.start||"2026-11-20")+"T00:00:00+04:00"),end=Date.parse(g.deadline+"T23:59:59+04:00"),now=Date.now();
+  const frac=Math.max(0,Math.min(1,(now-start)/Math.max(DAY,end-start))),expected=Math.floor(g.target*frac),daysLeft=Math.max(0,Math.ceil((end-now)/DAY)),left=Math.max(0,g.target-online),gap=expected-online;
+  const status=online>=g.target?"done":gap<=0?"track":gap<=Math.max(1,Math.floor(expected*.15))?"close":"behind";
+  return{status,online,expected,gap:Math.max(0,gap),left,daysLeft,perWeek:left?Math.ceil(left/Math.max(1,daysLeft/7)):0,target:g.target}}
+const pacePill=p=>`<span class="pill ${PACE[p.status][1]}">${PACE[p.status][0]}</span>`;
+function paceLine(p){return p.status==="done"?`Goal reached: ${p.online} of ${p.target} online. Outstanding!`:p.status==="track"?`On track: ${p.online} online, ${p.expected} expected by today. Keep going.`:p.status==="close"?`So close: ${p.gap} more online and you're on track.`:`Behind: ${p.online} online, ${p.expected} expected by today. ${p.perWeek} a week gets you to ${p.target}.`}
+function paceTeamText(g,ag){const by=k=>ag.filter(a=>a.p.status===k);const L=[`Peninsula · team pace, ${new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"})}`,`By today each agent should have ${ag[0]?ag[0].p.expected:0} of ${g.target} online on ${g.platforms.map(p=>p.n).join(" and ")}.`];
+  for(const k of ["behind","close","track","done"]){const l=by(k);if(l.length){L.push("",`${PACE[k][0]} (${l.length}):`);l.forEach(a=>L.push(`• ${a.name}: ${a.p.online} online${k==="done"?"":`, ${a.p.expected} expected, ${a.p.perWeek}/week needed`}`))}}return L.join("\n")}
+function paceModal(){if(!perf||!isTeam())return;const wz=$("#wiz"),so=$("#so");if((wz&&!wz.hidden)||(so&&!so.hidden)){setTimeout(paceModal,1500);return}const k="orla.pace."+todayISO()+"."+(uid||"");if(store.get(k))return;const g=perf.goal,me=perf.agents.find(a=>a.key===myKey());let h="";
+  if(isCEO()||isAdmin){const ag=perf.agents.filter(a=>a.name).map(a=>({key:a.key,name:a.name,p:paceOf(a.online,g)})).sort((x,y)=>["behind","close","track","done"].indexOf(x.p.status)-["behind","close","track","done"].indexOf(y.p.status)||x.p.online-y.p.online);
+    const n=s=>ag.filter(a=>a.p.status===s).length,first=((meInfo&&meInfo.name)||"").split(" ")[0],txt=paceTeamText(g,ag);
+    h=`<p class="kick" style="margin:0">Good ${new Date().getHours()<12?"morning":new Date().getHours()<18?"afternoon":"evening"}${first?", "+esc(first):""}</p><h2 style="margin:2px 0 6px">${n("behind")?`${n("behind")} agent${n("behind")===1?" is":"s are"} behind today`:"The team is on track"}</h2>
+      <p class="lede" style="margin:0 0 8px">By today each agent should have <b>${ag[0]?ag[0].p.expected:0}</b> of ${g.target} listings online on ${esc(g.platforms.map(p=>p.n).join(" and "))}. ${ag[0]?ag[0].p.daysLeft:0} days left.</p>
+      <div class="pcgroups">${["behind","close","track","done"].map(s=>{const l=ag.filter(a=>a.p.status===s);return l.length?`<div class="pcg ${s}"><b>${PACE[s][0]} · ${l.length}</b>${l.map(a=>`<button class="pcrow" data-review="${esc(a.key)}" data-pace-close><img src="${esc(agentPhotoOf(a.key))}" alt=""><span><b>${esc(a.name)}</b><small>${a.p.online} online · ${a.p.expected} expected${s==="done"?"":" · "+a.p.perWeek+"/week needed"}</small></span></button>`).join("")}</div>`:""}).join("")}</div>
+      <div class="actions"><button class="btn primary" data-pace-close>Got it</button><a class="btn" href="https://wa.me/?text=${encodeURIComponent(txt)}" target="_blank" rel="noopener">${ic("chat")}Share on WhatsApp</a><button class="btn" data-pace-copy>${ic("copy")}Copy</button></div>`;
+    window._paceTxt=txt}
+  else if(me){const p=paceOf(me.online,g),first=String(me.name||"").split(" ")[0],msg={behind:["You're behind your target",`You have <b>${p.online}</b> listing${p.online===1?"":"s"} online on both platforms. By today you should have <b>${p.expected}</b>. Get <b>${p.perWeek} a week</b> online to reach ${p.target} by ${new Date(g.deadline+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"long"})}. You can do it: start today.`],
+      close:["You're very close!",`Just <b>${p.gap}</b> more listing${p.gap===1?"":"s"} online and you're on track. You have ${p.online}; ${p.expected} by today keeps you on pace for ${p.target}.`],
+      track:["You're on track. Keep going!",`<b>${p.online}</b> online, ${p.expected} expected by today. Keep up ${p.perWeek} a week to reach ${p.target}.`],
+      done:["Goal reached!",`<b>${p.online}</b> of ${p.target} online. Outstanding work, ${esc(first)}.`]}[p.status];
+    h=`<div class="pchero ${p.status}"><span>${p.status==="behind"?"!":p.status==="done"?"★":"✓"}</span></div><p class="kick" style="margin:0">Good ${new Date().getHours()<12?"morning":new Date().getHours()<18?"afternoon":"evening"}, ${esc(first)}</p><h2 style="margin:2px 0 6px">${msg[0]}</h2><p class="lede" style="margin:0">${msg[1]}</p>
+      <div class="pcbar"><i style="width:${Math.min(100,p.online/p.target*100)}%"></i><em style="left:${Math.min(100,p.expected/p.target*100)}%" title="Expected by today"></em></div><p class="src" style="margin:0">${p.online} online · marker: ${p.expected} expected by today · goal ${p.target}</p>
+      <div class="actions"><button class="btn primary" data-goto="mine" data-pace-close>${ic("list")}My units</button><button class="btn" data-pace-close>Got it</button></div>`}
+  if(!h)return;store.set(k,1);let el=$("#pace");if(!el){document.body.insertAdjacentHTML("beforeend",'<div id="pace" role="dialog" aria-modal="true" aria-label="Your pace"><div class="pccard"></div></div>');el=$("#pace");
+    el.addEventListener("click",e=>{if(e.target.closest("[data-pace-copy]")){copy(window._paceTxt||"");return}if(e.target.id==="pace"||e.target.closest("[data-pace-close]")){el.hidden=true;document.body.classList.remove("lbopen");const g=e.target.closest("[data-goto]");if(g)show(g.dataset.goto)}})}
+  el.querySelector(".pccard").innerHTML=h;el.hidden=false;document.body.classList.add("lbopen")}
 
 /* ---------------- Start-up ---------------- */
 function startApp(){if(!SRV)setRole(isAdmin?"admin":"team");updateAcct();const ch=$("#userchip");

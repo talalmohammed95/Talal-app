@@ -80,9 +80,17 @@ The admin creates the CEO's account (Munir Al Deraawi) in **Admin › Create an 
 
 **Team chat** (top bar, or More on a phone) is one group for the admin, the agents and the CEO. It refreshes every 15 seconds, shows an unread count, and each person can delete their own messages (the admin any). Agents are asked not to post owners' or clients' numbers there.
 
+## Daily pace to the goal
+
+Each agent should have `goal × (days since the start ÷ days in the period)` listings online on both platforms by today (from 20 Nov to 31 Dec, 15 each). On the first visit of each day:
+- an **agent** sees where they stand: **behind** (red, with how many a week gets them to 15), **very close** (one listing short, a little more as the target grows), **on track** or **goal reached**, with a progress bar, the marker for today, and a button to My units. Their Home also shows the line under the greeting.
+- the **CEO** and the **admin** see who's behind, close, on track and done, with each agent's online, expected and weekly need; tapping an agent opens their review; **Share on WhatsApp** and **Copy** send the same summary. The CEO's team table has a **Pace** column.
+
+Every morning at 9:00 Dubai time, Vercel Cron (`/api/cron/daily`) emails the team pace to the CEO and the admin when email is set up, and on Sundays sends the weekly summary as well.
+
 ## The CEO's weekly summary
 
-Every Sunday at 9:00 Dubai time (05:00 UTC), Vercel Cron calls `/api/cron/weekly` (see `crons` in `vercel.json`). It builds the week's summary once and saves it: team units and online against the goal, units added and gone online this week, client requests and viewings, clients invited, tasks done and overdue, how many listings a week the team needs to reach the goal, the top achiever, who made the most progress, and per agent (units, online with the change from last week, new units, requests, registration quality, tasks). When email is set up (SMTP), it's emailed to the CEO and the admin. The CEO's Home and the admin's Home show a **Weekly summary** card; **Read it** opens this week so far and the last 8 weeks, with **Share on WhatsApp** and **Copy**. The admin also has **Email it now**. Optional: set `CRON_SECRET` in Vercel so only Vercel can trigger it (otherwise it accepts Vercel's cron and runs at most once a week).
+Every Sunday at 9:00 Dubai time (05:00 UTC), the daily Vercel Cron (`/api/cron/daily`, see `crons` in `vercel.json`) also makes the weekly summary. It builds the week's summary once and saves it: team units and online against the goal, units added and gone online this week, client requests and viewings, clients invited, tasks done and overdue, how many listings a week the team needs to reach the goal, the top achiever, who made the most progress, and per agent (units, online with the change from last week, new units, requests, registration quality, tasks). When email is set up (SMTP), it's emailed to the CEO and the admin. The CEO's Home and the admin's Home show a **Weekly summary** card; **Read it** opens this week so far and the last 8 weeks, with **Share on WhatsApp** and **Copy**. The admin also has **Email it now**. Optional: set `CRON_SECRET` in Vercel so only Vercel can trigger it (otherwise it accepts Vercel's cron and runs at most once a week).
 
 ## Agent review and tasks (the admin and the CEO)
 

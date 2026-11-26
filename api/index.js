@@ -10,7 +10,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { assist, assistOffline, aiEnabled } from "../lib/assistant.js";
 import { importContacts, contactStats, searchContacts, claimWarning } from "../lib/contacts.js";
 import { importDeals, dealStats } from "../lib/deals.js";
-import { runWeekly, buildWeekly, weeklyText } from "../lib/weekly.js";
+import { runWeekly, buildWeekly, weeklyText, runDaily } from "../lib/weekly.js";
 
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
 const COOKIE = "orla_session";
@@ -640,6 +640,14 @@ const routes = {
     const secret = process.env.CRON_SECRET, auth = c.req.headers.authorization || "";
     if (secret ? auth !== "Bearer " + secret : !/vercel-cron/i.test(c.req.headers["user-agent"] || "")) fail(401, "Not allowed.");
     return runWeekly(teamStats, appUrl(c.req));
+  },
+  // Every morning (Vercel Cron): the team's pace to the CEO and the admin, and on Sundays the weekly summary too.
+  "GET cron/daily": async c => {
+    const secret = process.env.CRON_SECRET, auth = c.req.headers.authorization || "";
+    if (secret ? auth !== "Bearer " + secret : !/vercel-cron/i.test(c.req.headers["user-agent"] || "")) fail(401, "Not allowed.");
+    const out = { daily: await runDaily(teamStats, appUrl(c.req)) };
+    if (new Date(Date.now() + 4 * 3600e3).getUTCDay() === 0) out.weekly = await runWeekly(teamStats, appUrl(c.req));
+    return out;
   },
   "GET team/weekly": async c => {
     requireStaff(c);
