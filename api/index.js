@@ -372,9 +372,12 @@ const routes = {
   "GET team/performance": async c => {
     requireTeam(c);
     const goal = await teamGoal();
-    const [{ rows }, { rows: [st] }] = await Promise.all([
+    const [{ rows: lrows }, { rows: orows }, { rows: [st] }] = await Promise.all([
       q("select l.data, l.created_at, u.agent_key, u.name from listings l join users u on u.id = l.user_id"),
+      q("select data, created_at from offers"),
       q("select data from settings where id = 'app'")]);
+    // The team's offers count too, under the agent each is listed under. A shared listing is counted once, as the listing.
+    const rows = lrows.concat(orows.filter(r => !r.data.fromListing).map(r => ({ data: r.data, created_at: r.created_at, agent_key: "", name: "" })));
     const agents = (st && st.data && st.data.agents) || SETTINGS.agents, by = {};
     const blank = k => ({ key: k, name: agents[k] ? agents[k].name : k, listings: 0, online: 0, partly: 0, platforms: {}, onlineDates: [], lastAdded: null });
     for (const k of Object.keys(agents)) by[k] = blank(k);
@@ -389,6 +392,21 @@ const routes = {
       if (!a.lastAdded || r.created_at > a.lastAdded) a.lastAdded = r.created_at;
     }
     return { goal, agents: Object.values(by), now: new Date().toISOString() };
+  },
+
+  // Ticks a platform on an offer: the agent it's listed under, or the admin.
+  "POST team/online": async c => {
+    requireTeam(c);
+    const id = str(c.body.id, 64), platform = str(c.body.platform, 40);
+    const goal = await teamGoal();
+    if (!goal.platforms.some(p => p.k === platform)) fail(400, "Unknown platform.");
+    const { rows: [o] } = await q("select data from offers where id = $1", [id]);
+    if (!o) fail(404, "Offer not found.");
+    if (c.user.role !== "admin" && (!o.data.agent || o.data.agent !== c.user.agent_key)) fail(403, "Only the agent this offer is listed under can change it.");
+    const data = { ...o.data, online: { ...(o.data.online || {}), [platform]: !!c.body.on } };
+    if (goal.platforms.every(p => data.online[p.k])) data.onlineAt = o.data.onlineAt || new Date().toISOString(); else delete data.onlineAt;
+    await q("update offers set data = $2, updated_at = now() where id = $1", [id, data]);
+    return { ok: true, online: data.online };
   },
 
   "POST data/listings/delete": async c => {
