@@ -11,6 +11,7 @@ import { assist, assistOffline, aiEnabled } from "../lib/assistant.js";
 import { importContacts, contactStats, searchContacts, claimWarning } from "../lib/contacts.js";
 import { importDeals, dealStats } from "../lib/deals.js";
 import { readBrochure, guideRows } from "../lib/guide.js";
+import { vapidKeys, subscribe, unsubscribe, notifyLead, pushTo } from "../lib/notify.js";
 import { runWeekly, buildWeekly, weeklyText, runDaily, greet } from "../lib/weekly.js";
 
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
@@ -833,10 +834,34 @@ const routes = {
     await limit("lead:" + c.user.id, 40, 3600);
     const { rows: [o] } = await q("select data from offers where id = $1", [id]);
     if (!o) fail(404, "Home not found.");
-    const { rows: [recent] } = await q("select id from leads where user_id = $1 and offer_id = $2 and kind = $3 and at > now() - interval '1 hour'", [c.user.id, id, kind]);
-    if (!recent) await q("insert into leads (user_id, offer_id, agent_key, kind, title) values ($1, $2, $3, $4, $5)",
-      [c.user.id, id, str(o.data.agent, 40), kind, str(o.data.title, 200)]);
+    const day = /^\d{4}-\d{2}-\d{2}$/.test(String(c.body.day || "")) ? c.body.day : "", slot = str(c.body.slot, 40), note = str(c.body.note, 500);
+    const phone = str(c.body.phone, 30).replace(/[^\d+ ]/g, "");
+    if (phone && !c.user.phone) await q("update users set phone = $2 where id = $1 and phone = ''", [c.user.id, phone]);
+    const dayTxt = day ? new Date(day + "T12:00:00Z").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }) : "";
+    // A booking with a time always counts; a plain tap on the same home within the hour doesn't repeat.
+    const { rows: [recent] } = day || note ? { rows: [] } : await q("select id from leads where user_id = $1 and offer_id = $2 and kind = $3 and at > now() - interval '1 hour'", [c.user.id, id, kind]);
+    if (recent) return { ok: true };
+    const { rows: [lead] } = await q("insert into leads (user_id, offer_id, agent_key, kind, title, day, slot, note, phone) values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id, kind",
+      [c.user.id, id, str(o.data.agent, 40), kind, str(o.data.title, 200), dayTxt || null, slot || null, note || null, phone || null]);
+    const person = { name: c.user.name, email: /@mobile\.peninsula$/.test(c.user.email) ? "" : c.user.email, phone: phone || c.user.phone, role: c.user.role, company: c.user.company };
+    let sent = null;
+    try { sent = await notifyLead({ lead: { ...lead, day: dayTxt, slot, note }, person, offer: o.data, appUrl: appUrl(c.req) }); } catch (e) { console.error("notify", e); }
+    return { ok: true, notified: sent ? sent.push + sent.emails > 0 : false };
+  },
+
+  // Notifications on this phone or computer (the Orla team).
+  "GET push/key": async c => { requireStaff(c); return { key: (await vapidKeys()).publicKey }; },
+  "POST push/subscribe": async c => {
+    requireStaff(c);
+    if (!(await subscribe(c.user.id, c.body.sub))) fail(400, "This browser couldn't turn on notifications.");
     return { ok: true };
+  },
+  "POST push/unsubscribe": async c => { requireStaff(c); await unsubscribe(c.user.id, c.body.endpoint); return { ok: true }; },
+  "POST push/test": async c => {
+    requireStaff(c);
+    await limit("pushtest:" + c.user.id, 10, 3600);
+    const n = await pushTo([c.user.id], { title: "Notifications are on", body: "You'll get a notification here when a client books a viewing.", url: "/app/#requests", tag: "test" });
+    return { sent: n };
   },
 
   // Requests for the agent's own homes (the admin sees all), with the person's contact details.
@@ -844,7 +869,7 @@ const routes = {
     requireStaff(c);
     const admin = seesAll(c.user);
     const { rows } = await q(
-      `select l.id, l.at, l.offer_id, l.agent_key, l.kind, l.title, l.done, u.name, u.email, u.phone, u.role, u.company
+      `select l.id, l.at, l.offer_id, l.agent_key, l.kind, l.title, l.done, l.day, l.slot, l.note, u.name, u.email, coalesce(nullif(l.phone, ''), u.phone) as phone, u.role, u.company
        from leads l left join users u on u.id = l.user_id
        ${admin ? "" : "where l.agent_key = $1"} order by l.done, l.at desc limit 200`, admin ? [] : [c.user.agent_key || "-"]);
     return { leads: rows };

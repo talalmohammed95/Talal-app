@@ -128,6 +128,16 @@ Every Sunday at 9:00 Dubai time (05:00 UTC), the daily Vercel Cron (`/api/cron/d
 
 **Tasks** are private: the admin or the CEO gives one to an agent (with a due date and notes), and only that agent, the admin and the CEO see it. They show on the agent's Home (overdue ones in red), and the agent ticks them done.
 
+## Viewing bookings and notifications
+A client or external agent taps **Book a viewing** on a home, picks a day (the next 10 days) and a time (morning, afternoon or evening), checks their mobile and can add a message. Their WhatsApp opens with the message to the listing agent, and the booking is saved.
+
+The admin and the listing agent are told straight away, with the person's name, type (client or external agent and company), mobile, email, the home (building, type, unit for the team, price, floor), the day and time, and the message:
+- **On their phone:** a notification, even when the app is closed. Each person turns it on once on Home (**Viewing requests on your phone › Turn on**). On iPhone this works from the Home Screen app (Share › Add to Home Screen), iOS 16.4 or later. The push keys are made automatically and kept in the database; there's nothing to set up. Tapping the notification opens the requests.
+- **In the app:** a pop-up with WhatsApp and Call buttons (the app checks every 45 seconds while it's open), and the request in **Requests** on Home with the booked time and message.
+- **By email,** when SMTP is set up.
+
+Mr Munir sees every request in the app too, without the notifications.
+
 ## Unit details from the brochures (team only)
 The AI reads the developer brochures and floor plan books in Brochures & plans. A Dubai unit number is the floor and then the stack (1203 is floor 12, stack 03), so from each brochure's key plans it records every stack's layout, size, balcony, view and floor plan page. In Brochures & plans, the admin or the CEO taps **Read the brochures** (or **Read units** on one PDF). Each brochure takes 1 to 3 minutes, and their phone saves the floor plan pages as images for everyone. This needs `ANTHROPIC_API_KEY`.
 
