@@ -672,6 +672,15 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
 .ta-cta{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.ta-ph{font-weight:700}
 @media (max-width:560px){.topagent{grid-template-columns:minmax(0,1fr);text-align:center;justify-items:center}.topagent img{width:110px;height:110px}.ta-cta{justify-content:center}}
 .topnote{margin:4px 0 0;font-size:14px}.topnote a{color:var(--accent-ink);font-weight:700}
+.askbox{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;border-radius:16px;padding:14px 16px;background:var(--accent-soft);border:1.5px solid var(--primary)}
+.askbox b{display:block;font:800 16px var(--display)}.askbox span{font-size:13.5px;color:var(--muted)}
+.gth.locked{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;opacity:1;text-decoration:none;color:var(--accent-ink);background:var(--accent-soft);border:2px dashed var(--primary)}
+.gth.locked .ic{width:18px;height:18px}.gth.locked span{position:static;background:none;color:var(--accent-ink);font-size:11px;padding:0}.gth.locked small{font-size:10px;color:var(--muted)}
+.lead{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--bg)}
+.lead.done{opacity:.55}.lead .lnk{text-align:left;padding:0;text-decoration:none}.lw{display:flex;flex-direction:column;gap:2px;min-width:0}.lw b{font:800 15px var(--display)}.lw span{font-size:12.5px;color:var(--muted)}
+.lk{align-self:flex-start;font-size:11px!important;font-weight:800;padding:2px 9px;border-radius:999px;color:#fff!important}.lk.viewing{background:var(--good)}.lk.details{background:var(--rent)}
+.lead .actions{display:flex;gap:6px;flex-wrap:wrap}
+@media (max-width:620px){.lead{grid-template-columns:minmax(0,1fr)}}
 </style>
 <script src="/config.js"></script>
 </head>
@@ -692,7 +701,7 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
       </div></div>
       <div class="field" id="g-name-wrap" hidden><label for="g-name">Full name</label><input id="g-name" autocomplete="name"></div>
       <div class="field" id="g-company-wrap" hidden><label for="g-company">Agency name</label><input id="g-company" autocomplete="organization"></div>
-      <div class="field" id="g-phone-wrap" hidden><label for="g-phone">Mobile number (optional)</label><input id="g-phone" type="tel" autocomplete="tel" inputmode="tel"></div>
+      <div class="field" id="g-phone-wrap" hidden><label for="g-phone">Mobile number (for viewings)</label><input id="g-phone" type="tel" autocomplete="tel" inputmode="tel"></div>
       <div class="field" id="g-email-wrap" hidden><label for="g-email">Email</label><input id="g-email" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false"></div>
       <div class="field" id="g-pass-wrap" hidden><label for="g-pass" id="g-pass-label">Password</label><input id="g-pass" type="password" autocomplete="current-password"></div>
       <div class="field" id="g-pass2-wrap" hidden><label for="g-pass2">Repeat password</label><input id="g-pass2" type="password" autocomplete="new-password"></div>
@@ -1274,11 +1283,12 @@ function renderDetail(){
       <div class="big num"><b>${esc(p.big)}</b><span>${esc(p.sub)}</span></div></div>
     <div class="dbody">
       ${galleryHTML(o)}
+      ${isTeam()?"":askBox(o)}
       <div class="actions">
         <button class="btn primary" id="d-star">${ic("star")}${starred.has(o.id)?"On shortlist":"Add to shortlist"}</button>
         <button class="btn" id="d-present">${ic("monitor")}${ROLE==="client"?"View full screen":"Present to client"}</button>
-        <button class="btn" id="d-copy">${ic("copy")}Copy offer text</button>
-        <a class="btn" href="${wa}" target="_blank" rel="noopener">${ic("chat")}Share on WhatsApp</a>
+        ${ROLE==="client"?"":`<button class="btn" id="d-copy">${ic("copy")}Copy offer text</button>
+        <a class="btn" href="${wa}" target="_blank" rel="noopener">${ic("chat")}Share on WhatsApp</a>`}
         ${o.deal!=="rent"?'<button class="btn" id="d-calc">'+ic("calc")+'Open in calculator</button>':""}
         ${o.mine&&SRV?'<button class="btn" id="d-edit">'+ic("file")+'Edit listing</button>':""}${o.mine?'<button class="btn" id="d-del">Delete listing</button>':""}
       </div>
@@ -1297,13 +1307,13 @@ function renderDetail(){
         ${o.deal!=="rent"?`<div class="field"><label for="e-price">Sale price (AED)</label><input id="e-price" inputmode="numeric" value="${fmt(o.price)}"></div>`:""}
         ${o.deal!=="sale"?`<div class="field"><label for="e-rent">Rent (AED / yr)</label><input id="e-rent" inputmode="numeric" value="${fmt(o.rent)}"></div>`:""}
         <div class="wide actions"><button class="btn primary" id="e-save">Save for everyone</button><button class="btn" id="e-full">Edit all details</button></div></div></details>`:""}
-      <div class="agent"><div class="who"><img class="aph" src="${esc(agentImg(o))}" alt=""><div><b>${esc(a.name)}${topStar(o.agent)}</b><span>Orla Properties L.L.C · BRN 41837</span></div></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="phone num">${esc(a.phone)}</span>${isTeam()?"":`<a class="btn primary" href="https://wa.me/${esc(String(a.phone).replace(/[^0-9]/g,""))}?text=${encodeURIComponent("Hello, I'm interested in the "+bedsWord(o.beds).toLowerCase()+" in "+BLD[o.b]+" ("+dealWord(o).toLowerCase()+", AED "+(o.deal==="rent"?fmt(o.rent)+" a year":fmt(o.price))+"). Is it still available?")}" target="_blank" rel="noopener">${ic("chat")}Ask about this home</a>`}<button class="btn" id="d-phone">Copy number</button></div></div>
+      <div class="agent"><div class="who"><img class="aph" src="${esc(agentImg(o))}" alt=""><div><b>${esc(a.name)}${topStar(o.agent)}</b><span>Orla Properties L.L.C · BRN 41837</span></div></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="phone num">${esc(a.phone)}</span>${isTeam()?"":`<a class="btn primary" ${leadAttrs(o,"viewing")}>${ic("chat")}Book a viewing</a>`}<button class="btn" id="d-phone">Copy number</button></div></div>
       ${!isTeam()&&topAgent()&&topAgent().key!==o.agent&&topAgent().phone?`<p class="topnote"><span class="topstar" style="margin:0 6px 0 0">★</span>Prefer our top performer? <a href="${esc(waTo(topAgent().phone,"Hello "+topAgent().name.split(" ")[0]+", I'm interested in the "+bedsWord(o.beds).toLowerCase()+" in "+BLD[o.b]+". Can you help me?"))}" target="_blank" rel="noopener">WhatsApp ${esc(topAgent().name.split(" ")[0])}</a></p>`:""}
       <p class="src">Source: ${esc(o.src)}. Market: DLD-registered deals, ${esc(MKT.asOf)}. Drive times approx.: Dubai Mall 7 min · Business Bay Metro 7 min · DIFC 12 min · DXB 16 min.</p>
     </div></article>`;
   fillCharts(el);
   $("#d-star").onclick=()=>{toggleStar(o.id)};
-  $("#d-copy").onclick=()=>copy(offerText(o));
+  const dcp=$("#d-copy");if(dcp)dcp.onclick=()=>copy(offerText(o));
   $("#d-phone").onclick=()=>copy(a.phone);
   $("#d-present").onclick=()=>openPresent(filtered().map(x=>x.id),o.id);
   const es=$("#e-save");if(es)es.onclick=async()=>{const base=OFFERS.find(x=>x.id===o.id);if(!base)return;const n=Object.assign({},base,{avail:$("#e-st").value});if($("#e-price"))n.price=nv("#e-price")||base.price;if($("#e-rent"))n.rent=nv("#e-rent")||base.rent;
@@ -1413,7 +1423,7 @@ const today=()=>new Date().toISOString().slice(0,10);
 const isDue=c=>c.follow&&c.follow<=today()&&c.status!=="Closed"&&c.status!=="Lost";
 function renderDash(){if(!isTeam()){renderShowroom();return}clearInterval(heroT);renderTeamDash();
   const myl=renderMyListings();if(myl){const r=$("#dash").children[0];if(r)r.insertAdjacentHTML("afterend",myl);else $("#dash").insertAdjacentHTML("afterbegin",myl)}
-  $("#dash").insertAdjacentHTML("afterbegin",teamHero())}
+  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+leadsHTML())}
 // The top achiever: first in the team ranking (online, then units), once they have a unit.
 let topPub=null;
 async function loadTop(){try{topPub=(await api("public/top")).top}catch(e){}}
@@ -1865,7 +1875,7 @@ function renderReports(){const el=$("#reports");if(!el)return;
 
 addEventListener("afterprint",()=>document.body.classList.remove("print-present"));
 /* ---------------- App shell: icons, page headers, menus, theme toggle ---------------- */
-const ICONS={"target":"M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4","home": "M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z", "building": "M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16M15 9h3a2 2 0 0 1 2 2v10M3 21h18M8 7h3M8 11h3M8 15h3", "chart": "M3 3v18h18M7 15l4-4 3 3 5-6", "file": "M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6", "star": "M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z", "users": "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8", "calc": "M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h8", "trend": "M22 7l-8.5 8.5-5-5L2 17M16 7h6v6", "list": "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01", "shield": "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z", "more": "M5 12h.01M12 12h.01M19 12h.01", "sun": "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4", "moon": "M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z", "logout": "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9", "lock": "M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4", "globe": "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20", "x": "M18 6 6 18M6 6l12 12", "monitor": "M2 4h20v12H2zM8 20h8M12 16v4", "copy": "M9 9h11v11H9zM5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1", "chat": "M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.4A8.5 8.5 0 1 1 21 12z", "phone": "M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z", "download": "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3", "print": "M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z", "arrow": "M19 12H5M12 19l-7-7 7-7", "arrowr": "M5 12h14M12 5l7 7-7 7", "user": "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8", "water": "M2 12c2 0 2-1.5 4-1.5S8 12 10 12s2-1.5 4-1.5S16 12 18 12s2-1.5 4-1.5M2 17c2 0 2-1.5 4-1.5S8 17 10 17s2-1.5 4-1.5S16 17 18 17s2-1.5 4-1.5M12 3v4", "pool": "M2 18c2 0 2-1.5 4-1.5S8 18 10 18s2-1.5 4-1.5S16 18 18 18s2-1.5 4-1.5M8 15V5a2 2 0 0 1 4 0M16 15V5a2 2 0 0 0-4 0M8 9h8", "boat": "M3 17l2 4h14l2-4zM12 3v10M12 3l6 8H12M6 13h12", "bag": "M6 7h12l1 14H5zM9 7a3 3 0 0 1 6 0", "pin": "M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5", "train": "M6 3h12a2 2 0 0 1 2 2v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V5a2 2 0 0 1 2-2zM4 11h16M8 15h.01M16 15h.01M7 21l2-3M17 21l-2-3", "plane": "M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z", "briefcase": "M3 7h18v13H3zM8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18", "tree": "M12 22v-6M7 16h10l-5-13z", "menu": "M3 6h18M3 12h18M3 18h18", "key": "M15 7a4 4 0 1 1-3.5 6L4 20.5V17h3v-3h3l1.5-1.5A4 4 0 0 1 15 7zM17 9h.01"};
+const ICONS={"calendar":"M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z","target":"M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4","home": "M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z", "building": "M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16M15 9h3a2 2 0 0 1 2 2v10M3 21h18M8 7h3M8 11h3M8 15h3", "chart": "M3 3v18h18M7 15l4-4 3 3 5-6", "file": "M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6", "star": "M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z", "users": "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8", "calc": "M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h8", "trend": "M22 7l-8.5 8.5-5-5L2 17M16 7h6v6", "list": "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01", "shield": "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z", "more": "M5 12h.01M12 12h.01M19 12h.01", "sun": "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4", "moon": "M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z", "logout": "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9", "lock": "M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4", "globe": "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20", "x": "M18 6 6 18M6 6l12 12", "monitor": "M2 4h20v12H2zM8 20h8M12 16v4", "copy": "M9 9h11v11H9zM5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1", "chat": "M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.4A8.5 8.5 0 1 1 21 12z", "phone": "M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z", "download": "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3", "print": "M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z", "arrow": "M19 12H5M12 19l-7-7 7-7", "arrowr": "M5 12h14M12 5l7 7-7 7", "user": "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8", "water": "M2 12c2 0 2-1.5 4-1.5S8 12 10 12s2-1.5 4-1.5S16 12 18 12s2-1.5 4-1.5M2 17c2 0 2-1.5 4-1.5S8 17 10 17s2-1.5 4-1.5S16 17 18 17s2-1.5 4-1.5M12 3v4", "pool": "M2 18c2 0 2-1.5 4-1.5S8 18 10 18s2-1.5 4-1.5S16 18 18 18s2-1.5 4-1.5M8 15V5a2 2 0 0 1 4 0M16 15V5a2 2 0 0 0-4 0M8 9h8", "boat": "M3 17l2 4h14l2-4zM12 3v10M12 3l6 8H12M6 13h12", "bag": "M6 7h12l1 14H5zM9 7a3 3 0 0 1 6 0", "pin": "M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5", "train": "M6 3h12a2 2 0 0 1 2 2v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V5a2 2 0 0 1 2-2zM4 11h16M8 15h.01M16 15h.01M7 21l2-3M17 21l-2-3", "plane": "M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z", "briefcase": "M3 7h18v13H3zM8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18", "tree": "M12 22v-6M7 16h10l-5-13z", "menu": "M3 6h18M3 12h18M3 18h18", "key": "M15 7a4 4 0 1 1-3.5 6L4 20.5V17h3v-3h3l1.5-1.5A4 4 0 0 1 15 7zM17 9h.01"};
 const ic=(n,cls="")=>`<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[n]}"/></svg>`;
 const PAGES={dash:["home","Dashboard",""],offers:["building","Offers","Browse, filter, compare and present every unit"],analysis:["chart","Analysis","How your offers compare with each other and the market"],
   reports:["file","Reports","Portfolio report and Excel-ready downloads"],shortlist:["star","Client shortlist","Offers you've starred, ready to present or send"],clients:["users","Clients","Buyers, investors and tenants you're working with"],
@@ -2082,7 +2092,7 @@ async function loadAll(first){
       else if(owner&&owner!==uid){mine=[];clients=[];starred=new Set();persist()}
       else if(mine.length||clients.length||starred.size)persist();
       store.set("orla.localOwner",uid)}
-    migrateOvr();if(!isTeam())await loadTop();if(isTeam()){await loadListings();await loadPerf(true);if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
+    migrateOvr();if(!isTeam())await loadTop();if(isTeam()){await loadListings();await loadPerf(true);await loadLeads();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
   catch(e){if(e.status===401||e.status===403){location.reload();return}
     if(first){OFFERS=store.get("orla.cache.offers",[]);applySettings(store.get("orla.cache.settings",{}))}
     if(first||!loadAll.warned){loadAll.warned=true;toast("Offline: showing what's saved on this device")}}
@@ -2141,7 +2151,7 @@ function photosOf(o){
   if(Array.isArray(o.photos)&&o.photos.length)return o.photos.map(p=>({k:p.u||p.k,c:p.c||"",t:p.t||"p"}));
   const m=MEDIA.offer[o.id];if(m)return m.map(toItem);
   const b=MEDIA.bld[o.b]||MEDIA.bld[3];return(b[o.beds]||b.all).map(toItem)}
-function planOf(o){if(o.plan&&typeof o.plan==="object")return(o.plan.u||o.plan.k)?{k:o.plan.u||o.plan.k,c:o.plan.c||"Floor plan",t:"f"}:null;const p=MEDIA.plan[o.id];return p?toItem(p):null}
+function planOf(o){if(!isTeam())return null;if(o.plan&&typeof o.plan==="object")return(o.plan.u||o.plan.k)?{k:o.plan.u||o.plan.k,c:o.plan.c||"Floor plan",t:"f"}:null;const p=MEDIA.plan[o.id];return p?toItem(p):null}
 const mediaOf=o=>{const l=photosOf(o),p=planOf(o);return p?l.concat([p]):l};
 const hasRealPhotos=o=>photosOf(o).some(p=>p.t==="p");
 const KIND={r:"Developer render",p:"Photo of this home",f:"Floor plan"};
@@ -2164,7 +2174,7 @@ function galleryHTML(o,cls=""){const m=mediaOf(o);if(!m.length)return"";const f=
     <div class="gmain"><button class="gimg" data-gopen aria-label="Open photos full screen"><img src="${esc(imgSrc(f.k))}" alt="${esc(f.c||KIND[f.t])}" ${f.t==="f"?'class="plan"':""}></button>
       ${m.length>1?`<button class="gnav prev" data-gstep="-1" aria-label="Previous photo">${ic("arrow")}</button><button class="gnav next" data-gstep="1" aria-label="Next photo">${ic("arrowr")}</button>`:""}
       <div class="gcap"><span class="gk">${esc(KIND[f.t])}</span><span class="gc">${esc(f.c)}</span><span class="gn num">1 / ${m.length}</span></div></div>
-    ${m.length>1?`<div class="gthumbs">${m.map((p,i)=>`<button class="gth${p.t==="f"?" isplan":""}" data-gi="${i}" aria-label="${esc((p.t==="f"?"Floor plan: ":"Photo: ")+(p.c||""))}" aria-current="${i===0}"><img loading="lazy" src="${esc(imgSrc(p.k,true))}" alt="">${p.t==="f"?"<span>Floor plan</span>":""}</button>`).join("")}</div>`:""}
+    ${m.length>1||!isTeam()?`<div class="gthumbs">${!isTeam()&&cls!=="pmain"?`<a class="gth locked" ${leadAttrs(o,"details")} aria-label="Ask the agent for the floor plan">${ic("lock")}<span>Floor plan</span><small>on request</small></a>`:""}${m.map((p,i)=>`<button class="gth${p.t==="f"?" isplan":""}" data-gi="${i}" aria-label="${esc((p.t==="f"?"Floor plan: ":"Photo: ")+(p.c||""))}" aria-current="${i===0}"><img loading="lazy" src="${esc(imgSrc(p.k,true))}" alt="">${p.t==="f"?"<span>Floor plan</span>":""}</button>`).join("")}</div>`:""}
   </div>`}
 function galGo(g,i){const o=all().find(x=>x.id===g.dataset.gal);if(!o)return;const m=mediaOf(o);i=(i+m.length)%m.length;g.dataset.i=i;const p=m[i];
   const img=g.querySelector(".gimg img");img.src=imgSrc(p.k);img.alt=p.c||KIND[p.t];img.classList.toggle("plan",p.t==="f");
@@ -2522,6 +2532,32 @@ $("#team").addEventListener("change",async e=>{const oc=e.target.closest("[data-
   const on=Object.assign({},m.online||{},{[c.dataset.tog]:c.checked});if(c.checked){if(c.dataset.tog==="off")Object.keys(on).forEach(k=>{if(k!=="off")delete on[k]});else delete on.off}
   const data=Object.assign({},m,{online:on});delete data.id;c.disabled=true;
   try{await api("data/listings",{id,data},"PUT");await loadListings();perf=null;await renderTeam();toast(isOnline(data,goalOf())?"Online everywhere: it counts towards the goal":"Saved")}catch(x){toast(x.message);c.checked=!c.checked;c.disabled=false}});
+
+/* ---------------- Viewings and full details go through the listing agent ---------------- */
+function leadMsg(o,kind){const a=agentOf(o),f=String(a.name||"").split(" ")[0],what=bedsWord(o.beds).toLowerCase()+" in "+BLD[o.b]+" ("+dealWord(o).toLowerCase()+", AED "+(o.deal==="rent"?fmt(o.rent)+" a year":fmt(o.price))+")",ref="Ref "+o.id.toUpperCase();
+  if(ROLE==="broker")return kind==="viewing"?`Hello ${f}, I'm ${(meInfo&&meInfo.name)||"an agent"}${profile&&profile.company?" from "+profile.company:""}. I have a client for the ${what}. Can we book a viewing? ${ref}`:`Hello ${f}, I'm ${(meInfo&&meInfo.name)||"an agent"}${profile&&profile.company?" from "+profile.company:""}. Could you send me the floor plan, exact floor and availability of the ${what}? ${ref}`;
+  return kind==="viewing"?`Hello ${f}, I'd like to book a viewing of the ${what}. When is a good time? ${ref}`:`Hello ${f}, could you send me the floor plan, exact floor and full details of the ${what}? ${ref}`}
+const leadAttrs=(o,kind)=>`href="${esc(waTo(agentOf(o).phone,leadMsg(o,kind)))}" target="_blank" rel="noopener" data-lead="${kind}" data-offer="${esc(o.id)}"`;
+function askBox(o){const f=String(agentOf(o).name||"the agent").split(" ")[0];
+  return `<div class="askbox"><div><b>Interested in this home?</b><span>Book a viewing with ${esc(f)}, or ask for the floor plan, exact floor and availability.</span></div>
+    <div class="actions"><a class="btn primary" ${leadAttrs(o,"viewing")}>${ic("calendar")}Book a viewing</a><a class="btn" ${leadAttrs(o,"details")}>${ic("file")}Ask for full details</a></div></div>`}
+// Record the request, then let the link open WhatsApp.
+document.addEventListener("click",e=>{const a=e.target.closest("[data-lead]");if(!a||!SRV||isTeam())return;
+  try{fetch(API+"/data/lead",{method:"POST",keepalive:true,credentials:"same-origin",headers:{"Content-Type":"application/json","X-Orla":"1"},body:JSON.stringify({offerId:a.dataset.offer,kind:a.dataset.lead})})}catch(x){}
+  setTimeout(()=>toast(a.dataset.lead==="viewing"?"Request sent to "+String(agentOf(all().find(o=>o.id===a.dataset.offer)||{}).name||"the agent").split(" ")[0]+". Send the WhatsApp message to confirm.":"Request sent. The agent will share the full details."),300)},true);
+
+/* ---------------- Requests for the listing agent ---------------- */
+let leads=[];
+async function loadLeads(){if(!SRV||!isTeam())return;try{leads=(await api("team/leads")).leads||[]}catch(e){}}
+function leadsHTML(){if(!leads.length)return"";const open=leads.filter(l=>!l.done),shown=open.concat(leads.filter(l=>l.done).slice(0,3));
+  const ago=t=>{const m=Math.round((Date.now()-Date.parse(t))/6e4);return m<60?m+" min ago":m<1440?Math.round(m/60)+" h ago":Math.round(m/1440)+" d ago"};
+  return `<div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Requests${open.length?` <span class="count num">${open.length}</span>`:""}</h2><p class="lede">${isAdmin?"Viewing and information requests from clients and external agents for every home.":"Clients and external agents who asked about your homes. Contact them to book the viewing."}</p></div></div>
+    <div class="stack">${shown.map(l=>{const o=OFFERS.find(x=>x.id===l.offer_id),ph=String(l.phone||"").replace(/[^0-9]/g,""),who=l.name||l.email||"Someone";
+      const msg=`Hello ${String(who).split(" ")[0]}, this is ${(meInfo&&meInfo.name)||"Orla Properties"} from Orla Properties about the ${o?bedsWord(o.beds).toLowerCase()+" in "+BLD[o.b]:"home"} you asked about.`;
+      return `<div class="lead${l.done?" done":""}"><div class="lw"><span class="lk ${l.kind}">${l.kind==="viewing"?"Viewing":"Full details"}</span><b>${esc(who)}</b><span>${l.role==="broker"?"External agent"+(l.company?" · "+esc(l.company):""):"Client"} · ${esc(l.email||"")}${l.phone?" · "+esc(l.phone):""}</span>
+        <span>${o?`<button class="lnk" data-id="${esc(o.id)}">${esc(BLD[o.b]+" · "+TYPE[o.beds]+" · "+o.title)}</button>`:esc(l.title||l.offer_id)}${isAdmin&&AGENTS[l.agent_key]?" · for "+esc(AGENTS[l.agent_key].name.split(" ")[0]):""} · ${ago(l.at)}</span></div>
+        <div class="actions">${ph?`<a class="btn sm primary" href="${esc(waTo(ph,msg))}" target="_blank" rel="noopener">${ic("chat")}WhatsApp</a><a class="btn sm" href="tel:+${esc(ph)}">${ic("phone")}Call</a>`:l.email?`<a class="btn sm" href="mailto:${esc(l.email)}">Email</a>`:""}<button class="btn sm" data-lead-done="${l.id}" data-v="${l.done?0:1}">${l.done?"Reopen":"Done"}</button></div></div>`}).join("")}</div></div>`}
+$("#dash").addEventListener("click",async e=>{const b=e.target.closest("[data-lead-done]");if(!b)return;b.disabled=true;try{await api("team/leads/done",{id:+b.dataset.leadDone,done:b.dataset.v==="1"});await loadLeads();renderDash()}catch(x){toast(x.message);b.disabled=false}});
 
 /* ---------------- Start-up ---------------- */
 function startApp(){if(!SRV)setRole(isAdmin?"admin":"team");updateAcct();const ch=$("#userchip");

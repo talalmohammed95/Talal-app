@@ -83,6 +83,14 @@ const ROLE_NAME = { admin: "Admin", agent: "Orla team agent", broker: "External 
 const isTeam = u => u && (u.role === "admin" || u.role === "agent");
 const TEAM_ONLY = ["unit", "owner", "ownerPhone", "ownerNote", "notes", "check", "internal"];
 const OWNER = ["owner", "ownerPhone", "ownerNote"];
+// Clients and external agents see a floor band (low, mid, high), not the exact floor: they ask the agent for it.
+const band = n => n <= 10 ? "Low floor" : n <= 25 ? "Mid floor" : "High floor";
+const FLOOR_RE = /\b(\d{1,2})(?:st|nd|rd|th)[\s-]*floor\b/gi;
+function hideFloor(d) {
+  if (typeof d.floor === "string") { const m = d.floor.match(/\d{1,2}/); if (m && !/low|mid|high|podium/i.test(d.floor)) d.floor = band(+m[0]); else if (/tower/i.test(d.floor)) d.floor = d.floor.replace(/\s*·.*$/, ""); }
+  for (const k of ["title", "hl"]) if (typeof d[k] === "string") { d[k] = d[k].replace(FLOOR_RE, (_, n) => band(+n).toLowerCase()); d[k] = d[k].charAt(0).toUpperCase() + d[k].slice(1); }
+  return d;
+}
 function forRole(data, user) {
   if (user && user.role === "admin") return data;
   if (isTeam(user)) {
@@ -98,10 +106,11 @@ function forRole(data, user) {
   const d = { ...data };
   for (const k of TEAM_ONLY) delete d[k];
   if (typeof d.title === "string") d.title = d.title.replace(/\bunit\s*[#no.]*\s*\d+[a-z]?\b\s*[·,-]?\s*/gi, "").trim();
-  return d;
+  delete d.plan; d.planOnRequest = true;
+  return hideFloor(d);
 }
 const PUBLIC_FIELDS = ["b", "beds", "deal", "title", "price", "rent", "size", "floor", "view", "furn", "baths", "status", "avail", "hl", "photos", "plan", "balcony", "cheques"];
-const forPublic = data => Object.fromEntries(PUBLIC_FIELDS.filter(k => data[k] !== undefined).map(k => [k, data[k]]));
+const forPublic = data => hideFloor(Object.fromEntries(PUBLIC_FIELDS.filter(k => data[k] !== undefined && k !== "plan").map(k => [k, data[k]])));
 
 async function currentUser(req) {
   const token = cookies(req)[COOKIE];
@@ -254,6 +263,7 @@ const routes = {
     if (!name) fail(400, "Enter your full name.", "no_name");
     await limit("register:" + c.ip, 10, 3600);
     const isAdmin = !!ADMIN_EMAIL && email === ADMIN_EMAIL;
+    if (!isAdmin && role !== "agent" && phone.replace(/[^0-9]/g, "").length < 7) fail(400, "Enter your mobile number so our agents can arrange viewings.", "no_phone");
     const emailOn = mailEnabled();
     let user;
     try {
@@ -432,6 +442,36 @@ const routes = {
     if (goal.platforms.every(p => data.online[p.k])) data.onlineAt = o.data.onlineAt || new Date().toISOString(); else delete data.onlineAt;
     await q("update offers set data = $2, updated_at = now() where id = $1", [id, data]);
     return { ok: true, online: data.online };
+  },
+
+  // A client or external agent asks to view a home or for its full details; the listing agent sees it.
+  "POST data/lead": async c => {
+    requireActive(c);
+    const kind = c.body.kind === "details" ? "details" : "viewing", id = str(c.body.offerId, 64);
+    await limit("lead:" + c.user.id, 40, 3600);
+    const { rows: [o] } = await q("select data from offers where id = $1", [id]);
+    if (!o) fail(404, "Home not found.");
+    const { rows: [recent] } = await q("select id from leads where user_id = $1 and offer_id = $2 and kind = $3 and at > now() - interval '1 hour'", [c.user.id, id, kind]);
+    if (!recent) await q("insert into leads (user_id, offer_id, agent_key, kind, title) values ($1, $2, $3, $4, $5)",
+      [c.user.id, id, str(o.data.agent, 40), kind, str(o.data.title, 200)]);
+    return { ok: true };
+  },
+
+  // Requests for the agent's own homes (the admin sees all), with the person's contact details.
+  "GET team/leads": async c => {
+    requireTeam(c);
+    const admin = c.user.role === "admin";
+    const { rows } = await q(
+      `select l.id, l.at, l.offer_id, l.agent_key, l.kind, l.title, l.done, u.name, u.email, u.phone, u.role, u.company
+       from leads l left join users u on u.id = l.user_id
+       ${admin ? "" : "where l.agent_key = $1"} order by l.done, l.at desc limit 200`, admin ? [] : [c.user.agent_key || "-"]);
+    return { leads: rows };
+  },
+
+  "POST team/leads/done": async c => {
+    requireTeam(c);
+    await q("update leads set done = $3 where id = $1 and ($2 or agent_key = $4)", [Number(c.body.id) || 0, c.user.role === "admin", !!c.body.done, c.user.agent_key || "-"]);
+    return { ok: true };
   },
 
   "POST data/listings/delete": async c => {
