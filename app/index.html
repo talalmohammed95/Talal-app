@@ -656,6 +656,16 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
 .thero .btn.primary{background:#F59A3E;border-color:#F59A3E;color:#1C1A18}
 .thero .btn.ghost{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);color:#fff}
 .thero .btn.ghost:hover{background:rgba(255,255,255,.24)}
+.topstar{color:#F5B83D;margin-left:6px;font-size:1.05em;text-shadow:0 0 12px rgba(245,184,61,.55);display:inline-block;animation:twinkle 2.6s ease-in-out infinite}
+@keyframes twinkle{50%{transform:scale(1.18) rotate(8deg)}}
+@media (prefers-reduced-motion:reduce){.topstar{animation:none}}
+.thero.champ{box-shadow:0 0 0 2px #F5B83D,0 18px 50px rgba(245,184,61,.25)}
+.th-top{margin:-8px 0 16px;font-size:14px;color:rgba(255,255,255,.88)}.th-top .topstar{margin:0 4px 0 0}
+.lhead{display:flex;justify-content:space-between;align-items:center;padding:12px 4px 2px;font:800 12px var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--accent-ink)}
+.lhead b{font-size:12px;color:var(--muted);background:var(--sunk);border-radius:999px;padding:2px 8px}
+.lhead:first-child{padding-top:2px}
+.acct{position:relative}.acct.top::after{content:"★";position:absolute;left:24px;top:-4px;width:20px;height:20px;border-radius:50%;background:#1C1A18;color:#F5B83D;font-size:12px;line-height:20px;text-align:center;box-shadow:0 0 0 2px var(--surface)}
+.toast{width:max-content;text-align:center}@media (max-width:900px){.toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))!important;max-width:calc(100vw - 32px)}}
 </style>
 <script src="/config.js"></script>
 </head>
@@ -1182,15 +1192,20 @@ function filtered(){
   const pk=o=>state.deal==="rent"?(o.rent??Infinity):keyPrice(o);
   const S={"price-asc":(a,b)=>pk(a)-pk(b),"price-desc":(a,b)=>pk(b)-pk(a),"size-desc":(a,b)=>(b.size||0)-(a.size||0),"bld":(a,b)=>a.b-b.b||a.beds-b.beds,
     "psf-asc":(a,b)=>((a.x.psf||a.x.rpsf)??Infinity)-((b.x.psf||b.x.rpsf)??Infinity),"yield-desc":(a,b)=>(b.x.gy??-1)-(a.x.gy??-1),"value":(a,b)=>(a.x.ref??9)-(b.x.ref??9),"newest":(a,b)=>(Date.parse(b.x.listed||0)||0)-(Date.parse(a.x.listed||0)||0),"dom-desc":(a,b)=>(b.x.dom??-1)-(a.x.dom??-1)};
-  return l.sort(S[state.sort]||S["price-asc"]);
+  l.sort(S[state.sort]||S["price-asc"]);
+  if(isTeam()){const g=offerGroup;return l.map((o,i)=>[o,i]).sort((a,b)=>g(a[0])-g(b[0])||a[1]-b[1]).map(x=>x[0])}
+  return l;
 }
+// For the team: 0 = my units, 1 = the rest of the team's units, 2 = other offers.
+function offerGroup(o){const k=myKey();if((o.mine&&o.own)||(k&&o.agent===k&&(o.teamUnit||o.fromListing)))return 0;if(o.teamUnit||o.fromListing||o.mine)return 1;return 2}
 function renderList(){
   renderChips();saveFilters();
   const l=filtered();
   if(!l.find(o=>o.id===state.sel))state.sel=l[0]?.id??null;
   const sale=l.filter(o=>o.deal!=="rent").length,rent=l.filter(o=>o.deal!=="sale").length;
   $("#summary").textContent=`${l.length} offers · ${sale} for sale · ${rent} for rent`;
-  $("#list").innerHTML=l.length?l.map(o=>cardHTML(o,o.id===state.sel)).join(""):(all().length?'<div class="empty">No offers match these filters.</div>':'<div class="empty">No offers yet. Admins add them in the Admin tab.</div>');
+  const GH=["Your units","Team units","Other offers"],cnt=[0,1,2].map(g=>isTeam()?l.filter(o=>offerGroup(o)===g).length:0);let last=-1;
+  $("#list").innerHTML=l.length?l.map(o=>{let h="";if(isTeam()){const g=offerGroup(o);if(g!==last){last=g;h=`<div class="lhead"><span>${GH[g]}</span><b class="num">${cnt[g]}</b></div>`}}return h+cardHTML(o,o.id===state.sel)}).join(""):(all().length?'<div class="empty">No offers match these filters.</div>':'<div class="empty">No offers yet. Admins add them in the Admin tab.</div>');
   $("#cnt-offers").textContent=all().length;
   renderDetail();
 }
@@ -1276,7 +1291,7 @@ function renderDetail(){
         ${o.deal!=="rent"?`<div class="field"><label for="e-price">Sale price (AED)</label><input id="e-price" inputmode="numeric" value="${fmt(o.price)}"></div>`:""}
         ${o.deal!=="sale"?`<div class="field"><label for="e-rent">Rent (AED / yr)</label><input id="e-rent" inputmode="numeric" value="${fmt(o.rent)}"></div>`:""}
         <div class="wide actions"><button class="btn primary" id="e-save">Save for everyone</button><button class="btn" id="e-full">Edit all details</button></div></div></details>`:""}
-      <div class="agent"><div class="who"><img class="aph" src="${esc(agentImg(o))}" alt=""><div><b>${esc(a.name)}</b><span>Orla Properties L.L.C · BRN 41837</span></div></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="phone num">${esc(a.phone)}</span>${isTeam()?"":`<a class="btn primary" href="https://wa.me/${esc(String(a.phone).replace(/[^0-9]/g,""))}?text=${encodeURIComponent("Hello, I'm interested in the "+bedsWord(o.beds).toLowerCase()+" in "+BLD[o.b]+" ("+dealWord(o).toLowerCase()+", AED "+(o.deal==="rent"?fmt(o.rent)+" a year":fmt(o.price))+"). Is it still available?")}" target="_blank" rel="noopener">${ic("chat")}Ask about this home</a>`}<button class="btn" id="d-phone">Copy number</button></div></div>
+      <div class="agent"><div class="who"><img class="aph" src="${esc(agentImg(o))}" alt=""><div><b>${esc(a.name)}${isTeam()?topStar(o.agent):""}</b><span>Orla Properties L.L.C · BRN 41837</span></div></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="phone num">${esc(a.phone)}</span>${isTeam()?"":`<a class="btn primary" href="https://wa.me/${esc(String(a.phone).replace(/[^0-9]/g,""))}?text=${encodeURIComponent("Hello, I'm interested in the "+bedsWord(o.beds).toLowerCase()+" in "+BLD[o.b]+" ("+dealWord(o).toLowerCase()+", AED "+(o.deal==="rent"?fmt(o.rent)+" a year":fmt(o.price))+"). Is it still available?")}" target="_blank" rel="noopener">${ic("chat")}Ask about this home</a>`}<button class="btn" id="d-phone">Copy number</button></div></div>
       <p class="src">Source: ${esc(o.src)}. Market: DLD-registered deals, ${esc(MKT.asOf)}. Drive times approx.: Dubai Mall 7 min · Business Bay Metro 7 min · DIFC 12 min · DXB 16 min.</p>
     </div></article>`;
   fillCharts(el);
@@ -1392,12 +1407,20 @@ const isDue=c=>c.follow&&c.follow<=today()&&c.status!=="Closed"&&c.status!=="Los
 function renderDash(){if(!isTeam()){renderShowroom();return}clearInterval(heroT);renderTeamDash();
   const myl=renderMyListings();if(myl){const r=$("#dash").children[0];if(r)r.insertAdjacentHTML("afterend",myl);else $("#dash").insertAdjacentHTML("afterbegin",myl)}
   $("#dash").insertAdjacentHTML("afterbegin",teamHero())}
+// The top achiever: first in the team ranking (online, then units), once they have a unit.
+function topAgent(){if(!perf)return null;const a=[...perf.agents].sort((x,y)=>y.online-x.online||y.listings-x.listings)[0];return a&&a.listings?a:null}
+const topStar=k=>{const t=topAgent();return t&&t.key===k?'<span class="topstar" title="Top achiever">★</span>':""};
+function welcomeTop(){const t=topAgent();if(!t||t.key!==myKey())return;try{if(sessionStorage.getItem("orla.topwelcome"))return;sessionStorage.setItem("orla.topwelcome","1")}catch(e){}
+  setTimeout(()=>toast("★ You're #1 on the team, "+t.name.split(" ")[0]+"!"),900)}
 function teamHero(){const h=new Date().getHours(),first=((meInfo&&meInfo.name)||"").split(" ")[0],k=myKey();
   const me=perf&&perf.agents.find(a=>a.key===k),g=perf?perf.goal:goalOf(),ag=perf?[...perf.agents].sort((a,b)=>b.online-a.online||b.listings-a.listings):[],rank=me?ag.indexOf(me)+1:null;
   const days=Math.max(0,Math.ceil((Date.parse(g.deadline+"T23:59:59")-Date.now())/864e5)),units=me?me.listings:OFFERS.filter(o=>k&&o.agent===k).length+mine.length;
   const stat=(v,l)=>`<div><b class="num">${v}</b><span>${l}</span></div>`;
-  return `<section class="thero" style="--rb:url('${imgSrc("p1-promenade-night")}')"><div class="th-in">
-    <p class="kick">Good ${h<12?"morning":h<18?"afternoon":"evening"}${first?", "+esc(first):""}</p><h2>Here's your day at the Peninsula.</h2>
+  const top=topAgent(),isTop=top&&top.key===k;
+  return `<section class="thero${isTop?" champ":""}" style="--rb:url('${imgSrc("p1-promenade-night")}')"><div class="th-in">
+    <p class="kick">Good ${h<12?"morning":h<18?"afternoon":"evening"}${first?", "+esc(first):""}${isTop?' <span class="topstar">★</span>':""}</p>
+    <h2>${isTop?"You're the team's top achiever. Well done!":"Here's your day at the Peninsula."}</h2>
+    ${top&&!isTop?`<p class="th-top"><span class="topstar">★</span> Top achiever: <b>${esc(top.name.split(" ")[0])}</b> with ${top.listings} unit${top.listings===1?"":"s"}${top.online?" · "+top.online+" online":""}</p>`:""}
     <div class="th-stats">${stat(units,"your units")}${stat((me?me.online:0)+"<small>/"+g.target+"</small>","online, team goal")}${rank?stat("#"+rank,"team ranking"):""}${stat(days,"days left")}</div>
     <div class="th-cta"><button class="btn primary big" data-find>${ic("star")}New client request</button><button class="btn big ghost" data-goto="mine">${ic("list")}Add a unit</button><button class="btn big ghost" data-goto-team>${ic("target")}Team performance</button></div></div></section>`}
 function renderMyListings(){const k=myKey();const l=OFFERS.filter(o=>k&&AGENTS[k]&&o.agent===k&&(o.teamUnit||o.fromListing)).concat(SRV?mine.map(mineToOffer):[]).map(enrich).sort((a,b)=>a.b-b.b||a.beds-b.beds);if(!l.length)return"";
@@ -1841,7 +1864,7 @@ const PAGES={dash:["home","Dashboard",""],offers:["building","Offers","Browse, f
 function setPageHead(v){const p=PAGES[v]||PAGES.dash,h=new Date().getHours(),first=((meInfo&&meInfo.name)||"").split(" ")[0];
   const sub=v==="dash"?(first?`Good ${h<12?"morning":h<18?"afternoon":"evening"}, ${first}. Here's your portfolio today.`:"Your portfolio at a glance"):p[2];
   $("#pagehead").innerHTML=`<div class="phi">${ic(p[0])}</div><div><h1>${esc(p[1])}</h1><p>${esc(sub)}</p></div>`}
-function updateAcct(){const n=(meInfo&&meInfo.name)||(CLOUD?"Account":"Admin");$("#acct-name").textContent=n.split(" ")[0];
+function updateAcct(){const n=(meInfo&&meInfo.name)||(CLOUD?"Account":"Admin");const top=isTeam()&&topAgent()&&topAgent().key===myKey();$("#acct-name").textContent=n.split(" ")[0]+(top?" ★":"");$("#acct-btn").classList.toggle("top",!!top);
   $("#acct-img").src=(meInfo&&meInfo.avatarUrl)||initialsAvatar(n);$("#menu-site").hidden=CLOUD;$("#gate-back").hidden=CLOUD}
 function closeMenus(){$("#tmore-pop").hidden=true;$("#tmore-btn").setAttribute("aria-expanded","false");$("#acct-menu").hidden=true;$("#acct-btn").setAttribute("aria-expanded","false");$("#more-sheet").hidden=true}
 $("#tmore-btn").onclick=e=>{e.stopPropagation();const p=$("#tmore-pop"),open=p.hidden;closeMenus();p.hidden=!open;$("#tmore-btn").setAttribute("aria-expanded",String(open))};
@@ -2050,7 +2073,7 @@ async function loadAll(first){
       else if(owner&&owner!==uid){mine=[];clients=[];starred=new Set();persist()}
       else if(mine.length||clients.length||starred.size)persist();
       store.set("orla.localOwner",uid)}
-    migrateOvr();if(isTeam()){await loadListings();await loadPerf(true);if(!$("#view-team").hidden)renderTeam()}}
+    migrateOvr();if(isTeam()){await loadListings();await loadPerf(true);if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
   catch(e){if(e.status===401||e.status===403){location.reload();return}
     if(first){OFFERS=store.get("orla.cache.offers",[]);applySettings(store.get("orla.cache.settings",{}))}
     if(first||!loadAll.warned){loadAll.warned=true;toast("Offline: showing what's saved on this device")}}
@@ -2424,7 +2447,7 @@ const BLDLONG={1:"Peninsula One",2:"Peninsula Two",3:"Peninsula Three",4:"Penins
 const STATUS_LABEL={online:"Online",partly:"Partly online",off:"Off market",none:"Not listed yet"};
 function unitsByAgent(a,g,photo){const typ=b=>b==null?"–":b===0?"Studio":b+" Bed",units=[...a.units].sort((x,y)=>(x.b||0)-(y.b||0)||(x.beds||0)-(y.beds||0));
   const price=u=>[u.price?"AED "+fmt(u.price):"",u.rent?"AED "+fmt(u.rent)+" / yr":""].filter(Boolean).join(" · ")||"On request";
-  return `<div class="uagent"><div class="uhead"><img src="${esc(photo(a.key))}" alt=""><div><b>${esc(a.name)}</b><span>${a.phone?esc(a.phone)+" · ":""}${a.listings} unit${a.listings===1?"":"s"}</span></div></div>
+  return `<div class="uagent"><div class="uhead"><img src="${esc(photo(a.key))}" alt=""><div><b>${esc(a.name)}${topStar(a.key)}</b><span>${a.phone?esc(a.phone)+" · ":""}${a.listings} unit${a.listings===1?"":"s"}</span></div></div>
     <div class="tablewrap"><table class="utable"><tr><th>Building</th><th>Type</th><th class="c">Size</th><th>Floor</th><th>View</th><th>For</th><th class="r">Price</th><th>Status</th></tr>
     ${units.length?units.map(u=>`<tr><td>${esc(BLDLONG[u.b]||"–")}</td><td>${esc(typ(u.beds))}</td><td class="c num">${u.size?fmt(u.size)+" sq ft":"–"}</td><td>${esc(u.floor||"On request")}</td><td>${esc(u.view||"On request")}</td><td>${u.deal==="both"?"Sale or rent":u.deal==="rent"?"Rent":"Sale"}</td><td class="r num pr">${esc(price(u))}</td>
       <td><span class="ust ${u.status}">${esc(STATUS_LABEL[u.status])}</span>${u.status==="partly"?`<small class="src"> ${esc(u.on.map(k=>(g.platforms.find(p=>p.k===k)||{}).n).filter(Boolean).join(", "))}</small>`:""}</td></tr>`).join("")
@@ -2453,7 +2476,7 @@ async function renderTeam(){const el=$("#team");if(!SRV){el.innerHTML='<div clas
   <div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Ranking</h2><p class="lede">From ${esc(new Date(g.start).toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"short"}))} to today. Units for sale or rent count in both columns.</p></div>
     <div class="actions"><a class="btn primary" id="wk-wa" href="https://wa.me/?text=${encodeURIComponent(weeklyText())}" target="_blank" rel="noopener">${ic("chat")}Send weekly update</a><button class="btn" type="button" id="wk-copy">${ic("copy")}Copy</button></div></div>
     <div class="tablewrap"><table class="rank"><tr><th class="c">Rank</th><th>Agent</th><th class="c">Total units</th><th class="c">For sale</th><th class="c">For rent</th><th class="c">Online</th><th class="c">Off market</th><th class="c">Still to list online</th><th>Progress</th></tr>
-      ${ag.map((a,i)=>{const p=pace(a,g,now);return `<tr class="${a.key===mk?"me":""}"><td class="c rk">${i+1}</td><td><span class="who"><img src="${esc(photo(a.key))}" alt="">${esc(a.name)}</span></td><td class="c tot num">${a.listings}</td><td class="c num">${a.forSale}</td><td class="c num">${a.forRent}</td><td class="c num on">${a.online}</td><td class="c num">${a.offMarket}</td><td class="c num">${Math.max(0,g.target-a.online)}</td>
+      ${ag.map((a,i)=>{const p=pace(a,g,now);return `<tr class="${a.key===mk?"me":""}"><td class="c rk">${i+1}</td><td><span class="who"><img src="${esc(photo(a.key))}" alt="">${esc(a.name)}${topStar(a.key)}</span></td><td class="c tot num">${a.listings}</td><td class="c num">${a.forSale}</td><td class="c num">${a.forRent}</td><td class="c num on">${a.online}</td><td class="c num">${a.offMarket}</td><td class="c num">${Math.max(0,g.target-a.online)}</td>
         <td><div class="gprog" style="min-width:110px" title="${a.online} online, ${a.partly} on some platforms"><i class="on" style="width:${Math.min(100,a.online/g.target*100)}%"></i><i class="pt" style="width:${Math.min(100,a.partly/g.target*100)}%"></i></div><span class="stat ${p.status}" style="margin-top:6px;display:inline-block">${p.status==="done"?"Goal reached":p.status==="ok"?"On track":"Behind"}</span></td></tr>`}).join("")}
       <tr class="total"><td></td><td>Team total</td><td class="c num">${ag.reduce((x,a)=>x+a.listings,0)}</td><td class="c num">${ag.reduce((x,a)=>x+a.forSale,0)}</td><td class="c num">${ag.reduce((x,a)=>x+a.forRent,0)}</td><td class="c num">${tot}</td><td class="c num">${ag.reduce((x,a)=>x+a.offMarket,0)}</td><td class="c num">${Math.max(0,goalT-tot)}</td><td></td></tr></table></div></div>
   <div class="panel"><h2>Units by agent</h2><p class="lede">Every unit each of us has, with its floor. Unit numbers and owners stay with the listing agent.</p><div class="stack">${ag.map(a=>unitsByAgent(a,g,photo)).join("")}</div></div>
