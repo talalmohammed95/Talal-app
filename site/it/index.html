@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Peninsula · Business Bay</title>
+<link rel="alternate" hreflang="en" href="/"><link rel="alternate" hreflang="ru" href="/ru/"><link rel="alternate" hreflang="de" href="/de/"><link rel="alternate" hreflang="it" href="/it/"><link rel="alternate" hreflang="x-default" href="/">
+<meta name="description" content="The Peninsula, Business Bay: cinque residenze sul Dubai Canal, a sette minuti da Downtown Dubai. Case in vendita e in affitto con Orla Properties.">
+<meta name="theme-color" content="#1C1A18">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap">
+<script>try{var t=JSON.parse(localStorage.getItem("orla.theme")||'"auto"');if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}document.documentElement.classList.add("js")</script>
+<style>
+:root{--bg:#F6F3EE;--surface:#FFFFFF;--sunk:#EFEAE3;--fg:#1C1A18;--muted:#5F5850;--line:#E3DDD4;--accent:#F28C28;--accent-ink:#A8420E;--accent-soft:#FFEEDC;
+  --primary:#B8480E;--primary-hover:#9C3C0B;--on-primary:#fff;--ring:rgba(184,72,14,.32);--appbar:rgba(255,255,255,.82);
+  --sky1:#F7B98A;--sky2:#FFF1E3;--orb:#FF9F43;--far:#E2BFA0;--tower:#3A2E2A;--win:rgba(255,236,214,.38);--water1:#6FA9CF;--water2:#2E6A97;--wave:rgba(255,255,255,.55);--starop:0;--cloudop:.75;--hero-fg:#1C1A18;
+  --display:"Montserrat",system-ui,-apple-system,"Segoe UI",sans-serif;--body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#100E0D;--surface:#1A1816;--sunk:#24211E;--fg:#F3EFEA;--muted:#B3AA9F;--line:#302C28;--accent:#F59A3E;--accent-ink:#FFB26E;--accent-soft:#3A2614;
+  --primary:#F59A3E;--primary-hover:#FFB26E;--on-primary:#1C1A18;--ring:rgba(245,154,62,.38);--appbar:rgba(16,14,13,.8);
+  --sky1:#070B1C;--sky2:#2B1C3A;--orb:#F4EBD6;--far:#1C1830;--tower:#0D0B12;--win:#FFC56B;--water1:#121E38;--water2:#05080F;--wave:rgba(255,205,140,.35);--starop:1;--cloudop:0;--hero-fg:#F3EFEA;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#100E0D;--surface:#1A1816;--sunk:#24211E;--fg:#F3EFEA;--muted:#B3AA9F;--line:#302C28;--accent:#F59A3E;--accent-ink:#FFB26E;--accent-soft:#3A2614;
+  --primary:#F59A3E;--primary-hover:#FFB26E;--on-primary:#1C1A18;--ring:rgba(245,154,62,.38);--appbar:rgba(16,14,13,.8);
+  --sky1:#070B1C;--sky2:#2B1C3A;--orb:#F4EBD6;--far:#1C1830;--tower:#0D0B12;--win:#FFC56B;--water1:#121E38;--water2:#05080F;--wave:rgba(255,205,140,.35);--starop:1;--cloudop:0;--hero-fg:#F3EFEA;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 var(--body);-webkit-text-size-adjust:100%}
+html.theming *,html.theming *::before{transition:background-color .45s,color .45s,border-color .45s,fill .45s,stop-color .45s!important}
+a{color:inherit}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+/* top bar */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--surface)}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--appbar);-webkit-backdrop-filter:saturate(1.6) blur(14px);backdrop-filter:saturate(1.6) blur(14px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:68px}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--fg)}
+.logo .mark{width:46px;height:20px}.mark .st{fill:var(--accent)}
+.logo .wm{display:flex;flex-direction:column;line-height:1.05}.logo .wm b{font-family:var(--display);font-weight:800;font-size:20px}
+.logo .wm small{font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+.links{display:flex;gap:4px}.links a{text-decoration:none;font-weight:600;font-size:15px;color:var(--muted);padding:10px 12px;border-radius:10px}.links a:hover{color:var(--fg);background:var(--sunk)}
+.right{display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:10px 18px;border-radius:12px;font:600 15px var(--body);text-decoration:none;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer;transition:background-color .15s,transform .1s,box-shadow .15s}
+.btn:hover{background:var(--sunk)}.btn .ic{width:18px;height:18px}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--on-primary);box-shadow:0 6px 18px var(--ring)}.btn.primary:hover{background:var(--primary-hover)}
+.btn.big{min-height:54px;padding:12px 24px;font-size:16px;border-radius:14px}
+.btn:focus-visible,.iconbtn:focus-visible,.links a:focus-visible{outline:3px solid var(--ring);outline-offset:2px}
+.iconbtn{width:46px;height:46px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--fg);display:inline-flex;align-items:center;justify-content:center;position:relative;overflow:hidden;cursor:pointer}
+.tt .ic{position:absolute;transition:transform .55s cubic-bezier(.3,1.5,.5,1),opacity .3s}
+.tt .sun{color:#E8890C}.tt .moon{color:#9DB8F2;opacity:0;transform:rotate(-90deg) scale(.3)}
+:root[data-theme="dark"] .tt .sun{opacity:0;transform:rotate(90deg) scale(.3)}:root[data-theme="dark"] .tt .moon{opacity:1;transform:none}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tt .sun{opacity:0;transform:rotate(90deg) scale(.3)}:root:not([data-theme="light"]) .tt .moon{opacity:1;transform:none}}
+.burger{display:none}
+.mnav{display:none}
+@media (max-width:1180px){.links,.right .login,.right .getaccess{display:none}.burger{display:inline-flex}
+  .mnav:not([hidden]){display:flex;flex-direction:column;gap:6px;padding:12px 0 18px}
+  .mnav a.l{text-decoration:none;font-weight:600;font-size:17px;padding:12px 10px;border-radius:12px}.mnav a.l:hover{background:var(--sunk)}
+  .mnav .btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}}
+/* hero */
+.hero{position:relative;overflow:hidden;min-height:clamp(560px,86vh,800px);display:flex;align-items:center;color:#fff;background:#1C1A18}
+@media (max-width:700px){.hero{min-height:max(560px,88svh);align-items:flex-end}.hero .wrap{padding-bottom:36px}.shade{background:linear-gradient(0deg,rgba(12,10,9,.88) 0%,rgba(12,10,9,.5) 55%,rgba(12,10,9,.2) 100%)}}
+.scene{position:absolute;inset:0;width:100%;height:100%}
+.scene .stars{fill:#fff;opacity:var(--starop)}.scene .stars circle{animation:tw 3.6s ease-in-out infinite}
+@keyframes tw{50%{opacity:.25}}
+.scene .orb{fill:var(--orb)}.scene .halo{animation:breathe 6s ease-in-out infinite}@keyframes breathe{50%{opacity:.6}}
+.scene .clouds{fill:#fff;opacity:var(--cloudop)}.scene .c1{animation:drift 60s linear infinite}.scene .c2{animation:drift 85s linear infinite reverse}
+@keyframes drift{from{transform:translateX(-80px)}to{transform:translateX(160px)}}
+.scene .far{fill:var(--far)}.scene .tw{fill:var(--tower)}.scene .win{opacity:.9}
+.scene .refl{opacity:.28}
+.scene .waves{stroke:var(--wave);stroke-width:2;stroke-dasharray:22 34;fill:none;animation:waves 6s linear infinite}@keyframes waves{to{stroke-dashoffset:-112}}
+.scene .boat{fill:var(--hero-fg);opacity:.85;animation:boat 38s linear infinite}@keyframes boat{from{transform:translate(-80px,500px)}to{transform:translate(1500px,500px)}}
+.hero .wrap{position:relative;z-index:1;width:100%;padding-top:clamp(48px,9vh,96px)}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font:700 12.5px var(--display);letter-spacing:.18em;text-transform:uppercase;color:var(--accent-ink);background:var(--appbar);border:1px solid var(--line);padding:7px 12px;border-radius:999px}
+.hero h1{font-family:var(--display);font-weight:800;font-size:clamp(36px,6vw,68px);line-height:1.04;letter-spacing:-.02em;margin:18px 0 16px;max-width:13ch;text-wrap:balance}
+.hero h1 em{font-style:normal;color:var(--accent-ink)}
+.hero p.lead{font-size:clamp(17px,2vw,20px);max-width:44ch;margin:0 0 26px;color:#fff;opacity:.92}
+.cta{display:flex;gap:12px;flex-wrap:wrap}
+.hero .anim{animation:rise .9s cubic-bezier(.2,.8,.2,1) both}.hero .d1{animation-delay:.08s}.hero .d2{animation-delay:.16s}.hero .d3{animation-delay:.24s}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}}
+.slides{position:absolute;inset:0;z-index:0;background:#1C1A18}
+.slide{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.08);transition:opacity 1.8s ease,transform 8s ease-out}
+.slide.on{opacity:1;transform:scale(1)}
+.shade{position:absolute;inset:0;z-index:0;background:linear-gradient(90deg,rgba(12,10,9,.72) 0%,rgba(12,10,9,.35) 55%,rgba(12,10,9,.1) 100%),linear-gradient(0deg,rgba(12,10,9,.55),transparent 45%)}
+.hero .eyebrow{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3);color:#FFD3A3;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.hero h1 em{color:#FFC27A}
+.btn.glass{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.4);color:#fff;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}.btn.glass:hover{background:rgba(255,255,255,.24)}
+.hero .btn.primary{background:#F59A3E;border-color:#F59A3E;color:#1C1A18}
+.hgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px}
+.hcard{display:flex;flex-direction:column;border-radius:20px;overflow:hidden;background:var(--bg);border:1px solid var(--line);text-decoration:none;color:var(--fg);transition:transform .2s,box-shadow .2s}
+.hcard:hover{transform:translateY(-3px);box-shadow:0 16px 36px rgba(0,0,0,.14)}
+.hph{position:relative;aspect-ratio:16/10;overflow:hidden;background:var(--sunk)}.hph img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s}.hcard:hover .hph img{transform:scale(1.05)}
+.hph span{position:absolute;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px}
+.hph .d{left:10px;top:10px;background:rgba(255,255,255,.94);color:#1C1A18}.hph .d.rent{background:#DCEBFF;color:#123E7A}.hph .r{right:10px;top:10px;background:#1A7346;color:#fff}.hph .f{right:10px;bottom:10px;background:rgba(12,10,9,.75);color:#fff}
+.hb{padding:16px 18px 18px}.hb b{display:block;font:800 21px var(--display)}.hb h3{margin:2px 0;font:700 16px var(--display)}.hb p{margin:0;color:var(--muted);font-size:14px}
+.ggrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:220px;gap:14px}
+.gitem{margin:0;position:relative;border-radius:18px;overflow:hidden;background:var(--sunk)}.gitem.wide{grid-column:span 2}
+.gitem img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .7s}.gitem:hover img{transform:scale(1.05)}
+.gitem figcaption{position:absolute;left:0;right:0;bottom:0;padding:30px 14px 12px;color:#fff;font-weight:600;font-size:14px;background:linear-gradient(transparent,rgba(12,10,9,.75))}
+@media (max-width:900px){.ggrid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:170px}}
+@media (max-width:520px){.ggrid{grid-auto-rows:140px;gap:10px}}
+.bimg{width:150px;height:110px;border-radius:16px;overflow:hidden;position:relative;flex:none}.bimg img{width:100%;height:100%;object-fit:cover;display:block}
+.bimg span{position:absolute;left:8px;bottom:8px;font:800 14px var(--display);background:rgba(12,10,9,.72);color:#FFB26E;padding:3px 9px;border-radius:8px}
+.whogrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}@media (max-width:900px){.whogrid{grid-template-columns:minmax(0,1fr)}}
+.who{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:26px;display:flex;flex-direction:column;gap:6px}
+.who h3{font:800 20px var(--display);margin:0}.who p{margin:0 0 14px;color:var(--muted);flex:1}.who .btn{align-self:flex-start}
+.srch{font:800 18px var(--display);margin:30px 0 12px}
+.srcs{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}@media (max-width:860px){.srcs{grid-template-columns:minmax(0,1fr)}}
+.srcs li{display:flex;flex-direction:column;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:18px;font-size:14.5px}
+.srcs b{font:800 15.5px var(--display)}.srcs span{color:var(--muted)}.srcs a{color:var(--accent-ink);font-weight:600}
+.tcard{grid-column:1/-1;display:grid;grid-template-columns:120px minmax(0,1fr);gap:22px;align-items:center;border:1.5px solid #F5B83D;background:linear-gradient(135deg,var(--surface),var(--accent-soft));box-shadow:0 14px 40px rgba(245,184,61,.18)}
+.tcard[hidden]{display:none}.tcard img{width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid #F5B83D}.tcard > div{display:flex;flex-direction:column;gap:6px}
+@media (max-width:560px){.tcard{grid-template-columns:minmax(0,1fr);justify-items:center;text-align:center}.tcard .cta{justify-content:center}}
+.langs{display:flex;gap:2px;background:var(--sunk);border-radius:12px;padding:3px}.langs a{text-decoration:none;font:700 12.5px var(--display);letter-spacing:.04em;color:var(--muted);padding:8px 9px;border-radius:9px;min-width:36px;text-align:center}
+.langs a[aria-current="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.15)}.langs a:hover{color:var(--fg)}
+@media (max-width:1180px){.right .langs{display:none}.mnav .langs{align-self:flex-start;margin:4px 0}}@media (min-width:1181px){.mnav .langs{display:none}}
+.top .btn,.links a{white-space:nowrap}.logo .wm small{white-space:nowrap}
+/* sections */
+section.s{padding:clamp(56px,9vw,104px) 0}
+.kicker{font:700 12.5px var(--display);letter-spacing:.18em;text-transform:uppercase;color:var(--accent-ink);margin:0 0 10px}
+h2{font-family:var(--display);font-weight:800;font-size:clamp(28px,4vw,42px);line-height:1.1;letter-spacing:-.01em;margin:0 0 14px;text-wrap:balance;max-width:22ch}
+.sub{color:var(--muted);font-size:18px;max-width:60ch;margin:0 0 36px}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+@media (max-width:980px){.grid4{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:560px){.grid4{grid-template-columns:minmax(0,1fr)}}
+.feat,.place{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px}
+.fi{width:50px;height:50px;border-radius:14px;background:var(--accent-soft);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;margin-bottom:16px}.fi .ic{width:24px;height:24px}
+.feat h3{font:800 19px var(--display);margin:0 0 6px}.feat p{margin:0;color:var(--muted);font-size:15.5px}
+.alt{background:var(--surface);border-block:1px solid var(--line)}
+.blist{display:flex;flex-direction:column;gap:14px}
+.bcard{display:grid;grid-template-columns:150px minmax(0,1fr);gap:22px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:22px;padding:20px 24px}
+.bnum{width:96px;height:96px;border-radius:20px;background:linear-gradient(140deg,#2A221D,#4A2B15);display:flex;align-items:center;justify-content:center}
+.bnum span{font:800 34px var(--display);color:#FFB26E}
+.bhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}.bcard h3{font:800 22px var(--display);margin:0}
+.bfl{font-weight:700;font-size:13px;color:var(--accent-ink);background:var(--accent-soft);padding:3px 10px;border-radius:999px}
+.bcard p{margin:6px 0 10px;color:var(--muted)}
+.tags{display:flex;flex-wrap:wrap;gap:8px}.tags span{font-size:13.5px;padding:5px 12px;border-radius:999px;background:var(--sunk)}
+@media (max-width:560px){.bcard{grid-template-columns:minmax(0,1fr);padding:18px}.bimg{width:100%;height:170px}}
+.place b{display:block;font:800 clamp(30px,4vw,40px) var(--display);line-height:1.1;color:var(--fg)}.place>span{color:var(--muted);font-weight:600}
+.mgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}@media (max-width:860px){.mgrid{grid-template-columns:minmax(0,1fr)}}
+.mrow{background:var(--bg);border:1px solid var(--line);border-radius:20px;padding:24px}.mrow h3{font:800 20px var(--display);margin:0 0 14px}
+.mrow dl{margin:0;display:flex;flex-direction:column;gap:10px}.mrow dl div{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--line);padding-top:10px}
+.mrow dt{color:var(--muted)}.mrow dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums}
+.note{color:var(--muted);font-size:14px;margin-top:18px}
+.band{border-radius:28px;padding:clamp(28px,5vw,56px);background:radial-gradient(700px 400px at 90% 0%,rgba(242,140,40,.45),transparent 60%),linear-gradient(135deg,#1C1A18,#2E2018);color:#F6EFE7;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:28px;align-items:center}
+.band h2{color:#fff}.band p{color:#D9D0C5;margin:0}.band .btn{background:#fff;color:#1C1A18;border-color:#fff}.band .btn.primary{background:#F59A3E;border-color:#F59A3E;color:#1C1A18;box-shadow:none}
+.band .cta{justify-content:flex-end}@media (max-width:860px){.band{grid-template-columns:minmax(0,1fr)}.band .cta{justify-content:flex-start}}
+.contact{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}@media (max-width:760px){.contact{grid-template-columns:minmax(0,1fr)}}
+.ccard{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:8px}
+.ccard b{font:800 20px var(--display)}.ccard .ph{font:700 22px var(--display);font-variant-numeric:tabular-nums;user-select:all}
+footer{border-top:1px solid var(--line);padding:28px 0 calc(28px + env(safe-area-inset-bottom,0px));color:var(--muted);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center}
+.js .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.8,.2,1)}.js .reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.slide{transition:opacity .3s}.hero .anim{animation:none!important}.js .reveal{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}html.theming *{transition:none!important}.tt .ic{transition:none}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="bar">
+    <a class="logo" href="/" aria-label="Peninsula"><svg class="mark" viewBox="0 0 60 26" aria-hidden="true"><polygon class="st" points="6.00,14.80 7.11,17.47 9.99,17.70 7.80,19.58 8.47,22.40 6.00,20.89 3.53,22.40 4.20,19.58 2.01,17.70 4.89,17.47"/><polygon class="st" points="17.00,5.60 18.43,9.03 22.14,9.33 19.31,11.75 20.17,15.37 17.00,13.43 13.83,15.37 14.69,11.75 11.86,9.33 15.57,9.03"/><polygon class="st" points="30.00,0.40 31.75,4.60 36.28,4.96 32.82,7.92 33.88,12.34 30.00,9.97 26.12,12.34 27.18,7.92 23.72,4.96 28.25,4.60"/><polygon class="st" points="43.00,5.60 44.43,9.03 48.14,9.33 45.31,11.75 46.17,15.37 43.00,13.43 39.83,15.37 40.69,11.75 37.86,9.33 41.57,9.03"/><polygon class="st" points="54.00,14.80 55.11,17.47 57.99,17.70 55.80,19.58 56.47,22.40 54.00,20.89 51.53,22.40 52.20,19.58 50.01,17.70 52.89,17.47"/></svg><span class="wm"><b>Peninsula</b><small>Business Bay · Dubai</small></span></a>
+    <nav class="links" aria-label="Sito"><a href="#homes">Case</a><a href="#buildings">Edifici</a><a href="#gallery">Galleria</a><a href="#market">Mercato</a><a href="#contact">Contatti</a></nav>
+    <div class="right">
+      <nav class="langs" aria-label="Language"><a href="/" hreflang="en" lang="en" title="English">EN</a><a href="/ru/" hreflang="ru" lang="ru" title="Русский">RU</a><a href="/de/" hreflang="de" lang="de" title="Deutsch">DE</a><a href="/it/" hreflang="it" lang="it" title="Italiano" aria-current="true">IT</a></nav>
+      <button class="iconbtn tt" id="tt" aria-label="Passa tra tema chiaro e scuro"><svg class="ic sun" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg class="ic moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      <a class="btn login" href="/app/"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M15 7a4 4 0 1 1-3.5 6L4 20.5V17h3v-3h3l1.5-1.5A4 4 0 0 1 15 7zM17 9h.01"/></svg>Accedi</a>
+      <a class="btn primary getaccess" href="#join">Richiedi accesso</a>
+      <button class="iconbtn burger" id="burger" aria-label="Apri menu" aria-expanded="false" aria-controls="mnav"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    </div>
+  </div>
+  <nav class="mnav" id="mnav" hidden aria-label="Menu del sito">
+    <a class="l" href="#homes">Case</a><a class="l" href="#buildings">Edifici</a><a class="l" href="#gallery">Galleria</a><a class="l" href="#location">Posizione</a><a class="l" href="#market">Mercato</a><a class="l" href="#contact">Contatti</a>
+    <nav class="langs" aria-label="Language"><a href="/" hreflang="en" lang="en" title="English">EN</a><a href="/ru/" hreflang="ru" lang="ru" title="Русский">RU</a><a href="/de/" hreflang="de" lang="de" title="Deutsch">DE</a><a href="/it/" hreflang="it" lang="it" title="Italiano" aria-current="true">IT</a></nav>
+    <div class="btns"><a class="btn" href="/app/"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M15 7a4 4 0 1 1-3.5 6L4 20.5V17h3v-3h3l1.5-1.5A4 4 0 0 1 15 7zM17 9h.01"/></svg>Accedi</a><a class="btn primary" href="#join">Richiedi accesso</a></div>
+  </nav>
+</div></header>
+
+<main>
+<section class="hero">
+  <div class="slides" aria-hidden="true"><img class="slide on" src="/img/p3-canal-sunset.webp" alt="" fetchpriority="high"><img class="slide" src="/img/p1-promenade-night.webp" alt="" loading="lazy"><img class="slide" src="/img/p4-canal.webp" alt="" loading="lazy"><img class="slide" src="/img/p5-sunset.webp" alt="" loading="lazy"><img class="slide" src="/img/p3-skyline-night.webp" alt="" loading="lazy"></div><div class="shade"></div>
+  <div class="wrap">
+    <span class="eyebrow anim"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg>Business Bay · Dubai Canal</span>
+    <h1 class="anim d1">Vivere sull'acqua, <em>a sette minuti</em> da Downtown.</h1>
+    <p class="lead anim d2">The Peninsula è un complesso di cinque edifici di Select Group sul Dubai Canal, con piscine da resort, una passeggiata sul canale e il Burj Khalifa sul vostro skyline.</p>
+    <div class="cta anim d3"><a class="btn primary big" href="#homes"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16M15 9h3a2 2 0 0 1 2 2v10M3 21h18M8 7h3M8 11h3M8 15h3"/></svg>Vedi le case disponibili</a><a class="btn big glass" href="/app/?signup=1&as=client&find=1"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z"/></svg>Trova casa in 4 domande</a></div>
+  </div>
+</section>
+
+<section class="s" id="community"><div class="wrap">
+  <p class="kicker">La comunità</p>
+  <h2>Un quartiere costruito intorno all'acqua</h2>
+  <p class="sub">Tutto ciò che serve è lungo un'unica passeggiata: case, piscine, caffè, un centro commerciale e il taxi d'acqua, con Downtown Dubai dall'altra parte del canale.</p>
+  <div class="grid4"><div class="feat reveal"><div class="fi"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12c2 0 2-1.5 4-1.5S8 12 10 12s2-1.5 4-1.5S16 12 18 12s2-1.5 4-1.5M2 17c2 0 2-1.5 4-1.5S8 17 10 17s2-1.5 4-1.5S16 17 18 17s2-1.5 4-1.5M12 3v4"/></svg></div><h3>Vita sul canale</h3><p>Una passeggiata verde corre lungo il Dubai Canal, con caffè, ristoranti e parchi.</p></div><div class="feat reveal"><div class="fi"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M2 18c2 0 2-1.5 4-1.5S8 18 10 18s2-1.5 4-1.5S16 18 18 18s2-1.5 4-1.5M8 15V5a2 2 0 0 1 4 0M16 15V5a2 2 0 0 0-4 0M8 9h8"/></svg></div><h3>Servizi da resort</h3><p>Piscine, palestre, padel e tennis, spazi di co-working e una terrazza panoramica al 50° piano.</p></div><div class="feat reveal"><div class="fi"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l2 4h14l2-4zM12 3v10M12 3l6 8H12M6 13h12"/></svg></div><h3>Taxi d'acqua</h3><p>I taxi d'acqua RTA fermano al Peninsula e vi collegano al resto del canale.</p></div><div class="feat reveal"><div class="fi"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l1 14H5zM9 7a3 3 0 0 1 6 0"/></svg></div><h3>Centro commerciale</h3><p>Spesa e ristoranti sotto casa, senza prendere l'auto.</p></div></div>
+</div></section>
+
+<section class="s alt" id="homes" hidden><div class="wrap">
+  <p class="kicker">Disponibili ora</p>
+  <h2>Case in vendita e in affitto</h2>
+  <p class="sub">Una selezione di ciò che è disponibile oggi. Registratevi per vedere ogni casa con planimetrie, costi completi e dati di mercato.</p>
+  <div class="hgrid" id="hgrid"></div>
+  <div class="cta" style="margin-top:26px"><a class="btn primary big" href="/app/?signup=1&as=client"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M15 7a4 4 0 1 1-3.5 6L4 20.5V17h3v-3h3l1.5-1.5A4 4 0 0 1 15 7zM17 9h.01"/></svg>Tutte le case</a><a class="btn big" href="/app/?signup=1&as=client&find=1"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z"/></svg>Ricevi 3 proposte</a></div>
+</div></section>
+
+<section class="s" id="buildings"><div class="wrap">
+  <p class="kicker">Cinque residenze</p>
+  <h2>Da Peninsula One a Five</h2>
+  <p class="sub">Dai simplex affacciati sul canale ai piani alti con vista piena sul Burj Khalifa: ogni edificio ha il suo carattere e i suoi servizi.</p>
+  <div class="blist"><article class="bcard reveal"><div class="bimg"><img loading="lazy" src="/img/p1-waterfront-s.webp" alt="Peninsula One"><span>P1</span></div><div class="bbody"><div class="bhead"><h3>Peninsula One</h3><span class="bfl">Edificio basso</span></div><p>Residenze sulla passeggiata del canale, a pochi passi da caffè, parchi e taxi d'acqua RTA.</p><div class="tags"><span>Passeggiata sul canale</span><span>Case sul podio</span><span>Taxi d'acqua</span></div></div></article><article class="bcard reveal"><div class="bimg"><img loading="lazy" src="/img/p2-1bed-living-s.webp" alt="Peninsula Two"><span>P2</span></div><div class="bbody"><div class="bhead"><h3>Peninsula Two</h3><span class="bfl">36 piani</span></div><p>Una torre con vista sul Burj Khalifa, lo skyline di Downtown e il Dubai Canal, con il centro commerciale accanto.</p><div class="tags"><span>Piscina esterna</span><span>Palestra</span><span>Co-working</span><span>Ricarica auto elettriche</span></div></div></article><article class="bcard reveal"><div class="bimg"><img loading="lazy" src="/img/p3-canal-sunset-s.webp" alt="Peninsula Three"><span>P3</span></div><div class="bbody"><div class="bhead"><h3>Peninsula Three</h3><span class="bfl">49 piani</span></div><p>Una torre sull'acqua con vista su skyline, canale e Burj Khalifa e una terrazza panoramica al 50° piano.</p><div class="tags"><span>Piscina e piscina per bambini</span><span>Tennis e padel</span><span>Terrazza yoga</span><span>Co-working</span></div></div></article><article class="bcard reveal"><div class="bimg"><img loading="lazy" src="/img/p4-plaza-s.webp" alt="Peninsula Four"><span>P4</span></div><div class="bbody"><div class="bhead"><h3>Peninsula Four</h3><span class="bfl">2 × 52 piani</span></div><p>The Plaza: torri gemelle e loft sull'acqua nel cuore del complesso.</p><div class="tags"><span>Piscina resort</span><span>Palestra e sauna</span><span>Giardini barbecue</span><span>Ristoranti sull'acqua</span></div></div></article><article class="bcard reveal"><div class="bimg"><img loading="lazy" src="/img/p5-sunset-s.webp" alt="Peninsula Five"><span>P5</span></div><div class="bbody"><div class="bhead"><h3>Peninsula Five</h3><span class="bfl">36 piani</span></div><p>The Signature Collection: soffitti di 2,9 m, vista sull'acqua a 180° e visuale aperta sul Burj Khalifa.</p><div class="tags"><span>Finiture di pregio</span><span>Vista sull'acqua</span><span>Passeggiata sul canale</span></div></div></article></div>
+</div></section>
+
+<section class="s alt" id="gallery"><div class="wrap">
+  <p class="kicker">Galleria</p>
+  <h2>La vita al Peninsula</h2>
+  <p class="sub">Render del costruttore e foto delle case che offriamo.</p>
+  <div class="ggrid"><figure class="gitem reveal wide"><img loading="lazy" src="/img/p3-pooldeck-s.webp" alt="Piscina, Peninsula Three"><figcaption>Piscina, Peninsula Three</figcaption></figure><figure class="gitem reveal"><img loading="lazy" src="/img/p1-promenade-s.webp" alt="Caffè sulla passeggiata"><figcaption>Caffè sulla passeggiata</figcaption></figure><figure class="gitem reveal"><img loading="lazy" src="/img/p4-resort-pool-s.webp" alt="Piscina resort, Peninsula Four"><figcaption>Piscina resort, Peninsula Four</figcaption></figure><figure class="gitem reveal"><img loading="lazy" src="/img/p5-living-s.webp" alt="Soggiorno, Peninsula Five"><figcaption>Soggiorno, Peninsula Five</figcaption></figure><figure class="gitem reveal wide"><img loading="lazy" src="/img/p3-aerial-s.webp" alt="Il Peninsula dall&#x27;alto"><figcaption>Il Peninsula dall'alto</figcaption></figure><figure class="gitem reveal"><img loading="lazy" src="/img/p4-1bed-view-s.webp" alt="La vista da una casa al Peninsula Four"><figcaption>La vista da una casa al Peninsula Four</figcaption></figure></div>
+</div></section>
+
+<section class="s" id="location"><div class="wrap">
+  <p class="kicker">Posizione</p>
+  <h2>Vicino a tutto ciò che conta</h2>
+  <p class="sub">Tempi di guida indicativi dal Peninsula.</p>
+  <div class="grid4"><div class="place reveal"><div class="fi"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg></div><b><span class="count" data-n="7">7</span> min</b><span>Dubai Mall e Burj Khalifa</span></div><div class="place reveal"><div class="fi"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12a2 2 0 0 1 2 2v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V5a2 2 0 0 1 2-2zM4 11h16M8 15h.01M16 15h.01M7 21l2-3M17 21l-2-3"/></svg></div><b><span class="count" data-n="7">7</span> min</b><span>Metro Business Bay</span></div><div class="place reveal"><div class="fi"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18v13H3zM8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg></div><b><span class="count" data-n="12">12</span> min</b><span>DIFC</span></div><div class="place reveal"><div class="fi"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></div><b><span class="count" data-n="16">16</span> min</b><span>Aeroporto DXB</span></div></div>
+</div></section>
+
+<section class="s alt" id="market"><div class="wrap">
+  <p class="kicker">Il mercato in breve</p>
+  <h2>Prezzi di vendita e affitto al Peninsula Three</h2>
+  <p class="sub">Medie delle compravendite registrate al DLD: prezzi reali, non prezzi richiesti.</p>
+  <div class="mgrid"><div class="mrow reveal"><h3>Monolocale</h3><dl><div><dt>Vendita media</dt><dd>AED 1.17M</dd></div><div><dt>Affitto medio</dt><dd>AED 80k / anno</dd></div><div><dt>Rendimento lordo</dt><dd>6.9%</dd></div></dl></div><div class="mrow reveal"><h3>1 camera</h3><dl><div><dt>Vendita media</dt><dd>AED 1.89M</dd></div><div><dt>Affitto medio</dt><dd>AED 114k / anno</dd></div><div><dt>Rendimento lordo</dt><dd>6.0%</dd></div></dl></div><div class="mrow reveal"><h3>2 camere</h3><dl><div><dt>Vendita media</dt><dd>AED 2.53M</dd></div><div><dt>Affitto medio</dt><dd>AED 149k / anno</dd></div><div><dt>Rendimento lordo</dt><dd>5.9%</dd></div></dl></div></div>
+  <p class="note">Medie delle compravendite registrate al DLD al Peninsula Three. Rendimento lordo = affitto medio ÷ prezzo medio di vendita, prima delle spese condominiali.</p>
+  <h3 class="srch">Fonti</h3><ul class="srcs"><li><b>Dubai Land Department (DLD)</b><span>Vendite e affitti registrati al Peninsula, ago.–nov. 2026: contratti conclusi, non prezzi richiesti.</span><a href="https://dubailand.gov.ae/en/open-data/real-estate-data/" target="_blank" rel="noopener">dubailand.gov.ae</a></li><li><b>Bayut e Property Finder</b><span>Prezzi richiesti delle case in vendita e in affitto al Peninsula, verificati il 22 nov. 2026.</span><a href="https://www.bayut.com" target="_blank" rel="noopener">bayut.com · propertyfinder.ae</a></li><li><b>Select Group</b><span>Dati degli edifici, planimetrie e render dalle brochure del costruttore. I render sono a scopo illustrativo.</span><a href="https://www.select-group.ae" target="_blank" rel="noopener">select-group.ae</a></li></ul>
+</div></section>
+
+<section class="s" id="join"><div class="wrap">
+  <p class="kicker">Richiedi accesso</p>
+  <h2>Chi siete?</h2>
+  <p class="sub">Scegliete l'account adatto. Orla Properties approva ogni account.</p>
+  <div class="whogrid"><div class="who reveal"><div class="fi"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></div><h3>Comprare o affittare</h3><p>Guardate ogni casa disponibile con foto, planimetrie e costi completi, oppure rispondete a quattro domande e ricevete tre proposte.</p><a class="btn primary" href="/app/?signup=1&as=client">Registrati come cliente<svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a></div><div class="who reveal"><div class="fi"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18v13H3zM8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg></div><h3>Agenti di altre agenzie</h3><p>Condividete le case del Peninsula con i vostri clienti: foto, planimetrie, prezzi e dati di mercato. I numeri degli appartamenti si condividono alla prenotazione della visita.</p><a class="btn" href="/app/?signup=1&as=broker">Registrati come agente<svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a></div><div class="who reveal"><div class="fi"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg></div><h3>Team Orla Properties</h3><p>L'area di lavoro completa: tutte le offerte, clienti, analisi, report e presentazioni.</p><a class="btn" href="/app/?signup=1&as=team">Registrazione team<svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a></div></div>
+</div></section>
+
+<section class="s" style="padding-top:0"><div class="wrap">
+  <div class="band reveal">
+    <div><p class="kicker" style="color:#FFB26E">Per acquirenti, inquilini e agenti</p><h2>Ogni casa disponibile, con prezzi e analisi</h2><p>Accedete per vedere le offerte attuali in vendita e in affitto, confrontarle con il mercato e condividerle con i clienti.</p></div>
+    <div class="cta"><a class="btn primary big" href="/app/"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M15 7a4 4 0 1 1-3.5 6L4 20.5V17h3v-3h3l1.5-1.5A4 4 0 0 1 15 7zM17 9h.01"/></svg>Accedi</a><a class="btn big" href="#join">Richiedi accesso</a></div>
+  </div>
+</div></section>
+
+<section class="s alt" id="contact"><div class="wrap">
+  <p class="kicker">Contatti</p>
+  <h2>Parlate con Orla Properties</h2>
+  <p class="sub">Prenotate una visita o chiedete di qualsiasi casa al Peninsula.</p>
+  <div class="contact">
+    <div class="ccard tcard" id="topcard" hidden><img id="tc-img" alt=""><div><p class="kicker" style="margin:0 0 4px">★ Miglior agente del mese</p><b id="tc-name"></b><span id="tc-text"></span><span class="ph" id="tc-ph"></span>
+      <div class="cta" style="margin-top:8px"><a class="btn primary" id="tc-wa" target="_blank" rel="noopener"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.4A8.5 8.5 0 1 1 21 12z"/></svg>WhatsApp</a><a class="btn" id="tc-call"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>Chiama</a></div></div></div>
+    <div class="ccard reveal"><b>Talal Al Deraawi</b><span>Orla Properties L.L.C · Agente autorizzato · BRN 41837</span><span class="ph">+971 50 120 9933</span>
+      <div class="cta" style="margin-top:8px"><a class="btn primary" href="https://wa.me/971501209933" target="_blank" rel="noopener"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.4A8.5 8.5 0 1 1 21 12z"/></svg>WhatsApp</a><a class="btn" href="tel:+971501209933"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>Chiama</a></div></div>
+    <div class="ccard reveal"><b>The Peninsula</b><span>Business Bay, Dubai Canal, Dubai</span><span>Peninsula One, Two, Three, Four e Five di Select Group.</span>
+      <div class="cta" style="margin-top:8px"><a class="btn" href="/app/"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16M15 9h3a2 2 0 0 1 2 2v10M3 21h18M8 7h3M8 11h3M8 15h3"/></svg>Vedi le offerte</a></div></div>
+  </div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><span>© 2026 Orla Properties L.L.C · BRN 41837</span><span>Dati di mercato: compravendite registrate al DLD, ago.–nov. 2026. Tempi di guida indicativi.</span></div></footer>
+
+<script>
+(function(){
+  var root=document.documentElement;
+  function dark(){var t=root.getAttribute("data-theme");return t?t==="dark":matchMedia("(prefers-color-scheme: dark)").matches}
+  document.getElementById("tt").addEventListener("click",function(){var next=dark()?"light":"dark";root.classList.add("theming");root.setAttribute("data-theme",next);
+    try{localStorage.setItem("orla.theme",JSON.stringify(next))}catch(e){}setTimeout(function(){root.classList.remove("theming")},500)});
+  var b=document.getElementById("burger"),m=document.getElementById("mnav");
+  b.addEventListener("click",function(){var open=m.hidden;m.hidden=!open;b.setAttribute("aria-expanded",String(open))});
+  m.addEventListener("click",function(e){if(e.target.closest("a")){m.hidden=true;b.setAttribute("aria-expanded","false")}});
+  var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var sl=document.querySelectorAll(".slide"),k=0;if(sl.length>1&&!reduce)setInterval(function(){if(document.hidden)return;sl[k].classList.remove("on");k=(k+1)%sl.length;sl[k].classList.add("on")},6500);
+  var M={"offer":{"p3-studio-410":"p3-studio","p3-studio-425-sale":"p3-canal-sunset","p3-studio-f6":"p3-kitchen","p3-studio-69":"p3-studio","p3-studio-33":"p3-pooldeck","p3-1bed-674":"p3-living","p3-1bed-685-sale":"p3-skyline-night","p3-1bed-685-rent":"p3-bedroom","p3-2bed-945":"p3-aerial","p3-2bed-1011":"p3-living2","p3-2bed-925-rent":"p3-living2","p2-1bed-688":"p2-1bed-living","p2-studio-80":"p1-promenade","p4-1bed-553":"p4-kitchen","p4-1bed-861":"p4-1bed-view","p4-studio-100":"p4-studio","p4-2bed-1453":"p4-living","p5-2bed-1307":"p5-living","p5-studio-120":"p5-sunset","p1-3bed-maid":"p1-waterfront"},"plan":["p3-1bed-674","p2-1bed-688"],"real":["p2-1bed-688","p4-1bed-861"],"bld":{"1":"p1-waterfront","2":"p1-promenade","3":"p3-canal-sunset","4":"p4-plaza","5":"p5-sunset"}},T=["Monolocale","1 camera","2 camere","3 camere"],N=["","One","Two","Three","Four","Five"];
+  function sh(n){return n>=1e6?(n/1e6).toFixed(2).replace(/\.?0+$/,"")+"M":Math.round(n/1e3)+"k"}
+  function e(x){return String(x==null?"":x).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+  fetch("/api/public/top").then(function(r){return r.ok?r.json():null}).then(function(d){var t=d&&d.top;if(!t||!t.phone)return;var f=t.name.split(" ")[0],ph=t.phone.replace(/[^0-9]/g,"");
+    var im=document.getElementById("tc-img");im.src="/img/agent-"+t.key+".webp";im.onerror=function(){im.onerror=null;im.src="/icon-192.png"};
+    document.getElementById("tc-name").textContent=t.name;document.getElementById("tc-text").textContent=f+" ha ora il maggior numero di case al Peninsula con noi ("+t.units+"). Parlate con "+f+" per vedere per primi le migliori proposte.";
+    document.getElementById("tc-ph").textContent=t.phone;document.getElementById("tc-wa").href="https://wa.me/"+ph+"?text="+encodeURIComponent("Ciao "+f+", cerco una casa al Peninsula, Business Bay. Mi può aiutare?");
+    document.getElementById("tc-call").href="tel:+"+ph;document.getElementById("topcard").hidden=false}).catch(function(){});
+  fetch("/api/public/offers").then(function(r){return r.ok?r.json():null}).then(function(d){if(!d||!d.offers||!d.offers.length)return;
+    var l=d.offers.slice().sort(function(a,b){return (M.real.indexOf(b.id)>=0)-(M.real.indexOf(a.id)>=0)||(M.plan.indexOf(b.id)>=0)-(M.plan.indexOf(a.id)>=0)}).slice(0,6);
+    document.getElementById("hgrid").innerHTML=l.map(function(o){var k=(o.photos&&o.photos[0]&&(o.photos[0].u||o.photos[0].k))||M.offer[o.id]||M.bld[o.b];var src=/^\/api\//.test(k)?k:"/img/"+k+"-s.webp";
+      return '<a class="hcard" href="/app/?signup=1&as=client"><div class="hph"><img loading="lazy" src="'+e(src)+'" alt=""><span class="d'+(o.deal==="rent"?" rent":"")+'">'+(o.deal==="rent"?"In affitto":o.deal==="both"?"Vendita o affitto":"In vendita")+'</span>'+(M.real.indexOf(o.id)>=0?'<span class="r">Foto reali</span>':"")+(M.plan.indexOf(o.id)>=0||o.plan?'<span class="f">Planimetria</span>':"")+'</div><div class="hb"><b>AED '+(o.deal==="rent"?sh(o.rent)+" / anno":sh(o.price))+'</b><h3>'+T[o.beds]+' · Peninsula '+N[o.b]+'</h3><p>'+(o.size?Number(o.size).toLocaleString("it-IT")+" sq ft":"Superficie su richiesta")+(o.view&&o.view!=="On request"?" · "+e(o.view):"")+'</p></div></a>'}).join("");
+    document.getElementById("homes").hidden=false}).catch(function(){});
+  if(!("IntersectionObserver" in window)||reduce){document.querySelectorAll(".reveal").forEach(function(el){el.classList.add("in")});return}
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){if(!e.isIntersecting)return;e.target.classList.add("in");io.unobserve(e.target);
+    var c=e.target.querySelector(".count");if(c){var n=+c.dataset.n,i=0,t=setInterval(function(){i++;c.textContent=Math.round(n*i/20);if(i>=20)clearInterval(t)},30)}})},{threshold:.15});
+  document.querySelectorAll(".reveal").forEach(function(el,i){el.style.transitionDelay=(i%4)*70+"ms";io.observe(el)});
+})();
+</script>
+</body>
+</html>

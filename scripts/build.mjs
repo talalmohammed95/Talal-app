@@ -73,12 +73,12 @@ if (dbUrl) {
 }
 
 // ---------- build the app ----------
-// Website at /, the app at /app/, shared files (icons, manifest, service worker, config) at the root.
+// Website at / (and /ru/, /de/, /it/), the app at /app/, shared files (icons, manifest, service worker, config) at the root.
 rmSync("dist", { recursive: true, force: true });
 cpSync("app", "dist", { recursive: true });
 mkdirSync("dist/app", { recursive: true });
 renameSync("dist/index.html", "dist/app/index.html");
-cpSync("site/index.html", "dist/index.html");
+cpSync("site", "dist", { recursive: true }); // the website in English at /, and /ru/, /de/, /it/
 writeFileSync("dist/config.js",
   "// Generated at build time. Do not edit.\nwindow.ORLA_CONFIG = " + JSON.stringify(dbUrl ? { api: "/api" } : {}) + ";\n");
 

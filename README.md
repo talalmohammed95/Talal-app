@@ -11,7 +11,7 @@ Built entirely on open-source software:
 - **Front end:** one static page in `app/`, with no framework.
 
 ```
-site/        the public website (served at /)
+site/        the public website: English at /, Russian at /ru/, German at /de/, Italian at /it/
 app/         the app (served at /app/), icons, service worker; app/img holds the photos, renders and floor plans
 api/         the backend: sign-in, approval, offers, settings (one Vercel Function)
 lib/         database connection, tables, password hashing, email, starting offers

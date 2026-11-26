@@ -69,6 +69,15 @@
           "value": "public, max-age=2592000"
         }
       ]
+    },
+    {
+      "source": "/:lang(ru|de|it)/",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
     }
   ],
   "rewrites": [
