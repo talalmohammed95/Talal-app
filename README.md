@@ -56,6 +56,14 @@ Privacy is the same as everywhere else: the lookups run on our server, and each 
 
 It runs on Claude (Anthropic). Add `ANTHROPIC_API_KEY` in Vercel to turn it on. Without the key it runs in basic mode: the unit lookup with the owner works, and it fills a starter listing.
 
+**How it thinks.** It runs on Claude's strongest model, reasons through each question before answering (adaptive thinking, high effort), checks facts with its tools instead of guessing, and suggests the next step. Replies appear as they're written, with what it's doing ("Finding the unit…", "Searching the web…").
+
+**Photos and PDFs.** The paperclip sends up to 5 photos or a PDF of up to 3 MB (a title deed, a floor plan, a screenshot of a Bayut ad or a WhatsApp chat, a contract). Photos are resized on the phone first. You can also paste a screenshot or drag files in on a laptop. It reads them, for example to pull the unit details out of a title deed into a listing. Files aren't stored: they go to the AI with that one message.
+
+**The web.** It can search the web and read web pages (Dubai market news, DLD and RERA rules and fees, Golden Visa, mortgage rates, a link the agent sends) and says where the information comes from. It never puts an owner's or client's name, number or unit in a search. Web search must be allowed for the Anthropic account (Claude Console › Settings › Privacy, if it's off).
+
+**Memory.** The chat stays on the device, even after closing the app (the last 40 messages), so it remembers the client and unit being discussed. **New chat** starts fresh.
+
 **Voice notes.** The microphone next to Send records a voice note in English, Arabic, Russian, German or Italian (the small selector; it remembers the choice). The words appear as you speak; it sends when you tap Send or stop talking for a few seconds, and the message shows as a voice note. It uses the browser's own speech recognition (Safari on iPhone, Chrome on Android and computers), so no other service is involved; the site's `Permissions-Policy` allows the microphone for this site only. Where a browser can't, the keyboard's own microphone works too.
 
 **The whole database.** Besides homes, units, owners and contacts, the assistant can look up: the agents' client lists (Clients page), client requests from the website, the Peninsula contacts by building and bedrooms, app accounts and their activity, tasks, website visitors, imported DXB Interact or DLD deals, the Brochures & plans library, and the team's pace to the goal. It combines them (for example, follow-ups due today with homes that match each client's budget). It only receives what the person asking may see: the admin and the CEO see everything, an agent sees their own clients, owners, requests and tasks, and accounts and visitors are for the admin and the CEO. Lookups of clients, requests, accounts and contacts are written to Activity.

@@ -37,7 +37,7 @@ async function readBody(req) {
     return req.body;
   }
   const chunks = []; let size = 0;
-  for await (const c of req) { size += c.length; if (size > 3e6) fail(413, "Request too large."); chunks.push(c); }
+  for await (const c of req) { size += c.length; if (size > 4.4e6) fail(413, "Request too large."); chunks.push(c); }
   const text = Buffer.concat(chunks).toString();
   return text ? JSON.parse(text) : {};
 }
@@ -443,14 +443,39 @@ const routes = {
   "GET ai/status": async c => { requireStaff(c); return { enabled: aiEnabled() }; },
   "POST ai/assist": async c => {
     requireStaff(c);
-    const raw = Array.isArray(c.body.messages) ? c.body.messages.slice(-16) : [];
-    const history = raw.map(m => ({ role: m && m.role === "assistant" ? "assistant" : "user", text: str(m && m.text, 4000) })).filter(m => m.text);
+    const raw = Array.isArray(c.body.messages) ? c.body.messages.slice(-30) : [];
+    const history = raw.map(m => ({ role: m && m.role === "assistant" ? "assistant" : "user", text: str(m && m.text, 8000) })).filter(m => m.text);
+    // Photos and PDFs sent with the newest message (resized on the phone first).
+    const files = (Array.isArray(c.body.files) ? c.body.files : []).slice(0, 5).map(f => ({ name: str(f && f.name, 120), mime: str(f && f.mime, 40), data: String((f && f.data) || "") }))
+      .filter(f => /^(image\/(jpeg|png|webp|gif)|application\/pdf)$/.test(f.mime) && /^[A-Za-z0-9+/=]+$/.test(f.data));
+    if (files.reduce((n, f) => n + f.data.length, 0) > 4.2e6) fail(413, "The files are too big. Send fewer photos, or a smaller PDF (under 3 MB).");
     while (history.length && history[0].role !== "user") history.shift();
     if (!history.length || history[history.length - 1].role !== "user") fail(400, "Type a message.");
     await limit("ai:" + c.user.id, 80, 3600);
     if (!aiEnabled()) return assistOffline(c.user, history);
     const { rows: [st] } = await q("select data from settings where id = 'app'");
-    try { return await assist(c.user, history, (st && st.data && st.data.agents) || SETTINGS.agents, { teamStats, appUrl: appUrl(c.req) }); }
+    const opts = { teamStats, appUrl: appUrl(c.req), files };
+    // Streamed: the agent sees what it's doing and the reply as it's written.
+    if (c.body.stream) {
+      c.res.statusCode = 200;
+      c.res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+      c.res.setHeader("Cache-Control", "no-cache, no-transform");
+      c.res.setHeader("X-Accel-Buffering", "no");
+      const ev = o => { try { c.res.write("data: " + JSON.stringify(o) + "\n\n"); } catch (e) {} };
+      const ping = setInterval(() => ev({ type: "ping" }), 15000);
+      try { const out = await assist(c.user, history, (st && st.data && st.data.agents) || SETTINGS.agents, { ...opts, onEvent: ev }); ev({ type: "done", ...out }); }
+      catch (e) {
+        let msg = "The assistant couldn't answer. Try again.";
+        if (e instanceof Anthropic.AuthenticationError) msg = "The AI key isn't valid. The admin needs to update ANTHROPIC_API_KEY.";
+        else if (e instanceof Anthropic.RateLimitError) msg = "The assistant is busy. Try again in a minute.";
+        else if (e instanceof Anthropic.APIConnectionError) msg = "Couldn't reach the AI service. Try again.";
+        else if (e instanceof Anthropic.BadRequestError && files.length) msg = "I couldn't read that file. Try a clearer photo or a smaller PDF.";
+        console.error("assistant", e.status, e.message);
+        ev({ type: "error", error: msg });
+      } finally { clearInterval(ping); c.res.end(); }
+      return RAW;
+    }
+    try { return await assist(c.user, history, (st && st.data && st.data.agents) || SETTINGS.agents, opts); }
     catch (e) {
       if (e instanceof Anthropic.AuthenticationError) fail(503, "The AI key isn't valid. The admin needs to update ANTHROPIC_API_KEY.", "ai_key");
       if (e instanceof Anthropic.RateLimitError) fail(429, "The assistant is busy. Try again in a minute.", "ai_busy");
