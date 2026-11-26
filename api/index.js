@@ -171,6 +171,40 @@ async function teamGoal() {
   return g;
 }
 
+// Units, online and off-market counts per agent for the team goal.
+async function teamStats() {
+  const goal = await teamGoal();
+  const [{ rows: lrows }, { rows: orows }, { rows: [st] }] = await Promise.all([
+    q("select l.data, l.created_at, u.agent_key, u.name from listings l join users u on u.id = l.user_id"),
+    q("select data, created_at from offers"),
+    q("select data from settings where id = 'app'")]);
+  // The team's offers count too, under the agent each is listed under. A shared listing is counted once, as the listing.
+  const rows = lrows.concat(orows.filter(r => r.data.teamUnit && !r.data.fromListing).map(r => ({ data: r.data, created_at: r.created_at, agent_key: "", name: "" })));
+  const agents = (st && st.data && st.data.agents) || SETTINGS.agents, by = {};
+  const blank = k => ({ key: k, name: agents[k] ? agents[k].name : k, phone: agents[k] ? agents[k].phone || "" : "", listings: 0, online: 0, partly: 0, offMarket: 0, forSale: 0, forRent: 0, platforms: {}, onlineDates: [], lastAdded: null, units: [] });
+  for (const k of Object.keys(agents)) by[k] = blank(k);
+  for (const r of rows) {
+    const k = r.data.agent || r.agent_key || "";
+    if (!k) continue;
+    const a = by[k] || (by[k] = { ...blank(k), name: agents[k] ? agents[k].name : r.name });
+    const on = r.data.online || {}, n = goal.platforms.filter(p => on[p.k]).length;
+    a.listings++;
+    let status = "none";
+    if (n && n === goal.platforms.length) { a.online++; a.onlineDates.push(r.data.onlineAt || r.created_at); status = "online"; }
+    else if (on.off) { a.offMarket++; status = "off"; }
+    else if (n) { a.partly++; status = "partly"; }
+    const d = r.data, num = v => Number(String(v ?? "").replace(/[^0-9.]/g, "")) || null;
+    a.units.push({ b: +d.b || null, beds: d.beds === undefined || d.beds === "" ? null : +d.beds, size: num(d.size), floor: str(d.floor, 40), view: str(d.view, 80), deal: d.deal,
+      price: d.deal === "rent" ? null : num(d.price), rent: d.deal === "rent" ? num(d.rent ?? d.price) : d.deal === "both" ? num(d.rent) : null, status,
+      on: goal.platforms.filter(p => on[p.k]).map(p => p.k) });
+    for (const p of goal.platforms) if (on[p.k]) a.platforms[p.k] = (a.platforms[p.k] || 0) + 1;
+    if (!a.lastAdded || r.created_at > a.lastAdded) a.lastAdded = r.created_at;
+    if (r.data.deal !== "rent") a.forSale++;
+    if (r.data.deal === "rent" || r.data.deal === "both") a.forRent++;
+  }
+  return { goal, agents: Object.values(by) };
+}
+
 // Writes the offer for a shared listing. Only these fields are copied: the unit number, the owner and the notes stay in the listing.
 const SHARE_STATUS = { Ready: "Ready", Vacant: "Ready · vacant", Tenanted: "Tenanted", "Off-plan": "Off-plan" };
 async function shareListing(listingId, email) {
@@ -372,36 +406,15 @@ const routes = {
   // Team performance: counts per agent only (no unit numbers, owners or prices). The admin and the Orla team see it.
   "GET team/performance": async c => {
     requireTeam(c);
-    const goal = await teamGoal();
-    const [{ rows: lrows }, { rows: orows }, { rows: [st] }] = await Promise.all([
-      q("select l.data, l.created_at, u.agent_key, u.name from listings l join users u on u.id = l.user_id"),
-      q("select data, created_at from offers"),
-      q("select data from settings where id = 'app'")]);
-    // The team's offers count too, under the agent each is listed under. A shared listing is counted once, as the listing.
-    const rows = lrows.concat(orows.filter(r => r.data.teamUnit && !r.data.fromListing).map(r => ({ data: r.data, created_at: r.created_at, agent_key: "", name: "" })));
-    const agents = (st && st.data && st.data.agents) || SETTINGS.agents, by = {};
-    const blank = k => ({ key: k, name: agents[k] ? agents[k].name : k, phone: agents[k] ? agents[k].phone || "" : "", listings: 0, online: 0, partly: 0, offMarket: 0, forSale: 0, forRent: 0, platforms: {}, onlineDates: [], lastAdded: null, units: [] });
-    for (const k of Object.keys(agents)) by[k] = blank(k);
-    for (const r of rows) {
-      const k = r.data.agent || r.agent_key || "";
-      if (!k) continue;
-      const a = by[k] || (by[k] = { ...blank(k), name: agents[k] ? agents[k].name : r.name });
-      const on = r.data.online || {}, n = goal.platforms.filter(p => on[p.k]).length;
-      a.listings++;
-      let status = "none";
-      if (n && n === goal.platforms.length) { a.online++; a.onlineDates.push(r.data.onlineAt || r.created_at); status = "online"; }
-      else if (on.off) { a.offMarket++; status = "off"; }
-      else if (n) { a.partly++; status = "partly"; }
-      const d = r.data, num = v => Number(String(v ?? "").replace(/[^0-9.]/g, "")) || null;
-      a.units.push({ b: +d.b || null, beds: d.beds === undefined || d.beds === "" ? null : +d.beds, size: num(d.size), floor: str(d.floor, 40), view: str(d.view, 80), deal: d.deal,
-        price: d.deal === "rent" ? null : num(d.price), rent: d.deal === "rent" ? num(d.rent ?? d.price) : d.deal === "both" ? num(d.rent) : null, status,
-        on: goal.platforms.filter(p => on[p.k]).map(p => p.k) });
-      for (const p of goal.platforms) if (on[p.k]) a.platforms[p.k] = (a.platforms[p.k] || 0) + 1;
-      if (!a.lastAdded || r.created_at > a.lastAdded) a.lastAdded = r.created_at;
-      if (r.data.deal !== "rent") a.forSale++;
-      if (r.data.deal === "rent" || r.data.deal === "both") a.forRent++;
-    }
-    return { goal, agents: Object.values(by), now: new Date().toISOString() };
+    return { ...(await teamStats()), now: new Date().toISOString() };
+  },
+
+  // The team's top performer, for clients, external agents and the public website: name, phone and counts only.
+  "GET public/top": async c => {
+    const { agents } = await teamStats();
+    const top = [...agents].sort((a, b) => b.online - a.online || b.listings - a.listings)[0];
+    c.cache = "public, max-age=120, s-maxage=120";
+    return { top: top && top.listings ? { key: top.key, name: top.name, phone: top.phone, units: top.listings, online: top.online } : null };
   },
 
   // Ticks a platform on an offer: the agent it's listed under, or the admin.

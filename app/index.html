@@ -666,6 +666,12 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
 .lhead:first-child{padding-top:2px}
 .acct{position:relative}.acct.top::after{content:"★";position:absolute;left:24px;top:-4px;width:20px;height:20px;border-radius:50%;background:#1C1A18;color:#F5B83D;font-size:12px;line-height:20px;text-align:center;box-shadow:0 0 0 2px var(--surface)}
 .toast{width:max-content;text-align:center}@media (max-width:900px){.toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))!important;max-width:calc(100vw - 32px)}}
+.topagent{display:grid;grid-template-columns:132px minmax(0,1fr);gap:22px;align-items:center;border-radius:22px;padding:clamp(18px,3vw,26px);background:linear-gradient(135deg,var(--surface),var(--accent-soft));border:1.5px solid #F5B83D;box-shadow:0 14px 40px rgba(245,184,61,.18)}
+.topagent img{width:132px;height:132px;border-radius:50%;object-fit:cover;border:4px solid #F5B83D;box-shadow:0 0 0 6px rgba(245,184,61,.18)}
+.topagent h3{margin:0 0 6px;font:800 clamp(20px,2.6vw,26px) var(--display)}.topagent p{margin:0 0 14px;color:var(--muted);max-width:62ch}
+.ta-cta{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.ta-ph{font-weight:700}
+@media (max-width:560px){.topagent{grid-template-columns:minmax(0,1fr);text-align:center;justify-items:center}.topagent img{width:110px;height:110px}.ta-cta{justify-content:center}}
+.topnote{margin:4px 0 0;font-size:14px}.topnote a{color:var(--accent-ink);font-weight:700}
 </style>
 <script src="/config.js"></script>
 </head>
@@ -1291,7 +1297,8 @@ function renderDetail(){
         ${o.deal!=="rent"?`<div class="field"><label for="e-price">Sale price (AED)</label><input id="e-price" inputmode="numeric" value="${fmt(o.price)}"></div>`:""}
         ${o.deal!=="sale"?`<div class="field"><label for="e-rent">Rent (AED / yr)</label><input id="e-rent" inputmode="numeric" value="${fmt(o.rent)}"></div>`:""}
         <div class="wide actions"><button class="btn primary" id="e-save">Save for everyone</button><button class="btn" id="e-full">Edit all details</button></div></div></details>`:""}
-      <div class="agent"><div class="who"><img class="aph" src="${esc(agentImg(o))}" alt=""><div><b>${esc(a.name)}${isTeam()?topStar(o.agent):""}</b><span>Orla Properties L.L.C · BRN 41837</span></div></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="phone num">${esc(a.phone)}</span>${isTeam()?"":`<a class="btn primary" href="https://wa.me/${esc(String(a.phone).replace(/[^0-9]/g,""))}?text=${encodeURIComponent("Hello, I'm interested in the "+bedsWord(o.beds).toLowerCase()+" in "+BLD[o.b]+" ("+dealWord(o).toLowerCase()+", AED "+(o.deal==="rent"?fmt(o.rent)+" a year":fmt(o.price))+"). Is it still available?")}" target="_blank" rel="noopener">${ic("chat")}Ask about this home</a>`}<button class="btn" id="d-phone">Copy number</button></div></div>
+      <div class="agent"><div class="who"><img class="aph" src="${esc(agentImg(o))}" alt=""><div><b>${esc(a.name)}${topStar(o.agent)}</b><span>Orla Properties L.L.C · BRN 41837</span></div></div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="phone num">${esc(a.phone)}</span>${isTeam()?"":`<a class="btn primary" href="https://wa.me/${esc(String(a.phone).replace(/[^0-9]/g,""))}?text=${encodeURIComponent("Hello, I'm interested in the "+bedsWord(o.beds).toLowerCase()+" in "+BLD[o.b]+" ("+dealWord(o).toLowerCase()+", AED "+(o.deal==="rent"?fmt(o.rent)+" a year":fmt(o.price))+"). Is it still available?")}" target="_blank" rel="noopener">${ic("chat")}Ask about this home</a>`}<button class="btn" id="d-phone">Copy number</button></div></div>
+      ${!isTeam()&&topAgent()&&topAgent().key!==o.agent&&topAgent().phone?`<p class="topnote"><span class="topstar" style="margin:0 6px 0 0">★</span>Prefer our top performer? <a href="${esc(waTo(topAgent().phone,"Hello "+topAgent().name.split(" ")[0]+", I'm interested in the "+bedsWord(o.beds).toLowerCase()+" in "+BLD[o.b]+". Can you help me?"))}" target="_blank" rel="noopener">WhatsApp ${esc(topAgent().name.split(" ")[0])}</a></p>`:""}
       <p class="src">Source: ${esc(o.src)}. Market: DLD-registered deals, ${esc(MKT.asOf)}. Drive times approx.: Dubai Mall 7 min · Business Bay Metro 7 min · DIFC 12 min · DXB 16 min.</p>
     </div></article>`;
   fillCharts(el);
@@ -1408,7 +1415,9 @@ function renderDash(){if(!isTeam()){renderShowroom();return}clearInterval(heroT)
   const myl=renderMyListings();if(myl){const r=$("#dash").children[0];if(r)r.insertAdjacentHTML("afterend",myl);else $("#dash").insertAdjacentHTML("afterbegin",myl)}
   $("#dash").insertAdjacentHTML("afterbegin",teamHero())}
 // The top achiever: first in the team ranking (online, then units), once they have a unit.
-function topAgent(){if(!perf)return null;const a=[...perf.agents].sort((x,y)=>y.online-x.online||y.listings-x.listings)[0];return a&&a.listings?a:null}
+let topPub=null;
+async function loadTop(){try{topPub=(await api("public/top")).top}catch(e){}}
+function topAgent(){if(!perf)return topPub?{key:topPub.key,name:topPub.name,phone:topPub.phone,listings:topPub.units,online:topPub.online}:null;const a=[...perf.agents].sort((x,y)=>y.online-x.online||y.listings-x.listings)[0];return a&&a.listings?a:null}
 const topStar=k=>{const t=topAgent();return t&&t.key===k?'<span class="topstar" title="Top achiever">★</span>':""};
 function welcomeTop(){const t=topAgent();if(!t||t.key!==myKey())return;try{if(sessionStorage.getItem("orla.topwelcome"))return;sessionStorage.setItem("orla.topwelcome","1")}catch(e){}
   setTimeout(()=>toast("★ You're #1 on the team, "+t.name.split(" ")[0]+"!"),900)}
@@ -2073,7 +2082,7 @@ async function loadAll(first){
       else if(owner&&owner!==uid){mine=[];clients=[];starred=new Set();persist()}
       else if(mine.length||clients.length||starred.size)persist();
       store.set("orla.localOwner",uid)}
-    migrateOvr();if(isTeam()){await loadListings();await loadPerf(true);if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
+    migrateOvr();if(!isTeam())await loadTop();if(isTeam()){await loadListings();await loadPerf(true);if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
   catch(e){if(e.status===401||e.status===403){location.reload();return}
     if(first){OFFERS=store.get("orla.cache.offers",[]);applySettings(store.get("orla.cache.settings",{}))}
     if(first||!loadAll.warned){loadAll.warned=true;toast("Offline: showing what's saved on this device")}}
@@ -2207,6 +2216,7 @@ function renderShowroom(){const A=all().filter(o=>!isDone(o)),first=((meInfo&&me
       <p>${broker?"Browse every home we can offer your clients, with photos, floor plans and full costs. Unit numbers are shared by the listing agent when you book a viewing.":"Five waterfront buildings by Select Group, seven minutes from Downtown Dubai. Tell us what you need and we'll pick three homes for you."}</p>
       <div class="sh-cta"><button class="btn primary big" data-find>${ic("star")}${broker?"Find 3 options for a client":"Find my home in 4 questions"}</button><button class="btn big ghost" data-goto="offers">${ic("building")}See all homes</button></div></div>
   </section>
+  ${topAgentCard(broker)}
   <section class="spanel"><div class="shead"><div><p class="kick">Prices from</p><h3>What each type of home costs</h3></div></div>
     <div class="types">${types.map(t=>`<button class="tcard" data-type="${t.b}"><b>${esc(t.b===0?"Studios":t.b+" bedrooms")}</b>${t.s?`<span>Buy from <strong class="num">AED ${short(t.s)}</strong></span>`:""}${t.r?`<span>Rent from <strong class="num">AED ${short(t.r)}</strong> / yr</span>`:""}</button>`).join("")}</div></section>
   <section class="spanel"><div class="shead"><div><p class="kick">Hand-picked</p><h3>Homes with photos and floor plans</h3></div><button class="btn" data-goto="offers">See all ${A.length}${ic("arrowr")}</button></div>
@@ -2223,6 +2233,15 @@ function renderShowroom(){const A=all().filter(o=>!isDone(o)),first=((meInfo&&me
   ${sourcesHTML()}`;
   clearInterval(heroT);const imgs=[...document.querySelectorAll(".shero .sh-img")];let k=0;
   if(imgs.length>1&&!matchMedia("(prefers-reduced-motion: reduce)").matches)heroT=setInterval(()=>{if(document.hidden||$("#view-dash").hidden)return;imgs[k].classList.remove("on");k=(k+1)%imgs.length;imgs[k].classList.add("on")},6000)}
+// For clients and external agents: the team's top performer, as the agent to choose.
+const agentPhotoOf=(k,name)=>{const a=AGENTS[k]||{},m=MEDIA.agent[k];return a.photo?imgSrc(a.photo):m?imgSrc(m):initialsAvatar(name||a.name||k)};
+const waTo=(phone,text)=>"https://wa.me/"+String(phone||"").replace(/[^0-9]/g,"")+"?text="+encodeURIComponent(text);
+function topAgentCard(broker){const t=topAgent();if(!t||!t.phone)return"";const f=t.name.split(" ")[0];
+  const msg=broker?`Hello ${f}, I'm an agent at another agency and I have a client for the Peninsula. Can we work on it together?`:`Hello ${f}, I'm looking for a home at the Peninsula, Business Bay. Can you help me?`;
+  return `<section class="topagent"><img src="${esc(agentPhotoOf(t.key,t.name))}" alt="">
+    <div class="ta-body"><p class="kick"><span class="topstar" style="margin:0 4px 0 0">★</span>Top performer at Orla Properties</p><h3>Meet ${esc(f)}, our top agent</h3>
+      <p>${esc(f)} has the most homes in the Peninsula with us right now (${t.listings}) and works every building from One to Five. ${broker?"Bring your client to "+esc(f)+" for the fastest deal.":"Tell "+esc(f)+" what you need and get the best options first."}</p>
+      <div class="ta-cta"><a class="btn primary" href="${esc(waTo(t.phone,msg))}" target="_blank" rel="noopener">${ic("chat")}WhatsApp ${esc(f)}</a><a class="btn" href="tel:${esc(String(t.phone).replace(/[^0-9+]/g,""))}">${ic("phone")}Call</a><span class="num ta-ph">${esc(t.phone)}</span></div></div></section>`}
 function sourcesHTML(){return `<section class="spanel sources"><div class="shead"><div><p class="kick">Sources</p><h3>Where the figures come from</h3></div></div><ul class="srcs">
   <li><b>Dubai Land Department (DLD)</b><span>Registered sales and leases in Peninsula One to Five, ${esc(MKT.asOf||"Aug–Nov 2026")}. These are completed deals, not asking prices.</span><a href="https://dubailand.gov.ae/en/open-data/real-estate-data/" target="_blank" rel="noopener">dubailand.gov.ae</a></li>
   <li><b>Bayut and Property Finder</b><span>Asking prices of homes listed for sale and rent in the Peninsula, checked 22 Nov 2026.</span><span><a href="https://www.bayut.com" target="_blank" rel="noopener">bayut.com</a> · <a href="https://www.propertyfinder.ae" target="_blank" rel="noopener">propertyfinder.ae</a></span></li>
@@ -2310,8 +2329,8 @@ function drawResults(c){const a=wz.a,R=pick3(a);wz.r=R.list;const r=R.list;
         <div class="wm">${metric(x)}</div><p class="why">${esc(whyLine(x,r,a))}</p>
         <button class="btn" data-view-id="${esc(o.id)}">See photos and details${ic("arrowr")}</button></div></article>`}).join("")}</div>
     ${isTeam()||ROLE==="broker"?`<div class="field wcl"><label for="wz-name">Client's name, for the message (optional)</label><input id="wz-name" value="${esc(wz.client||"")}" placeholder="e.g. Sara"></div>`:""}
-    <div class="wzfoot wrap"><div class="actions"><button class="btn primary" data-wz="present">${ic("monitor")}Present these</button><a class="btn" id="wz-wa" href="#" target="_blank" rel="noopener">${ic("chat")}${ROLE==="client"?"Ask about these on WhatsApp":"Send on WhatsApp"}</a><button class="btn" data-wz="copy">${ic("copy")}Copy text</button><button class="btn" data-wz="star">${ic("star")}Add to shortlist</button></div><button class="btn ghost" data-wz="again">Start again</button></div>`;
-  const nm=c.querySelector("#wz-name");const upd=()=>{wz.client=nm?nm.value.trim():"";const ph=ROLE==="client"?String(agentOf(r[0].o).phone||"").replace(/[^0-9]/g,""):"";c.querySelector("#wz-wa").href="https://wa.me/"+ph+"?text="+encodeURIComponent(wizText())};
+    <div class="wzfoot wrap"><div class="actions"><button class="btn primary" data-wz="present">${ic("monitor")}Present these</button><a class="btn" id="wz-wa" href="#" target="_blank" rel="noopener">${ic("chat")}${ROLE==="client"?(topAgent()?"Ask "+esc(topAgent().name.split(" ")[0])+" ★ on WhatsApp":"Ask about these on WhatsApp"):"Send on WhatsApp"}</a><button class="btn" data-wz="copy">${ic("copy")}Copy text</button><button class="btn" data-wz="star">${ic("star")}Add to shortlist</button></div><button class="btn ghost" data-wz="again">Start again</button></div>`;
+  const nm=c.querySelector("#wz-name");const upd=()=>{wz.client=nm?nm.value.trim():"";const ph=ROLE==="client"?String((topAgent()&&topAgent().phone)||agentOf(r[0].o).phone||"").replace(/[^0-9]/g,""):"";c.querySelector("#wz-wa").href="https://wa.me/"+ph+"?text="+encodeURIComponent(wizText())};
   if(nm)nm.addEventListener("input",upd);upd();c.scrollTop=0}
 function wizText(){const a=wz.a,r=wz.r||[],nm=wz.client;
   let t=ROLE==="client"?`Hello, I'm interested in these homes at the Peninsula, Business Bay:\n\n`:`${nm?"Hi "+nm+", h":"H"}ere are ${r.length===3?"three options":"the best options"} at the Peninsula, Business Bay (Dubai Canal), ${a.deal==="rent"?"for rent":"for sale"}:\n\n`;
