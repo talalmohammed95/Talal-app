@@ -2352,6 +2352,20 @@ async function loadPerf(force){if(!SRV||!isTeam())return null;if(!force&&perf&&D
 function goalCardHTML(){if(!SRV||!perf)return"";const g=perf.goal,me=perf.agents.find(a=>a.key===myKey()),tot=perf.agents.reduce((s,a)=>s+a.online,0),goalT=g.target*perf.agents.length,p=me?pace(me,g,Date.now()):null;
   return `<div class="panel goalcard"><div class="gc-l"><h2>Team goal</h2><p class="lede" style="margin:0 0 8px">${tot} of ${goalT} listings online on every platform${me?` · you: ${me.online} of ${g.target}`:""}${p?` · ${p.daysLeft} days left`:""}</p><div class="pbar" style="max-width:420px"><i class="on" style="width:${Math.min(100,tot/goalT*100)}%"></i></div></div><button class="btn primary" data-goto-team>${ic("target")}Open team performance</button></div>`}
 $("#dash").addEventListener("click",e=>{if(e.target.closest("[data-goto-team]"))show("team")});
+// The weekly leaderboard as a WhatsApp message for the team group. Counts only: no units, owners or prices.
+function weeklyText(){if(!perf)return"";const g=perf.goal,now=Date.now(),ag=[...perf.agents].sort((a,b)=>b.online-a.online||b.partly-a.partly||a.name.localeCompare(b.name));
+  const tot=ag.reduce((s,a)=>s+a.online,0),goalT=g.target*ag.length,week=a=>a.onlineDates.filter(d=>now-Date.parse(d)<6048e5).length,wk=ag.reduce((s,a)=>s+week(a),0);
+  const tp=pace({online:tot},Object.assign({},g,{target:goalT}),now),medal=["🥇","🥈","🥉"],first=n=>String(n).split(" ")[0];
+  const bar=n=>{const f=Math.round(Math.min(1,n/g.target)*10);return "🟩".repeat(f)+"⬜".repeat(10-f)};
+  const date=new Date().toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}),dl=new Date(g.deadline).toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+  let t=`*Peninsula team: weekly leaderboard* 🏆\n${date}\n\n*Goal:* ${g.target} listings each, live on ${g.platforms.map(p=>p.n).join(", ")} by ${dl}\n*Team:* ${tot} of ${goalT} online (${Math.round(tot/goalT*100)}%) · ${wk} went live this week · ${tp.daysLeft} days left\n\n`;
+  ag.forEach((a,i)=>{const p=pace(a,g,now),w=week(a);
+    t+=`${medal[i]||(i+1)+"."} *${first(a.name)}*: ${a.online}/${g.target} ${p.status==="done"?"✅":p.status==="ok"?"👍":"⏳"}\n${bar(a.online)}\n`;
+    t+=`   ${w?"+"+w+" this week":"none live this week"}${a.partly?" · "+a.partly+" on some platforms":""}${p.left?" · needs ~"+Math.ceil(p.perWeek)+"/week":" · goal reached!"}\n\n`});
+  const top=ag.filter(a=>week(a)>0).sort((a,b)=>week(b)-week(a))[0];
+  if(top)t+=`⭐ Top this week: ${first(top.name)} with ${week(top)} listing${week(top)===1?"":"s"} live.\n`;
+  t+=tp.status==="behind"?`We should be at ${tp.expected} by now. Let's push this week 💪`:`We're on track. Keep it going 💪`;
+  return t}
 async function renderTeam(){const el=$("#team");if(!SRV){el.innerHTML='<div class="empty">Team performance uses the online version of the app, where everyone signs in.</div>';return}
   if(!perf)el.innerHTML='<div class="empty">Loading…</div>';await loadPerf();if(!perf){el.innerHTML='<div class="empty">Team performance couldn\'t be loaded. Check your connection.</div>';return}
   const g=perf.goal,now=Date.now(),ag=[...perf.agents].sort((a,b)=>b.online-a.online||b.partly-a.partly||a.name.localeCompare(b.name)),tot=ag.reduce((s,a)=>s+a.online,0),goalT=g.target*ag.length;
@@ -2370,7 +2384,8 @@ async function renderTeam(){const el=$("#team");if(!SRV){el.innerHTML='<div clas
   el.innerHTML=`<div class="gband"><div><p class="kick">Goal until ${esc(dl)}</p><h2>${g.target} listings each, live on ${esc(plist)}</h2><p>A listing counts once it's online on every platform. ${tp.daysLeft} days left.</p>
       <div class="gbar" aria-label="Team progress"><i style="width:${Math.min(100,tot/goalT*100)}%"></i><em style="left:${tf*100}%" title="Where we should be today"></em></div><p style="margin-top:8px;font-size:13px">${tot} of ${goalT} for the team · the white line is where we should be today (${tp.expected})</p></div>
     <div class="gstats"><div><b class="num">${tot}</b><span>online on every platform</span></div><div><b class="num">${Math.max(0,goalT-tot)}</b><span>still to go</span></div><div><b class="num">${wk}</b><span>went live this week</span></div></div></div>
-  <div class="panel"><h2>Leaderboard</h2><p class="lede">Green: online on every platform. Orange: on some platforms so far.</p><div class="lboard">${ag.map(card).join("")}</div></div>
+  <div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Leaderboard</h2><p class="lede">Green: online on every platform. Orange: on some platforms so far.</p></div>
+    <div class="actions"><a class="btn primary" id="wk-wa" href="https://wa.me/?text=${encodeURIComponent(weeklyText())}" target="_blank" rel="noopener">${ic("chat")}Send weekly update</a><button class="btn" type="button" id="wk-copy">${ic("copy")}Copy</button></div></div><div class="lboard">${ag.map(card).join("")}</div></div>
   <div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Your listings</h2><p class="lede">Tick each platform once the listing is live there. Only you${isAdmin?"":" and the admin"} see these units.</p></div><button class="btn primary" data-goto-mine>${ic("list")}Add a listing</button></div>
     <div class="stack" id="team-own">${own.length?own.map(m=>{const o=mineToOffer(m);return `<div class="ochk" data-lst="${esc(m.id)}"><div><b>${o.unit?"Unit "+esc(o.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(TYPE[o.beds])}</b><span class="s">${esc(o.deal==="rent"?aed(o.rent)+" / yr":aed(o.price))}${isOnline(m,g)?" · counts towards the goal":""}</span></div><div class="plats">${g.platforms.map(p=>`<label class="plat"><input type="checkbox" data-tog="${esc(p.k)}"${m.online&&m.online[p.k]?" checked":""}>${esc(p.n)}</label>`).join("")}</div></div>`}).join(""):'<div class="empty">No listings yet. Add your units in Listings, then tick the platforms they\'re live on.</div>'}</div></div>
   ${isAdmin?`<div class="panel"><h2>Goal settings</h2><p class="lede">Only you can change these. Everyone on the team sees the result.</p><div class="fgrid">
@@ -2380,6 +2395,7 @@ async function renderTeam(){const el=$("#team");if(!SRV){el.innerHTML='<div clas
     <div class="field wide"><label for="gl-plats">Platforms (comma-separated)</label><input id="gl-plats" value="${esc(pn.join(", "))}"></div>
     <div class="wide actions"><button class="btn primary" id="gl-save">Save goal</button></div></div></div>`:""}`}
 $("#team").addEventListener("click",e=>{if(e.target.closest("[data-goto-mine]")){show("mine");return}
+  if(e.target.closest("#wk-copy")){copy(weeklyText());return}
   if(e.target.closest("#gl-save")){const n=parseInt($("#gl-target").value,10),st=$("#gl-start").value,en=$("#gl-end").value;
     const names=$("#gl-plats").value.split(",").map(x=>x.trim()).filter(Boolean);if(!n||n<1){toast("Enter how many listings each");return}if(!st||!en||en<st){toast("Check the dates");return}if(!names.length){toast("Enter at least one platform");return}
     const old=goalOf().platforms,plats=names.map(nm=>{const f=old.find(p=>p.n.toLowerCase()===nm.toLowerCase());return f||{k:nm.toLowerCase().replace(/[^a-z0-9]+/g,"").slice(0,20)||"p"+Date.now(),n:nm}});
