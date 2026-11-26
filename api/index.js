@@ -88,6 +88,8 @@ const ROLE_NAME = { admin: "Admin", agent: "Orla team agent", broker: "External 
 const isTeam = u => u && (u.role === "admin" || u.role === "agent");
 // The CEO sees what the team sees (team offers, floors, performance, chat) but no unit numbers or owners, and changes nothing.
 const isStaff = u => isTeam(u) || (u && u.role === "ceo");
+// The admin and the CEO see every unit number, owner, listing, contact and request. Only the admin changes settings and accounts.
+const seesAll = u => !!u && (u.role === "admin" || u.role === "ceo");
 const TEAM_ONLY = ["tower", "unit", "owner", "ownerPhone", "ownerNote", "notes", "check", "internal"];
 const OWNER = ["owner", "ownerPhone", "ownerNote"];
 // Clients and external agents see a floor band (low, mid, high), not the exact floor: they ask the agent for it.
@@ -99,7 +101,7 @@ function hideFloor(d) {
   return d;
 }
 function forRole(data, user) {
-  if (user && user.role === "admin") return data;
+  if (seesAll(user)) return data;
   if (isStaff(user)) {
     // An agent sees the owner's contact only on offers listed under their own name.
     // Unit numbers and owners' details are for the agent the offer is listed under (and the admin) only.
@@ -369,8 +371,8 @@ const routes = {
 
   // An agent's own units. Each agent reads only their own; the admin reads everyone's.
   "GET data/listings": async c => {
-    requireTeam(c);
-    const admin = c.user.role === "admin";
+    requireStaff(c);
+    const admin = seesAll(c.user);
     const { rows } = await q(
       `select l.id, l.user_id, l.data, l.created_at, l.updated_at, u.name, u.email, u.agent_key
        from listings l join users u on u.id = l.user_id
@@ -424,9 +426,9 @@ const routes = {
   },
 
   // The AI assistant for the Orla team: finds a unit and its owner (own units only), and drafts the listing.
-  "GET ai/status": async c => { requireTeam(c); return { enabled: aiEnabled() }; },
+  "GET ai/status": async c => { requireStaff(c); return { enabled: aiEnabled() }; },
   "POST ai/assist": async c => {
-    requireTeam(c);
+    requireStaff(c);
     const raw = Array.isArray(c.body.messages) ? c.body.messages.slice(-16) : [];
     const history = raw.map(m => ({ role: m && m.role === "assistant" ? "assistant" : "user", text: str(m && m.text, 4000) })).filter(m => m.text);
     while (history.length && history[0].role !== "user") history.shift();
@@ -446,7 +448,7 @@ const routes = {
 
   // The Peninsula contacts database. The Orla team searches it; the admin imports it. Every lookup is logged.
   "GET team/contacts": async c => {
-    requireTeam(c);
+    requireStaff(c);
     const query = str(new URL(c.req.url, "http://localhost").searchParams.get("q"), 80);
     if (query.replace(/\s/g, "").length < 2) fail(400, "Type a phone number, a unit number or a name.");
     await limit("contacts:" + c.user.id, 300, 3600);
@@ -506,8 +508,8 @@ const routes = {
     return { email, password, phone, url: appUrl(c.req) + "/app/" };
   },
   "GET team/invites": async c => {
-    requireTeam(c);
-    const admin = c.user.role === "admin";
+    requireStaff(c);
+    const admin = seesAll(c.user);
     const { rows } = await q(`select u.id, u.name, u.email, u.phone, u.role, u.company, u.status, u.created_at, i.name as invited_by_name,
         (select max(s.created_at) from sessions s where s.user_id = u.id) as last_seen
       from users u join users i on i.id = u.invited_by ${admin ? "" : "where u.invited_by = $1"} order by u.created_at desc limit 200`, admin ? [] : [c.user.id]);
@@ -567,6 +569,35 @@ const routes = {
     return { leads, invites, offers: offers[0] };
   },
 
+  // AI training: the CEO and the admin teach the assistant (rules, knowledge, quick questions). Everyone on the team can read it.
+  "GET ai/notes": async c => {
+    requireStaff(c);
+    const { rows } = await q("select id, kind, title, text, active, by_name, updated_at from ai_notes order by kind, id");
+    return { notes: rows.map(r => ({ ...r, id: +r.id })), canEdit: seesAll(c.user) };
+  },
+  "POST ai/notes": async c => {
+    requireStaff(c);
+    if (!seesAll(c.user)) fail(403, "Only the CEO and the admin can train the assistant.", "not_trainer");
+    const kind = ["rule", "knowledge", "quick"].includes(c.body.kind) ? c.body.kind : "knowledge", title = str(c.body.title, 120);
+    const text = String(c.body.text || "").replace(/\r/g, "").trim().slice(0, kind === "quick" ? 200 : 8000), active = c.body.active !== false;
+    if (!text) fail(400, kind === "quick" ? "Type the question." : "Write what the assistant should know.");
+    const id = parseInt(c.body.id, 10) || 0;
+    const { rows: [{ total }] } = await q("select coalesce(sum(length(text)), 0)::int as total from ai_notes where id <> $1", [id]);
+    if (total + text.length > 60000) fail(400, "The training is full (60,000 characters). Shorten or delete older notes.", "too_long");
+    if (id) {
+      const { rowCount } = await q("update ai_notes set kind = $2, title = $3, text = $4, active = $5, by_user = $6, by_name = $7, updated_at = now() where id = $1", [id, kind, title, text, active, c.user.id, c.user.name || c.user.email]);
+      if (!rowCount) fail(404, "Note not found.");
+    } else await q("insert into ai_notes (kind, title, text, active, by_user, by_name) values ($1, $2, $3, $4, $5, $6)", [kind, title, text, active, c.user.id, c.user.name || c.user.email]);
+    await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `${id ? "Edited" : "Added"} AI training: ${title || text.slice(0, 60)}`]);
+    return { ok: true };
+  },
+  "POST ai/notes/delete": async c => {
+    requireStaff(c);
+    if (!seesAll(c.user)) fail(403, "Only the CEO and the admin can train the assistant.", "not_trainer");
+    await q("delete from ai_notes where id = $1", [parseInt(c.body.id, 10) || 0]);
+    return { ok: true };
+  },
+
   // Team performance: counts per agent only (no unit numbers, owners or prices). The admin and the Orla team see it.
   "GET team/performance": async c => {
     requireStaff(c);
@@ -613,8 +644,8 @@ const routes = {
 
   // Requests for the agent's own homes (the admin sees all), with the person's contact details.
   "GET team/leads": async c => {
-    requireTeam(c);
-    const admin = c.user.role === "admin";
+    requireStaff(c);
+    const admin = seesAll(c.user);
     const { rows } = await q(
       `select l.id, l.at, l.offer_id, l.agent_key, l.kind, l.title, l.done, u.name, u.email, u.phone, u.role, u.company
        from leads l left join users u on u.id = l.user_id
