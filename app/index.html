@@ -762,6 +762,7 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
 @keyframes aidot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
 @media (max-width:900px){.aithread{max-height:none;overflow:visible;min-height:120px}.aiform{bottom:calc(72px + env(safe-area-inset-bottom,0px));z-index:20;background:var(--surface);padding:8px 0;margin:0 -2px}}
 @media (max-width:620px){.aipanel{padding:10px}.aimsg .aiav{display:none}.aimsg.bot .aib{border-radius:16px}}
+.aicard.taken{border-color:var(--bad);background:var(--bad-soft)}.aicard.taken p{margin:0;font-size:14px}
 .ctso{border-top:1px dashed var(--line-strong);padding-top:10px}
 .aiown b+b{margin-top:2px}
 </style>
@@ -957,7 +958,7 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
     <div class="aithread" id="ai-thread" aria-live="polite"></div>
     <div class="aichips" id="ai-chips"></div>
     <form class="aiform" id="ai-form" autocomplete="off"><input id="ai-in" placeholder="Phone number or unit, e.g. 050 123 4567 or 1203" aria-label="Message the AI assistant" maxlength="2000"><button class="btn primary" id="ai-send" type="submit">Send</button></form>
-    <p class="src" style="margin:6px 2px 0">The Peninsula contacts are for the Orla team only, and every lookup is logged. Owners of listings show only on your own units. Check every draft before you save it or put it online.</p>
+    <p class="src" style="margin:6px 2px 0">The Peninsula contacts are for the Orla agents only, and every lookup is logged. A client belongs to the agent who lists their unit on the website first: other agents see only who has them. Owners of listings show only on your own units. Check every draft before you save it or put it online.</p>
   </div></section>
   <section class="view" id="view-docs" hidden><div class="stack" id="docs"></div></section>
 
@@ -1101,7 +1102,7 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
         <div class="stack" id="ad-agents"></div>
         <div class="actions" style="margin-top:10px"><button class="btn" id="ad-agent-add">Add agent</button><button class="btn primary" id="ad-agents-save">Save agents</button></div></div>
       
-      <div class="panel" id="ad-ct-panel" hidden><h2>Peninsula contacts</h2><p class="lede">Upload the contacts database (Excel .xlsx or CSV). Your agents find people by phone number, unit number or name in the AI assistant, and make sales offers from them. Only the Orla team can search it, and every lookup shows in Activity below.</p>
+      <div class="panel" id="ad-ct-panel" hidden><h2>Peninsula contacts</h2><p class="lede">Upload the contacts database (Excel .xlsx or CSV). Your agents find people by phone number, unit number or name in the AI assistant, and make sales offers from them. Only the Orla agents can search it, and every lookup shows in Activity below. When an agent saves a listing with the unit number or the client's phone, that client is theirs: other agents see only who has them.</p>
         <p id="ct-stats" class="src"></p>
         <div class="actions"><label class="btn primary" for="ct-file"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Choose Excel or CSV file</label><input type="file" id="ct-file" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden><button class="btn" id="ct-clear" hidden>Delete all contacts</button></div>
         <div id="ct-map" hidden></div></div>
@@ -1503,7 +1504,7 @@ $("#mine-form").addEventListener("submit",async e=>{e.preventDefault();
   if(!price&&!$("#m-future").checked){toast("Enter a price");$("#m-price").focus();return}
   if($("#m-future").checked&&!g("#m-remind")){toast("Pick a reminder date");$("#m-remind").focus();return}
   const m={id:g("#m-id")||"l-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),unit:g("#m-unit"),b:g("#m-bld"),beds:g("#m-type"),deal:g("#m-deal"),floor:g("#m-floor"),view:g("#m-view"),size:g("#m-size").replace(/[^0-9.]/g,""),price,status:g("#m-status"),furn:g("#m-furn"),owner:g("#m-owner"),phone:g("#m-phone"),agent:g("#m-agent"),date:g("#m-date"),notes:g("#m-notes"),online:onlineFromForm(),future:$("#m-future").checked||undefined,availableFrom:g("#m-avail")||undefined,remindAt:g("#m-remind")||undefined,remindNote:g("#m-rnote")||undefined,adTitle:g("#m-adtitle")||undefined,adText:g("#m-adtext")||undefined};
-  if(SRV){const prev=mine.concat(teamListings).find(x=>x.id===m.id)||{};const{id,...data}=Object.assign({},prev,m);delete data._by;delete data._own;try{await api("data/listings",{id,data},"PUT")}catch(x){toast(x.message);return}await loadListings()}
+  if(SRV){const prev=mine.concat(teamListings).find(x=>x.id===m.id)||{};const{id,...data}=Object.assign({},prev,m);delete data._by;delete data._own;let r;try{r=await api("data/listings",{id,data},"PUT")}catch(x){toast(x.message);return}await loadListings();if(r&&r.warning){resetMineForm();renderAll();setTimeout(()=>toast(r.warning),50);return}}
   else{const i=mine.findIndex(x=>x.id===m.id);if(i>=0)mine[i]=m;else mine.push(m);persist()}
   const was=!!g("#m-id");resetMineForm();renderAll();toast(was?"Listing updated":"Listing saved");
 });
@@ -2863,10 +2864,10 @@ function aiDraftCard(d,i,j){return `<div class="aicard draft"><div class="aic-h"
     ${d.missing&&d.missing.length?`<div class="aichk"><b>Before it goes live</b><ul>${d.missing.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
     ${d.tips&&d.tips.length?`<div class="aichk tips"><b>Tips</b><ul>${d.tips.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
     <div class="actions"><button class="btn sm primary" data-ai-fill="${i}:${j}">${ic("list")}Put into My units form</button><button class="btn sm" data-ai-copy="${i}:${j}:t">${ic("copy")}Copy title</button><button class="btn sm" data-ai-copy="${i}:${j}:d">${ic("copy")}Copy description</button></div></div>`}
-function aiContactCard(ct,i,j){const me=(meInfo&&meInfo.name)||"Orla Properties",first=String(ct.name||"").split(" ")[0];
+function aiContactCard(ct,i,j){if(ct.taken)return `<div class="aicard taken"><div class="aic-h">${ic("lock")}<b>Client taken by ${esc(ct.by||"another agent")}</b></div><p>${esc(ct.by||"Another agent")} listed this client on the website first${ct.since?" ("+esc(new Date(ct.since).toLocaleDateString("en-GB",{day:"numeric",month:"short"}))+")":""}, so the client's details are only for ${esc(ct.by||"them")}. Please don't contact this client. If you have a buyer, talk to ${esc(ct.by||"the agent")}.</p></div>`;const me=(meInfo&&meInfo.name)||"Orla Properties",first=String(ct.name||"").split(" ")[0];
   const bl=ct.building?BLD[ct.building]:ct.building_raw||ct.building||"",rows=[["Building",ct.building?BLD[ct.building]:ct.buildingText||""],["Unit",ct.unit],["Type",ct.type],["Size",ct.size?(/[a-z]/i.test(ct.size)?ct.size:fmt(+String(ct.size).replace(/[^0-9.]/g,""))+" sq ft"):""],["Floor",ct.floor],["View",ct.view],["Role",ct.role],["Nationality",ct.nationality],["Email",ct.email]].concat(Object.entries(ct.extra||{})).filter(r=>r[1]);
   const so=ct.unit||ct.building||ct.beds!=null;
-  return `<div class="aicard contact"><div class="aic-h">${ic("users")}<b>${esc(ct.name||"No name")}</b><span class="pill">Peninsula contacts</span></div>
+  return `<div class="aicard contact"><div class="aic-h">${ic("users")}<b>${esc(ct.name||"No name")}</b>${ct.yours?'<span class="pill ok">Your client</span>':ct.claimedBy?`<span class="pill">Listed by ${esc(ct.claimedBy.split(" ")[0])}</span>`:'<span class="pill">Peninsula contacts</span>'}</div>
     ${(ct.phones||[]).length?`<div class="aiown"><div><span>Phone</span>${ct.phones.map(p=>`<b>${esc(p)}</b>`).join("")}</div><div class="actions"><a class="btn sm primary" href="tel:${esc(telOf(ct.phones[0]))}">${ic("phone")}Call</a><a class="btn sm" href="${esc(waTo(ct.phones[0],`Hello ${first}, this is ${me} from Orla Properties about your ${ct.type?String(ct.type).toLowerCase()+" ":""}apartment in ${ct.building?BLD[ct.building]:"the Peninsula"}.`))}" target="_blank" rel="noopener">${ic("chat")}WhatsApp</a></div></div>`:""}
     <dl class="aidl">${rows.map(r=>`<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join("")}</dl>
     ${ct.notes?`<p class="ainote">${esc(ct.notes)}</p>`:""}

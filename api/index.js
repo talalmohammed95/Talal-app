@@ -8,7 +8,7 @@ import { mailEnabled, sendMail, trySendMail } from "../lib/mail.js";
 import { SETTINGS } from "../lib/seed.js";
 import Anthropic from "@anthropic-ai/sdk";
 import { assist, assistOffline, aiEnabled } from "../lib/assistant.js";
-import { importContacts, contactStats, searchContacts } from "../lib/contacts.js";
+import { importContacts, contactStats, searchContacts, claimWarning } from "../lib/contacts.js";
 
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
 const COOKIE = "orla_session";
@@ -391,7 +391,7 @@ const routes = {
       await q("insert into listings (id, user_id, data) values ($1, $2, $3)", [id, c.user.id, data]);
     } else await q("update listings set data = $2, updated_at = now() where id = $1", [id, data]);
     if (data.sharedOffer) await shareListing(id, c.user.email);
-    return { ok: true };
+    return { ok: true, warning: await claimWarning(c.user, data) };
   },
 
   // An agent shares their own unit as an offer: with the floor, never the unit number or the owner.
@@ -444,7 +444,7 @@ const routes = {
     const query = str(new URL(c.req.url, "http://localhost").searchParams.get("q"), 80);
     if (query.replace(/\s/g, "").length < 2) fail(400, "Type a phone number, a unit number or a name.");
     await limit("contacts:" + c.user.id, 300, 3600);
-    const contacts = await searchContacts(query);
+    const contacts = await searchContacts(query, c.user);
     await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `Contacts lookup: ${query} (${contacts.length} found)`]);
     return { contacts };
   },
