@@ -56,6 +56,8 @@ Privacy is the same as everywhere else: the lookups run on our server, and each 
 
 It runs on Claude (Anthropic). Add `ANTHROPIC_API_KEY` in Vercel to turn it on. Without the key it runs in basic mode: the unit lookup with the owner works, and it fills a starter listing.
 
+**Voice notes.** The microphone next to Send records a voice note in English, Arabic, Russian, German or Italian (the small selector; it remembers the choice). The words appear as you speak; it sends when you tap Send or stop talking for a few seconds, and the message shows as a voice note. It uses the browser's own speech recognition (Safari on iPhone, Chrome on Android and computers), so no other service is involved; the site's `Permissions-Policy` allows the microphone for this site only. Where a browser can't, the keyboard's own microphone works too.
+
 **The whole database.** Besides homes, units, owners and contacts, the assistant can look up: the agents' client lists (Clients page), client requests from the website, the Peninsula contacts by building and bedrooms, app accounts and their activity, tasks, website visitors, imported DXB Interact or DLD deals, the Brochures & plans library, and the team's pace to the goal. It combines them (for example, follow-ups due today with homes that match each client's budget). It only receives what the person asking may see: the admin and the CEO see everything, an agent sees their own clients, owners, requests and tasks, and accounts and visitors are for the admin and the CEO. Lookups of clients, requests, accounts and contacts are written to Activity.
 
 ## Home-screen guide
