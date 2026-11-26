@@ -56,6 +56,12 @@ Privacy is the same as everywhere else: the lookups run on our server, and each 
 
 It runs on Claude (Anthropic). Add `ANTHROPIC_API_KEY` in Vercel to turn it on. Without the key it runs in basic mode: the unit lookup with the owner works, and it fills a starter listing.
 
+## Peninsula contacts (team only)
+
+The admin uploads the Peninsula contacts database in **Admin › Peninsula contacts**: an Excel (.xlsx) or CSV file. The app matches the columns itself (name, phones, email, building, unit, type, size, floor, view, owner or tenant, nationality, notes); you can change any match before importing, and other columns are kept as extra details. Choose **Replace all contacts** or **Add to existing**. The file is read in your browser and sent to the database in parts.
+
+In the **AI assistant**, an agent types a client's phone number (any format: 050…, +971 50…, 97150…), a unit number or a name. The contact shows with Call and WhatsApp, the unit details, and three buttons: **Create sales offer** (enter the price and it makes the same one-page PDF, prepared for the client), **Add to My units** and **Write the listing**. The whole Orla team can search the contacts; clients and external agents can't. Each search is limited to 300 an hour per agent and shows in Admin › Activity. The Excel reader is read-excel-file (MIT), in `app/vendor`.
+
 ## Brochures & plans (team only)
 
 More › **Brochures & plans** is the team's library, filtered by building (P1–P5, Community) with search. It starts with the floor plans and every building's photos and renders that are in the app. Anyone on the team can add a brochure, floor plan, price list or payment plan as a file (PDF, JPG, PNG, up to 60 MB, uploaded in 2 MB parts to stay under Vercel's request limit) or as a link, and open, download or share it (on phones, Share sends the file straight to WhatsApp). Each offer has a button to its building's documents. Clients and external agents can't open it.

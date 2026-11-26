@@ -1,3 +1,5 @@
 html2canvas 1.4.1 - MIT License - Copyright (c) 2012 Niklas von Hertzen - https://github.com/niklasvh/html2canvas
 jsPDF 2.5.1 - MIT License - Copyright (c) 2010-2021 James Hall, (c) 2015-2021 yWorks GmbH - https://github.com/parallax/jsPDF
 Used to make the sales offer PDFs in the app.
+read-excel-file 9.3.20 - MIT License - Copyright (c) 2018 gitlab.com/catamphetamine - https://gitlab.com/catamphetamine/read-excel-file
+Used by the admin to import the Peninsula contacts from Excel.

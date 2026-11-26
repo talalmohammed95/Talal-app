@@ -8,6 +8,7 @@ import { mailEnabled, sendMail, trySendMail } from "../lib/mail.js";
 import { SETTINGS } from "../lib/seed.js";
 import Anthropic from "@anthropic-ai/sdk";
 import { assist, assistOffline, aiEnabled } from "../lib/assistant.js";
+import { importContacts, contactStats, searchContacts } from "../lib/contacts.js";
 
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
 const COOKIE = "orla_session";
@@ -435,6 +436,32 @@ const routes = {
       if (e instanceof Anthropic.APIError) { console.error("assistant", e.status, e.message); fail(502, "The assistant couldn't answer. Try again.", "ai_error"); }
       throw e;
     }
+  },
+
+  // The Peninsula contacts database. The Orla team searches it; the admin imports it. Every lookup is logged.
+  "GET team/contacts": async c => {
+    requireTeam(c);
+    const query = str(new URL(c.req.url, "http://localhost").searchParams.get("q"), 80);
+    if (query.replace(/\s/g, "").length < 2) fail(400, "Type a phone number, a unit number or a name.");
+    await limit("contacts:" + c.user.id, 300, 3600);
+    const contacts = await searchContacts(query);
+    await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `Contacts lookup: ${query} (${contacts.length} found)`]);
+    return { contacts };
+  },
+  "GET admin/contacts": async c => { requireAdmin(c); return contactStats(); },
+  "POST admin/contacts/import": async c => {
+    requireAdmin(c);
+    const rows = Array.isArray(c.body.rows) ? c.body.rows : [];
+    if (rows.length > 2000) fail(400, "Send at most 2,000 rows at a time.");
+    const n = await importContacts(rows, c.body.replace === true);
+    if (c.body.last) await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `Imported the Peninsula contacts (${str(c.body.file, 120) || "file"})`]);
+    return { imported: n, ...(c.body.last ? await contactStats() : {}) };
+  },
+  "POST admin/contacts/clear": async c => {
+    requireAdmin(c);
+    await q("delete from contacts");
+    await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, "Deleted the Peninsula contacts"]);
+    return contactStats();
   },
 
   // Team performance: counts per agent only (no unit numbers, owners or prices). The admin and the Orla team see it.

@@ -762,6 +762,8 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
 @keyframes aidot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
 @media (max-width:900px){.aithread{max-height:none;overflow:visible;min-height:120px}.aiform{bottom:calc(72px + env(safe-area-inset-bottom,0px));z-index:20;background:var(--surface);padding:8px 0;margin:0 -2px}}
 @media (max-width:620px){.aipanel{padding:10px}.aimsg .aiav{display:none}.aimsg.bot .aib{border-radius:16px}}
+.ctso{border-top:1px dashed var(--line-strong);padding-top:10px}
+.aiown b+b{margin-top:2px}
 </style>
 <script src="/config.js"></script>
 </head>
@@ -954,8 +956,8 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
     <div class="aiban" id="ai-ban" hidden></div>
     <div class="aithread" id="ai-thread" aria-live="polite"></div>
     <div class="aichips" id="ai-chips"></div>
-    <form class="aiform" id="ai-form" autocomplete="off"><input id="ai-in" placeholder="Type a unit number, e.g. 1203" aria-label="Message the AI assistant" maxlength="2000"><button class="btn primary" id="ai-send" type="submit">Send</button></form>
-    <p class="src" style="margin:6px 2px 0">Owners' details show only on your own units. Check every draft before you save it or put it online.</p>
+    <form class="aiform" id="ai-form" autocomplete="off"><input id="ai-in" placeholder="Phone number or unit, e.g. 050 123 4567 or 1203" aria-label="Message the AI assistant" maxlength="2000"><button class="btn primary" id="ai-send" type="submit">Send</button></form>
+    <p class="src" style="margin:6px 2px 0">The Peninsula contacts are for the Orla team only, and every lookup is logged. Owners of listings show only on your own units. Check every draft before you save it or put it online.</p>
   </div></section>
   <section class="view" id="view-docs" hidden><div class="stack" id="docs"></div></section>
 
@@ -1099,7 +1101,11 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
         <div class="stack" id="ad-agents"></div>
         <div class="actions" style="margin-top:10px"><button class="btn" id="ad-agent-add">Add agent</button><button class="btn primary" id="ad-agents-save">Save agents</button></div></div>
       
-      <div class="panel" id="ad-log-panel"><h2>Activity</h2><p class="lede">The latest 50 changes admins made to offers and settings.</p><div class="tablewrap"><table id="ad-log"></table></div></div>
+      <div class="panel" id="ad-ct-panel" hidden><h2>Peninsula contacts</h2><p class="lede">Upload the contacts database (Excel .xlsx or CSV). Your agents find people by phone number, unit number or name in the AI assistant, and make sales offers from them. Only the Orla team can search it, and every lookup shows in Activity below.</p>
+        <p id="ct-stats" class="src"></p>
+        <div class="actions"><label class="btn primary" for="ct-file"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Choose Excel or CSV file</label><input type="file" id="ct-file" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden><button class="btn" id="ct-clear" hidden>Delete all contacts</button></div>
+        <div id="ct-map" hidden></div></div>
+      <div class="panel" id="ad-log-panel"><h2>Activity</h2><p class="lede">The latest 50 changes to offers and settings, and lookups in the Peninsula contacts.</p><div class="tablewrap"><table id="ad-log"></table></div></div>
     </div>
   </section>
 </main>
@@ -1975,7 +1981,7 @@ const ICONS={"spark":"M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM
 const ic=(n,cls="")=>`<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[n]}"/></svg>`;
 const PAGES={dash:["home","Dashboard",""],offers:["building","Offers","Browse, filter, compare and present every unit"],analysis:["chart","Analysis","How your offers compare with each other and the market"],
   reports:["file","Reports","Portfolio report and Excel-ready downloads"],shortlist:["star","Client shortlist","Offers you've starred, ready to present or send"],clients:["users","Clients","Buyers, investors and tenants you're working with"],
-  calc:["calc","Deal calculator","Purchase costs, yield, resale return and mortgage"],market:["trend","Market data","Registered sales and rents in the Peninsula"],docs:["folder","Brochures & plans","Brochures, floor plans, price lists and photos for every building. Open, download or share them on WhatsApp."],team:["target","Team performance","Our goal: 15 listings each, online on every platform, by the end of the year. Only the Orla team sees this."],assist:["spark","AI assistant","Type a unit number: see the unit and the owner, and get the listing written for Bayut and Property Finder. Only your own owners are shown."],mine:["list","My units","Your own units with the owners' details. Only you and the admin can see them."],admin:["shield","Admin","Users, offers, market data, fees and agents"]};
+  calc:["calc","Deal calculator","Purchase costs, yield, resale return and mortgage"],market:["trend","Market data","Registered sales and rents in the Peninsula"],docs:["folder","Brochures & plans","Brochures, floor plans, price lists and photos for every building. Open, download or share them on WhatsApp."],team:["target","Team performance","Our goal: 15 listings each, online on every platform, by the end of the year. Only the Orla team sees this."],assist:["spark","AI assistant","Type a client's phone number or a unit number: see the person and the unit, make a sales offer, and get the listing written for Bayut and Property Finder."],mine:["list","My units","Your own units with the owners' details. Only you and the admin can see them."],admin:["shield","Admin","Users, offers, market data, fees and agents"]};
 function setPageHead(v){const p=PAGES[v]||PAGES.dash,h=new Date().getHours(),first=((meInfo&&meInfo.name)||"").split(" ")[0];
   const sub=v==="dash"?(first?`Good ${h<12?"morning":h<18?"afternoon":"evening"}, ${first}. Here's your portfolio today.`:"Your portfolio at a glance"):p[2];
   $("#pagehead").innerHTML=`<div class="phi">${ic(p[0])}</div><div><h1>${esc(p[1])}</h1><p>${esc(sub)}</p></div>`}
@@ -2094,7 +2100,7 @@ function renderAdmin(){$("#tab-admin").hidden=!isAdmin;$("#sheet-admin").hidden=
   if(a!=="ad-notice")$("#ad-notice").value=settings.notice||"";
   if(!["ad-dld","ad-trustee","ad-admin"].includes(a)){$("#ad-dld").value=+(FEES.dld*100).toFixed(3);$("#ad-trustee").value=fmt(FEES.trustee);$("#ad-admin").value=fmt(FEES.admin)}
   if(!$("#ad-agents").contains(document.activeElement)){agentDraft=Object.entries(AGENTS).map(([k,x])=>({k,name:x.name,phone:x.phone}));drawAgents()}
-  $("#ad-log-panel").hidden=!(CLOUD||SRV);$("#ad-users-panel").hidden=!SRV;renderMarketEditor();renderOwnTable();if(document.activeElement?.id!=="nu-agent")fillNuAgent()}
+  $("#ad-log-panel").hidden=!(CLOUD||SRV);$("#ad-ct-panel").hidden=!SRV;if(SRV&&!ctStatsLoaded)loadCtStats();$("#ad-users-panel").hidden=!SRV;renderMarketEditor();renderOwnTable();if(document.activeElement?.id!=="nu-agent")fillNuAgent()}
 function drawAgents(){$("#ad-agents").innerHTML=agentDraft.map((x,i)=>`<div class="fgrid"><div class="field"><label for="ag-n${i}">Name</label><input id="ag-n${i}" data-ai="${i}" data-af="name" value="${esc(x.name)}"></div><div class="field"><label for="ag-p${i}">Phone</label><input id="ag-p${i}" data-ai="${i}" data-af="phone" inputmode="tel" value="${esc(x.phone)}"></div></div>`).join("")}
 $("#ad-agents").addEventListener("input",e=>{const t=e.target;if(t.dataset.ai!=null)agentDraft[+t.dataset.ai][t.dataset.af]=t.value});
 $("#ad-agent-add").onclick=()=>{agentDraft.push({k:"a"+Date.now().toString(36),name:"",phone:""});drawAgents();$("#ag-n"+(agentDraft.length-1)).focus()};
@@ -2795,13 +2801,14 @@ function soPage(o,opt){const x=o.x||{},a=AGENTS[opt.agent]||agentOf(o),photos=ph
         <div class="so-call"><div><b>${esc(a.phone||"")}</b><span>Call or WhatsApp</span></div><img src="/img/qr-brn-41837.png" alt=""></div></div>
       <p class="so-note">${sale&&opt.invest?"*Mortgage at "+MORT.down*100+"% down, "+(MORT.rate*100).toFixed(1)+"%, "+MORT.years+" years. ":""}Images are developer renders for illustration${photos.some(p=>p.t==="p")?", except photos of the home":""}. Market figures: DLD-registered deals, ${esc(MKT.asOf||"Aug–Nov 2026")}. Prices and availability subject to confirmation.</p>
     </div></div>`}
-function openSalesOffer(ids,client){ids=ids.filter(id=>all().some(o=>o.id===id));if(!ids.length){toast("Nothing to put in the offer");return}
-  const me=myKey(),first=all().find(o=>o.id===ids[0]);
+let SO_EXTRA=[];const soAll=()=>all().concat(SO_EXTRA.map(enrich));
+function openSalesOffer(ids,client){ids=ids.filter(id=>soAll().some(o=>o.id===id));if(!ids.length){toast("Nothing to put in the offer");return}
+  const me=myKey(),first=soAll().find(o=>o.id===ids[0]);
   soState={ids,opt:{client:client||"",agent:me&&AGENTS[me]?me:first.agent,exactFloor:false,plan:true,invest:true,hl:true}};
   let el=$("#so");if(!el){document.body.insertAdjacentHTML("beforeend",'<div id="so" role="dialog" aria-modal="true" aria-label="Sales offer"><div class="so-card"></div></div><div id="so-stage" aria-hidden="true"></div>');el=$("#so");
     el.addEventListener("click",soClick);el.addEventListener("input",soInput);el.addEventListener("change",soInput)}
   el.hidden=false;document.body.classList.add("lbopen");soDraw(true)}
-function soDraw(full){const S=soState,c=$("#so .so-card"),offers=S.ids.map(id=>all().find(o=>o.id===id)).filter(Boolean);
+function soDraw(full){const S=soState,c=$("#so .so-card"),offers=S.ids.map(id=>soAll().find(o=>o.id===id)).filter(Boolean);
   if(full)c.innerHTML=`<div class="so-head"><div><p class="kick">Sales offer · ${offers.length} page${offers.length===1?"":"s"}</p><h2>Ready to send</h2></div><button class="iconbtn" data-so="close" aria-label="Close">${ic("x")}</button></div>
     <div class="so-ctl"><div class="field"><label for="so-client">Client's name</label><input id="so-client" placeholder="e.g. Mr Ahmed" value="${esc(S.opt.client)}"></div>
       <div class="field"><label for="so-agent">Agent on the offer</label><select id="so-agent">${Object.entries(AGENTS).map(([k,a])=>`<option value="${esc(k)}"${k===S.opt.agent?" selected":""}>${esc(a.name)}</option>`).join("")}</select></div>
@@ -2818,8 +2825,8 @@ addEventListener("resize",()=>{if($("#so")&&!$("#so").hidden)soFit()});
 function soInput(e){const S=soState,t=e.target;if(t.id==="so-client")S.opt.client=t.value.trim();if(t.id==="so-agent")S.opt.agent=t.value;if(t.id==="so-plan")S.opt.plan=t.checked;if(t.id==="so-invest")S.opt.invest=t.checked;if(t.id==="so-hl")S.opt.hl=t.checked;if(t.id==="so-floor")S.opt.exactFloor=t.checked;
   clearTimeout(soInput.t);soInput.t=setTimeout(()=>soDraw(false),t.id==="so-client"?250:0)}
 function closeSO(){const el=$("#so");if(el)el.hidden=true;document.body.classList.remove("lbopen")}
-const soFile=(ext)=>{const offers=soState.ids.map(id=>all().find(o=>o.id===id)).filter(Boolean),o=offers[0];return ("Peninsula-"+(offers.length>1?offers.length+"-homes":BLD[o.b].replace("Peninsula ","")+"-"+bedsWord(o.beds).replace(" ","-"))+(soState.opt.client?"-for-"+soState.opt.client:"")).replace(/[^\w-]+/g,"-").replace(/-+/g,"-")+"."+ext};
-async function soCanvases(){await soLibs();const S=soState,offers=S.ids.map(id=>all().find(o=>o.id===id)).filter(Boolean),stage=$("#so-stage"),out=[];
+const soFile=(ext)=>{const offers=soState.ids.map(id=>soAll().find(o=>o.id===id)).filter(Boolean),o=offers[0];return ("Peninsula-"+(offers.length>1?offers.length+"-homes":BLD[o.b].replace("Peninsula ","")+"-"+bedsWord(o.beds).replace(" ","-"))+(soState.opt.client?"-for-"+soState.opt.client:"")).replace(/[^\w-]+/g,"-").replace(/-+/g,"-")+"."+ext};
+async function soCanvases(){await soLibs();const S=soState,offers=S.ids.map(id=>soAll().find(o=>o.id===id)).filter(Boolean),stage=$("#so-stage"),out=[];
   for(const o of offers){stage.innerHTML=soPage(o,S.opt);const pg=stage.firstElementChild;soTighten(pg);
     await Promise.all([...pg.querySelectorAll("img")].map(i=>i.complete&&i.naturalWidth?0:new Promise(r=>{i.onload=i.onerror=r})));try{await document.fonts.ready}catch(e){}
     out.push(await html2canvas(pg,{scale:2,useCORS:true,backgroundColor:"#ffffff",logging:false,width:794,height:1123,windowWidth:1200}))}
@@ -2836,7 +2843,7 @@ async function soClick(e){if(e.target.id==="so"){closeSO();return}const b=e.targ
 $("#dash").addEventListener("click",e=>{if(!e.target.closest("[data-below]"))return;Object.keys(FDEF).forEach(f=>{if(f!=="deal"&&f!=="sort")state[f]=FDEF[f]});state.value=true;syncFilters();show("offers");renderList()});
 /* ---------------- AI assistant ---------------- */
 let aiMsgs=[],aiBusy=false,aiStatus=null;
-const AI_CHIPS=["Find unit …","Which of my units aren't online yet?","Suggest a price for a 1 bed in Peninsula Three","What do I need before a listing goes live?"];
+const AI_CHIPS=["Find a phone number …","Find unit …","Which of my units aren't online yet?","Suggest a price for a 1 bed in Peninsula Three","What do I need before a listing goes live?"];
 function aiMd(t){let h=esc(t).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>");
   return h.split(/\n/).map(l=>/^\s*[-•*]\s+/.test(l)?"<li>"+l.replace(/^\s*[-•*]\s+/,"")+"</li>":l?"<p>"+l+"</p>":"").join("").replace(/(<li>.*?<\/li>)+/g,m=>"<ul>"+m+"</ul>")}
 const aiMoney=v=>v?"AED "+fmt(v):"";
@@ -2856,17 +2863,35 @@ function aiDraftCard(d,i,j){return `<div class="aicard draft"><div class="aic-h"
     ${d.missing&&d.missing.length?`<div class="aichk"><b>Before it goes live</b><ul>${d.missing.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
     ${d.tips&&d.tips.length?`<div class="aichk tips"><b>Tips</b><ul>${d.tips.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
     <div class="actions"><button class="btn sm primary" data-ai-fill="${i}:${j}">${ic("list")}Put into My units form</button><button class="btn sm" data-ai-copy="${i}:${j}:t">${ic("copy")}Copy title</button><button class="btn sm" data-ai-copy="${i}:${j}:d">${ic("copy")}Copy description</button></div></div>`}
-function aiCardHTML(c,i,j){if(c.type==="unit")return aiUnitCard(c.unit,i,j);if(c.type==="draft")return aiDraftCard(c.draft,i,j);
+function aiContactCard(ct,i,j){const me=(meInfo&&meInfo.name)||"Orla Properties",first=String(ct.name||"").split(" ")[0];
+  const bl=ct.building?BLD[ct.building]:ct.building_raw||ct.building||"",rows=[["Building",ct.building?BLD[ct.building]:ct.buildingText||""],["Unit",ct.unit],["Type",ct.type],["Size",ct.size?(/[a-z]/i.test(ct.size)?ct.size:fmt(+String(ct.size).replace(/[^0-9.]/g,""))+" sq ft"):""],["Floor",ct.floor],["View",ct.view],["Role",ct.role],["Nationality",ct.nationality],["Email",ct.email]].concat(Object.entries(ct.extra||{})).filter(r=>r[1]);
+  const so=ct.unit||ct.building||ct.beds!=null;
+  return `<div class="aicard contact"><div class="aic-h">${ic("users")}<b>${esc(ct.name||"No name")}</b><span class="pill">Peninsula contacts</span></div>
+    ${(ct.phones||[]).length?`<div class="aiown"><div><span>Phone</span>${ct.phones.map(p=>`<b>${esc(p)}</b>`).join("")}</div><div class="actions"><a class="btn sm primary" href="tel:${esc(telOf(ct.phones[0]))}">${ic("phone")}Call</a><a class="btn sm" href="${esc(waTo(ct.phones[0],`Hello ${first}, this is ${me} from Orla Properties about your ${ct.type?String(ct.type).toLowerCase()+" ":""}apartment in ${ct.building?BLD[ct.building]:"the Peninsula"}.`))}" target="_blank" rel="noopener">${ic("chat")}WhatsApp</a></div></div>`:""}
+    <dl class="aidl">${rows.map(r=>`<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join("")}</dl>
+    ${ct.notes?`<p class="ainote">${esc(ct.notes)}</p>`:""}
+    <div class="actions">${so?`<button class="btn sm primary" data-ct-so="${i}:${j}">${ic("file")}Create sales offer</button>`:""}<button class="btn sm" data-ai-fill="${i}:${j}">${ic("list")}Add to My units</button>${ct.unit?`<button class="btn sm" data-ai-say="Write the Bayut and Property Finder listing for unit ${esc(ct.unit)}${ct.building?" in "+esc(BLD[ct.building]):""}">${ic("spark")}Write the listing</button>`:""}</div>
+    <form class="ctso" data-ct-form="${i}:${j}" hidden><div class="fgrid">
+      <div class="field"><label>Prepared for</label><input name="client" value="${esc(ct.name||"")}" placeholder="Client's name"></div>
+      <div class="field"><label>Building</label><select name="b">${[1,2,3,4,5].map(n=>`<option value="${n}"${(ct.building||3)===n?" selected":""}>${esc(BLD[n])}</option>`).join("")}</select></div>
+      <div class="field"><label>Type</label><select name="beds">${TYPE.map((t,n)=>`<option value="${n}"${(ct.beds??1)===n?" selected":""}>${esc(t)}</option>`).join("")}</select></div>
+      <div class="field"><label>Sale or rent</label><select name="deal"><option value="sale">Sale</option><option value="rent">Rent (per year)</option></select></div>
+      <div class="field"><label>Price (AED)</label><input name="price" inputmode="numeric" required placeholder="e.g. 2,150,000"></div>
+      <div class="field"><label>Size (sq ft)</label><input name="size" inputmode="numeric" value="${esc(String(ct.size||"").replace(/[^0-9.]/g,""))}"></div>
+      <div class="field"><label>Floor</label><input name="floor" value="${esc(ct.floor||"")}"></div>
+      <div class="field"><label>View</label><input name="view" value="${esc(ct.view||"")}"></div>
+    </div><div class="actions" style="margin-top:8px"><button class="btn sm primary" type="submit">${ic("file")}Make the sales offer</button></div></form></div>`}
+function aiCardHTML(c,i,j){if(c.type==="contact")return aiContactCard(c.contact,i,j);if(c.type==="unit")return aiUnitCard(c.unit,i,j);if(c.type==="draft")return aiDraftCard(c.draft,i,j);
   if(c.type==="notfound")return `<div class="aicard"><div class="aic-h">${ic("building")}<b>Unit ${esc(c.query||"")}</b></div><p>${c.teammates&&c.teammates.length?`It's listed by a teammate (${esc(c.teammates.join(", "))}). Only they and the admin can see the owner.`:"It isn't in your units yet."}</p><div class="actions"><button class="btn sm" data-ai-new="${esc(c.query||"")}">${ic("list")}Add it as a new listing</button></div></div>`;return""}
 function aiRender(){const th=$("#ai-thread");if(!th)return;const first=((meInfo&&meInfo.name)||"").split(" ")[0];
-  let h=`<div class="aimsg bot"><div class="aiav">${ic("spark")}</div><div class="aib"><p><b>Hi${first?" "+esc(first):""}! I'm your listing assistant.</b></p><p>Type a unit number and I'll find the unit with the owner's details. Then I can write the listing for Bayut and Property Finder, suggest a price and tell you what's missing.</p></div></div>`;
+  let h=`<div class="aimsg bot"><div class="aiav">${ic("spark")}</div><div class="aib"><p><b>Hi${first?" "+esc(first):""}! I'm your listing assistant.</b></p><p>Type a client's phone number or a unit number. I'll find them in the Peninsula contacts and your units, with the unit details. Then you can make a sales offer, or I can write the listing for Bayut and Property Finder.</p></div></div>`;
   h+=aiMsgs.map((m,i)=>m.role==="user"?`<div class="aimsg me"><div class="aib">${esc(m.text)}</div></div>`:`<div class="aimsg bot"><div class="aiav">${ic("spark")}</div><div class="aib">${m.error?`<p class="aierr">${esc(m.text)}</p>`:aiMd(m.text)}${(m.cards||[]).map((c,j)=>aiCardHTML(c,i,j)).join("")}</div></div>`).join("");
   if(aiBusy)h+=`<div class="aimsg bot"><div class="aiav">${ic("spark")}</div><div class="aib"><span class="aidots"><i></i><i></i><i></i></span></div></div>`;
   th.innerHTML=h;$("#ai-chips").innerHTML=aiMsgs.length?"":AI_CHIPS.map(c=>`<button class="chip" data-ai-chip="${esc(c)}">${esc(c)}</button>`).join("");
   $("#ai-send").disabled=aiBusy;const last=th.lastElementChild;if(!last||!aiMsgs.length)return;
   // Show the start of the newest message: inside the thread on a laptop, on the page on a phone.
   if(th.scrollHeight>th.clientHeight+2)th.scrollTop=Math.max(0,last.offsetTop-th.offsetTop-8);else{const y=last.getBoundingClientRect().top+window.scrollY-90;if(last.getBoundingClientRect().top>innerHeight*.5||last.getBoundingClientRect().top<80)window.scrollTo({top:y,behavior:"smooth"})}}
-async function aiSend(text){text=String(text||"").trim();if(!text||aiBusy)return;if(/^[a-z]?\d{2,5}[a-z]?$/i.test(text))text="Unit "+text;
+async function aiSend(text){text=String(text||"").trim();if(!text||aiBusy)return;if(/^[a-z]?\d{2,5}[a-z]?$/i.test(text))text="Unit "+text;else if(/^\+?[\d\s-]{7,}$/.test(text))text="Phone number "+text;
   aiMsgs.push({role:"user",text});aiBusy=true;aiRender();
   try{const r=await api("ai/assist",{messages:aiMsgs.filter(m=>!m.error).map(m=>({role:m.role,text:m.text}))});aiMsgs.push({role:"assistant",text:r.reply||"",cards:r.cards||[]})}
   catch(x){aiMsgs.push({role:"assistant",text:x.message||"Something went wrong. Try again.",error:true})}
@@ -2881,18 +2906,67 @@ function aiFill(d){const m=d.listingId&&mine.concat(teamListings).find(x=>x.id==
   const pr=deal==="rent"?d.rent:d.price;if(pr)set("#m-price",fmt(pr));set("#m-status",d.status);set("#m-furn",d.furn);set("#m-owner",d.owner);set("#m-phone",d.phone);if(AGENTS[d.agent])set("#m-agent",d.agent);
   set("#m-adtitle",d.adTitle);set("#m-adtext",d.adText);if(d.deal==="both"&&d.rent&&!/rent/i.test($("#m-notes").value))$("#m-notes").value=($("#m-notes").value?$("#m-notes").value+"\n":"")+"Also for rent: AED "+fmt(d.rent)+" a year";
   setTimeout(()=>{$("#mine-form").scrollIntoView({behavior:"smooth",block:"start"})},80);toast("Filled in. Check the details, then tap "+$("#m-save").textContent)}
+function aiContactToDraft(ct){return{unit:ct.unit,b:ct.building,beds:ct.beds,deal:"sale",size:String(ct.size||"").replace(/[^0-9.]/g,""),floor:ct.floor,view:ct.view,owner:ct.name,phone:(ct.phones||[])[0],agent:myKey()}}
 function aiUnitToDraft(u){return{listingId:u.kind==="listing"?u.id:null,unit:u.unit,b:u.b,beds:u.beds,deal:u.deal,price:u.price,rent:u.rent,size:u.size,floor:u.floor,view:u.view,status:u.status,furn:u.furnishing,owner:u.owner,phone:u.ownerPhone,agent:myKey()}}
 $("#ai-form").addEventListener("submit",e=>{e.preventDefault();const v=$("#ai-in").value;$("#ai-in").value="";aiSend(v)});
+$("#view-assist").addEventListener("click",e=>{const so=e.target.closest("[data-ct-so]");if(so){const f=$(`[data-ct-form="${so.dataset.ctSo}"]`);f.hidden=!f.hidden;if(!f.hidden)f.querySelector('[name="price"]').focus();return}});
+$("#view-assist").addEventListener("submit",e=>{const f=e.target.closest("[data-ct-form]");if(!f)return;e.preventDefault();
+  const[i,j]=f.dataset.ctForm.split(":"),c=((aiMsgs[+i]||{}).cards||[])[+j];if(!c)return;const ct=c.contact,v=n=>f.elements[n].value.trim(),price=+v("price").replace(/[^0-9.]/g,"");
+  if(!price){toast("Enter the price");f.elements.price.focus();return}
+  const b=+v("b"),beds=+v("beds"),deal=v("deal"),size=+v("size").replace(/[^0-9.]/g,"")||null;
+  const o={id:"ct-"+ct.id+"-"+Date.now().toString(36),b,beds,deal,title:TYPE[beds]+(v("floor")?", "+v("floor")+(/floor/i.test(v("floor"))?"":" floor"):""),price:deal==="sale"?price:undefined,rent:deal==="rent"?price:undefined,size,floor:v("floor")||"On request",view:v("view")||"On request",furn:"—",baths:"—",status:"Ready",avail:"Available",agent:myKey()||Object.keys(AGENTS)[0],hl:"",src:"Peninsula contacts"};
+  SO_EXTRA=[o];openSalesOffer([o.id],v("client"))});
 $("#view-assist").addEventListener("click",e=>{const t=e.target.closest("[data-ai-chip],[data-ai-say],[data-ai-edit],[data-ai-fill],[data-ai-copy],[data-ai-new]");if(!t)return;
-  if(t.dataset.aiChip){const c=t.dataset.aiChip;if(c.endsWith("…")){$("#ai-in").value="Unit ";$("#ai-in").focus()}else aiSend(c);return}
+  if(t.dataset.aiChip){const c=t.dataset.aiChip;if(c.endsWith("…")){$("#ai-in").value=/phone/.test(c)?"":"Unit ";$("#ai-in").placeholder=/phone/.test(c)?"e.g. 050 123 4567":"e.g. 1203";$("#ai-in").focus()}else aiSend(c);return}
   if(t.dataset.aiSay){aiSend(t.dataset.aiSay);return}
   if(t.dataset.aiEdit){editListing(t.dataset.aiEdit);return}
   if(t.dataset.aiNew!==undefined){show("mine");resetMineForm();$("#m-unit").value=t.dataset.aiNew;$("#m-owner").focus();return}
   const[i,j,k]=(t.dataset.aiFill||t.dataset.aiCopy).split(":"),c=((aiMsgs[+i]||{}).cards||[])[+j];if(!c)return;
-  const d=c.type==="unit"?aiUnitToDraft(c.unit):c.draft;
+  const d=c.type==="unit"?aiUnitToDraft(c.unit):c.type==="contact"?aiContactToDraft(c.contact):c.draft;
   if(t.dataset.aiFill)aiFill(d);else copy(k==="t"?d.adTitle||"":d.adText||"")});
 $("#m-adcopy").onclick=()=>{const t=$("#m-adtitle").value.trim(),d=$("#m-adtext").value.trim();if(!t&&!d){toast("Nothing to copy yet");return}copy(t+(t&&d?"\n\n":"")+d)};
 $("#m-adai").onclick=()=>{const u=$("#m-unit").value.trim();show("assist");aiSend(u?"Write the Bayut and Property Finder listing for unit "+u:`Write a Bayut and Property Finder listing for a ${TYPE[$("#m-type").value]||"unit"} in ${BLD[$("#m-bld").value]||"the Peninsula"}${$("#m-size").value?", "+$("#m-size").value+" sq ft":""}${$("#m-floor").value?", floor "+$("#m-floor").value:""}${$("#m-view").value?", "+$("#m-view").value+" view":""}${$("#m-price").value?", AED "+$("#m-price").value:""}`)};
+
+/* ---------------- Peninsula contacts: import (admin) ---------------- */
+let ctStatsLoaded=false,ctImport=null;
+const CT_FIELDS=[["name","Name",/^(full\s*)?name$|owner|client|contact|customer|first\s*name|^name/i],["phone","Phone",/mobile|phone|tel|cell|whats|contact\s*no|number/i],["phone2","Phone 2",/mobile\s*2|phone\s*2|second|other\s*(phone|mobile)|landline|alt/i],["phone3","Phone 3",/mobile\s*3|phone\s*3/i],
+  ["email","Email",/e-?mail/i],["building","Building",/build|tower|project|bldg|property/i],["unit","Unit no.",/unit|apt|apartment|flat|villa\s*no|^no\.?$/i],["type","Type (studio, 1 bed …)",/type|bed|br\b|layout|category/i],["size","Size (sq ft)",/size|area|sq|bua/i],
+  ["floor","Floor",/floor|level/i],["view","View",/view/i],["role","Owner / tenant",/role|status|owner\s*\/|relation/i],["nationality","Nationality",/national|country/i],["notes","Notes",/note|remark|comment|detail/i]];
+async function loadCtStats(){ctStatsLoaded=true;try{const r=await api("admin/contacts");ctShowStats(r)}catch(e){}}
+function ctShowStats(r){$("#ct-stats").innerHTML=r.count?`<b>${fmt(r.count)}</b> contacts, ${fmt(r.units)} units. Last import ${esc(new Date(r.importedAt).toLocaleString("en-GB",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}))}.`:"No contacts yet.";$("#ct-clear").hidden=!r.count}
+function parseCSV(t){const rows=[];let row=[],f="",q=false;t=t.replace(/^﻿/,"");const sep=(t.split("\n")[0].match(/;/g)||[]).length>(t.split("\n")[0].match(/,/g)||[]).length?";":",";
+  for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}else if(c==='"')q=true;else if(c===sep){row.push(f);f=""}else if(c==="\n"){row.push(f.replace(/\r$/,""));rows.push(row);row=[];f=""}else f+=c}
+  if(f||row.length){row.push(f);rows.push(row)}return rows.filter(r=>r.some(x=>String(x).trim()))}
+async function ctRead(file){if(/\.csv$/i.test(file.name)||file.type==="text/csv")return parseCSV(await file.text());
+  await loadScriptOnce("/vendor/read-excel-file-9.3.20.min.js");const w=()=>new Promise(ok=>{const c=()=>window.readXlsxFile?ok():setTimeout(c,50);c()});await w();
+  const sheets=await window.readXlsxFile(file);const best=sheets.reduce((a,b)=>b.data.length>a.data.length?b:a,sheets[0]);return best.data.map(r=>r.map(x=>x==null?"":x instanceof Date?x.toISOString().slice(0,10):String(x)))}
+function ctGuess(headers){const used=new Set(),map={};for(const[k,,re]of CT_FIELDS){const i=headers.findIndex((h,ix)=>!used.has(ix)&&re.test(String(h).trim()));if(i>=0){map[k]=i;used.add(i)}}return map}
+function ctDrawMap(){const C=ctImport,h=C.rows[C.head]||[],opts=`<option value="">—</option>`+h.map((x,i)=>`<option value="${i}">${esc(String(x||"Column "+(i+1)).slice(0,40))}</option>`).join("");
+  const ex=C.rows.slice(C.head+1,C.head+4);
+  $("#ct-map").innerHTML=`<h4 style="margin-top:14px">${esc(C.file)} · ${fmt(C.rows.length-C.head-1)} rows</h4><p class="src">Check which column is which. Columns not matched are kept as extra details.</p>
+    <div class="fgrid">${CT_FIELDS.map(([k,l])=>`<div class="field"><label>${esc(l)}</label><select data-ctf="${k}">${opts}</select></div>`).join("")}</div>
+    <div class="tablewrap" style="margin-top:10px"><table><tr>${h.map(x=>`<th>${esc(String(x).slice(0,24))}</th>`).join("")}</tr>${ex.map(r=>`<tr>${h.map((_,i)=>`<td>${esc(String(r[i]??"").slice(0,30))}</td>`).join("")}</tr>`).join("")}</table></div>
+    <div class="seg" role="group" style="margin-top:12px"><button data-ctmode="replace" aria-pressed="true">Replace all contacts</button><button data-ctmode="add" aria-pressed="false">Add to existing</button></div>
+    <div class="actions" style="margin-top:10px"><button class="btn primary" id="ct-go">Import ${fmt(C.rows.length-C.head-1)} contacts</button><button class="btn" id="ct-cancel">Cancel</button><span class="src" id="ct-prog"></span></div>`;
+  for(const[k,v]of Object.entries(C.map))$(`[data-ctf="${k}"]`).value=v;$("#ct-map").hidden=false}
+$("#ct-file").addEventListener("change",async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
+  try{const rows=await ctRead(f);if(rows.length<2){toast("That file has no rows");return}
+    // The header is the first of the top rows that names at least two known columns.
+    let head=0;for(let i=0;i<Math.min(10,rows.length);i++){if(Object.keys(ctGuess(rows[i])).length>=2){head=i;break}}
+    ctImport={file:f.name,rows,head,map:ctGuess(rows[head]),mode:"replace"};ctDrawMap()}
+  catch(x){toast(x.message||"Couldn't read that file. Save it as .xlsx or .csv and try again.")}});
+$("#ad-ct-panel").addEventListener("change",e=>{const t=e.target.closest("[data-ctf]");if(t&&ctImport){if(t.value==="")delete ctImport.map[t.dataset.ctf];else ctImport.map[t.dataset.ctf]=+t.value}});
+$("#ad-ct-panel").addEventListener("click",async e=>{const m=e.target.closest("[data-ctmode]");if(m&&ctImport){ctImport.mode=m.dataset.ctmode;document.querySelectorAll("[data-ctmode]").forEach(b=>b.setAttribute("aria-pressed",b===m));return}
+  if(e.target.closest("#ct-cancel")){ctImport=null;$("#ct-map").hidden=true;return}
+  if(e.target.closest("#ct-clear")){if(!confirm("Delete all the Peninsula contacts from the website?"))return;try{ctShowStats(await api("admin/contacts/clear",{}))}catch(x){toast(x.message)}return}
+  const go=e.target.closest("#ct-go");if(!go||!ctImport)return;const C=ctImport;
+  if(C.map.phone===undefined&&C.map.unit===undefined){toast("Choose the phone or the unit column");return}
+  const h=C.rows[C.head],mapped=new Set(Object.values(C.map));
+  const recs=C.rows.slice(C.head+1).map(r=>{const o={};for(const[k,i]of Object.entries(C.map))o[k]=String(r[i]??"").trim();const ex={};h.forEach((x,i)=>{if(!mapped.has(i)&&String(r[i]??"").trim()&&String(x).trim())ex[String(x).trim()]=String(r[i]).trim()});if(Object.keys(ex).length)o.extra=ex;return o});
+  go.disabled=true;let done=0,res;try{for(let k=0;k<recs.length;k+=1000){const part=recs.slice(k,k+1000);$("#ct-prog").textContent=`Importing ${fmt(Math.min(k+1000,recs.length))} of ${fmt(recs.length)}…`;
+      res=await api("admin/contacts/import",{rows:part,replace:C.mode==="replace"&&k===0,last:k+1000>=recs.length,file:C.file});done+=res.imported}
+    ctShowStats(res);ctImport=null;$("#ct-map").hidden=true;toast(`Imported ${fmt(done)} contacts`);loadLog&&loadLog()}
+  catch(x){toast(x.message);go.disabled=false;$("#ct-prog").textContent=done?`${fmt(done)} imported before the error. Try again.`:""}});
 
 /* ---------------- Start-up ---------------- */
 function startApp(){if(!SRV)setRole(isAdmin?"admin":"team");updateAcct();const ch=$("#userchip");
