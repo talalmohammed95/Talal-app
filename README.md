@@ -80,6 +80,12 @@ The admin creates the CEO's account in **Admin › Create an account › CEO** (
 
 **Team chat** (top bar, or More on a phone) is one group for the admin, the agents and the CEO. It refreshes every 15 seconds, shows an unread count, and each person can delete their own messages (the admin any). Agents are asked not to post owners' or clients' numbers there.
 
+## Agent review and tasks (the admin and the CEO)
+
+**More › Agent review** (or tap an agent in the CEO's table) shows one agent at a time: units, online on both platforms against the goal, partly online, off market, client requests in the last 30 days, clients invited, and a registration-quality score. **How the units are registered** lists every unit the agent has (My units and offers), incomplete ones first, with what's missing: unit number, owner, owner phone, size, floor, view, price, furnishing, status, tower (Peninsula Four) and whether it's online. **Task: complete the missing details** fills a task with the list.
+
+**Tasks** are private: the admin or the CEO gives one to an agent (with a due date and notes), and only that agent, the admin and the CEO see it. They show on the agent's Home (overdue ones in red), and the agent ticks them done.
+
 ## Buildings and unit types
 
 From Select Group's material: Peninsula One is one 36-floor tower with simplexes in the podium and on the waterfront; Two (36 storeys) and Three (49 floors) are single towers with studios, 1 and 2 bedrooms; Four, The Plaza, is the only building with two towers (Tower A and Tower B, 52 floors) with studios to 4 bedrooms and 16 duplex lofts; Five is one 36-storey tower (3-bed semi-penthouses at the top) plus two waterfront duplex blocks (1 to 4 bedroom duplexes). Units carry `beds` (0 to 4) and `layout` (simplex, duplex, loft, semipenthouse). The My units form offers only the types of the chosen building and the Tower field only for Peninsula Four; Offers filters by 4 bedrooms, Simplexes and Duplexes & lofts. Towers set on other buildings were removed, and the Peninsula One podium home is marked as a simplex.

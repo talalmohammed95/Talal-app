@@ -598,6 +598,42 @@ const routes = {
     return { ok: true };
   },
 
+  // Private tasks: the admin or the CEO gives one to an agent; only that agent, the admin and the CEO see it.
+  "GET team/tasks": async c => {
+    requireStaff(c);
+    const all = seesAll(c.user);
+    if (!all && !c.user.agent_key) return { tasks: [] };
+    const { rows } = await q(`select id, agent_key, title, notes, due, done, done_at, by_name, created_at from tasks
+      ${all ? "" : "where agent_key = $1"} order by done, due nulls last, created_at desc limit 500`, all ? [] : [c.user.agent_key]);
+    return { tasks: rows.map(t => ({ ...t, id: +t.id, due: t.due ? new Date(t.due).toISOString().slice(0, 10) : null })) };
+  },
+  "POST team/tasks": async c => {
+    requireStaff(c);
+    if (!seesAll(c.user)) fail(403, "Only the admin and the CEO give tasks.", "not_allowed");
+    const agent = str(c.body.agent, 40), title = str(c.body.title, 200), notes = str(c.body.notes, 2000), due = /^\d{4}-\d{2}-\d{2}$/.test(c.body.due || "") ? c.body.due : null;
+    if (!/^[A-Za-z0-9_-]+$/.test(agent)) fail(400, "Choose the agent.");
+    if (!title) fail(400, "Write the task.");
+    const id = parseInt(c.body.id, 10) || 0;
+    if (id) await q("update tasks set agent_key = $2, title = $3, notes = $4, due = $5 where id = $1", [id, agent, title, notes, due]);
+    else await q("insert into tasks (agent_key, title, notes, due, by_user, by_name) values ($1, $2, $3, $4, $5, $6)", [agent, title, notes, due, c.user.id, c.user.name || c.user.email]);
+    await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `${id ? "Edited" : "Gave"} a task to ${agent}: ${title.slice(0, 80)}`]);
+    return { ok: true };
+  },
+  "POST team/tasks/done": async c => {
+    requireStaff(c);
+    const done = c.body.done !== false;
+    const { rowCount } = await q("update tasks set done = $2, done_at = case when $2 then now() else null end where id = $1 and ($3 or agent_key = $4)",
+      [parseInt(c.body.id, 10) || 0, done, seesAll(c.user), c.user.agent_key || "-"]);
+    if (!rowCount) fail(404, "Task not found.");
+    return { ok: true };
+  },
+  "POST team/tasks/delete": async c => {
+    requireStaff(c);
+    if (!seesAll(c.user)) fail(403, "Only the admin and the CEO delete tasks.", "not_allowed");
+    await q("delete from tasks where id = $1", [parseInt(c.body.id, 10) || 0]);
+    return { ok: true };
+  },
+
   // Team performance: counts per agent only (no unit numbers, owners or prices). The admin and the Orla team see it.
   "GET team/performance": async c => {
     requireStaff(c);
