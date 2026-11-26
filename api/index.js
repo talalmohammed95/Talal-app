@@ -377,7 +377,7 @@ const routes = {
       q("select data, created_at from offers"),
       q("select data from settings where id = 'app'")]);
     // The team's offers count too, under the agent each is listed under. A shared listing is counted once, as the listing.
-    const rows = lrows.concat(orows.filter(r => !r.data.fromListing).map(r => ({ data: r.data, created_at: r.created_at, agent_key: "", name: "" })));
+    const rows = lrows.concat(orows.filter(r => r.data.teamUnit && !r.data.fromListing).map(r => ({ data: r.data, created_at: r.created_at, agent_key: "", name: "" })));
     const agents = (st && st.data && st.data.agents) || SETTINGS.agents, by = {};
     const blank = k => ({ key: k, name: agents[k] ? agents[k].name : k, listings: 0, online: 0, partly: 0, platforms: {}, onlineDates: [], lastAdded: null });
     for (const k of Object.keys(agents)) by[k] = blank(k);
@@ -390,6 +390,8 @@ const routes = {
       if (n && n === goal.platforms.length) { a.online++; a.onlineDates.push(r.data.onlineAt || r.created_at); } else if (n) a.partly++;
       for (const p of goal.platforms) if (on[p.k]) a.platforms[p.k] = (a.platforms[p.k] || 0) + 1;
       if (!a.lastAdded || r.created_at > a.lastAdded) a.lastAdded = r.created_at;
+      if (r.data.deal !== "rent") a.forSale = (a.forSale || 0) + 1;
+      if (r.data.deal === "rent" || r.data.deal === "both") a.forRent = (a.forRent || 0) + 1;
     }
     return { goal, agents: Object.values(by), now: new Date().toISOString() };
   },
