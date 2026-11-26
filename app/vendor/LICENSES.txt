@@ -3,3 +3,5 @@ jsPDF 2.5.1 - MIT License - Copyright (c) 2010-2021 James Hall, (c) 2015-2021 yW
 Used to make the sales offer PDFs in the app.
 read-excel-file 9.3.20 - MIT License - Copyright (c) 2018 gitlab.com/catamphetamine - https://gitlab.com/catamphetamine/read-excel-file
 Used by the admin to import the Peninsula contacts from Excel.
+pdf.js 3.11.174 - Apache License 2.0 - Copyright Mozilla Foundation - https://github.com/mozilla/pdf.js
+Used to show floor plan pages from the brochures (opened with isEvalSupported off).

@@ -859,6 +859,12 @@ body.guest .tab[data-view="chat"]{display:none!important}
 .aivn{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;opacity:.85;margin-bottom:2px}.aivn .ic{width:13px;height:13px}
 @media (max-width:620px){#ai-lang{max-width:56px;font-size:13px}.aimic{padding:0 11px}}
 .ufull td,.ufull th{white-space:nowrap;vertical-align:top}.ufull td:nth-child(10){white-space:normal;min-width:170px}.ufull tr.urow{cursor:pointer}.ufull tr.urow:hover td{background:var(--accent-soft)}
+.mguide .gbox,.guidep .gbox{display:flex;gap:12px;align-items:flex-start;border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;background:var(--bg);margin-top:8px}
+.gbox b{display:flex;align-items:center;gap:6px}.gbox b .ic{width:16px;height:16px;color:var(--good,#1a7f4b)}.gbox span{display:block;margin-top:2px}
+.gplan{flex:0 0 auto;display:block;width:120px;height:90px;border-radius:10px;overflow:hidden;border:1px solid var(--line);background:#fff}.gplan img{width:100%;height:100%;object-fit:contain}
+.guidep h3{display:flex;align-items:center;gap:8px;margin:0 0 4px}.guidep h3 .ic{width:20px;height:20px}.guidep .dfil{margin-top:8px}#gq{flex:1;min-width:140px}
+.gread{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}.gread-ok{display:inline-flex;align-items:center;gap:3px;color:var(--good,#1a7f4b)}.gread-ok .ic{width:13px;height:13px}
+@media (max-width:620px){.gplan{width:96px;height:76px}}
 </style>
 <script src="/config.js"></script>
 <script src="/track.js" defer></script>
@@ -1103,7 +1109,7 @@ body.guest .tab[data-view="chat"]{display:none!important}
         <h2>Add a unit</h2>
         <p class="lede" id="mine-form-lede">Your own units, with the owner's details. Only you and the admin can see them. They show up in your Offers with a “Mine” tag.</p>
         <form id="mine-form" class="fgrid" autocomplete="off"><input type="hidden" id="m-id">
-          <div class="field"><label for="m-unit">Unit no.</label><input id="m-unit" placeholder="e.g. 3305"></div>
+          <div class="field"><label for="m-unit">Unit no.</label><input id="m-unit" placeholder="e.g. 3305"></div><div class="field wide mguide" id="m-guide" hidden></div>
           <div class="field"><label for="m-bld">Building</label><select id="m-bld"><option value="3">Peninsula Three</option><option value="1">Peninsula One</option><option value="2">Peninsula Two</option><option value="4">Peninsula Four</option><option value="5">Peninsula Five</option></select></div>
           <div class="field" id="m-tower-wrap"><label for="m-tower">Tower</label><select id="m-tower"><option value="">Not set</option><option value="A">Tower A</option><option value="B">Tower B</option></select></div>
           <div class="field"><label for="m-type">Type</label><select id="m-type"></select></div>
@@ -1405,10 +1411,27 @@ const isDone=o=>o.avail==="Sold"||o.avail==="Rented";
 const FDEF={deal:"all",type:"",bld:"",sort:"price-asc",q:"",pmin:"",pmax:"",smin:"",smax:"",view:"",furn:"",band:"",avail:"",agent:"",ymin:"",value:false,checkOnly:false,starOnly:false,hide:true,reduced:false};
 const state=Object.assign({},FDEF,store.get("orla.filters",{}),{client:null,sel:store.get("orla.sel",null)});
 
+const known=v=>v!=null&&String(v).trim()!==""&&!/^(on request|—|–|-|n\/a)$/i.test(String(v).trim());
+const ordN=n=>{const s=["th","st","nd","rd"],v=n%100;return n===0?"Ground":n+(s[(v-20)%10]||s[v]||s[0])};
+let GUIDE=[];
+async function loadGuide(){if(!SRV||!isTeam())return;try{GUIDE=(await api("team/guide")).rows||[]}catch(e){}}
+function unitSplit(u){const d=String(u||"").replace(/\D/g,"");if(d.length<3||d.length>5)return null;return{d,floor:+d.slice(0,-2),stack:d.slice(-2)}}
+// The brochure row for a unit: its own number first, then its stack on that floor, then its stack anywhere. Floor always comes from the number.
+function guideOf(b,tower,unit){const u=unitSplit(unit);if(!u)return null;
+  const inB=GUIDE.filter(r=>+r.b===+b&&(+b!==4||!tower||!r.tower||r.tower===tower));
+  const ex=inB.find(r=>r.unit===u.d);if(ex)return Object.assign({},ex,{floor:u.floor});
+  const st=inB.filter(r=>!r.unit&&r.stack===u.stack),span=r=>(r.to??99)-(r.from??0);
+  const fit=st.filter(r=>(r.from==null||u.floor>=r.from)&&(r.to==null||u.floor<=r.to)).sort((x,y)=>span(x)-span(y));
+  const r=fit[0]||st[0];return r?Object.assign({},r,{floor:u.floor}):{floor:u.floor}}
+const planUrl=g=>API+"/team/guide/plan?doc="+encodeURIComponent(g.doc)+"&page="+g.page;
+function fillUnit(o){if(!isTeam()||!o||!o.unit)return o;const g=guideOf(o.b,o.tower,o.unit);if(!g)return o;const x=Object.assign({},o);
+  if(!known(x.floor)||/^(low|mid|high)/i.test(x.floor))x.floor=ordN(g.floor);
+  if(!known(x.view)&&g.view)x.view=g.view;if(!x.size&&g.size)x.size=g.size;if(!x.balcony&&g.balcony)x.balcony=g.balcony;
+  if(g.doc&&g.page&&g.img)x.gplan={doc:g.doc,page:g.page,c:g.type||""};if(g.type)x.gtype=g.type;return x}
 function mineToOffer(m){return{id:m.id,b:+m.b,tower:m.tower||"",layout:m.layout||"",beds:+m.beds,deal:m.deal,title:(m.unit?"Unit "+m.unit+" · ":"")+typeOf(m),price:m.deal==="sale"?+m.price:undefined,rent:m.deal==="rent"?+m.price:undefined,
-  size:m.size?+m.size:null,floor:m.floor||"On request",view:m.view||"On request",furn:m.furn,status:m.status,agent:m.agent,hl:m.notes||"",mine:true,future:!!m.future,unit:m.unit||null,owner:m.owner,ownerPhone:m.phone,date:m.date,by:m._by||null,own:m._own!==false,shared:m.sharedOffer||null,shareTo:m.shareTo,shareNote:m.shareNote,src:SRV?(m._by?"Added by "+(m._by.name||m._by.email):"Added by you"):"Added on this device"}}
+  size:m.size?+m.size:null,floor:m.floor||"",view:m.view||"",furn:m.furn,status:m.status,agent:m.agent,hl:m.notes||"",mine:true,future:!!m.future,unit:m.unit||null,owner:m.owner,ownerPhone:m.phone,date:m.date,by:m._by||null,own:m._own!==false,shared:m.sharedOffer||null,shareTo:m.shareTo,shareNote:m.shareNote,src:SRV?(m._by?"Added by "+(m._by.name||m._by.email):"Added by you"):"Added on this device"}}
 // A unit an agent has shared shows once, as its shared offer.
-const all=()=>{const live=new Set(OFFERS.map(o=>o.id));return OFFERS.concat(mine.concat(teamListings).filter(m=>!(m.sharedOffer&&live.has(m.sharedOffer))).map(mineToOffer)).map(enrich)};
+const all=()=>{const live=new Set(OFFERS.map(o=>o.id));return OFFERS.concat(mine.concat(teamListings).filter(m=>!(m.sharedOffer&&live.has(m.sharedOffer))).map(mineToOffer)).map(fillUnit).map(enrich)};
 const agentOf=o=>AGENTS[o.agent]||Object.values(AGENTS)[0]||{name:"Orla Properties",phone:""};
 const dldLabel=()=>"DLD registration ("+(+(FEES.dld*100).toFixed(2))+"%)";
 const keyPrice=o=>o.deal==="rent"?o.rent:o.price;
@@ -1435,7 +1458,7 @@ function cardHTML(o,cur){
   return `<button class="card" data-id="${esc(o.id)}" aria-current="${cur}">
     <div class="tower ph" aria-hidden="true"><img loading="lazy" src="${esc(imgSrc(photosOf(o)[0].k,true))}" alt=""><b>P${o.b}${isTeam()&&o.tower&&hasTowers(o.b)?esc(o.tower):""}</b></div>
     <div style="min-width:0"><h3>${starred.has(o.id)?'<span class="star" aria-label="Shortlisted">★</span> ':""}${esc(o.title)}</h3>
-      <div class="meta">${esc(bldT(o))} · ${o.size?fmt(o.size)+" sq ft":"size on request"} · ${esc(o.floor)}${o.x&&o.x.psf?" · AED "+fmt(o.x.psf)+"/sq ft":""}</div>
+      <div class="meta">${esc(bldT(o))} ${o.size?" · "+fmt(o.size)+" sq ft":""}${known(o.floor)?" · "+esc(o.floor):""}${o.x&&o.x.psf?" · AED "+fmt(o.x.psf)+"/sq ft":""}</div>
       <div class="pills">${pills(o)}${needsTower(o)?'<span class="pill pending">Tower A or B?</span>':""}</div></div>
     <div class="p num">${esc(o.deal==="rent"?short(o.rent):short(o.price))}<small>${o.deal==="rent"?"AED / yr":"AED"}</small></div>
   </button>`;
@@ -1494,26 +1517,26 @@ function renderDetail(){
   const metric=(l,v,sub,cls="")=>`<div class="metric ${cls}"><span>${esc(l)}</span><b class="num">${esc(v)}</b><small>${esc(sub)}</small></div>`;
   const vcls=d=>d==null?"":d<-0.03?"below":d>0.03?"above":"";
   let M="";
-  if(o.deal!=="rent")M=metric("Price per sq ft",x.psf?aed(x.psf):"—",o.size?fmt(o.size)+" sq ft":"Size on request")
+  if(o.deal!=="rent")M=metric("Price per sq ft",x.psf?aed(x.psf):"—",o.size?fmt(o.size)+" sq ft":"")
     
     +metric("Gross yield",x.gy?(x.gy*100).toFixed(1)+"%":"—",x.rentFor?aed(x.rentFor)+" / yr"+(x.rentSrc==="market"?" (avg lease)":""):"No rent estimate")
     +metric("Mortgage estimate",aed(x.mort)+" / mo",`${MORT.down*100}% down · ${(MORT.rate*100).toFixed(1)}% · ${MORT.years} yrs`);
-  else M=metric("Monthly rent",aed(o.rent/12),o.cheques?o.cheques+" cheque"+(o.cheques==="1"?"":"s"):"Cheques on request")
-    +metric("Rent per sq ft",x.rpsf?aed(x.rpsf):"—",o.size?fmt(o.size)+" sq ft":"Size on request")
+  else M=metric("Monthly rent",aed(o.rent/12),o.cheques?o.cheques+" cheque"+(o.cheques==="1"?"":"s"):"Cheques to agree")
+    +metric("Rent per sq ft",x.rpsf?aed(x.rpsf):"—",o.size?fmt(o.size)+" sq ft":"")
     
     +metric("Security deposit",aed(o.rent*dep),(dep*100)+"% of annual rent");
   const pos=o.deal!=="rent"&&x.psf&&x.mS?{v:x.psf,m:x.mS.psf,f:v=>"AED "+fmt(v),t:"Asking price per sq ft against the building's registered average"}:(x.vsR!=null?{v:o.rent,m:x.mR.avg,f:v=>short(v),t:"Annual rent against the building's average registered lease"}:null);
   const tags=x.views.map(v=>`<span class="tag">${esc(VIEWS[v])}</span>`).join("")+(x.band?`<span class="tag">${esc(BAND[x.band])}</span>`:"")+(x.furn?`<span class="tag">${esc(FURN[x.furn])}</span>`:"");
-  const unit=(isTeam()&&o.unit?[["Unit number",o.unit]]:[]).concat([["Unit type",typeOf(o)]]);unit.push(["Size",o.size?fmt(o.size)+" sq ft · "+(o.size*0.092903).toFixed(1)+" m²":"On request"]);
+  const unit=(isTeam()&&o.unit?[["Unit number",o.unit]]:[]).concat([["Unit type",typeOf(o)]]);if(o.size)unit.push(["Size",fmt(o.size)+" sq ft · "+(o.size*0.092903).toFixed(1)+" m²"]);
   if(o.balcony)unit.push(["Balcony",o.balcony+" sq ft"]);
-  unit.push(["Bathrooms",String(o.baths??"—")],["Floor",o.floor||"On request"],["View",o.view||"On request"],["Furnishing",o.furn||"—"],["Handover",o.status||"—"],["Availability",o.avail]);
+  unit.push(["Bathrooms",String(o.baths??"—")]);if(known(o.floor))unit.push(["Floor",o.floor]);if(known(o.view))unit.push(["View",o.view]);if(o.gtype&&isTeam())unit.push(["Brochure layout",o.gtype]);unit.push(["Furnishing",o.furn||"—"],["Handover",o.status||"—"],["Availability",o.avail]);
   if(o.parking)unit.push(["Parking",o.parking]);
   if(o.mine&&!SRV&&o.owner)unit.push(["Owner / client",o.owner]);
   if(o.mine&&!SRV&&o.ownerPhone)unit.push(["Owner phone",o.ownerPhone]);
   if(o.date)unit.push(["Date listed",o.date]);
   let money="";
   if(o.deal!=="rent"){const c=costs(o.price);money+=`<div><h4>Purchase cost</h4>${kv("Price",aed(o.price))}${kv(dldLabel(),aed(c.dld))}${kv("Trustee office fee",aed(FEES.trustee))}${kv("Admin fee",aed(FEES.admin))}${kv("Total cost",aed(c.total),"total")}</div>`}
-  if(o.deal!=="sale")money+=`<div><h4>Rent and payment</h4>${kv("Annual rent",aed(o.rent))}${kv("Monthly equivalent",aed(o.rent/12))}${kv("Cheques",o.cheques||"On request")}${kv("Security deposit ("+(dep*100)+"%)",aed(o.rent*dep))}${kv("Rent per year",aed(o.rent),"total")}</div>`;
+  if(o.deal!=="sale")money+=`<div><h4>Rent and payment</h4>${kv("Annual rent",aed(o.rent))}${kv("Monthly equivalent",aed(o.rent/12))}${kv("Cheques",o.cheques||"To agree")}${kv("Security deposit ("+(dep*100)+"%)",aed(o.rent*dep))}${kv("Rent per year",aed(o.rent),"total")}</div>`;
   let inv="";
   if(o.deal!=="rent"&&x.rentFor){const c=costs(o.price);let rows=kv("Rent used",aed(x.rentFor)+" / yr"+(x.rentSrc==="market"?" (avg lease)":""))+kv("Gross yield on price",(x.gy*100).toFixed(1)+"%")+kv("Gross yield on total cost",(x.rentFor/c.total*100).toFixed(1)+"%")+kv("Mortgage, "+MORT.down*100+"% down",aed(x.mort)+" / mo")+kv("Cash upfront",aed(o.price*MORT.down+c.total-o.price));
     if(o.inv&&o.inv.resale){const be=c.total/0.98,gain=o.inv.resale*0.98-c.total;rows+=kv("Break-even resale (2% exit)",aed(Math.round(be/1000)*1000))+kv("Resale target",aed(o.inv.resale))+kv("12-month return (resale + rent)",aed(gain+x.rentFor)+" · "+((gain+x.rentFor)/c.total*100).toFixed(1)+"%","total")}
@@ -1795,11 +1818,11 @@ $("#present").addEventListener("click",e=>{const b=e.target.closest("[data-pph]"
 function renderPresent(){
   const o=all().find(x=>x.id===pres.ids[pres.i]);if(!o){closePresent();return}
   const p=priceLine(o),a=agentOf(o);
-  const f=[["Unit",typeOf(o)],["Size",o.size?fmt(o.size)+" sq ft":"On request"],["Floor",o.floor],["View",o.view],["Bathrooms",String(o.baths??"—")],["Furnishing",o.furn&&o.furn!=="—"?o.furn:"On request"],["Status",o.avail==="Available"?(o.status||"Ready"):o.avail]];
+  const f=[["Unit",typeOf(o)],["Size",o.size?fmt(o.size)+" sq ft":""],["Floor",known(o.floor)?o.floor:""],["View",known(o.view)?o.view:""],["Bathrooms",String(o.baths??"—")],["Furnishing",known(o.furn)?o.furn:""],["Status",o.avail==="Available"?(o.status||"Ready"):o.avail]].filter(x=>known(x[1]));
   f.push(o.parking?["Parking",o.parking]:o.cheques?["Cheques",o.cheques]:["Community","The Peninsula"]);
   let money="";
   if(o.deal!=="rent"){const c=costs(o.price);money+=`<div class="panel"><h4>Total purchase cost</h4>${kv("Price",aed(o.price))}${kv(dldLabel(),aed(c.dld))}${kv("Trustee office fee",aed(FEES.trustee))}${kv("Admin fee",aed(FEES.admin))}${kv("Total cost",aed(c.total),"total")}</div>`}
-  if(o.deal!=="sale"){const dep=parseFloat(o.deposit||"5")/100;money+=`<div class="panel"><h4>Rent</h4>${kv("Annual rent",aed(o.rent))}${kv("Monthly equivalent",aed(o.rent/12))}${kv("Security deposit ("+(dep*100)+"%)",aed(o.rent*dep))}${kv("Cheques",o.cheques||"On request")}</div>`}
+  if(o.deal!=="sale"){const dep=parseFloat(o.deposit||"5")/100;money+=`<div class="panel"><h4>Rent</h4>${kv("Annual rent",aed(o.rent))}${kv("Monthly equivalent",aed(o.rent/12))}${kv("Security deposit ("+(dep*100)+"%)",aed(o.rent*dep))}${kv("Cheques",o.cheques||"To agree")}</div>`}
   $("#present").innerHTML=`<div class="pbar"><button class="btn" id="p-close">Close</button><span class="num" style="font-size:13px;color:#CFC8BF">${pres.i+1} of ${pres.ids.length}</span><div style="display:flex;gap:8px">${CLOUD?"":'<button class="btn" id="p-print">Print</button>'}<button class="btn" id="p-prev" ${pres.i===0?"disabled":""}>‹ Previous</button><button class="btn" id="p-next" ${pres.i===pres.ids.length-1?"disabled":""}>Next ›</button></div></div>
    <div class="pwrap">
     <div class="phero"><div><div class="eyebrow">${esc(BLD[o.b].toUpperCase())} · BUSINESS BAY · ${o.deal==="rent"?"FOR RENT":o.deal==="both"?"FOR SALE OR RENT":"FOR SALE"}</div><h1>${esc(o.title)}</h1></div><div class="big num"><b>${esc(p.big)}</b><span>${esc(p.sub)}</span></div></div>
@@ -2131,7 +2154,7 @@ function renderReports(){const el=$("#reports");if(!el)return;
 
 addEventListener("afterprint",()=>document.body.classList.remove("print-present"));
 /* ---------------- App shell: icons, page headers, menus, theme toggle ---------------- */
-const ICONS={"mic":"M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM5 11a7 7 0 0 0 14 0M12 18v3M8 21h8","eye":"M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z","tasks":"M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11","chat2":"M21 12a8 8 0 0 1-11.6 7.1L4 21l1.9-5.4A8 8 0 1 1 21 12z","spark":"M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z","folder":"M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z","share":"M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13","calendar":"M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z","target":"M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4","home": "M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z", "building": "M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16M15 9h3a2 2 0 0 1 2 2v10M3 21h18M8 7h3M8 11h3M8 15h3", "chart": "M3 3v18h18M7 15l4-4 3 3 5-6", "file": "M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6", "star": "M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z", "users": "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8", "calc": "M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h8", "trend": "M22 7l-8.5 8.5-5-5L2 17M16 7h6v6", "list": "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01", "shield": "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z", "more": "M5 12h.01M12 12h.01M19 12h.01", "sun": "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4", "moon": "M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z", "logout": "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9", "lock": "M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4", "globe": "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20", "x": "M18 6 6 18M6 6l12 12", "monitor": "M2 4h20v12H2zM8 20h8M12 16v4", "copy": "M9 9h11v11H9zM5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1", "chat": "M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.4A8.5 8.5 0 1 1 21 12z", "phone": "M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z", "download": "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3", "print": "M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z", "arrow": "M19 12H5M12 19l-7-7 7-7", "arrowr": "M5 12h14M12 5l7 7-7 7", "user": "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8", "water": "M2 12c2 0 2-1.5 4-1.5S8 12 10 12s2-1.5 4-1.5S16 12 18 12s2-1.5 4-1.5M2 17c2 0 2-1.5 4-1.5S8 17 10 17s2-1.5 4-1.5S16 17 18 17s2-1.5 4-1.5M12 3v4", "pool": "M2 18c2 0 2-1.5 4-1.5S8 18 10 18s2-1.5 4-1.5S16 18 18 18s2-1.5 4-1.5M8 15V5a2 2 0 0 1 4 0M16 15V5a2 2 0 0 0-4 0M8 9h8", "boat": "M3 17l2 4h14l2-4zM12 3v10M12 3l6 8H12M6 13h12", "bag": "M6 7h12l1 14H5zM9 7a3 3 0 0 1 6 0", "pin": "M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5", "train": "M6 3h12a2 2 0 0 1 2 2v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V5a2 2 0 0 1 2-2zM4 11h16M8 15h.01M16 15h.01M7 21l2-3M17 21l-2-3", "plane": "M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z", "briefcase": "M3 7h18v13H3zM8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18", "tree": "M12 22v-6M7 16h10l-5-13z", "menu": "M3 6h18M3 12h18M3 18h18", "key": "M15 7a4 4 0 1 1-3.5 6L4 20.5V17h3v-3h3l1.5-1.5A4 4 0 0 1 15 7zM17 9h.01"};
+const ICONS={"check":"M5 12.5l4.5 4.5L19 7","search":"M11 4a7 7 0 1 1 0 14a7 7 0 0 1 0-14zM20 20l-4-4","mic":"M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM5 11a7 7 0 0 0 14 0M12 18v3M8 21h8","eye":"M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z","tasks":"M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11","chat2":"M21 12a8 8 0 0 1-11.6 7.1L4 21l1.9-5.4A8 8 0 1 1 21 12z","spark":"M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z","folder":"M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z","share":"M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13","calendar":"M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z","target":"M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4","home": "M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z", "building": "M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16M15 9h3a2 2 0 0 1 2 2v10M3 21h18M8 7h3M8 11h3M8 15h3", "chart": "M3 3v18h18M7 15l4-4 3 3 5-6", "file": "M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6", "star": "M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z", "users": "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8", "calc": "M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h8", "trend": "M22 7l-8.5 8.5-5-5L2 17M16 7h6v6", "list": "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01", "shield": "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z", "more": "M5 12h.01M12 12h.01M19 12h.01", "sun": "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4", "moon": "M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z", "logout": "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9", "lock": "M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4", "globe": "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20", "x": "M18 6 6 18M6 6l12 12", "monitor": "M2 4h20v12H2zM8 20h8M12 16v4", "copy": "M9 9h11v11H9zM5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1", "chat": "M21 12a8.5 8.5 0 0 1-12.6 7.4L3 21l1.6-5.4A8.5 8.5 0 1 1 21 12z", "phone": "M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z", "download": "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3", "print": "M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z", "arrow": "M19 12H5M12 19l-7-7 7-7", "arrowr": "M5 12h14M12 5l7 7-7 7", "user": "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8", "water": "M2 12c2 0 2-1.5 4-1.5S8 12 10 12s2-1.5 4-1.5S16 12 18 12s2-1.5 4-1.5M2 17c2 0 2-1.5 4-1.5S8 17 10 17s2-1.5 4-1.5S16 17 18 17s2-1.5 4-1.5M12 3v4", "pool": "M2 18c2 0 2-1.5 4-1.5S8 18 10 18s2-1.5 4-1.5S16 18 18 18s2-1.5 4-1.5M8 15V5a2 2 0 0 1 4 0M16 15V5a2 2 0 0 0-4 0M8 9h8", "boat": "M3 17l2 4h14l2-4zM12 3v10M12 3l6 8H12M6 13h12", "bag": "M6 7h12l1 14H5zM9 7a3 3 0 0 1 6 0", "pin": "M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5", "train": "M6 3h12a2 2 0 0 1 2 2v10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V5a2 2 0 0 1 2-2zM4 11h16M8 15h.01M16 15h.01M7 21l2-3M17 21l-2-3", "plane": "M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z", "briefcase": "M3 7h18v13H3zM8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18", "tree": "M12 22v-6M7 16h10l-5-13z", "menu": "M3 6h18M3 12h18M3 18h18", "key": "M15 7a4 4 0 1 1-3.5 6L4 20.5V17h3v-3h3l1.5-1.5A4 4 0 0 1 15 7zM17 9h.01"};
 const ic=(n,cls="")=>`<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[n]}"/></svg>`;
 const PAGES={dash:["home","Dashboard",""],offers:["building","Offers","Browse, filter, compare and present every unit"],analysis:["chart","Analysis","How your offers compare with each other and the market"],
   reports:["file","Reports","Portfolio report and Excel-ready downloads"],shortlist:["star","Client shortlist","Offers you've starred, ready to present or send"],clients:["users","Clients","Buyers, investors and tenants you're working with"],
@@ -2279,7 +2302,7 @@ $("#ad-form").addEventListener("submit",async e=>{e.preventDefault();const g=k=>
   if(!g("#o-title")){toast("Enter a headline");$("#o-title").focus();return}
   if(deal!=="rent"&&!n("#o-price")){toast("Enter the sale price");$("#o-price").focus();return}
   if(deal!=="sale"&&!n("#o-rent")){toast("Enter the rent");$("#o-rent").focus();return}
-  const o=Object.assign({},base,{id:id||"o-"+Date.now().toString(36),title:g("#o-title"),b:+g("#o-b"),beds:+g("#o-beds"),deal,avail:g("#o-avail"),price:deal!=="rent"?n("#o-price"):null,rent:deal!=="sale"?n("#o-rent"):null,size:n("#o-size")||null,floor:g("#o-floor")||"On request",view:g("#o-view")||"On request",furn:g("#o-furn")||"—",baths:g("#o-baths")||"—",status:g("#o-status")||"Ready",cheques:g("#o-cheques")||null,deposit:g("#o-deposit")||null,agent:g("#o-agent"),hl:g("#o-hl"),src:base.src||"Added in Admin"});
+  const o=Object.assign({},base,{id:id||"o-"+Date.now().toString(36),title:g("#o-title"),b:+g("#o-b"),beds:+g("#o-beds"),deal,avail:g("#o-avail"),price:deal!=="rent"?n("#o-price"):null,rent:deal!=="sale"?n("#o-rent"):null,size:n("#o-size")||null,floor:g("#o-floor")||"",view:g("#o-view")||"",furn:g("#o-furn")||"—",baths:g("#o-baths")||"—",status:g("#o-status")||"Ready",cheques:g("#o-cheques")||null,deposit:g("#o-deposit")||null,agent:g("#o-agent"),hl:g("#o-hl"),src:base.src||"Added in Admin"});
   const ir=n("#o-irent");o.inv=ir?Object.assign({},base.inv||{},{rent:ir}):(base.inv&&base.inv.resale?{resale:base.inv.resale}:null);
   const ch=g("#o-check").split("\n").map(x=>x.trim()).filter(Boolean);o.check=ch.length?ch:null;
   o.unit=g("#o-unit")||null;o.teamUnit=$("#o-teamunit").checked||undefined;o.owner=g("#o-owner")||null;o.ownerPhone=g("#o-ophone")||null;if(phDraft.photos)o.photos=phDraft.photos;else delete o.photos;if(phDraft.plan)o.plan=phDraft.plan;else delete o.plan;
@@ -2349,7 +2372,7 @@ async function loadAll(first){
       else if(owner&&owner!==uid){mine=[];clients=[];starred=new Set();persist()}
       else if(mine.length||clients.length||starred.size)persist();
       store.set("orla.localOwner",uid)}
-    migrateOvr();if(!isTeam()){await loadTop();await loadMyProperty()}if(isTeam()){await loadListings();await loadPerf(true);await loadLeads();await loadTasks();if(isAdmin||isCEO()){loadWeekly();loadVisitorsBrief()}setTimeout(paceModal,700);if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
+    migrateOvr();if(!isTeam()){await loadTop();await loadMyProperty()}if(isTeam()){await loadGuide();await loadListings();await loadPerf(true);await loadLeads();await loadTasks();if(isAdmin||isCEO()){loadWeekly();loadVisitorsBrief()}setTimeout(paceModal,700);if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
   catch(e){if(e.status===401||e.status===403){location.reload();return}
     if(first){OFFERS=store.get("orla.cache.offers",[]);applySettings(store.get("orla.cache.settings",{}))}
     if(first||!loadAll.warned){loadAll.warned=true;toast("Offline: showing what's saved on this device")}}
@@ -2408,7 +2431,7 @@ function photosOf(o){
   if(Array.isArray(o.photos)&&o.photos.length)return o.photos.map(p=>({k:p.u||p.k,c:p.c||"",t:p.t||"p"}));
   const m=MEDIA.offer[o.id];if(m)return m.map(toItem);
   const b=MEDIA.bld[o.b]||MEDIA.bld[3];return(b[o.beds]||b.all).map(toItem)}
-function planOf(o){if(!isTeam())return null;if(o.plan&&typeof o.plan==="object")return(o.plan.u||o.plan.k)?{k:o.plan.u||o.plan.k,c:o.plan.c||"Floor plan",t:"f"}:null;const p=MEDIA.plan[o.id];return p?toItem(p):null}
+function planOf(o){if(!isTeam())return null;if(o.plan&&typeof o.plan==="object")return(o.plan.u||o.plan.k)?{k:o.plan.u||o.plan.k,c:o.plan.c||"Floor plan",t:"f"}:null;const p=MEDIA.plan[o.id];if(p)return toItem(p);return o.gplan?{k:planUrl(o.gplan),c:"Floor plan"+(o.gplan.c?" · "+o.gplan.c:"")+" (developer brochure)",t:"f"}:null}
 const mediaOf=o=>{const l=photosOf(o),p=planOf(o);return p?l.concat([p]):l};
 const hasRealPhotos=o=>photosOf(o).some(p=>p.t==="p");
 const KIND={r:"Developer render",p:"Photo of this home",f:"Floor plan"};
@@ -2442,7 +2465,7 @@ function galleryHTML(o,cls=""){const m=mediaOf(o);if(!m.length)return"";const f=
     <div class="gmain"><button class="gimg" data-gopen aria-label="Open photos full screen"><img src="${esc(imgSrc(f.k))}" alt="${esc(f.c||KIND[f.t])}" ${f.t==="f"?'class="plan"':""}></button>
       ${m.length>1?`<button class="gnav prev" data-gstep="-1" aria-label="Previous photo">${ic("arrow")}</button><button class="gnav next" data-gstep="1" aria-label="Next photo">${ic("arrowr")}</button>`:""}
       <div class="gcap"><span class="gk">${esc(KIND[f.t])}</span><span class="gc">${esc(f.c)}</span><span class="gn num">1 / ${m.length}</span></div></div>
-    ${m.length>1||!isTeam()?`<div class="gthumbs">${!isTeam()&&cls!=="pmain"?`<a class="gth locked" ${leadAttrs(o,"details")} aria-label="Ask the agent for the floor plan">${ic("lock")}<span>Floor plan</span><small>on request</small></a>`:""}${m.map((p,i)=>`<button class="gth${p.t==="f"?" isplan":""}" data-gi="${i}" aria-label="${esc((p.t==="f"?"Floor plan: ":"Photo: ")+(p.c||""))}" aria-current="${i===0}"><img loading="lazy" src="${esc(imgSrc(p.k,true))}" alt="">${p.t==="f"?"<span>Floor plan</span>":""}</button>`).join("")}</div>`:""}
+    ${m.length>1||!isTeam()?`<div class="gthumbs">${!isTeam()&&cls!=="pmain"?`<a class="gth locked" ${leadAttrs(o,"details")} aria-label="Ask the agent for the floor plan">${ic("lock")}<span>Floor plan</span><small>ask ${esc(firstName(agentOf(o).name))}</small></a>`:""}${m.map((p,i)=>`<button class="gth${p.t==="f"?" isplan":""}" data-gi="${i}" aria-label="${esc((p.t==="f"?"Floor plan: ":"Photo: ")+(p.c||""))}" aria-current="${i===0}"><img loading="lazy" src="${esc(imgSrc(p.k,true))}" alt="">${p.t==="f"?"<span>Floor plan</span>":""}</button>`).join("")}</div>`:""}
   </div>`}
 function galGo(g,i){const o=all().find(x=>x.id===g.dataset.gal);if(!o)return;const m=mediaOf(o);i=(i+m.length)%m.length;g.dataset.i=i;const p=m[i];
   const img=g.querySelector(".gimg img");img.src=imgSrc(p.k);img.alt=p.c||KIND[p.t];img.classList.toggle("plan",p.t==="f");
@@ -2475,7 +2498,7 @@ const isAvail=o=>!o.avail||o.avail==="Available";
 function homeCard(o,label){const c=photosOf(o)[0],p=o.deal==="rent"?short(o.rent)+" / yr":short(o.price);
   return `<button class="hcard" data-id="${esc(o.id)}">
     <div class="hph"><img loading="lazy" src="${esc(imgSrc(c.k,true))}" alt="${esc(c.c)}"><span class="hbadge ${o.deal==="rent"?"rent":""}">${dealWord(o)}</span>${hasRealPhotos(o)?'<span class="hreal">Real photos</span>':""}${planOf(o)?'<span class="hplan">Floor plan</span>':""}${label?`<span class="hlabel">${esc(label)}</span>`:""}</div>
-    <div class="hb"><div class="hp num">AED ${esc(p)}</div><h3>${esc(o.layout?typeOf(o):bedsWord(o.beds))} · ${esc(BLD[o.b])}</h3><p>${o.size?fmt(o.size)+" sq ft":"Size on request"}${o.view&&o.view!=="On request"?" · "+esc(o.view):""}</p></div>
+    <div class="hb"><div class="hp num">AED ${esc(p)}</div><h3>${esc(o.layout?typeOf(o):bedsWord(o.beds))} · ${esc(BLD[o.b])}</h3><p>${esc([o.size?fmt(o.size)+" sq ft":"",known(o.view)?o.view:""].filter(Boolean).join(" · "))}</p></div>
   </button>`}
 
 /* ---------------- Welcome page for clients and external agents ---------------- */
@@ -2591,7 +2614,7 @@ function pick3(a){const pr=o=>a.deal==="rent"?o.rent:o.price,notes=[];
   const lab=pick.length===3?["Premium","Balanced","Best value"]:pick.length===2?["Premium","Best value"]:["Our pick"];
   return{list:pick.map((o,i)=>({o,label:lab[i],p:pr(o)})),notes}}
 function whyLine(x,r,a){const o=x.o,top=r[0],low=r[r.length-1];
-  if(x.label==="Premium")return(o.size?"The most space: "+fmt(o.size)+" sq ft":"The most complete option")+(o.view&&o.view!=="On request"?" · "+o.view:"")+".";
+  if(x.label==="Premium")return(o.size?"The most space: "+fmt(o.size)+" sq ft":"The most complete option")+(known(o.view)?" · "+o.view:"")+".";
   if(x.label==="Best value")return r.length>1?"Saves AED "+short(top.p-x.p)+(a.deal==="rent"?" a year":"")+" compared with the premium option.":"The lowest price available.";
   if(x.label==="Balanced")return"Sits between the two: AED "+short(x.p-low.p)+" more than best value, AED "+short(top.p-x.p)+" less than premium.";
   return"The best match available right now."}
@@ -2607,7 +2630,7 @@ function drawResults(c){const a=wz.a,R=pick3(a);wz.r=R.list;const r=R.list;
     <div class="wres">${r.map(x=>{const o=x.o,cv=photosOf(o)[0];return `<article class="wcard">
       <div class="wph"><img src="${esc(imgSrc(cv.k,true))}" alt="${esc(cv.c)}"><span class="wlab ${x.label==="Premium"?"prem":x.label==="Best value"?"val":"bal"}">${esc(x.label)}</span>${planOf(o)?'<span class="hplan">Floor plan</span>':""}</div>
       <div class="wb"><div class="hp num">AED ${esc(a.deal==="rent"?fmt(o.rent)+" / yr":fmt(o.price))}</div><h3>${esc(o.layout?typeOf(o):bedsWord(o.beds))} · ${esc(BLD[o.b])}</h3>
-        <p class="wmeta">${o.size?fmt(o.size)+" sq ft":"Size on request"}${o.floor&&o.floor!=="On request"?" · "+esc(o.floor):""}${o.furn&&o.furn!=="—"?" · "+esc(o.furn):""}</p>
+        <p class="wmeta">${esc([o.size?fmt(o.size)+" sq ft":"",known(o.floor)?o.floor:"",known(o.furn)?o.furn:""].filter(Boolean).join(" · "))}</p>
         <div class="wm">${metric(x)}</div><p class="why">${esc(whyLine(x,r,a))}</p>
         <button class="btn" data-view-id="${esc(o.id)}">See photos and details${ic("arrowr")}</button></div></article>`}).join("")}</div>
     ${isTeam()||ROLE==="broker"?`<div class="field wcl"><label for="wz-name">Client's name, for the message (optional)</label><input id="wz-name" value="${esc(wz.client||"")}" placeholder="e.g. Sara"></div>`:""}
@@ -2616,7 +2639,7 @@ function drawResults(c){const a=wz.a,R=pick3(a);wz.r=R.list;const r=R.list;
   if(nm)nm.addEventListener("input",upd);upd();c.scrollTop=0}
 function wizText(){const a=wz.a,r=wz.r||[],nm=wz.client;
   let t=ROLE==="client"?`Hello, I'm interested in these homes at the Peninsula, Business Bay:\n\n`:`${nm?"Hi "+nm+", h":"H"}ere are ${r.length===3?"three options":"the best options"} at the Peninsula, Business Bay (Dubai Canal), ${a.deal==="rent"?"for rent":"for sale"}:\n\n`;
-  r.forEach((x,i)=>{const o=x.o;t+=`${i+1}. *${x.label}*: ${bedsWord(o.beds)} in ${BLD[o.b]}\n   AED ${a.deal==="rent"?fmt(o.rent)+" a year":fmt(o.price)}${o.size?" · "+fmt(o.size)+" sq ft":""}${o.view&&o.view!=="On request"?" · "+o.view:""}\n   ${whyLine(x,r,a)}\n\n`});
+  r.forEach((x,i)=>{const o=x.o;t+=`${i+1}. *${x.label}*: ${bedsWord(o.beds)} in ${BLD[o.b]}\n   AED ${a.deal==="rent"?fmt(o.rent)+" a year":fmt(o.price)}${o.size?" · "+fmt(o.size)+" sq ft":""}${known(o.view)?" · "+o.view:""}\n   ${whyLine(x,r,a)}\n\n`});
   if(ROLE!=="client"){const ag=isTeam()?(myAgent()||agentOf(r[0]?r[0].o:{})):null;t+="7 minutes to Dubai Mall and Burj Khalifa. Photos, floor plans and full costs available."+(ag?`\n\n${ag.name} · Orla Properties · BRN 41837\n${ag.phone}`:"")}
   return t}
 
@@ -2699,7 +2722,7 @@ $("#nu-form").addEventListener("submit",async e=>{e.preventDefault();const role=
 function shareBox(L,offer){const on=!!L.shared;
   return `<div class="panel shbox" data-share="${esc(L.id)}"><h4 style="margin:0 0 4px">${on?"Shared as an offer":"Share with the team"}</h4>
     <p class="src" style="margin:0 0 10px">${on?`Others see it as “${esc(offer?offer.title:"")}”${offer?"":""} with the floor, price and details. ${L.shareTo==="all"?"Shared with the team, external agents and clients.":"Shared with the Orla team only."} The unit number and the owner stay private to ${L.by?esc((L.by.name||"the agent").split(" ")[0])+" and you":"you and the admin"}.`:"Others will see the floor, price and details. The unit number, the owner and your notes stay private."}</p>
-    <div class="fgrid"><div class="field"><label for="sh-floor">Floor shown to others</label><input id="sh-floor" value="${esc(L.floor&&L.floor!=="On request"?L.floor:"")}" placeholder="e.g. 21st"></div>
+    <div class="fgrid"><div class="field"><label for="sh-floor">Floor shown to others</label><input id="sh-floor" value="${esc(known(L.floor)?L.floor:"")}" placeholder="e.g. 21st"></div>
       <div class="field"><label for="sh-to">Share with</label><select id="sh-to"><option value="team"${L.shareTo!=="all"?" selected":""}>Orla team only</option><option value="all"${L.shareTo==="all"?" selected":""}>Team, external agents and clients</option></select></div>
       <div class="field wide"><label for="sh-note">Highlight for others (optional)</label><textarea id="sh-note" rows="2" placeholder="e.g. Vacant, keys with us, flexible on price">${esc(L.shareNote||"")}</textarea></div>
       <div class="wide actions"><button class="btn primary" type="button" data-share-go>${ic("users")}${on?"Update shared offer":"Share as an offer"}</button>${on?'<button class="btn" type="button" data-share-stop>Stop sharing</button>':""}${offer?`<button class="btn" type="button" data-edit-listing="${esc(L.id)}">${ic("file")}Edit the unit</button>`:""}</div></div></div>`}
@@ -2746,20 +2769,20 @@ function weeklyText(){if(!perf)return"";const g=perf.goal,now=Date.now(),ag=[...
   return t}
 const BLDLONG={1:"Peninsula One",2:"Peninsula Two",3:"Peninsula Three",4:"Peninsula Four – The Plaza",5:"Peninsula Five – Signature Collection"};
 const STATUS_LABEL={online:"Online",partly:"Partly online",off:"Off market",none:"Not listed yet"};
-function unitsByAgentFull(a,g,photo){const units=[...a.units].sort((x,y)=>(x.b||0)-(y.b||0)||(x.beds||0)-(y.beds||0)||String(x.unit||"").localeCompare(String(y.unit||""),undefined,{numeric:true}));
-  const price=u=>[u.price?"AED "+fmt(u.price):"",u.rent?"AED "+fmt(u.rent)+" / yr":""].filter(Boolean).join(" · ")||"On request",d=v=>v?new Date(v).toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"–";
+function unitsByAgentFull(a,g,photo){const units=a.units.map(fillUnit).sort((x,y)=>(x.b||0)-(y.b||0)||(x.beds||0)-(y.beds||0)||String(x.unit||"").localeCompare(String(y.unit||""),undefined,{numeric:true}));
+  const price=u=>[u.price?"AED "+fmt(u.price):"",u.rent?"AED "+fmt(u.rent)+" / yr":""].filter(Boolean).join(" · ")||"–",d=v=>v?new Date(v).toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"–";
   const wa=u=>waTo(u.ownerPhone,`Hello${u.owner?" "+greetOf(u.owner):""}, this is ${firstName((meInfo&&meInfo.name)||"")} from Orla Properties about your ${(typeOf(u)||"home").toLowerCase()} in ${BLD[u.b]||"the Peninsula"}${u.unit?" (unit "+u.unit+")":""}.`);
   return `<div class="uagent"><div class="uhead"><img src="${esc(photo(a.key))}" alt=""><div><b>${esc(a.name)}${topStar(a.key)}</b><span>${a.phone?esc(a.phone)+" · ":""}${a.listings} unit${a.listings===1?"":"s"}</span></div></div>
     <div class="tablewrap"><table class="utable ufull"><tr><th>Unit</th><th>Building</th><th>Type</th><th class="c">Size</th><th>Floor</th><th>View</th><th>Furnishing</th><th>For</th><th class="r">Price</th><th>Owner</th><th>Online</th><th>Listed</th></tr>
-    ${units.length?units.map(u=>`<tr${u.id?` data-id="${esc(u.id)}" class="urow"`:""}><td><b>${esc(u.unit||"–")}</b>${u.future?'<br><span class="pill pending">Coming soon</span>':""}</td><td>${esc((BLD[u.b]||"–")+(u.tower&&hasTowers(u.b)?" · Tower "+u.tower:""))}</td><td>${esc(typeOf(u)||"–")}</td><td class="c num">${u.size?fmt(u.size)+" sq ft":"–"}</td><td>${esc(u.floor||"–")}</td><td>${esc(u.view||"–")}</td><td>${esc(u.furn||"–")}${u.condition?`<br><small class="src">${esc(u.condition)}</small>`:""}</td><td>${u.deal==="both"?"Sale or rent":u.deal==="rent"?"Rent":"Sale"}</td><td class="r num pr">${esc(price(u))}</td>
+    ${units.length?units.map(u=>`<tr${u.id?` data-id="${esc(u.id)}" class="urow"`:""}><td><b>${esc(u.unit||"–")}</b>${u.future?'<br><span class="pill pending">Coming soon</span>':""}</td><td>${esc((BLD[u.b]||"–")+(u.tower&&hasTowers(u.b)?" · Tower "+u.tower:""))}</td><td>${esc(typeOf(u)||"–")}</td><td class="c num">${u.size?fmt(u.size)+" sq ft":"–"}</td><td>${esc(known(u.floor)?u.floor:"–")}</td><td>${esc(known(u.view)?u.view:"–")}</td><td>${esc(u.furn||"–")}${u.condition?`<br><small class="src">${esc(u.condition)}</small>`:""}</td><td>${u.deal==="both"?"Sale or rent":u.deal==="rent"?"Rent":"Sale"}</td><td class="r num pr">${esc(price(u))}</td>
       <td>${u.owner||u.ownerPhone?`<b>${esc(u.owner||"–")}</b>${u.ownerPhone?`<br><a href="tel:${esc(telOf(u.ownerPhone))}">${esc(u.ownerPhone)}</a> · <a href="${esc(wa(u))}" target="_blank" rel="noopener">WhatsApp</a>`:""}`:'<span class="src">Not added</span>'}${u.notes?`<br><small class="src">${esc(u.notes)}</small>`:""}</td>
       <td><span class="ust ${u.status}">${esc(STATUS_LABEL[u.status])}</span>${u.on&&u.on.length&&u.status!=="online"?`<small class="src"> ${esc(u.on.map(k=>(g.platforms.find(p=>p.k===k)||{}).n).filter(Boolean).join(", "))}</small>`:""}</td><td>${esc(d(u.listedAt))}</td></tr>`).join("")
       :`<tr><td colspan="12" class="c" style="color:var(--muted);font-style:italic">No units yet</td></tr>`}</table></div></div>`}
 function unitsByAgent(a,g,photo){if(perf&&perf.full)return unitsByAgentFull(a,g,photo);const typ=b=>b==null?"–":b===0?"Studio":b+" Bed",units=[...a.units].sort((x,y)=>(x.b||0)-(y.b||0)||(x.beds||0)-(y.beds||0));
-  const price=u=>[u.price?"AED "+fmt(u.price):"",u.rent?"AED "+fmt(u.rent)+" / yr":""].filter(Boolean).join(" · ")||"On request";
+  const price=u=>[u.price?"AED "+fmt(u.price):"",u.rent?"AED "+fmt(u.rent)+" / yr":""].filter(Boolean).join(" · ")||"–";
   return `<div class="uagent"><div class="uhead"><img src="${esc(photo(a.key))}" alt=""><div><b>${esc(a.name)}${topStar(a.key)}</b><span>${a.phone?esc(a.phone)+" · ":""}${a.listings} unit${a.listings===1?"":"s"}</span></div></div>
     <div class="tablewrap"><table class="utable"><tr><th>Building</th><th>Type</th><th class="c">Size</th><th>Floor</th><th>View</th><th>For</th><th class="r">Price</th><th>Status</th></tr>
-    ${units.length?units.map(u=>`<tr><td>${esc(BLDLONG[u.b]||"–")}</td><td>${esc(typ(u.beds))}</td><td class="c num">${u.size?fmt(u.size)+" sq ft":"–"}</td><td>${esc(u.floor||"On request")}</td><td>${esc(u.view||"On request")}</td><td>${u.deal==="both"?"Sale or rent":u.deal==="rent"?"Rent":"Sale"}</td><td class="r num pr">${esc(price(u))}</td>
+    ${units.length?units.map(u=>`<tr><td>${esc(BLDLONG[u.b]||"–")}</td><td>${esc(typ(u.beds))}</td><td class="c num">${u.size?fmt(u.size)+" sq ft":"–"}</td><td>${esc(known(u.floor)?u.floor:"–")}</td><td>${esc(known(u.view)?u.view:"–")}</td><td>${u.deal==="both"?"Sale or rent":u.deal==="rent"?"Rent":"Sale"}</td><td class="r num pr">${esc(price(u))}</td>
       <td><span class="ust ${u.status}">${esc(STATUS_LABEL[u.status])}</span>${u.status==="partly"?`<small class="src"> ${esc(u.on.map(k=>(g.platforms.find(p=>p.k===k)||{}).n).filter(Boolean).join(", "))}</small>`:""}</td></tr>`).join("")
       :`<tr><td colspan="8" class="c" style="color:var(--muted);font-style:italic">${a.key==="love"||!a.lastAdded?"New to the team – first listings coming soon":"No units yet"}</td></tr>`}</table></div></div>`}
 async function renderTeam(){const el=$("#team");if(!SRV){el.innerHTML='<div class="empty">Team performance uses the online version of the app, where everyone signs in.</div>';return}
@@ -2897,10 +2920,10 @@ async function renderDocs(){const el=$("#docs");if(docs===null){el.innerHTML='<d
   const chips=[["","All"],...[1,2,3,4,5].map(b=>[String(b),"P"+b]),["0","Community"]].map(([v,t])=>`<button class="dchip" data-dbld="${v}" aria-pressed="${docF.b===v}">${t}</button>`).join("");
   const card=d=>{const tag=d.url?"Link":d.builtin?(d.kind==="photos"?"Photos":"Image"):(d.mime==="application/pdf"?"PDF":"Image");
     return `<div class="dcard" data-doc="${esc(d.id)}"><div class="dthumb ${d.kind}">${d.img?`<img src="${esc(imgSrc(d.img,true))}" alt="">`:d.photos?`<img src="${esc(imgSrc(d.photos[0][0],true))}" alt="">`:`<span>${tag}</span>`}</div>
-      <div class="dbody"><b>${esc(d.title)}</b><span>${esc(BLDNAME(d.building))}${d.beds!=null?" · "+esc(typeOf(d)||""):""}${+d.size?" · "+fsize(+d.size):""}${d.by_name?" · added by "+esc(String(d.by_name).split(" ")[0]):""}${d.builtin?" · in the app":""}${d.ready===false?" · uploading…":""}</span>
-      <div class="actions"><button class="btn sm primary" data-dact="open">Open</button>${d.url?"":`<button class="btn sm" data-dact="download">${ic("download")}Download</button>`}<button class="btn sm" data-dact="share">${ic("share")}Share</button>${d.mine||(isAdmin&&!d.builtin)?`<button class="btn sm" data-dact="delete">Delete</button>`:""}</div></div></div>`};
+      <div class="dbody"><b>${esc(d.title)}</b><span>${esc(BLDNAME(d.building))}${d.beds!=null?" · "+esc(typeOf(d)||""):""}${+d.size?" · "+fsize(+d.size):""}${d.by_name?" · added by "+esc(String(d.by_name).split(" ")[0]):""}${d.builtin?" · in the app":""}${d.ready===false?" · uploading…":""}${d.read_at?` · <b class="gread-ok">${ic("check")}read: ${d.read_rows||0} units</b>`:""}</span>
+      <div class="actions"><button class="btn sm primary" data-dact="open">Open</button>${d.url?"":`<button class="btn sm" data-dact="download">${ic("download")}Download</button>`}<button class="btn sm" data-dact="share">${ic("share")}Share</button>${(isAdmin||isCEO())&&d.mime==="application/pdf"&&!d.url&&!d.builtin?`<button class="btn sm" data-dact="read">${d.read_at?"Read again":"Read units"}</button>`:""}${d.mine||(isAdmin&&!d.builtin)?`<button class="btn sm" data-dact="delete">Delete</button>`:""}</div></div></div>`};
   const sections=DKIND.map(([k,t])=>{const x=l.filter(d=>d.kind===k);return x.length?`<div class="dsect"><h4 class="mh">${esc(t)} · ${x.length}</h4><div class="dgrid">${x.map(card).join("")}</div></div>`:""}).join("");
-  el.innerHTML=`<div class="panel"><div class="dfil"><div class="dchips">${chips}</div><input id="doc-q" placeholder="Search brochures, plans…" value="${esc(docF.q)}"></div></div>
+  el.innerHTML=guidePanel()+`<div class="panel"><div class="dfil"><div class="dchips">${chips}</div><input id="doc-q" placeholder="Search brochures, plans…" value="${esc(docF.q)}"></div></div>
     ${SRV?`<details class="panel dup" id="doc-up"${docs.length&&!docUpOpen?"":" open"}><summary><b>${ic("download")}Add a brochure, floor plan or price list</b></summary><div class="fgrid" style="margin-top:12px">
       <div class="field wide"><label for="doc-file">File (PDF, JPG, PNG; up to 60 MB)</label><input type="file" id="doc-file" accept="application/pdf,image/*"></div>
       <div class="field wide"><label for="doc-url">…or a link instead (Google Drive, Dropbox, the developer's site)</label><input id="doc-url" inputmode="url" placeholder="https://"></div>
@@ -2912,6 +2935,9 @@ async function renderDocs(){const el=$("#docs");if(docs===null){el.innerHTML='<d
     ${sections||'<div class="empty">Nothing here yet for this building. Add the brochure and floor plans above.</div>'}
     <p class="src">Brochures, floor plans and renders are the developer's marketing material for the Orla team and our clients. Only the Orla team can open this page.</p>`;
   const du=$("#doc-up");if(du)du.ontoggle=()=>{docUpOpen=du.open};
+  const gq=$("#gq");if(gq){gq.oninput=guideFind;$("#gq-b").onchange=guideFind}
+  const gr=$("#guide-read");if(gr)gr.onclick=()=>{gr.disabled=true;readBrochures((docs||[]).filter(d=>d.mime==="application/pdf"&&!d.url&&d.ready!==false&&!d.read_at))};
+  const ga=$("#guide-reread");if(ga)ga.onclick=()=>{ga.disabled=true;readBrochures((docs||[]).filter(d=>d.mime==="application/pdf"&&!d.url&&d.ready!==false))};
   const qi=$("#doc-q");if(qi)qi.oninput=()=>{docF.q=qi.value;const pos=qi.selectionStart;renderDocs().then(()=>{const n=$("#doc-q");n.focus();n.setSelectionRange(pos,pos)})};
   const f=$("#doc-file");if(f)f.onchange=()=>{const x=f.files[0];if(x&&!$("#doc-title").value)$("#doc-title").value=x.name.replace(/\.[a-z0-9]+$/i,"").replace(/[_-]+/g," ");if(x&&/pdf/i.test(x.type)&&/floor|plan/i.test(x.name))$("#doc-kind").value="floorplan";else if(x&&/brochure/i.test(x.name))$("#doc-kind").value="brochure"}}
 async function docBlob(d){const parts=[];for(let i=0;i<d.parts;i++){const r=await fetch(API+"/team/docs/part?id="+d.id+"&idx="+i,{credentials:"same-origin"});if(!r.ok)throw new Error("The file couldn't be loaded. Try again.");parts.push(await r.arrayBuffer())}return new Blob(parts,{type:d.mime})}
@@ -2921,7 +2947,7 @@ async function shareFile(blob,name,title){const file=new File([blob],name,{type:
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast("Downloaded. Attach it in WhatsApp.")}
 $("#docs").addEventListener("click",async e=>{const ch=e.target.closest("[data-dbld]");if(ch){docF.b=ch.dataset.dbld;renderDocs();return}
   if(e.target.closest("#doc-add")){addDoc();return}
-  const b=e.target.closest("[data-dact]");if(!b)return;const id=b.closest("[data-doc]").dataset.doc,d=builtinDocs().concat(docs||[]).find(x=>String(x.id)===id);if(!d)return;const act=b.dataset.dact;
+  const b=e.target.closest("[data-dact]");if(!b)return;const id=b.closest("[data-doc]").dataset.doc,d=builtinDocs().concat(docs||[]).find(x=>String(x.id)===id);if(!d)return;const act=b.dataset.dact;if(act==="read"){b.disabled=true;$("#gq")&&$("#gq").scrollIntoView({block:"center"});readBrochures([d]);return}
   if(d.builtin){const items=d.photos?d.photos.map(x=>({k:x[0],c:x[1],t:x[2]})):[{k:d.img,c:d.title,t:"f"}];
     if(act==="open"){openViewer(items,d.title,0);return}
     const r=await fetch(imgSrc(items[0].k));const blob=await r.blob();if(act==="download"||act==="share")await shareFile(blob,d.title.replace(/[^\w]+/g,"-")+".webp",d.title);return}
@@ -2945,20 +2971,20 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-docs-bld]"
 
 /* ---------------- Sales offer: a one-page PDF per home, with the client's name ---------------- */
 const BLDFULL={1:"Peninsula One",2:"Peninsula Two",3:"Peninsula Three",4:"Peninsula Four – The Plaza",5:"Peninsula Five – Signature Collection"};
-const soFloor=f=>{const m=String(f||"").match(/\d{1,2}/);if(!m||/low|mid|high|podium/i.test(f))return String(f||"On request").replace(/\s*·.*$/,"");const n=+m[0];return n<=10?"Low floor":n<=25?"Mid floor":"High floor"};
+const soFloor=f=>{const m=String(f||"").match(/\d{1,2}/);if(!m||/low|mid|high|podium/i.test(f))return known(f)?String(f).replace(/\s*·.*$/,""):"";const n=+m[0];return n<=10?"Low floor":n<=25?"Mid floor":"High floor"};
 let soState=null;
 function loadScriptOnce(src){return new Promise((ok,no)=>{if(document.querySelector(`script[src="${src}"]`)){const w=()=>window.html2canvas&&window.jspdf?ok():setTimeout(w,50);return w()}const s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=()=>no(new Error("The PDF maker couldn't load. Check your connection."));document.head.appendChild(s)})}
 async function soLibs(){await loadScriptOnce("/vendor/html2canvas-1.4.1.min.js");await loadScriptOnce("/vendor/jspdf-2.5.1.umd.min.js")}
 function soPage(o,opt){const x=o.x||{},a=AGENTS[opt.agent]||agentOf(o),photos=photosOf(o),plan=opt.plan?planOf(o):null,sale=o.deal!=="rent";
   const row=(k,v)=>v?`<div class="so-row"><span>${esc(k)}</span><b>${esc(v)}</b></div>`:"";
-  const fl=opt.exactFloor?String(o.floor||"On request"):soFloor(o.floor);
-  const details=row("Unit type",typeOf(o)+" apartment")+row("Size",o.size?fmt(o.size)+" sq ft ("+(o.size*0.092903).toFixed(1)+" m²)":"On request")+(o.balcony?row("Balcony",o.balcony+" sq ft"):"")
-    +row("Floor",fl)+row("View",o.view&&o.view!=="On request"?o.view:"On request")+row("Furnishing",o.furn&&o.furn!=="—"?o.furn:"On request")+(o.baths&&o.baths!=="—"?row("Bathrooms",String(o.baths)):"")+row("Status",o.status||"Ready")+(o.parking?row("Parking",o.parking):"");
+  const fl=opt.exactFloor?(known(o.floor)?String(o.floor):""):soFloor(o.floor);
+  const details=row("Unit type",typeOf(o)+" apartment")+row("Size",o.size?fmt(o.size)+" sq ft ("+(o.size*0.092903).toFixed(1)+" m²)":"")+(o.balcony?row("Balcony",o.balcony+" sq ft"):"")
+    +row("Floor",fl)+row("View",known(o.view)?o.view:"")+row("Furnishing",known(o.furn)?o.furn:"")+(o.baths&&o.baths!=="—"?row("Bathrooms",String(o.baths)):"")+row("Status",o.status||"Ready")+(o.parking?row("Parking",o.parking):"");
   let money="";
   if(sale){const c=costs(o.price);money=`<h3>TOTAL PURCHASE COST</h3>${row("Price",aed(o.price))}${row(dldLabel(),aed(c.dld))}${row("Trustee office fee",aed(FEES.trustee))}${row("Admin fee",aed(FEES.admin))}<div class="so-row tot"><span>Total cost</span><b>${aed(c.total)}</b></div>
     ${opt.invest&&x.gy?`<div class="so-inv"><div><b>${(x.gy*100).toFixed(1)}%</b><span>est. gross yield</span></div><div><b>${aed(x.mort)}</b><span>mortgage / month*</span></div>${x.rentFor?`<div><b>${short(x.rentFor)}</b><span>est. rent / year</span></div>`:""}</div>`:""}`}
   if(o.deal==="both")money+=`<div class="so-row tot" style="border-top:1px solid #E7E2DA;margin-top:6px"><span>Or rent</span><b>${aed(o.rent)} / year</b></div>`;
-  else if(o.deal==="rent"){const dep=parseFloat(o.deposit||"5")/100;money+=`<h3>RENT AND PAYMENT</h3>${row("Annual rent",aed(o.rent))}${row("Monthly equivalent",aed(o.rent/12))}${row("Cheques",o.cheques||"On request")}${row("Security deposit ("+(dep*100)+"%)",aed(o.rent*dep))}`}
+  else if(o.deal==="rent"){const dep=parseFloat(o.deposit||"5")/100;money+=`<h3>RENT AND PAYMENT</h3>${row("Annual rent",aed(o.rent))}${row("Monthly equivalent",aed(o.rent/12))}${row("Cheques",o.cheques||"To agree")}${row("Security deposit ("+(dep*100)+"%)",aed(o.rent*dep))}`}
   const pics=photos.slice(1,plan?3:4);
   const fig=(k,c,cls="")=>`<figure class="${cls}"><img src="${esc(imgSrc(k))}" crossorigin="anonymous" alt=""><figcaption>${esc(c)}</figcaption></figure>`;
   const date=new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
@@ -3059,7 +3085,7 @@ function aiContactCard(ct,i,j){if(ct.taken)return `<div class="aicard taken"><di
       <div class="field"><label>View</label><input name="view" value="${esc(ct.view||"")}"></div>
     </div><div class="actions" style="margin-top:8px"><button class="btn sm primary" type="submit">${ic("file")}Make the sales offer</button></div></form></div>`}
 function aiOfferRow(o){const pr=o.deal==="rent"||(!o.price&&o.rent)?aiMoney(o.rent)+" a year":aiMoney(o.price)+(o.deal==="both"&&o.rent?" · or "+aiMoney(o.rent)+" a year":"");
-  return `<div class="aior">${o.label?`<span class="aolab ${esc(o.label.toLowerCase())}">${esc(o.label)}</span>`:""}<div class="aoi"><b>${esc((o.building||BLD[o.b]||"").replace(/ \(.*\)/,""))}${o.tower?" · "+esc(o.tower):""} · ${esc(o.type||typeOf(o)||"")}</b><span>${esc([o.size?fmt(o.size)+" sq ft":"",o.floor,o.view&&o.view!=="On request"?o.view:"",o.furnishing&&o.furnishing!=="—"?o.furnishing:""].filter(Boolean).join(" · "))}</span></div>
+  return `<div class="aior">${o.label?`<span class="aolab ${esc(o.label.toLowerCase())}">${esc(o.label)}</span>`:""}<div class="aoi"><b>${esc((o.building||BLD[o.b]||"").replace(/ \(.*\)/,""))}${o.tower?" · "+esc(o.tower):""} · ${esc(o.type||typeOf(o)||"")}</b><span>${esc([o.size?fmt(o.size)+" sq ft":"",o.floor,known(o.view)?o.view:"",o.furnishing&&o.furnishing!=="—"?o.furnishing:""].filter(Boolean).join(" · "))}</span></div>
     <div class="aop"><b>${esc(pr)}</b><button class="btn sm" data-ai-open="${esc(o.id)}">Open</button></div></div>`}
 function aiOffersCard(c,i,j){const ids=c.items.map(o=>o.id);
   return `<div class="aicard offers"><div class="aic-h">${ic(c.three?"star":"building")}<b>${c.three?"Three options":c.items.length+" home"+(c.items.length===1?"":"s")}</b></div>${c.items.map(aiOfferRow).join("")}
@@ -3117,7 +3143,7 @@ $("#view-assist").addEventListener("submit",e=>{const so=e.target.closest("[data
   const[i,j]=f.dataset.ctForm.split(":"),c=((aiMsgs[+i]||{}).cards||[])[+j];if(!c)return;const ct=c.contact,v=n=>f.elements[n].value.trim(),price=+v("price").replace(/[^0-9.]/g,"");
   if(!price){toast("Enter the price");f.elements.price.focus();return}
   const b=+v("b"),beds=+v("beds"),deal=v("deal"),size=+v("size").replace(/[^0-9.]/g,"")||null;
-  const o={id:"ct-"+ct.id+"-"+Date.now().toString(36),b,beds,deal,title:TYPE[beds]+(v("floor")?", "+v("floor")+(/floor/i.test(v("floor"))?"":" floor"):""),price:deal==="sale"?price:undefined,rent:deal==="rent"?price:undefined,size,floor:v("floor")||"On request",view:v("view")||"On request",furn:"—",baths:"—",status:"Ready",avail:"Available",agent:myKey()||Object.keys(AGENTS)[0],hl:"",src:"Peninsula contacts"};
+  const o={id:"ct-"+ct.id+"-"+Date.now().toString(36),b,beds,deal,title:TYPE[beds]+(v("floor")?", "+v("floor")+(/floor/i.test(v("floor"))?"":" floor"):""),price:deal==="sale"?price:undefined,rent:deal==="rent"?price:undefined,size,floor:v("floor")||"",view:v("view")||"",furn:"—",baths:"—",status:"Ready",avail:"Available",agent:myKey()||Object.keys(AGENTS)[0],hl:"",src:"Peninsula contacts"};
   SO_EXTRA=[o];openSalesOffer([o.id],v("client"))});
 $("#view-assist").addEventListener("click",e=>{const t=e.target.closest("[data-ai-chip],[data-ai-say],[data-ai-edit],[data-ai-fill],[data-ai-copy],[data-ai-new]");if(!t)return;
   if(t.dataset.aiChip){const c=t.dataset.aiChip;if(c.endsWith("…")){$("#ai-in").value=/phone/.test(c)?"":"Unit ";$("#ai-in").placeholder=/phone/.test(c)?"e.g. 050 123 4567":"e.g. 1203";$("#ai-in").focus()}else aiSend(c);return}
@@ -3524,7 +3550,7 @@ function propertyHTML(){if(!myProps.length)return"";
     const plat=(k,n)=>`<span class="pill ${on[k]?"ok":""}">${on[k]?"✓ ":""}${esc(n)}</span>`,status=p.future?"Coming soon"+(p.availableFrom?" · available from "+new Date(p.availableFrom+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"}):""):on.off?"Shared privately with selected buyers":both?"Live on Bayut and Property Finder":on.bayut||on.pf?"Live on "+(on.bayut?"Bayut":"Property Finder")+", the other one is on its way":"Your agent is preparing the advert";
     const tile=(v,l)=>`<div class="cmt"><span>${esc(l)}</span><b>${v}</b></div>`;
     return `<section class="panel myprop"><div class="mpimg"><img src="${esc(imgSrc(ph.k))}" alt=""><span>Your property</span></div><div class="mpbody">
-      <h2>${esc((typeOf(p)||"Home")+" · "+(BLD[p.b]||"Peninsula")+(p.tower?" · Tower "+p.tower:""))}</h2><p class="lede" style="margin:0">${esc([p.unit?"Unit "+p.unit:"",p.size?fmt(p.size)+" sq ft":"",p.floor&&p.floor!=="On request"?p.floor+(/floor/i.test(p.floor)?"":" floor"):"",p.view&&p.view!=="On request"?p.view+" view":""].filter(Boolean).join(" · "))}</p>
+      <h2>${esc((typeOf(p)||"Home")+" · "+(BLD[p.b]||"Peninsula")+(p.tower?" · Tower "+p.tower:""))}</h2><p class="lede" style="margin:0">${esc([p.unit?"Unit "+p.unit:"",p.size?fmt(p.size)+" sq ft":"",known(p.floor)?p.floor+(/floor/i.test(p.floor)?"":" floor"):"",known(p.view)?p.view+" view":""].filter(Boolean).join(" · "))}</p>
       <p class="mpprice">${esc(price)}<small>${p.deal==="rent"?"for rent":"for sale"}</small></p>
       <div class="mpst"><b>${esc(status)}</b><div class="pills">${plat("bayut","Bayut")}${plat("pf","Property Finder")}</div></div>
       <div class="cmtiles">${tile(fmt(p.views),"people viewed it")}${tile(fmt(p.viewsWeek),"this week")}${tile(fmt(p.viewings),"viewing requests")}${tile(fmt(p.requests),"all requests")}</div>
@@ -3551,6 +3577,48 @@ function aiVoiceStart(){if(aiBusy)return;
 $("#ai-mic").addEventListener("click",aiVoiceStart);
 $("#ai-vstop").addEventListener("click",()=>aiVoiceStop(true));
 $("#ai-vcancel").addEventListener("click",()=>aiVoiceStop(false));
+
+/* ---------------- Unit guide: the brochures, by unit number ---------------- */
+function mGuide(){const box=$("#m-guide");if(!box)return;const u=$("#m-unit").value.trim(),sp=unitSplit(u);if(!sp){box.hidden=true;return}
+  const b=+$("#m-bld").value,g=guideOf(b,$("#m-tower").value,u);
+  if(!known($("#m-floor").value)||$("#m-floor").dataset.auto)$("#m-floor").value=ordN(sp.floor),$("#m-floor").dataset.auto="1";
+  if(!g||!g.type){box.hidden=false;box.innerHTML=`<span class="src">Floor ${esc(ordN(sp.floor))} from the unit number.${GUIDE.length?" This unit isn't in the brochures read so far.":""}</span>`;return}
+  const fill=k=>!known($(k).value)||$(k).dataset.auto;
+  if(g.view&&fill("#m-view")){$("#m-view").value=g.view;$("#m-view").dataset.auto="1"}
+  if(g.size&&fill("#m-size")){$("#m-size").value=g.size;$("#m-size").dataset.auto="1"}
+  if(g.beds!=null&&!$("#m-id").value){const lay={"simplex":"simplex","duplex":"duplex","duplex loft":"loft","semi-penthouse":"semipenthouse"}[g.layout]||"";try{mFillTypes(g.beds,lay)}catch(e){}}
+  box.hidden=false;box.innerHTML=`<div class="gbox">${g.img?`<a href="${esc(planUrl(g))}" target="_blank" rel="noopener" class="gplan"><img src="${esc(planUrl(g))}" alt="Floor plan"></a>`:""}<div><b>${ic("check")}From the brochure</b><span>${esc([BLD[b]+(g.tower?" · Tower "+g.tower:""),g.type,ordN(sp.floor)+" floor",g.size?fmt(g.size)+" sq ft":"",g.view?g.view+" view":""].filter(Boolean).join(" · "))}</span><small class="src">Filled in for you. Change anything that's different in this unit.</small></div></div>`}
+["#m-unit","#m-bld","#m-tower"].forEach(k=>{const e=$(k);if(e)e.addEventListener(k==="#m-unit"?"input":"change",mGuide)});
+["#m-floor","#m-view","#m-size"].forEach(k=>{const e=$(k);if(e)e.addEventListener("input",()=>{delete e.dataset.auto})});
+
+// Reading the brochures (the admin and the CEO): the AI reads each PDF; this device saves its floor plan pages as images.
+let guideBusy=false;
+async function pdfLib(){if(!window.pdfjsLib)await new Promise((ok,no)=>{const s=document.createElement("script");s.src="/vendor/pdf-3.11.174.min.js";s.onload=ok;s.onerror=()=>no(new Error("The PDF reader couldn't load."));document.head.appendChild(s)});
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc="/vendor/pdf-3.11.174.worker.min.js";return window.pdfjsLib}
+const blobB64=b=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(",")[1]);r.onerror=no;r.readAsDataURL(b)});
+async function savePlans(d,pages,say){const lib=await pdfLib();const pdf=await lib.getDocument({data:await (await docBlob(d)).arrayBuffer(),isEvalSupported:false}).promise;let n=0;
+  for(const p of pages){if(p>pdf.numPages)continue;say(`Saving floor plans: ${++n} of ${pages.length}`);const pg=await pdf.getPage(p),v0=pg.getViewport({scale:1}),v=pg.getViewport({scale:Math.min(3,1600/Math.max(v0.width,v0.height))});
+    const cv=document.createElement("canvas");cv.width=Math.round(v.width);cv.height=Math.round(v.height);const cx=cv.getContext("2d");cx.fillStyle="#fff";cx.fillRect(0,0,cv.width,cv.height);await pg.render({canvasContext:cx,viewport:v}).promise;
+    let b=await new Promise(ok=>cv.toBlob(ok,"image/webp",0.8));if(!b||b.type!=="image/webp"||b.size>2e6)b=await new Promise(ok=>cv.toBlob(ok,"image/jpeg",0.8));
+    await api("team/guide/plan",{doc:d.id,page:p,data:await blobB64(b)})}}
+async function readBrochures(list){if(guideBusy)return;guideBusy=true;const say=t=>{const e=$("#guide-prog");if(e)e.textContent=t};let ok=0,rows=0;const bad=[];
+  try{for(const [i,d] of list.entries()){say(`Reading ${d.title} (${i+1} of ${list.length}). This takes 1 to 3 minutes per brochure…`);
+      try{const r=await api("team/guide/read",{id:d.id});rows+=r.rows;ok++;if(r.pages&&r.pages.length)await savePlans(d,r.pages,t=>say(d.title+": "+t))}
+      catch(e){bad.push(d.title+": "+e.message);if(e.code==="ai_off")break}}}
+  finally{guideBusy=false}
+  await loadGuide();await loadDocs();docs=docs||[];await renderDocs();
+  const msg=(ok?`Read ${ok} brochure${ok===1?"":"s"}: ${rows} units and layouts. Agents now get the floor, view, size and floor plan from the unit number.`:"")+(bad.length?" Not read: "+bad.join(" · "):"");
+  say(msg);toast(ok?"Brochures read":"Not read: "+(bad[0]||""))}
+function guideFind(){const u=($("#gq")||{}).value||"",sp=unitSplit(u),out=$("#gq-out");if(!out)return;if(!sp){out.innerHTML="";return}
+  const bs=$("#gq-b").value?[+$("#gq-b").value]:[1,2,3,4,5];
+  const hits=bs.map(b=>{const g=guideOf(b,"",u);return g&&g.type?Object.assign({b},g):null}).filter(Boolean);
+  out.innerHTML=hits.length?hits.map(g=>`<div class="gbox">${g.img?`<a href="${esc(planUrl(g))}" target="_blank" rel="noopener" class="gplan"><img loading="lazy" src="${esc(planUrl(g))}" alt="Floor plan"></a>`:""}<div><b>${esc(BLD[g.b]+(g.tower?" · Tower "+g.tower:""))} · unit ${esc(sp.d)}</b><span>${esc([g.type,ordN(sp.floor)+" floor",g.size?fmt(g.size)+" sq ft":"",g.balcony?"balcony "+fmt(g.balcony)+" sq ft":"",g.view?g.view+" view":""].filter(Boolean).join(" · "))}</span>${g.img?`<small class="src">Tap the plan to open it full size.</small>`:""}</div></div>`).join("")
+    :`<p class="src">${GUIDE.length?"Floor "+esc(ordN(sp.floor))+". This unit number isn't in the brochures read so far.":"The brochures haven't been read yet."}</p>`}
+function guidePanel(){if(!SRV)return"";const n=GUIDE.length,pdfs=(docs||[]).filter(d=>d.mime==="application/pdf"&&!d.url&&d.ready!==false),unread=pdfs.filter(d=>!d.read_at),boss=isAdmin||isCEO();
+  return `<div class="panel guidep"><h3>${ic("search")}Find a unit in the brochures</h3><p class="lede">Type a unit number: you get the layout, floor, size, view and floor plan from the developer's brochures.</p>
+    <div class="dfil"><input id="gq" inputmode="numeric" placeholder="Unit number, e.g. 1203"><select id="gq-b"><option value="">All buildings</option>${[1,2,3,4,5].map(b=>`<option value="${b}">${BLD[b]}</option>`).join("")}</select></div><div id="gq-out"></div>
+    ${boss?`<div class="gread"><p class="src">${n?`${fmt(n)} units and layouts read from ${new Set(GUIDE.map(r=>r.doc)).size} brochure${new Set(GUIDE.map(r=>r.doc)).size===1?"":"s"}.`:"The brochures haven't been read yet."} ${unread.length?`${unread.length} PDF${unread.length===1?"":"s"} not read yet.`:pdfs.length?"Every PDF has been read.":"Add the brochures below first."}</p>
+      <div class="actions">${unread.length?`<button class="btn primary" id="guide-read">Read the brochures (${unread.length})</button>`:""}${pdfs.length&&!unread.length?`<button class="btn" id="guide-reread">Read them all again</button>`:""}</div><p class="src" id="guide-prog" aria-live="polite"></p></div>`:""}</div>`}
 
 /* ---------------- Start-up ---------------- */
 function startApp(){if(!SRV)setRole(isAdmin?"admin":"team");updateAcct();const ch=$("#userchip");

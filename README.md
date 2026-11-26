@@ -120,6 +120,17 @@ Every Sunday at 9:00 Dubai time (05:00 UTC), the daily Vercel Cron (`/api/cron/d
 
 **Tasks** are private: the admin or the CEO gives one to an agent (with a due date and notes), and only that agent, the admin and the CEO see it. They show on the agent's Home (overdue ones in red), and the agent ticks them done.
 
+## Unit details from the brochures (team only)
+The AI reads the developer brochures and floor plan books in Brochures & plans. A Dubai unit number is the floor and then the stack (1203 is floor 12, stack 03), so from each brochure's key plans it records every stack's layout, size, balcony, view and floor plan page. In Brochures & plans, the admin or the CEO taps **Read the brochures** (or **Read units** on one PDF). Each brochure takes 1 to 3 minutes, and their phone saves the floor plan pages as images for everyone. This needs `ANTHROPIC_API_KEY`.
+
+After that, the website never says "on request" for the floor, view, size or floor plan:
+- In **My units**, typing the unit number fills in the floor, view, size and type, and shows the floor plan. The agent changes anything that's different in their unit.
+- Every unit with a number shows its floor, view and the brochure's floor plan in its page, in sales offers and in the admin's Team table. What the agent typed always wins over the brochure.
+- **Find a unit in the brochures** (top of Brochures & plans) shows the layout, floor, size, view and plan for any unit number.
+- The AI assistant uses it when an agent types a unit number.
+
+A detail nobody has is simply left out instead of saying "on request". Clients still see a floor band and no unit numbers, and they get the floor plan through the agent.
+
 ## Every unit in full (the admin only)
 On the Team page, "Units by agent" shows the admin every unit of every agent with nothing hidden: unit number, building and tower, type, size, floor, view, furnishing, price, the owner's name and phone (call or WhatsApp), whether it is online and when it was listed. Tap a row to open it. The CEO and the agents keep the summary view.
 

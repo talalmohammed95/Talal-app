@@ -10,6 +10,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { assist, assistOffline, aiEnabled } from "../lib/assistant.js";
 import { importContacts, contactStats, searchContacts, claimWarning } from "../lib/contacts.js";
 import { importDeals, dealStats } from "../lib/deals.js";
+import { readBrochure, guideRows } from "../lib/guide.js";
 import { runWeekly, buildWeekly, weeklyText, runDaily, greet } from "../lib/weekly.js";
 
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
@@ -833,7 +834,7 @@ const routes = {
   // ---------- Documents library (team and admin) ----------
   "GET team/docs": async c => {
     requireStaff(c);
-    const { rows } = await q(`select d.id, d.title, d.building, d.kind, d.beds, d.mime, d.size, d.parts, d.url, d.by_user, d.by_name, d.created_at,
+    const { rows } = await q(`select d.id, d.title, d.building, d.kind, d.beds, d.mime, d.size, d.parts, d.url, d.by_user, d.by_name, d.created_at, d.read_at, d.read_rows, d.read_note,
       (select count(*)::int from doc_parts p where p.doc_id = d.id) as have from docs d order by d.created_at desc`);
     return { docs: rows.map(r => ({ ...r, ready: !!r.url || r.have === r.parts, mine: r.by_user === c.user.id })) };
   },
@@ -883,6 +884,55 @@ const routes = {
     const { rowCount } = await q("delete from docs where id = $1 and (by_user = $2 or $3)", [String(c.body.id || ""), c.user.id, c.user.role === "admin"]);
     if (!rowCount) fail(404, "Document not found, or it was added by someone else.");
     return { ok: true };
+  },
+
+  // ---------- The unit guide, read from the brochures ----------
+  "GET team/guide": async c => {
+    requireStaff(c);
+    return { rows: await guideRows(), ai: aiEnabled() };
+  },
+
+  "POST team/guide/read": async c => {
+    requireActive(c);
+    if (!seesAll(c.user)) fail(403, "Only the admin and the CEO can do this.");
+    if (!aiEnabled()) fail(503, "Add the AI key (ANTHROPIC_API_KEY) in Vercel first. The AI reads the brochures.", "ai_off");
+    await limit("guide:" + c.user.id, 60, 3600);
+    let out;
+    try { out = await readBrochure(str(c.body.id, 40)); }
+    catch (e) {
+      if (e instanceof Anthropic.AuthenticationError) fail(503, "The AI key isn't valid. The admin needs to update ANTHROPIC_API_KEY.", "ai_key");
+      if (e instanceof Anthropic.RateLimitError) fail(429, "The AI is busy. Try again in a minute.", "ai_busy");
+      if (e instanceof Anthropic.APIError) { console.error("guide", e.status, e.message); fail(502, "This brochure couldn't be read" + (e.status === 400 ? " (it may be too long: split it into PDFs of under 100 pages)" : "") + ". Try again.", "ai_error"); }
+      if (e instanceof SyntaxError) fail(502, "The brochure was read, but the answer was cut off. Try again.");
+      throw e;
+    }
+    if (out.error) fail(400, out.error);
+    await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `Brochure read: ${out.rows} units and layouts`]);
+    return out;
+  },
+
+  "POST team/guide/plan": async c => {
+    requireActive(c);
+    if (!seesAll(c.user)) fail(403, "Only the admin and the CEO can do this.");
+    const id = str(c.body.doc, 40), page = Math.floor(+c.body.page), buf = Buffer.from(String(c.body.data || ""), "base64");
+    if (!/^[0-9a-f-]{36}$/.test(id) || !(page >= 1 && page <= 2000) || !buf.length || buf.length > 2.2e6) fail(400, "Invalid page.");
+    const { rows: [d] } = await q("select 1 from docs where id = $1", [id]);
+    if (!d) fail(404, "Document not found.");
+    await q("insert into guide_plans (doc_id, page, data) values ($1, $2, $3) on conflict (doc_id, page) do update set data = excluded.data", [id, page, buf]);
+    return { ok: true };
+  },
+
+  "GET team/guide/plan": async c => {
+    requireStaff(c);
+    const u = new URL(c.req.url, "http://localhost"), id = u.searchParams.get("doc") || "", page = Math.floor(+u.searchParams.get("page"));
+    if (!/^[0-9a-f-]{36}$/.test(id)) fail(404, "Not found.");
+    const { rows: [p] } = await q("select data from guide_plans where doc_id = $1 and page = $2", [id, page]);
+    if (!p) fail(404, "Not found.");
+    c.res.statusCode = 200;
+    c.res.setHeader("Content-Type", p.data[0] === 0x89 ? "image/png" : p.data[0] === 0xff ? "image/jpeg" : "image/webp");
+    c.res.setHeader("Cache-Control", "private, max-age=86400");
+    c.res.end(p.data);
+    return RAW;
   },
 
   "POST data/listings/delete": async c => {
