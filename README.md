@@ -56,6 +56,10 @@ Privacy is the same as everywhere else: the lookups run on our server, and each 
 
 It runs on Claude (Anthropic). Add `ANTHROPIC_API_KEY` in Vercel to turn it on. Without the key it runs in basic mode: the unit lookup with the owner works, and it fills a starter listing.
 
+## Home-screen guide
+
+`/home-screen/` is a page, with the picture `app/img/home-screen-guide.jpg`, showing how to put Peninsula on an iPhone (Safari: Share, Add to Home Screen, Add) or Android (Chrome: ⋮, Add to home screen or Install app) home screen. It shows the steps for the visitor's phone, and on Android an Install button when Chrome offers one. When the admin creates an account, the invitation message links to it, and **Send the picture** shares the picture straight to WhatsApp on a phone (or downloads it on a laptop). Anyone who opens the app in a phone's browser sees a reminder on Home ("Show me how", or "Install" on Android) until they add it or tap "Not now".
+
 ## Tower A / Tower B (team only)
 
 Every unit can carry its tower: **Tower A** or **Tower B**. The team sees it next to the building on cards ("P4A"), in the offer details ("Peninsula Four · Tower B") and in the AI assistant; clients and external agents don't get it. Peninsula Four has two towers, so its units without one are flagged "Tower A or B?", and Home and My units list them with Tower A / Tower B buttons: each agent sets their own units, the admin sets anyone's. The My units form has a Tower field and won't save a Peninsula Four unit without it. Units whose floor said "Tower A" or "Tower B" were set automatically.

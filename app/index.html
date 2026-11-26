@@ -771,6 +771,12 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
 .twrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
 .twrow .lnk{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:2px;background:none;border:0;padding:0;cursor:pointer;color:inherit;font:inherit;min-width:0}.twrow .lnk span{font-size:12.5px;color:var(--muted)}
 .twtodo.inl{margin-bottom:12px}.twtodo.inl h2{font-size:16px}
+.a2ban{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;padding:12px 14px;border-radius:16px;background:var(--surface);border:1.5px solid var(--primary)}
+.a2ban img{width:46px;height:46px;border-radius:12px;flex:none}.a2ban>div:nth-child(2){flex:1;min-width:180px}.a2ban b{display:block;font:800 15.5px var(--display)}.a2ban span{font-size:13.5px;color:var(--muted)}
+.a2ban .actions{display:flex;gap:6px}
+.a2inv{display:flex;gap:14px;align-items:flex-start;margin-top:12px;padding:12px;border-radius:14px;background:var(--bg);border:1px solid var(--line)}
+.a2inv img{width:88px;border-radius:10px;border:1px solid var(--line);flex:none}.a2inv b{display:block;font:800 15px var(--display)}.a2inv span{display:block;font-size:13px;color:var(--muted);margin:2px 0 8px}
+.a2inv .actions{display:flex;gap:6px;flex-wrap:wrap}
 </style>
 <script src="/config.js"></script>
 </head>
@@ -830,7 +836,7 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
 <main>
   <div class="pagehead" id="pagehead"></div>
   <!-- OFFERS -->
-  <section class="view" id="view-dash"><div class="stack" id="dash"></div></section>
+  <section class="view" id="view-dash"><div id="a2hs"></div><div class="stack" id="dash"></div></section>
 
   <section class="view" id="view-offers" hidden>
     <div class="split">
@@ -2533,8 +2539,8 @@ $("#nu-role").onchange=()=>{$("#nu-agent-wrap").hidden=$("#nu-role").value!=="ag
 $("#nu-name").addEventListener("input",()=>{const f=$("#nu-name").value.trim().split(/\s+/)[0].toLowerCase();fillNuAgent();const k=Object.keys(AGENTS).find(k=>String(AGENTS[k].name).split(" ")[0].toLowerCase()===f);if(k)$("#nu-agent").value=k});
 $("#nu-form").addEventListener("submit",async e=>{e.preventDefault();const role=$("#nu-role").value;
   try{const r=await api("admin/users/create",{name:$("#nu-name").value.trim(),email:$("#nu-email").value.trim(),role,agentKey:role==="agent"?$("#nu-agent").value:"",password:$("#nu-pass").value||undefined});
-    const nm=$("#nu-name").value.trim(),msg=`Hi ${nm.split(" ")[0]}, your Peninsula Offers account is ready.\n\nSign in here: ${r.url}\nEmail: ${r.email}\nPassword: ${r.password}\n\nYou can add it to your home screen from the browser's Share menu.`;
-    const d=$("#nu-done");d.hidden=false;d.innerHTML=`<div class="ow"><span class="ok">Account created</span><b>${esc(nm)}</b><span class="num">${esc(r.email)}</span><span class="num">Password: ${esc(r.password)}</span><small>Send these now: the password isn't shown again. They can sign in straight away.</small></div><div class="actions"><button class="btn primary" type="button" id="nu-copy">${ic("copy")}Copy message</button><a class="btn" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(msg)}">${ic("chat")}Send on WhatsApp</a></div>`;
+    const nm=$("#nu-name").value.trim(),msg=`Hi ${nm.split(" ")[0]}, your Peninsula Offers account is ready.\n\nSign in here: ${r.url}\nEmail: ${r.email}\nPassword: ${r.password}\n\nPut Peninsula on your phone's home screen (20 seconds, with pictures): ${location.origin}/home-screen/`;
+    const d=$("#nu-done");d.hidden=false;d.innerHTML=`<div class="ow"><span class="ok">Account created</span><b>${esc(nm)}</b><span class="num">${esc(r.email)}</span><span class="num">Password: ${esc(r.password)}</span><small>Send these now: the password isn't shown again. They can sign in straight away.</small></div><div class="actions"><button class="btn primary" type="button" id="nu-copy">${ic("copy")}Copy message</button><a class="btn" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(msg)}">${ic("chat")}Send on WhatsApp</a></div>${a2hsInviteHTML()}`;
     $("#nu-copy").onclick=()=>copy(msg);logAct("Created an account for "+r.email);$("#nu-form").reset();$("#nu-agent-wrap").hidden=false;loadUsers()}
   catch(x){toast(x.message)}});
 
@@ -2995,6 +3001,23 @@ function towerTodoHTML(){if(!isTeam())return"";const l=all().filter(o=>needsTowe
     <div class="stack">${l.map(o=>`<div class="twrow"><button class="lnk" data-id="${esc(o.id)}"><b>${esc(o.unit&&!String(o.title).includes(o.unit)?"Unit "+o.unit+" · ":"")}${esc(o.title)}</b><span>${esc([TYPE[o.beds],o.size?fmt(o.size)+" sq ft":"",o.floor,isAdmin?agentOf(o).name.split(" ")[0]:""].filter(Boolean).join(" · "))}</span></button>
       <span class="twbtns"><button class="btn sm" data-tower-set="${esc(o.id)}:A">Tower A</button><button class="btn sm" data-tower-set="${esc(o.id)}:B">Tower B</button></span></div>`).join("")}</div></div>`}
 
+/* ---------------- Home screen: the guide and the reminder ---------------- */
+const A2HS_IMG="/img/home-screen-guide.jpg";
+function a2hsInviteHTML(){return `<div class="a2inv"><img src="${A2HS_IMG}" alt="How to put Peninsula on the home screen" loading="lazy"><div><b>Then send the home-screen guide</b><span>A picture showing how to put Peninsula on their iPhone or Android home screen. The link is in the message too.</span>
+  <div class="actions"><button class="btn sm primary" type="button" data-a2share>${ic("share")}Send the picture</button><a class="btn sm" href="${A2HS_IMG}" download="Peninsula-home-screen.jpg">${ic("download")}Download</a><a class="btn sm" href="/home-screen/" target="_blank" rel="noopener">Open the guide</a></div></div></div>`}
+async function a2hsShare(){try{const blob=await (await fetch(A2HS_IMG)).blob();await shareFile(blob,"Peninsula-home-screen.jpg","Put Peninsula on your home screen")}catch(x){if(x&&x.name==="AbortError")return;const l=document.createElement("a");l.href=A2HS_IMG;l.download="Peninsula-home-screen.jpg";document.body.appendChild(l);l.click();l.remove();toast("Picture downloaded. Send it on WhatsApp.")}}
+document.addEventListener("click",e=>{if(e.target.closest("[data-a2share]")){e.preventDefault();a2hsShare()}});
+// On a phone, in the browser (not opened from the home screen yet): a reminder on Home, until it's done or closed.
+let a2Prompt=null;addEventListener("beforeinstallprompt",e=>{e.preventDefault();a2Prompt=e;renderA2hs()});addEventListener("appinstalled",()=>{store.set("orla.a2hs","done");renderA2hs()});
+const a2Standalone=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+const a2Phone=()=>/iPhone|iPod|Android/.test(navigator.userAgent)||(/iPad|Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
+function renderA2hs(){const el=$("#a2hs");if(!el)return;const off=a2Standalone()||!a2Phone()||store.get("orla.a2hs")==="done";
+  if(off){el.innerHTML="";return}const ios=/iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent);
+  el.innerHTML=`<div class="a2ban"><img src="/icon-192.png" alt=""><div><b>Put Peninsula on your home screen</b><span>${a2Prompt?"Open it with one tap, like an app.":ios?"In Safari, tap Share, then Add to Home Screen.":"In Chrome, tap ⋮, then Add to home screen."}</span></div>
+    <div class="actions">${a2Prompt?`<button class="btn sm primary" data-a2install>Install</button>`:`<a class="btn sm primary" href="/home-screen/">Show me how</a>`}<button class="btn sm ghost" data-a2close aria-label="Close">Not now</button></div></div>`}
+document.addEventListener("click",async e=>{if(e.target.closest("[data-a2close]")){store.set("orla.a2hs","done");renderA2hs();return}
+  if(e.target.closest("[data-a2install]")&&a2Prompt){const p=a2Prompt;a2Prompt=null;p.prompt();try{const r=await p.userChoice;if(r.outcome==="accepted")store.set("orla.a2hs","done")}catch(x){}renderA2hs()}});
+
 /* ---------------- Start-up ---------------- */
 function startApp(){if(!SRV)setRole(isAdmin?"admin":"team");updateAcct();const ch=$("#userchip");
   if(meInfo){ch.innerHTML=`<img alt="" src="${esc(meInfo.avatarUrl)}"><span></span>`;ch.querySelector("span").textContent=(meInfo.name||"You")+" · "+ROLE_LABEL[ROLE]}else ch.textContent="Admin · this device";
@@ -3041,7 +3064,7 @@ function fillPick(){const cur=pick.value;pick.innerHTML='<option value="">Custom
 pick.onchange=()=>pick.value&&loadCalc(pick.value);
 document.querySelectorAll("#view-calc input").forEach(i=>i.addEventListener("input",calc));
 try{$("#m-date").valueAsDate=new Date()}catch(e){}
-function renderAll(){fillAgentFilter();renderList();renderShort();renderMine();renderClients();renderDash();renderAnalysis();renderReports();fillPick();renderAdmin()}
+function renderAll(){renderA2hs();fillAgentFilter();renderList();renderShort();renderMine();renderClients();renderDash();renderAnalysis();renderReports();fillPick();renderAdmin()}
 boot();
 if("serviceWorker" in navigator&&location.protocol==="https:"&&!/claude|claudeusercontent/.test(location.host)){navigator.serviceWorker.register("/sw.js").catch(()=>{})}
 </script>

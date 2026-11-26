@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Put Peninsula on your home screen</title>
+<meta name="description" content="How to add the Peninsula Offers app to your iPhone or Android home screen in 20 seconds.">
+<meta property="og:title" content="Put Peninsula on your home screen">
+<meta property="og:description" content="One tap to open it, like an app. It takes 20 seconds.">
+<meta property="og:image" content="/img/home-screen-guide.jpg">
+<meta name="theme-color" content="#1C1A18">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+:root{--bg:#F5F2ED;--fg:#1C1A18;--muted:#6B635B;--accent:#F28C28;--ink:#A8420E;--card:#fff;--line:#E2DAD0}
+@media (prefers-color-scheme:dark){:root{--bg:#110F0E;--fg:#F3EEE8;--muted:#B5ABA0;--ink:#FFB26E;--card:#1C1A18;--line:#2E2A27}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:720px;margin:0 auto;padding:20px 16px 48px}
+.top{display:flex;gap:14px;align-items:center;margin:8px 0 18px}
+.top img{width:56px;height:56px;border-radius:14px}
+h1{font:800 clamp(24px,6vw,34px)/1.15 system-ui,-apple-system,"Segoe UI",sans-serif;margin:0}
+.lede{margin:4px 0 0;color:var(--muted)}
+.steps{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin:0 0 18px}
+.steps h2{font-size:18px;margin:0 0 8px}
+.steps ol{margin:0;padding-left:22px}.steps li{margin:6px 0}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 20px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 20px;border-radius:14px;font-weight:700;text-decoration:none;border:0;font-size:16px;cursor:pointer}
+.btn.primary{background:var(--accent);color:#1C1A18}.btn.ghost{background:transparent;color:var(--fg);border:1.5px solid var(--line)}
+.pic{width:100%;height:auto;border-radius:18px;display:block;border:1px solid var(--line)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><img src="/icon-192.png" alt=""><div><h1>Put Peninsula on your home screen</h1><p class="lede">One tap to open it, like an app. It takes 20 seconds.</p></div></div>
+  <div class="steps" id="ios" hidden><h2>On your iPhone</h2><ol><li>Tap <b>Open Peninsula</b> below. It opens in Safari.</li><li>Tap <b>Share</b> (the square with an arrow). On newer iPhones, tap <b>•••</b> first.</li><li>Scroll down and tap <b>Add to Home Screen</b>, then <b>Add</b>.</li></ol></div>
+  <div class="steps" id="android" hidden><h2>On your Android phone</h2><ol><li>Tap <b>Install Peninsula</b> below, if you see it. Or tap <b>Open Peninsula</b>.</li><li>In Chrome, tap <b>⋮</b> at the top right.</li><li>Tap <b>Add to home screen</b> (or <b>Install app</b>), then <b>Install</b>.</li></ol></div>
+  <div class="actions"><button class="btn primary" id="install" hidden>Install Peninsula</button><a class="btn primary" id="open" href="/app/">Open Peninsula</a></div>
+  <img class="pic" src="/img/home-screen-guide.jpg" width="1080" height="2279" alt="Steps with pictures. iPhone, in Safari: tap Share, then Add to Home Screen, then Add. Android, in Chrome: tap the three-dot menu, then Add to home screen or Install app, then Install.">
+</main>
+<script>
+const ua=navigator.userAgent,ios=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1),android=/Android/.test(ua);
+if(ios)document.getElementById("ios").hidden=false;else if(android)document.getElementById("android").hidden=false;
+let ev=null;addEventListener("beforeinstallprompt",e=>{e.preventDefault();ev=e;const b=document.getElementById("install");b.hidden=false;document.getElementById("open").className="btn ghost"});
+document.getElementById("install").onclick=async()=>{if(!ev)return;ev.prompt();await ev.userChoice.catch(()=>{});ev=null;document.getElementById("install").hidden=true};
+if(navigator.serviceWorker)navigator.serviceWorker.register("/sw.js").catch(()=>{});
+</script>
+</body>
+</html>
