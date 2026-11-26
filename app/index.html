@@ -735,6 +735,7 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
 .so-call{display:flex;align-items:center;gap:12px;text-align:right}.so-call b{display:block;font-size:15px;color:#F28C28}.so-call span{font-size:11px;color:#D9D4CC}.so-call img{width:58px;height:58px;background:#fff;border-radius:4px}
 .so-page.t1 .so-hl{display:none}.so-page.t2 .so-inv{display:none}.so-page.t3 .so-pics img{height:70px}.so-page.t3 .so-chips span:nth-child(n+5){display:none}
 .so-note{margin:0;font-size:9.5px;line-height:1.35;color:#6B655E}
+.belowsec{border:1.5px solid var(--d-below);background:linear-gradient(135deg,var(--surface),var(--rent-soft))}
 </style>
 <script src="/config.js"></script>
 </head>
@@ -1307,13 +1308,13 @@ function renderDetail(){
   const metric=(l,v,sub,cls="")=>`<div class="metric ${cls}"><span>${esc(l)}</span><b class="num">${esc(v)}</b><small>${esc(sub)}</small></div>`;
   const vcls=d=>d==null?"":d<-0.03?"below":d>0.03?"above":"";
   let M="";
-  if(o.deal!=="rent")M=metric("Price per sq ft",x.psf?aed(x.psf):"—",x.mS?"Registered avg "+aed(x.mS.psf):"No registered sales")
-    +metric("Vs building average",pct(x.vs),x.mS?x.mS.deals+" sales, "+x.mS.period:"No market data",vcls(x.vs)+" team-only")
+  if(o.deal!=="rent")M=metric("Price per sq ft",x.psf?aed(x.psf):"—",o.size?fmt(o.size)+" sq ft":"Size on request")
+    
     +metric("Gross yield",x.gy?(x.gy*100).toFixed(1)+"%":"—",x.rentFor?aed(x.rentFor)+" / yr"+(x.rentSrc==="market"?" (avg lease)":""):"No rent estimate")
     +metric("Mortgage estimate",aed(x.mort)+" / mo",`${MORT.down*100}% down · ${(MORT.rate*100).toFixed(1)}% · ${MORT.years} yrs`);
   else M=metric("Monthly rent",aed(o.rent/12),o.cheques?o.cheques+" cheque"+(o.cheques==="1"?"":"s"):"Cheques on request")
     +metric("Rent per sq ft",x.rpsf?aed(x.rpsf):"—",o.size?fmt(o.size)+" sq ft":"Size on request")
-    +metric("Vs building average",pct(x.vsR),x.mR&&x.mR.avg?"Avg lease "+aed(x.mR.avg):"No registered leases",vcls(x.vsR)+" team-only")
+    
     +metric("Security deposit",aed(o.rent*dep),(dep*100)+"% of annual rent");
   const pos=o.deal!=="rent"&&x.psf&&x.mS?{v:x.psf,m:x.mS.psf,f:v=>"AED "+fmt(v),t:"Asking price per sq ft against the building's registered average"}:(x.vsR!=null?{v:o.rent,m:x.mR.avg,f:v=>short(v),t:"Annual rent against the building's average registered lease"}:null);
   const tags=x.views.map(v=>`<span class="tag">${esc(VIEWS[v])}</span>`).join("")+(x.band?`<span class="tag">${esc(BAND[x.band])}</span>`:"")+(x.furn?`<span class="tag">${esc(FURN[x.furn])}</span>`:"");
@@ -1334,7 +1335,7 @@ function renderDetail(){
   let mrows="";
   if(x.mS)mrows+=kv("Registered sales",x.mS.deals+" · "+x.mS.period)+(x.mS.avg?kv("Average sale price",aed(x.mS.avg)):"")+kv("Average price per sq ft",aed(x.mS.psf))+(x.mS.lo?kv("Sale price range",short(x.mS.lo)+" – "+short(x.mS.hi)):"")+(x.mS.note?kv("Note",x.mS.note):"");
   if(x.mR)mrows+=(x.mR.deals?kv("Registered leases",x.mR.deals+" · "+x.mR.period):"")+(x.mR.avg?kv("Average annual rent",aed(x.mR.avg)):"")+(x.mR.lo?kv("Rent range",short(x.mR.lo)+" – "+short(x.mR.hi)):"")+(x.mR.note?kv("Note",x.mR.note):"");
-  if(o.market)mrows+=o.market.map(m=>kv(m[0],m[1])).join("");
+  if(o.market)mrows+=o.market.filter(m=>!/this unit|vs average|vs comparable/i.test(m[0])).map(m=>kv(m[0],m[1])).join("");
   const comp=COMPS.find(c=>c.t.startsWith(BLD[o.b])&&((o.beds===0&&/Studio/.test(c.t))||(o.beds>0&&c.t.includes(o.beds+" Bed"))));
   const compT=comp&&o.deal!=="rent"?`<div class="tablewrap" style="margin-top:8px"><table><tr><th>Recent sale</th><th class="r">Size</th><th class="r">Price</th><th class="r">/ sq ft</th></tr>${comp.rows.map(r=>`<tr><td>${r[0]}</td><td class="r">${fmt(r[1])}</td><td class="r">${fmt(r[2])}</td><td class="r">${fmt(r[2]/r[1])}</td></tr>`).join("")}</table></div>`:"";
   const check=o.check?`<div class="notes"><b>Figures to confirm</b><ul>${o.check.map(c=>"<li>"+esc(c)+"</li>").join("")}</ul></div>`:"";
@@ -1356,12 +1357,12 @@ function renderDetail(){
       </div>
       ${ownerCard(o)}${o.mine&&SRV?shareBox(o):""}
       <div class="metrics">${M}</div>
-      ${pos?`<div class="team-only"><h4>Market position ${valueChip(x)}</h4>${chartSlot("detail-pos",W=>chartVsMarket([{label:"This offer",v:pos.v,m:pos.m}],W,{compact:true,fmt:pos.f,label:pos.t}))}${legend([["var(--fg)","Building average","tick"],[x.value==="above"?"var(--d-above)":x.value==="below"?"var(--d-below)":"var(--faint)","This offer"]])}</div>`:""}
+      
       ${o.hl?`<p class="hl">${esc(o.hl)}</p>`:""}
       ${check}
       <div class="dsec"><h4>Unit</h4>${tags?`<div class="tagrow">${tags}</div>`:""}<div class="cols"><div>${unit.slice(0,Math.ceil(unit.length/2)).map(f=>kv(f[0],f[1])).join("")}</div><div>${unit.slice(Math.ceil(unit.length/2)).map(f=>kv(f[0],f[1])).join("")}</div></div></div>
       <div class="dsec"><div class="cols">${money}${inv}</div></div>
-      ${mrows||compT?`<div class="dsec"><h4>Market in ${esc(BLD[o.b])} · ${esc(TYPE[o.beds])}</h4>${mrows}${compT}</div>`:""}
+      ${(mrows||compT)&&x.value==="below"?`<div class="dsec"><h4><span class="pill below" style="margin-right:6px">Below market</span>Market in ${esc(BLD[o.b])} · ${esc(TYPE[o.beds])}</h4>${mrows}${compT}</div>`:""}
       <div class="dsec team-only"><h4>History</h4><p class="hl" style="margin-bottom:6px">${x.listed?"Listed "+esc(dateS(x.listed))+" · "+x.dom+" day"+(x.dom===1?"":"s")+" on the market":"Listing date not recorded"}${x.pc.length?" · "+x.pc.length+" price change"+(x.pc.length===1?"":"s"):""}</p>${x.hist.length?histRows(x.hist,false):""}</div>
       ${isTeam()?`<button class="btn" data-docs-bld="${o.b}" style="align-self:flex-start">${ic("folder")}Brochures &amp; plans for ${esc(BLD[o.b])}</button>`:""}
       <div class="dsec"><h4>The building</h4><p class="hl" style="margin-bottom:8px">${esc(TOWER[o.b])}</p><div class="chips">${AMEN[o.b].map(t=>'<span class="chip">'+esc(t)+'</span>').join("")}</div></div>
@@ -1531,10 +1532,9 @@ function renderTeamDash(){setTimeout(()=>{const dp=$("#dash-pending");if(dp)dp.o
   const lost=clients.filter(c=>c.status==="Lost").length;
   $("#dash").innerHTML=`${SRV&&isAdmin&&pendingCount()?`<button class="notice" style="text-align:left;width:100%;cursor:pointer" id="dash-pending"><b>Waiting for approval</b>${pendingCount()} new ${pendingCount()===1?"account is":"accounts are"} waiting for you to approve. Open Admin › Users.</button>`:""}${settings.notice?`<div class="notice"><b>Announcement</b>${esc(settings.notice)}</div>`:""}
    <div class="kpis">
-    ${kpi("Active offers",act.length,`${sale.length} for sale · ${rent.length} for rent`)}
+    ${kpi("Available units",act.length,`${sale.length} for sale · ${rent.length} for rent`)}
     ${kpi("Sale stock value","AED "+short(sale.reduce((s,o)=>s+o.price,0)),"total asking price")}
     ${kpi("Annual rent roll","AED "+short(rent.reduce((s,o)=>s+o.rent,0)),"if every rental lets at asking")}
-    ${kpi("Asking price / sq ft",askPsf?"AED "+fmt(askPsf):"—",avgVs!=null?pct(avgVs)+" vs registered sales":"no market match",avgVs>0.03?"up":avgVs<-0.03?"down":"")}
     ${kpi("Average gross yield",avgY?(avgY*100).toFixed(1)+"%":"—",`across ${ys.length} sale offers`)}
     ${kpi("Below market",below,`of ${priced} offers with market data`)}
     ${kpi("Open clients",openC.length,`${due.length} follow-up${due.length===1?"":"s"} due`,due.length?"up":"")}
@@ -1544,10 +1544,7 @@ function renderTeamDash(){setTimeout(()=>{const dp=$("#dash-pending");if(dp)dp.o
     <div class="panel"><h3 class="ph">Stock by building</h3><p class="lede">Active offers for sale and for rent. An offer for sale or rent counts in both.</p>${chartSlot("d-bld",W=>chartStack(blds,[{k:"sale",label:"For sale",short:"sale",c:"var(--s-sale)"},{k:"rent",label:"For rent",short:"rent",c:"var(--s-rent)"}],W,{label:"Active offers by building"}))}${legend([["var(--s-sale)","For sale"],["var(--s-rent)","For rent"]])}</div>
     <div class="panel"><h3 class="ph">Offers by status</h3><p class="lede">Every offer, including sold and rented.</p>${chartSlot("d-status",W=>chartBars(st,W,{label:"Offers by status",color:"var(--q3)",lw:110}))}</div>
    </div>
-   <div class="panel"><h3 class="ph">Asking price per sq ft against the market</h3><p class="lede">Each sale offer against the average registered sale for the same building and type. Tap an offer to open it.</p>
-     ${chartSlot("d-vs",W=>chartVsMarket(vsRows,W,{fmt:v=>fmt(v),label:"Asking price per sq ft against the registered average"}))}
-     ${legend([["var(--fg)","Registered average","tick"],["var(--d-below)","Below market"],["var(--faint)","Within 3%"],["var(--d-above)","Higher than average"]])}
-     ${tableToggle("",["Offer","Asking AED / sq ft","Registered AED / sq ft","Difference"],vsRows.map(r=>[r.label,fmt(r.v),fmt(r.m),pct(r.v/r.m-1)]))}</div>
+   ${(()=>{const bl=act.filter(o=>o.x.value==="below");return bl.length?`<div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h3 class="ph">Below the market</h3><p class="lede">${bl.length} home${bl.length===1?"":"s"} priced under the registered average for the same building and type. Lead with these.</p></div><button class="btn" data-below>See them in Offers${ic("arrowr")}</button></div><div class="hgrid">${bl.map(o=>homeCard(o,"Below market")).join("")}</div></div>`:""})()}
    <div class="panel"><h3 class="ph">Recent changes</h3><p class="lede">The latest price, rent and status changes. Tap one to open the offer.</p>${histRows(HISTORY.slice(0,8))}</div>
    <div class="grid2">
     <div class="panel"><h3 class="ph">Client pipeline</h3><p class="lede">Clients at each stage${lost?` · ${lost} lost`:""}. Add and update clients in the Clients tab.</p>${clients.length?chartSlot("d-pipe",W=>chartBars(pipe,W,{label:"Clients by stage",lw:120})):'<div class="empty">No clients yet.</div>'}</div>
@@ -1792,9 +1789,8 @@ function renderAnalysis(){
    <div class="grid2">
      <div class="panel"><h3 class="ph">Gross yield</h3><p class="lede">Annual rent divided by price. * uses the building's average registered rent, because the offer has no rent estimate of its own.</p>
        ${chartSlot("an-yield",W=>chartBars(yRows,W,{label:"Gross yield by offer",color:"var(--s-rent)",lw:190}))}</div>
-     <div class="panel"><h3 class="ph">Value against the market</h3><p class="lede">Sale offers against the building's average registered price per sq ft; rentals against the average registered rent for the same type.</p>
-       ${chartSlot("an-value",W=>chartDiverge(vRows,W))}
-       ${legend([["var(--d-below)","More than 3% below market"],["var(--faint)","Within 3%"],["var(--d-above)","More than 3% higher than average"]])}</div>
+     <div class="panel"><h3 class="ph">Below the market</h3><p class="lede">Offers priced more than 3% under the registered average for the same building and type.</p>
+       ${(()=>{const b=vRows.filter(r=>r.d<-0.03).sort((a,b)=>a.d-b.d);return b.length?chartSlot("an-value",W=>chartBars(b.map(r=>({label:r.label,v:-r.d*100,text:Math.round(-r.d*100)+"% below",id:r.id,tip:r.tip})),W,{label:"Below the market",color:"var(--d-below)",lw:190})):'<div class="empty">No offers below the market right now.</div>'})()}</div>
    </div>
    <div class="grid2">
      <div class="panel"><h3 class="ph">Days on the market</h3><p class="lede">Active offers with a known listing date, longest first.</p>
@@ -1802,8 +1798,7 @@ function renderAnalysis(){
      <div class="panel"><h3 class="ph">Price changes</h3><p class="lede">Every recorded price and rent change, newest first.</p>
        ${(()=>{const pcs=HISTORY.filter(h=>(h.kind==="price"||h.kind==="rent")&&+h.old&&+h.nw);return pcs.length?`<div class="tablewrap"><table><tr><th>Date</th><th>Offer</th><th class="r">From</th><th class="r">To</th><th class="r">Change</th></tr>${pcs.slice(0,15).map(h=>`<tr><td>${esc(dateS(h.at))}</td><td>${esc(h.title||"")}</td><td class="r">${esc(short(+h.old))}</td><td class="r">${esc(short(+h.nw))}</td><td class="r">${esc(pct(h.nw/h.old-1))}</td></tr>`).join("")}</table></div>`:'<div class="empty">No price changes recorded yet.</div>'})()}</div>
    </div>
-   <div class="panel"><h3 class="ph">Price per sq ft by building</h3><p class="lede">Your average asking price per sq ft against the average registered sale in the same building.</p>
-     <div class="tablewrap"><table><tr><th>Building</th><th class="r">Offers</th><th class="r">Asking AED / sq ft</th><th class="r">Registered AED / sq ft</th><th class="r">Difference</th></tr>${psfRows.map(r=>`<tr>${r.map((c,i)=>`<td${i?' class="r"':""}>${esc(c)}</td>`).join("")}</tr>`).join("")}</table></div></div>
+
    <div class="panel"><h3 class="ph">Buy or rent: monthly cost by unit type</h3><p class="lede">The cheapest offer of each type. Mortgage at ${MORT.down*100}% down, ${(MORT.rate*100).toFixed(1)}% interest over ${MORT.years} years, before service charges. Cash upfront = down payment plus DLD, trustee and admin fees.</p>
      <div class="tablewrap"><table><tr><th>Type</th><th class="r">Cheapest sale</th><th class="r">Mortgage / month</th><th class="r">Cash upfront</th><th class="r">Cheapest rent / month</th><th class="r">Difference</th></tr>${brRows.map(r=>`<tr>${r.map((c,i)=>`<td${i?' class="r"':""}>${esc(c)}</td>`).join("")}</tr>`).join("")}</table></div></div>`;
   fillCharts(el);
@@ -1914,7 +1909,7 @@ function renderReports(){const el=$("#reports");if(!el)return;
    <article class="report">
      <div class="panel"><div class="eyebrow">ORLA PROPERTIES · PENINSULA, BUSINESS BAY</div><h2 style="font-size:24px;margin-top:4px">Portfolio report</h2><p class="lede" style="margin:0">${esc(dateS(new Date()))} · Changes over ${esc(period)} · Market data: DLD-registered deals, ${esc(MKT.asOf)}</p></div>
      <div class="kpis">
-       ${kpi("Active offers",act.length,`${sale.length} for sale · ${rent.length} for rent`)}
+       ${kpi("Available units",act.length,`${sale.length} for sale · ${rent.length} for rent`)}
        ${kpi("Sale stock value","AED "+short(sale.reduce((s,o)=>s+o.price,0)),"total asking price")}
        ${kpi("Annual rent roll","AED "+short(rent.reduce((s,o)=>s+o.rent,0)),"if every rental lets at asking")}
        ${kpi("Average gross yield",avgY?(avgY*100).toFixed(1)+"%":"—",`across ${ys.length} sale offers`)}
@@ -1923,11 +1918,11 @@ function renderReports(){const el=$("#reports");if(!el)return;
        ${kpi("Sold or rented",closedP.length,"in "+period)}
        ${kpi("Open clients",openC.length,`${due.length} follow-up${due.length===1?"":"s"} due`)}
      </div>
-     <div class="panel"><h3 class="ph">Inventory by building and type</h3>${tbl(["Building","Type","For sale","For rent","Avg price","Avg AED / sq ft","Avg rent / yr","Vs market"],inv,[2,3,4,5,6,7])}</div>
+     <div class="panel"><h3 class="ph">Inventory by building and type</h3>${tbl(["Building","Type","For sale","For rent","Avg price","Avg AED / sq ft","Avg rent / yr"],inv.map(r=>r.slice(0,7)),[2,3,4,5,6])}</div>
      <div class="panel"><h3 class="ph">Price changes</h3>${tbl(["Date","Offer","From","To","Change","By"],pcs.map(h=>[dateS(h.at),h.title||"",aed(+h.old),aed(+h.nw),pct(h.nw/h.old-1),h.by||""]),[2,3,4])}</div>
      <div class="panel"><h3 class="ph">Status changes and new listings</h3>${tbl(["Date","Offer","Change","By"],H.filter(h=>h.kind==="avail"||h.kind==="listed"||h.kind==="removed").map(h=>[dateS(h.at),h.title||"",histText(h,false),h.by||""]))}</div>
      <div class="grid2">
-       <div class="panel"><h3 class="ph">Pricing review</h3><p class="lede">More than 3% above registered deals. These may need a price change to sell or let.</p>${tbl(["Offer","Asking","Vs market"],above.map(o=>[shortLabel(o),o.deal==="rent"?aed(o.rent)+" / yr":aed(o.price),pct(o.x.ref)]),[1,2])}</div>
+
        <div class="panel"><h3 class="ph">Best value: below market</h3><p class="lede">More than 3% below registered deals. Lead with these for buyers and tenants.</p>${tbl(["Offer","Asking","Vs market"],belowL.map(o=>[shortLabel(o),o.deal==="rent"?aed(o.rent)+" / yr":aed(o.price),pct(o.x.ref)]),[1,2])}</div>
      </div>
      <div class="panel"><h3 class="ph">Client pipeline</h3>${tbl(["Stage","Clients"],stages.map(s=>[s,clients.filter(c=>c.status===s).length]),[1])}</div>
@@ -2294,6 +2289,7 @@ function renderShowroom(){const A=all().filter(o=>!isDone(o)),first=((meInfo&&me
       <div class="sh-cta"><button class="btn primary big" data-find>${ic("star")}${broker?"Find 3 options for a client":"Find my home in 4 questions"}</button><button class="btn big ghost" data-goto="offers">${ic("building")}See all homes</button></div></div>
   </section>
   ${topAgentCard(broker)}
+  ${(()=>{const bl=A.map(enrich).filter(o=>o.x&&o.x.value==="below");return bl.length?`<section class="spanel belowsec"><div class="shead"><div><p class="kick">★ Best value</p><h3>Below the market price</h3><p class="lede" style="margin:4px 0 0">${bl.length} home${bl.length===1?"":"s"} priced under what similar homes in the same building sold or rented for.</p></div><button class="btn" data-below>See all${ic("arrowr")}</button></div><div class="hgrid">${bl.map(o=>homeCard(o,"Below market")).join("")}</div></section>`:""})()}
   <section class="spanel"><div class="shead"><div><p class="kick">Prices from</p><h3>What each type of home costs</h3></div></div>
     <div class="types">${types.map(t=>`<button class="tcard" data-type="${t.b}"><b>${esc(t.b===0?"Studios":t.b+" bedrooms")}</b>${t.s?`<span>Buy from <strong class="num">AED ${short(t.s)}</strong></span>`:""}${t.r?`<span>Rent from <strong class="num">AED ${short(t.r)}</strong> / yr</span>`:""}</button>`).join("")}</div></section>
   <section class="spanel"><div class="shead"><div><p class="kick">Hand-picked</p><h3>Homes with photos and floor plans</h3></div><button class="btn" data-goto="offers">See all ${A.length}${ic("arrowr")}</button></div>
@@ -2802,6 +2798,7 @@ async function soClick(e){if(e.target.id==="so"){closeSO();return}const b=e.targ
     st.textContent="";logAct&&isAdmin&&logAct("Made a sales offer"+(soState.opt.client?" for "+soState.opt.client:""))}
   catch(x){st.textContent="";toast(x.message||"The PDF couldn't be made")}finally{b.disabled=false}}
 
+$("#dash").addEventListener("click",e=>{if(!e.target.closest("[data-below]"))return;Object.keys(FDEF).forEach(f=>{if(f!=="deal"&&f!=="sort")state[f]=FDEF[f]});state.value=true;syncFilters();show("offers");renderList()});
 /* ---------------- Start-up ---------------- */
 function startApp(){if(!SRV)setRole(isAdmin?"admin":"team");updateAcct();const ch=$("#userchip");
   if(meInfo){ch.innerHTML=`<img alt="" src="${esc(meInfo.avatarUrl)}"><span></span>`;ch.querySelector("span").textContent=(meInfo.name||"You")+" · "+ROLE_LABEL[ROLE]}else ch.textContent="Admin · this device";
