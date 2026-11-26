@@ -192,14 +192,14 @@ async function teamGoal() {
 }
 
 // Units, online and off-market counts per agent for the team goal.
-async function teamStats() {
+async function teamStats(opts = {}) {
   const goal = await teamGoal();
   const [{ rows: lrows }, { rows: orows }, { rows: [st] }] = await Promise.all([
-    q("select l.data, l.created_at, u.agent_key, u.name from listings l join users u on u.id = l.user_id"),
-    q("select data, created_at from offers"),
+    q("select l.id, l.data, l.created_at, u.agent_key, u.name from listings l join users u on u.id = l.user_id"),
+    q("select id, data, created_at from offers"),
     q("select data from settings where id = 'app'")]);
   // The team's offers count too, under the agent each is listed under. A shared listing is counted once, as the listing.
-  const rows = lrows.concat(orows.filter(r => r.data.teamUnit && !r.data.fromListing).map(r => ({ data: r.data, created_at: r.created_at, agent_key: "", name: "" })));
+  const rows = lrows.map(r => ({ ...r, kind: "listing" })).concat(orows.filter(r => r.data.teamUnit && !r.data.fromListing).map(r => ({ id: r.id, kind: "offer", data: r.data, created_at: r.created_at, agent_key: "", name: "" })));
   const agents = (st && st.data && st.data.agents) || SETTINGS.agents, by = {};
   const blank = k => ({ key: k, name: agents[k] ? agents[k].name : k, phone: agents[k] ? agents[k].phone || "" : "", listings: 0, online: 0, partly: 0, offMarket: 0, forSale: 0, forRent: 0, platforms: {}, onlineDates: [], lastAdded: null, units: [] });
   for (const k of Object.keys(agents)) by[k] = blank(k);
@@ -217,7 +217,10 @@ async function teamStats() {
     const d = r.data, num = v => Number(String(v ?? "").replace(/[^0-9.]/g, "")) || null;
     a.units.push({ b: +d.b || null, tower: ["A", "B"].includes(d.tower) ? d.tower : null, layout: d.layout || null, beds: d.beds === undefined || d.beds === "" ? null : +d.beds, size: num(d.size), floor: str(d.floor, 40), view: str(d.view, 80), deal: d.deal,
       price: d.deal === "rent" ? null : num(d.price), rent: d.deal === "rent" ? num(d.rent ?? d.price) : d.deal === "both" ? num(d.rent) : null, status,
-      on: goal.platforms.filter(p => on[p.k]).map(p => p.k) });
+      on: goal.platforms.filter(p => on[p.k]).map(p => p.k),
+      // Everything about the unit, for the admin only (see GET team/performance).
+      ...(opts.full ? { id: r.id, kind: r.kind, unit: str(d.unit, 20), owner: str(d.owner, 100), ownerPhone: str(d.phone ?? d.ownerPhone, 40), furn: str(d.furn, 40),
+        condition: str(d.status, 40), listedAt: d.date || r.created_at, future: !!d.future, notes: str(d.notes ?? d.ownerNote, 200), title: str(d.title, 100), baths: d.baths ?? null, shared: !!d.sharedOffer } : {}) });
     for (const p of goal.platforms) if (on[p.k]) a.platforms[p.k] = (a.platforms[p.k] || 0) + 1;
     if (!a.lastAdded || r.created_at > a.lastAdded) a.lastAdded = r.created_at;
     if (r.data.deal !== "rent") a.forSale++;
@@ -768,7 +771,8 @@ const routes = {
   // Team performance: counts per agent only (no unit numbers, owners or prices). The admin and the Orla team see it.
   "GET team/performance": async c => {
     requireStaff(c);
-    return { ...(await teamStats()), now: new Date().toISOString() };
+    // The admin sees every unit in full (unit number, owner, all details); everyone else the summary.
+    return { ...(await teamStats({ full: c.user.role === "admin" })), full: c.user.role === "admin", now: new Date().toISOString() };
   },
 
   // The team's top performer, for clients, external agents and the public website: name, phone and counts only.

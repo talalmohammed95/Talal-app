@@ -120,6 +120,9 @@ Every Sunday at 9:00 Dubai time (05:00 UTC), the daily Vercel Cron (`/api/cron/d
 
 **Tasks** are private: the admin or the CEO gives one to an agent (with a due date and notes), and only that agent, the admin and the CEO see it. They show on the agent's Home (overdue ones in red), and the agent ticks them done.
 
+## Every unit in full (the admin only)
+On the Team page, "Units by agent" shows the admin every unit of every agent with nothing hidden: unit number, building and tower, type, size, floor, view, furnishing, price, the owner's name and phone (call or WhatsApp), whether it is online and when it was listed. Tap a row to open it. The CEO and the agents keep the summary view.
+
 ## Buildings and unit types
 
 From Select Group's material: Peninsula One is one 36-floor tower with simplexes in the podium and on the waterfront; Two (36 storeys) and Three (49 floors) are single towers with studios, 1 and 2 bedrooms; Four, The Plaza, is the only building with two towers (Tower A and Tower B, 52 floors) with studios to 4 bedrooms and 16 duplex lofts; Five is one 36-storey tower (3-bed semi-penthouses at the top) plus two waterfront duplex blocks (1 to 4 bedroom duplexes). Units carry `beds` (0 to 4) and `layout` (simplex, duplex, loft, semipenthouse). The My units form offers only the types of the chosen building and the Tower field only for Peninsula Four; Offers filters by 4 bedrooms, Simplexes and Duplexes & lofts. Towers set on other buildings were removed, and the Peninsula One podium home is marked as a simplex.
