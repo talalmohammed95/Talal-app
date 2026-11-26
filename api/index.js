@@ -936,6 +936,14 @@ const routes = {
     return { ok: true };
   },
 
+  // The unit types in each building, from the owners list (lofts, duplexes, simplexes, 1 to 4 bedrooms).
+  "GET team/unit-types": async c => {
+    requireStaff(c);
+    const { rows } = await q(`select building as b, (data->>'beds')::int as beds, coalesce(data->>'layout', '') as layout, count(*)::int as n
+      from contacts where building between 1 and 5 and data->>'beds' ~ '^[0-4]$' group by 1, 2, 3 order by 1, 3, 2`);
+    return { types: rows };
+  },
+
   // ---------- The unit guide, read from the brochures ----------
   "GET team/guide": async c => {
     requireStaff(c);

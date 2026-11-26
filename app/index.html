@@ -1434,6 +1434,11 @@ const state=Object.assign({},FDEF,store.get("orla.filters",{}),{client:null,sel:
 const known=v=>v!=null&&String(v).trim()!==""&&!/^(on request|—|–|-|n\/a)$/i.test(String(v).trim());
 const ordN=n=>{const s=["th","st","nd","rd"],v=n%100;return n===0?"Ground":n+(s[(v-20)%10]||s[v]||s[0])};
 let GUIDE=[];
+// The unit types in each building also come from the owners list (lofts, duplexes, simplexes, 1 to 4 bedrooms).
+async function loadUnitTypes(){if(!SRV||!isTeam())return;let t=[];try{t=(await api("team/unit-types")).types||[]}catch(e){return}
+  const ord=["","simplex","duplex","loft","semipenthouse"];
+  for(const r of t){const info=BLDINFO[r.b],l=r.layout==="apartment"?"":r.layout||"";if(!info||(l&&!LAYOUT[l])||!(r.beds>=0&&r.beds<=4))continue;if(!info.types.some(([n,x])=>n===r.beds&&x===l))info.types.push([r.beds,l])}
+  for(const b in BLDINFO)BLDINFO[b].types.sort((x,y)=>ord.indexOf(x[1])-ord.indexOf(y[1])||x[0]-y[0])}
 async function loadGuide(){if(!SRV||!isTeam())return;try{GUIDE=(await api("team/guide")).rows||[]}catch(e){}}
 function unitSplit(u){const d=String(u||"").replace(/\D/g,"");if(d.length<3||d.length>5)return null;return{d,floor:+d.slice(0,-2),stack:d.slice(-2)}}
 // The brochure row for a unit: its own number first, then its stack on that floor, then its stack anywhere. Floor always comes from the number.
@@ -2392,7 +2397,7 @@ async function loadAll(first){
       else if(owner&&owner!==uid){mine=[];clients=[];starred=new Set();persist()}
       else if(mine.length||clients.length||starred.size)persist();
       store.set("orla.localOwner",uid)}
-    migrateOvr();if(!isTeam()){await loadTop();await loadMyProperty()}if(isTeam()){await loadGuide();await loadListings();await loadPerf(true);await loadLeads();await loadTasks();if(isAdmin||isCEO()){loadWeekly();loadVisitorsBrief()}setTimeout(paceModal,700);setTimeout(leadPollStart,1500);if(location.hash==='#requests')setTimeout(()=>{show('dash');const r=$('#requests');if(r)r.scrollIntoView()},900);if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
+    migrateOvr();if(!isTeam()){await loadTop();await loadMyProperty()}if(isTeam()){await loadGuide();await loadUnitTypes();await loadListings();await loadPerf(true);await loadLeads();await loadTasks();if(isAdmin||isCEO()){loadWeekly();loadVisitorsBrief()}setTimeout(paceModal,700);setTimeout(leadPollStart,1500);if(location.hash==='#requests')setTimeout(()=>{show('dash');const r=$('#requests');if(r)r.scrollIntoView()},900);if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
   catch(e){if(e.status===401||e.status===403){location.reload();return}
     if(first){OFFERS=store.get("orla.cache.offers",[]);applySettings(store.get("orla.cache.settings",{}))}
     if(first||!loadAll.warned){loadAll.warned=true;toast("Offline: showing what's saved on this device")}}
@@ -3129,7 +3134,7 @@ function aiContactCard(ct,i,j){if(ct.taken)return `<div class="aicard taken"><di
     <form class="ctso" data-ct-form="${i}:${j}" hidden><div class="fgrid">
       <div class="field"><label>Prepared for</label><input name="client" value="${esc(ct.name||"")}" placeholder="Client's name"></div>
       <div class="field"><label>Building</label><select name="b">${[1,2,3,4,5].map(n=>`<option value="${n}"${(ct.building||3)===n?" selected":""}>${esc(BLD[n])}</option>`).join("")}</select></div>
-      <div class="field"><label>Type</label><select name="beds">${TYPE.map((t,n)=>`<option value="${n}"${(ct.beds??1)===n?" selected":""}>${esc(t)}</option>`).join("")}</select></div>
+      <div class="field"><label>Bedrooms</label><select name="beds">${TYPE.map((t,n)=>`<option value="${n}"${(ct.beds??1)===n?" selected":""}>${esc(t)}</option>`).join("")}</select></div><div class="field"><label>Layout</label><select name="layout">${[["","Apartment"],...Object.entries(LAYOUT)].map(([k,t])=>`<option value="${k}"${(ct.layout||"")===k?" selected":""}>${esc(t)}</option>`).join("")}</select></div>
       <div class="field"><label>Sale or rent</label><select name="deal"><option value="sale">Sale</option><option value="rent">Rent (per year)</option></select></div>
       <div class="field"><label>Price (AED)</label><input name="price" inputmode="numeric" required placeholder="e.g. 2,150,000"></div>
       <div class="field"><label>Size (sq ft)</label><input name="size" inputmode="numeric" value="${esc(String(ct.size||"").replace(/[^0-9.]/g,""))}"></div>
@@ -3233,7 +3238,7 @@ $("#view-assist").addEventListener("submit",e=>{const so=e.target.closest("[data
   const[i,j]=f.dataset.ctForm.split(":"),c=((aiMsgs[+i]||{}).cards||[])[+j];if(!c)return;const ct=c.contact,v=n=>f.elements[n].value.trim(),price=+v("price").replace(/[^0-9.]/g,"");
   if(!price){toast("Enter the price");f.elements.price.focus();return}
   const b=+v("b"),beds=+v("beds"),deal=v("deal"),size=+v("size").replace(/[^0-9.]/g,"")||null;
-  const o={id:"ct-"+ct.id+"-"+Date.now().toString(36),b,beds,deal,title:TYPE[beds]+(v("floor")?", "+v("floor")+(/floor/i.test(v("floor"))?"":" floor"):""),price:deal==="sale"?price:undefined,rent:deal==="rent"?price:undefined,size,floor:v("floor")||"",view:v("view")||"",furn:"—",baths:"—",status:"Ready",avail:"Available",agent:myKey()||Object.keys(AGENTS)[0],hl:"",src:"Peninsula contacts"};
+  const layout=v("layout")||"";const o={id:"ct-"+ct.id+"-"+Date.now().toString(36),b,beds,layout:layout||undefined,deal,title:typeOf({beds,layout})+(v("floor")?", "+v("floor")+(/floor/i.test(v("floor"))?"":" floor"):""),price:deal==="sale"?price:undefined,rent:deal==="rent"?price:undefined,size,floor:v("floor")||"",view:v("view")||"",furn:"—",baths:"—",status:"Ready",avail:"Available",agent:myKey()||Object.keys(AGENTS)[0],hl:"",src:"Peninsula contacts"};
   SO_EXTRA=[o];openSalesOffer([o.id],v("client"))});
 $("#view-assist").addEventListener("click",e=>{const t=e.target.closest("[data-ai-chip],[data-ai-say],[data-ai-edit],[data-ai-fill],[data-ai-copy],[data-ai-new]");if(!t)return;
   if(t.dataset.aiChip){const c=t.dataset.aiChip;if(c.endsWith("…")){$("#ai-in").value=/phone/.test(c)?"":"Unit ";$("#ai-in").placeholder=/phone/.test(c)?"e.g. 050 123 4567":"e.g. 1203";$("#ai-in").focus()}else aiSend(c);return}
