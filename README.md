@@ -44,6 +44,10 @@ scripts/     build.mjs (Vercel build) and dev.mjs (run it on your computer)
   - Only the admin can change offers or settings, there can only be one admin, and pending or blocked accounts get no data.
 - Each device can also add a PIN lock (My listings › Login & security).
 
+## Brochures & plans (team only)
+
+More › **Brochures & plans** is the team's library, filtered by building (P1–P5, Community) with search. It starts with the floor plans and every building's photos and renders that are in the app. Anyone on the team can add a brochure, floor plan, price list or payment plan as a file (PDF, JPG, PNG, up to 60 MB, uploaded in 2 MB parts to stay under Vercel's request limit) or as a link, and open, download or share it (on phones, Share sends the file straight to WhatsApp). Each offer has a button to its building's documents. Clients and external agents can't open it.
+
 ## Photos and floor plans
 
 Each offer shows a photo gallery with a full-screen viewer, and its floor plan where one exists. The photos come from the flyers' developer renders (Select Group) and from photos of the actual units, and are labelled as one or the other. The list of which photos belong to which offer is the `MEDIA` table in `app/index.html`. Offers without their own photos show the standard photos for their building.

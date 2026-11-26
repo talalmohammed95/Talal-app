@@ -475,6 +475,61 @@ const routes = {
     return { ok: true };
   },
 
+  // ---------- Documents library (team and admin) ----------
+  "GET team/docs": async c => {
+    requireTeam(c);
+    const { rows } = await q(`select d.id, d.title, d.building, d.kind, d.beds, d.mime, d.size, d.parts, d.url, d.by_user, d.by_name, d.created_at,
+      (select count(*)::int from doc_parts p where p.doc_id = d.id) as have from docs d order by d.created_at desc`);
+    return { docs: rows.map(r => ({ ...r, ready: !!r.url || r.have === r.parts, mine: r.by_user === c.user.id })) };
+  },
+
+  "POST team/docs": async c => {
+    requireTeam(c);
+    const title = str(c.body.title, 160), url = str(c.body.url, 1000), kind = ["brochure", "floorplan", "pricelist", "photos", "other"].includes(c.body.kind) ? c.body.kind : "other";
+    if (!title) fail(400, "Give the document a name.");
+    const building = [1, 2, 3, 4, 5].includes(+c.body.building) ? +c.body.building : null, beds = [0, 1, 2, 3, 4].includes(+c.body.beds) && c.body.beds !== "" && c.body.beds != null ? +c.body.beds : null;
+    let mime = null, size = 0, parts = 0;
+    if (url) { if (!/^https:\/\//i.test(url)) fail(400, "Links must start with https://"); }
+    else {
+      mime = str(c.body.mime, 100); size = Math.floor(+c.body.size || 0); parts = Math.floor(+c.body.parts || 0);
+      if (!/^(application\/pdf|image\/(jpeg|png|webp))$/.test(mime)) fail(400, "Upload a PDF, JPG, PNG or WebP file.");
+      if (size <= 0 || size > 60e6 || parts < 1 || parts > 40) fail(400, "Files can be up to 60 MB.");
+    }
+    const { rows: [d] } = await q("insert into docs (title, building, kind, beds, mime, size, parts, url, by_user, by_name) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) returning id",
+      [title, building, kind, beds, mime, size, parts, url || null, c.user.id, c.user.name || c.user.email]);
+    return { id: d.id };
+  },
+
+  "POST team/docs/part": async c => {
+    requireTeam(c);
+    const { rows: [d] } = await q("select by_user, parts from docs where id = $1", [String(c.body.id || "")]);
+    if (!d || d.by_user !== c.user.id) fail(404, "Document not found.");
+    const idx = Math.floor(+c.body.idx), buf = Buffer.from(String(c.body.data || ""), "base64");
+    if (!(idx >= 0 && idx < d.parts) || !buf.length || buf.length > 2.2e6) fail(400, "Invalid part.");
+    await q("insert into doc_parts (doc_id, idx, data) values ($1, $2, $3) on conflict (doc_id, idx) do update set data = excluded.data", [c.body.id, idx, buf]);
+    return { ok: true };
+  },
+
+  "GET team/docs/part": async c => {
+    requireTeam(c);
+    const u = new URL(c.req.url, "http://localhost"), id = u.searchParams.get("id") || "", idx = Math.floor(+u.searchParams.get("idx"));
+    if (!/^[0-9a-f-]{36}$/.test(id)) fail(404, "Not found.");
+    const { rows: [p] } = await q("select data from doc_parts where doc_id = $1 and idx = $2", [id, idx]);
+    if (!p) fail(404, "Not found.");
+    c.res.statusCode = 200;
+    c.res.setHeader("Content-Type", "application/octet-stream");
+    c.res.setHeader("Cache-Control", "private, max-age=86400");
+    c.res.end(p.data);
+    return RAW;
+  },
+
+  "POST team/docs/delete": async c => {
+    requireTeam(c);
+    const { rowCount } = await q("delete from docs where id = $1 and (by_user = $2 or $3)", [String(c.body.id || ""), c.user.id, c.user.role === "admin"]);
+    if (!rowCount) fail(404, "Document not found, or it was added by someone else.");
+    return { ok: true };
+  },
+
   "POST data/listings/delete": async c => {
     requireTeam(c);
     const { rows: [gone] } = await q("select data from listings where id = $1 and (user_id = $2 or $3)", [str(c.body.id, 64), c.user.id, c.user.role === "admin"]);
