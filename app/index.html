@@ -777,6 +777,15 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
 .a2inv{display:flex;gap:14px;align-items:flex-start;margin-top:12px;padding:12px;border-radius:14px;background:var(--bg);border:1px solid var(--line)}
 .a2inv img{width:88px;border-radius:10px;border:1px solid var(--line);flex:none}.a2inv b{display:block;font:800 15px var(--display)}.a2inv span{display:block;font-size:13px;color:var(--muted);margin:2px 0 8px}
 .a2inv .actions{display:flex;gap:6px;flex-wrap:wrap}
+.ivrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.ivrow b{display:block;font:700 14.5px var(--display)}.ivrow span{font-size:12.5px;color:var(--muted)}.ivrow .pill{color:inherit}
+.aior{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.aior:first-of-type{border-top:0}.aoi b{display:block;font:700 14px var(--display)}.aoi span{font-size:12.5px;color:var(--muted)}
+.aop{display:flex;align-items:center;gap:8px}.aop b{font:800 14px var(--display);white-space:nowrap}
+.aolab{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--sunk)}
+.aolab.premium{background:#1C1A18;color:#F7A94E}.aolab.middle{background:var(--accent-soft);color:var(--accent-ink)}.aolab.value{background:var(--good-soft);color:var(--good)}
+.aiso{display:flex;gap:6px;flex-wrap:wrap}.aiso input{flex:1;min-width:150px;padding:9px 12px;border-radius:12px;border:1.5px solid var(--line-strong);background:var(--bg);color:var(--fg);font-size:15px}
+@media (max-width:620px){.aior{grid-template-columns:minmax(0,1fr)}.aop{justify-content:space-between}}
 </style>
 <script src="/config.js"></script>
 </head>
@@ -905,6 +914,19 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
 
   <!-- CLIENTS -->
   <section class="view" id="view-clients" hidden>
+    <div class="panel ivpanel team-only" id="iv-panel" style="margin-bottom:16px">
+      <h2>Invite to the website</h2><p class="lede">Make an account for your client or an external agent. They get a ready message with their password and the home-screen guide, sent from your WhatsApp.</p>
+      <form id="iv-form" class="fgrid" autocomplete="off">
+        <div class="field"><label for="iv-name">Full name</label><input id="iv-name" required autocomplete="off"></div>
+        <div class="field"><label for="iv-phone">Mobile (for WhatsApp)</label><input id="iv-phone" inputmode="tel" placeholder="+971 …" autocomplete="off"></div>
+        <div class="field"><label for="iv-email">Email (their username)</label><input id="iv-email" type="email" inputmode="email" autocapitalize="off" spellcheck="false" required autocomplete="off"></div>
+        <div class="field"><label for="iv-role">They are</label><select id="iv-role"><option value="client">A client</option><option value="broker">An external agent</option></select></div>
+        <div class="field" id="iv-company-wrap" hidden><label for="iv-company">Their agency</label><input id="iv-company" autocomplete="off"></div>
+        <div class="wide actions"><button class="btn primary" type="submit" id="iv-go">Create the account</button></div>
+      </form>
+      <div id="iv-done" class="ocard" hidden style="margin-top:12px"></div>
+      <div id="iv-list"></div>
+    </div>
     <div class="grid2">
       <div class="panel">
         <h2 id="cl-title">Add a client</h2>
@@ -1564,7 +1586,7 @@ function teamHero(){const h=new Date().getHours(),first=((meInfo&&meInfo.name)||
     <h2>${isTop?"You're the team's top achiever. Well done!":"Here's your day at the Peninsula."}</h2>
     ${top&&!isTop?`<p class="th-top"><span class="topstar">★</span> Top achiever: <b>${esc(top.name.split(" ")[0])}</b> with ${top.listings} unit${top.listings===1?"":"s"}${top.online?" · "+top.online+" online":""}</p>`:""}
     <div class="th-stats">${stat(units,"your units")}${stat((me?me.online:0)+"<small>/"+g.target+"</small>","online, team goal")}${rank?stat("#"+rank,"team ranking"):""}${stat(days,"days left")}</div>
-    <div class="th-cta"><button class="btn primary big" data-find>${ic("star")}New client request</button><button class="btn big ghost aicta" data-goto="assist">${ic("spark")}AI assistant</button><button class="btn big ghost" data-goto="mine">${ic("list")}Add a unit</button><button class="btn big ghost" data-goto-team>${ic("target")}Team performance</button><button class="btn big ghost" data-goto="docs">${ic("folder")}Brochures &amp; plans</button></div></div></section>`}
+    <div class="th-cta"><button class="btn primary big" data-find>${ic("star")}New client request</button><button class="btn big ghost aicta" data-goto="assist">${ic("spark")}AI assistant</button><button class="btn big ghost" data-invite>${ic("users")}Invite a client</button><button class="btn big ghost" data-goto="mine">${ic("list")}Add a unit</button><button class="btn big ghost" data-goto-team>${ic("target")}Team performance</button><button class="btn big ghost" data-goto="docs">${ic("folder")}Brochures &amp; plans</button></div></div></section>`}
 function renderMyListings(){const k=myKey();const l=OFFERS.filter(o=>k&&AGENTS[k]&&o.agent===k&&(o.teamUnit||o.fromListing)).concat(SRV?mine.map(mineToOffer):[]).map(enrich).sort((a,b)=>a.b-b.b||a.beds-b.beds);if(!l.length)return"";
   const withOwner=l.filter(o=>o.ownerPhone).length;
   return `<div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Listed under you</h2><p class="lede">${l.length} offer${l.length===1?"":"s"} in your name${withOwner<l.length?` · ${l.length-withOwner} without an owner's number yet`:""}. Only you can see these owners' contacts.</p></div><button class="btn" data-mine-all>See them in Offers${ic("arrowr")}</button></div>
@@ -2210,7 +2232,7 @@ async function loadAll(first){
       else if(owner&&owner!==uid){mine=[];clients=[];starred=new Set();persist()}
       else if(mine.length||clients.length||starred.size)persist();
       store.set("orla.localOwner",uid)}
-    migrateOvr();if(!isTeam())await loadTop();if(isTeam()){await loadListings();await loadPerf(true);await loadLeads();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
+    migrateOvr();if(!isTeam())await loadTop();if(isTeam()){await loadListings();await loadPerf(true);await loadLeads();loadInvites();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
   catch(e){if(e.status===401||e.status===403){location.reload();return}
     if(first){OFFERS=store.get("orla.cache.offers",[]);applySettings(store.get("orla.cache.settings",{}))}
     if(first||!loadAll.warned){loadAll.warned=true;toast("Offline: showing what's saved on this device")}}
@@ -2224,7 +2246,7 @@ function renderUsers(){const n=pendingCount(),c=$("#cnt-pending");c.hidden=!n;c.
   const pill=u=>u.status==="pending"?'<span class="pill pending">Waiting</span>'+(emailOn&&!u.email_verified?' <span class="pill st">Email not confirmed</span>':""):u.status==="active"?'<span class="pill ok">Approved</span>':'<span class="pill st done">Blocked</span>';
   const btn=(u,to,t,cls="")=>`<button class="btn sm ${cls}" data-uact="${esc(u.id)}" data-to="${to}">${t}</button>`;
   const btns=u=>u.id===uid?"You":(u.status==="pending"?btn(u,"active","Approve","primary")+btn(u,"blocked","Decline"):u.status==="active"?btn(u,"blocked","Block")+btn(u,"reset","Reset link"):btn(u,"active","Approve"));
-  $("#ad-users").innerHTML='<tr><th>Name</th><th>Email</th><th>Role</th><th>Registered</th><th>Status</th><th></th></tr>'+l.map(u=>`<tr><td>${esc(u.full_name||"—")}</td><td>${esc(u.email)}</td><td>${u.role==="admin"?"Admin":`<select data-urole="${esc(u.id)}" aria-label="Role of ${esc(u.email)}">${[["agent","Orla team"],["broker","External agent"],["client","Client"]].map(([v,t])=>`<option value="${v}"${u.role===v?" selected":""}>${t}</option>`).join("")}</select>`}${u.role==="admin"||u.role==="agent"?`<select data-uagent="${esc(u.id)}" aria-label="Offers listed under" style="margin-top:6px"><option value="">Listings: none</option>${Object.entries(AGENTS).map(([k,a])=>`<option value="${esc(k)}"${u.agent_key===k?" selected":""}>Listings: ${esc(a.name)}</option>`).join("")}</select>`:""}${u.company?`<div class="src">${esc(u.company)}</div>`:""}${u.phone?`<div class="src num">${esc(u.phone)}</div>`:""}</td><td>${esc(new Date(u.created_at).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}))}</td><td>${pill(u)}</td><td>${btns(u)}</td></tr>`).join("")}
+  $("#ad-users").innerHTML='<tr><th>Name</th><th>Email</th><th>Role</th><th>Registered</th><th>Status</th><th></th></tr>'+l.map(u=>`<tr><td>${esc(u.full_name||"—")}${u.invited_by_name?`<br><small class="src">Invited by ${esc(u.invited_by_name.split(" ")[0])}</small>`:""}</td><td>${esc(u.email)}</td><td>${u.role==="admin"?"Admin":`<select data-urole="${esc(u.id)}" aria-label="Role of ${esc(u.email)}">${[["agent","Orla team"],["broker","External agent"],["client","Client"]].map(([v,t])=>`<option value="${v}"${u.role===v?" selected":""}>${t}</option>`).join("")}</select>`}${u.role==="admin"||u.role==="agent"?`<select data-uagent="${esc(u.id)}" aria-label="Offers listed under" style="margin-top:6px"><option value="">Listings: none</option>${Object.entries(AGENTS).map(([k,a])=>`<option value="${esc(k)}"${u.agent_key===k?" selected":""}>Listings: ${esc(a.name)}</option>`).join("")}</select>`:""}${u.company?`<div class="src">${esc(u.company)}</div>`:""}${u.phone?`<div class="src num">${esc(u.phone)}</div>`:""}</td><td>${esc(new Date(u.created_at).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}))}</td><td>${pill(u)}</td><td>${btns(u)}</td></tr>`).join("")}
 $("#ad-users").addEventListener("click",async e=>{const b=e.target.closest("[data-uact]");if(!b)return;const u=usersList.find(x=>x.id===b.dataset.uact);if(!u)return;const to=b.dataset.to;
   try{
     if(to==="reset"){const r=await api("admin/users/reset-link",{id:u.id});const box=$("#ad-csv-text");box.hidden=false;box.value="Password reset link for "+u.email+" (works for 24 hours):\n"+r.url;await copy(box.value,box);logAct("Made a password reset link for "+u.email);return}
@@ -2378,6 +2400,7 @@ function sourcesHTML(){return `<section class="spanel sources"><div class="shead
   <li><b>Select Group</b><span>Building details, floor plans and renders from the developer's Peninsula brochures. Renders are for illustration.</span><a href="https://www.select-group.ae" target="_blank" rel="noopener">select-group.ae</a></li>
   <li><b>Orla Properties</b><span>Photos marked "Photo of this home" were taken in the actual apartment. Drive times are approximate.</span></li></ul></section>`}
 $("#dash").addEventListener("click",e=>{const f=e.target.closest("[data-find]");if(f){openWizard();return}
+  if(e.target.closest("[data-invite]")){show("clients");setTimeout(()=>{$("#iv-panel").scrollIntoView({behavior:"smooth",block:"start"});$("#iv-name").focus({preventScroll:true})},60);return}
   const g=e.target.closest("[data-goto]");if(g){show(g.dataset.goto);return}
   const t=e.target.closest("[data-type]");if(t){Object.assign(state,{type:t.dataset.type,bld:""});syncFilters();show("offers");renderList();return}
   const b=e.target.closest("[data-bld]");if(b){Object.assign(state,{bld:b.dataset.bld,type:""});syncFilters();show("offers");renderList()}});
@@ -2539,9 +2562,8 @@ $("#nu-role").onchange=()=>{$("#nu-agent-wrap").hidden=$("#nu-role").value!=="ag
 $("#nu-name").addEventListener("input",()=>{const f=$("#nu-name").value.trim().split(/\s+/)[0].toLowerCase();fillNuAgent();const k=Object.keys(AGENTS).find(k=>String(AGENTS[k].name).split(" ")[0].toLowerCase()===f);if(k)$("#nu-agent").value=k});
 $("#nu-form").addEventListener("submit",async e=>{e.preventDefault();const role=$("#nu-role").value;
   try{const r=await api("admin/users/create",{name:$("#nu-name").value.trim(),email:$("#nu-email").value.trim(),role,agentKey:role==="agent"?$("#nu-agent").value:"",password:$("#nu-pass").value||undefined});
-    const nm=$("#nu-name").value.trim(),msg=`Hi ${nm.split(" ")[0]}, your Peninsula Offers account is ready.\n\nSign in here: ${r.url}\nEmail: ${r.email}\nPassword: ${r.password}\n\nPut Peninsula on your phone's home screen (20 seconds, with pictures): ${location.origin}/home-screen/`;
-    const d=$("#nu-done");d.hidden=false;d.innerHTML=`<div class="ow"><span class="ok">Account created</span><b>${esc(nm)}</b><span class="num">${esc(r.email)}</span><span class="num">Password: ${esc(r.password)}</span><small>Send these now: the password isn't shown again. They can sign in straight away.</small></div><div class="actions"><button class="btn primary" type="button" id="nu-copy">${ic("copy")}Copy message</button><a class="btn" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(msg)}">${ic("chat")}Send on WhatsApp</a></div>${a2hsInviteHTML()}`;
-    $("#nu-copy").onclick=()=>copy(msg);logAct("Created an account for "+r.email);$("#nu-form").reset();$("#nu-agent-wrap").hidden=false;loadUsers()}
+    const nm=$("#nu-name").value.trim(),msg=inviteMsg(nm,r);
+    const d=$("#nu-done");d.hidden=false;lastInviteMsg=msg;d.innerHTML=inviteDoneHTML(nm,r,msg);logAct("Created an account for "+r.email);$("#nu-form").reset();$("#nu-agent-wrap").hidden=false;loadUsers()}
   catch(x){toast(x.message)}});
 
 /* ---------------- Sharing an agent's unit with the team: floor yes, unit number and owner never ---------------- */
@@ -2859,7 +2881,7 @@ async function soClick(e){if(e.target.id==="so"){closeSO();return}const b=e.targ
 $("#dash").addEventListener("click",e=>{if(!e.target.closest("[data-below]"))return;Object.keys(FDEF).forEach(f=>{if(f!=="deal"&&f!=="sort")state[f]=FDEF[f]});state.value=true;syncFilters();show("offers");renderList()});
 /* ---------------- AI assistant ---------------- */
 let aiMsgs=[],aiBusy=false,aiStatus=null;
-const AI_CHIPS=["Find a phone number …","Find unit …","Which of my units aren't online yet?","Suggest a price for a 1 bed in Peninsula Three","What do I need before a listing goes live?"];
+const AI_CHIPS=["Find a phone number …","Find unit …","Client wants a 1 bed to buy, budget AED 2M","Make a sales offer for our best studio","How is the team doing this week?","Which of my units aren't online yet?","Suggest a price for a 1 bed in Peninsula Three","What do I need before a listing goes live?"];
 function aiMd(t){let h=esc(t).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>");
   return h.split(/\n/).map(l=>/^\s*[-•*]\s+/.test(l)?"<li>"+l.replace(/^\s*[-•*]\s+/,"")+"</li>":l?"<p>"+l+"</p>":"").join("").replace(/(<li>.*?<\/li>)+/g,m=>"<ul>"+m+"</ul>")}
 const aiMoney=v=>v?"AED "+fmt(v):"";
@@ -2897,10 +2919,18 @@ function aiContactCard(ct,i,j){if(ct.taken)return `<div class="aicard taken"><di
       <div class="field"><label>Floor</label><input name="floor" value="${esc(ct.floor||"")}"></div>
       <div class="field"><label>View</label><input name="view" value="${esc(ct.view||"")}"></div>
     </div><div class="actions" style="margin-top:8px"><button class="btn sm primary" type="submit">${ic("file")}Make the sales offer</button></div></form></div>`}
-function aiCardHTML(c,i,j){if(c.type==="contact")return aiContactCard(c.contact,i,j);if(c.type==="unit")return aiUnitCard(c.unit,i,j);if(c.type==="draft")return aiDraftCard(c.draft,i,j);
+function aiOfferRow(o){const pr=o.deal==="rent"||(!o.price&&o.rent)?aiMoney(o.rent)+" a year":aiMoney(o.price)+(o.deal==="both"&&o.rent?" · or "+aiMoney(o.rent)+" a year":"");
+  return `<div class="aior">${o.label?`<span class="aolab ${esc(o.label.toLowerCase())}">${esc(o.label)}</span>`:""}<div class="aoi"><b>${esc((o.building||BLD[o.b]||"").replace(/ \(.*\)/,""))}${o.tower?" · "+esc(o.tower):""} · ${esc(o.type||TYPE[o.beds]||"")}</b><span>${esc([o.size?fmt(o.size)+" sq ft":"",o.floor,o.view&&o.view!=="On request"?o.view:"",o.furnishing&&o.furnishing!=="—"?o.furnishing:""].filter(Boolean).join(" · "))}</span></div>
+    <div class="aop"><b>${esc(pr)}</b><button class="btn sm" data-ai-open="${esc(o.id)}">Open</button></div></div>`}
+function aiOffersCard(c,i,j){const ids=c.items.map(o=>o.id);
+  return `<div class="aicard offers"><div class="aic-h">${ic(c.three?"star":"building")}<b>${c.three?"Three options":c.items.length+" home"+(c.items.length===1?"":"s")}</b></div>${c.items.map(aiOfferRow).join("")}
+    <form class="aiso" data-ai-so="${esc(ids.join(","))}"><input name="client" placeholder="Client's name (for the sales offer)" maxlength="80"><button class="btn sm primary" type="submit">${ic("file")}Sales offer${ids.length>1?" ("+ids.length+" pages)":""}</button></form></div>`}
+function aiSalesCard(c){return `<div class="aicard draft"><div class="aic-h">${ic("file")}<b>Sales offer${c.client?" for "+esc(c.client):""}</b><span class="pill ok">${c.ids.length} page${c.ids.length===1?"":"s"}</span></div>${c.items.map(aiOfferRow).join("")}
+    <form class="aiso" data-ai-so="${esc(c.ids.join(","))}"><input name="client" value="${esc(c.client||"")}" placeholder="Client's name" maxlength="80"><button class="btn sm primary" type="submit">${ic("file")}Open the sales offer</button></form></div>`}
+function aiCardHTML(c,i,j){if(c.type==="offers")return aiOffersCard(c,i,j);if(c.type==="salesoffer")return aiSalesCard(c);if(c.type==="contact")return aiContactCard(c.contact,i,j);if(c.type==="unit")return aiUnitCard(c.unit,i,j);if(c.type==="draft")return aiDraftCard(c.draft,i,j);
   if(c.type==="notfound")return `<div class="aicard"><div class="aic-h">${ic("building")}<b>Unit ${esc(c.query||"")}</b></div><p>${c.teammates&&c.teammates.length?`It's listed by a teammate (${esc(c.teammates.join(", "))}). Only they and the admin can see the owner.`:"It isn't in your units yet."}</p><div class="actions"><button class="btn sm" data-ai-new="${esc(c.query||"")}">${ic("list")}Add it as a new listing</button></div></div>`;return""}
 function aiRender(){const th=$("#ai-thread");if(!th)return;const first=((meInfo&&meInfo.name)||"").split(" ")[0];
-  let h=`<div class="aimsg bot"><div class="aiav">${ic("spark")}</div><div class="aib"><p><b>Hi${first?" "+esc(first):""}! I'm your listing assistant.</b></p><p>Type a client's phone number or a unit number. I'll find them in the Peninsula contacts and your units, with the unit details. Then you can make a sales offer, or I can write the listing for Bayut and Property Finder.</p></div></div>`;
+  let h=`<div class="aimsg bot"><div class="aiav">${ic("spark")}</div><div class="aib"><p><b>Hi${first?" "+esc(first):""}! I'm your listing assistant.</b></p><p>Type a client's phone number or a unit number and I'll find them, with the unit details. Tell me what a client wants and I'll pick three homes (premium, middle, value) and make the sales offer. I know our homes, the market figures and Talal's decks, and I can write your Bayut and Property Finder listings.</p></div></div>`;
   h+=aiMsgs.map((m,i)=>m.role==="user"?`<div class="aimsg me"><div class="aib">${esc(m.text)}</div></div>`:`<div class="aimsg bot"><div class="aiav">${ic("spark")}</div><div class="aib">${m.error?`<p class="aierr">${esc(m.text)}</p>`:aiMd(m.text)}${(m.cards||[]).map((c,j)=>aiCardHTML(c,i,j)).join("")}</div></div>`).join("");
   if(aiBusy)h+=`<div class="aimsg bot"><div class="aiav">${ic("spark")}</div><div class="aib"><span class="aidots"><i></i><i></i><i></i></span></div></div>`;
   th.innerHTML=h;$("#ai-chips").innerHTML=aiMsgs.length?"":AI_CHIPS.map(c=>`<button class="chip" data-ai-chip="${esc(c)}">${esc(c)}</button>`).join("");
@@ -2925,8 +2955,10 @@ function aiFill(d){const m=d.listingId&&mine.concat(teamListings).find(x=>x.id==
 function aiContactToDraft(ct){return{unit:ct.unit,b:ct.building,beds:ct.beds,deal:"sale",size:String(ct.size||"").replace(/[^0-9.]/g,""),floor:ct.floor,view:ct.view,owner:ct.name,phone:(ct.phones||[])[0],agent:myKey()}}
 function aiUnitToDraft(u){return{listingId:u.kind==="listing"?u.id:null,unit:u.unit,b:u.b,beds:u.beds,deal:u.deal,price:u.price,rent:u.rent,size:u.size,floor:u.floor,view:u.view,status:u.status,furn:u.furnishing,owner:u.owner,phone:u.ownerPhone,agent:myKey()}}
 $("#ai-form").addEventListener("submit",e=>{e.preventDefault();const v=$("#ai-in").value;$("#ai-in").value="";aiSend(v)});
-$("#view-assist").addEventListener("click",e=>{const so=e.target.closest("[data-ct-so]");if(so){const f=$(`[data-ct-form="${so.dataset.ctSo}"]`);f.hidden=!f.hidden;if(!f.hidden)f.querySelector('[name="price"]').focus();return}});
-$("#view-assist").addEventListener("submit",e=>{const f=e.target.closest("[data-ct-form]");if(!f)return;e.preventDefault();
+$("#view-assist").addEventListener("click",e=>{const op=e.target.closest("[data-ai-open]");if(op){const id=op.dataset.aiOpen;if(!all().some(o=>o.id===id)){toast("This home isn't in Offers any more");return}state.sel=id;show("offers");renderList();renderDetail();return}
+  const so=e.target.closest("[data-ct-so]");if(so){const f=$(`[data-ct-form="${so.dataset.ctSo}"]`);f.hidden=!f.hidden;if(!f.hidden)f.querySelector('[name="price"]').focus();return}});
+$("#view-assist").addEventListener("submit",e=>{const so=e.target.closest("[data-ai-so]");if(so){e.preventDefault();openSalesOffer(so.dataset.aiSo.split(","),so.elements.client.value.trim());return}
+  const f=e.target.closest("[data-ct-form]");if(!f)return;e.preventDefault();
   const[i,j]=f.dataset.ctForm.split(":"),c=((aiMsgs[+i]||{}).cards||[])[+j];if(!c)return;const ct=c.contact,v=n=>f.elements[n].value.trim(),price=+v("price").replace(/[^0-9.]/g,"");
   if(!price){toast("Enter the price");f.elements.price.focus();return}
   const b=+v("b"),beds=+v("beds"),deal=v("deal"),size=+v("size").replace(/[^0-9.]/g,"")||null;
@@ -3017,6 +3049,25 @@ function renderA2hs(){const el=$("#a2hs");if(!el)return;const off=a2Standalone()
     <div class="actions">${a2Prompt?`<button class="btn sm primary" data-a2install>Install</button>`:`<a class="btn sm primary" href="/home-screen/">Show me how</a>`}<button class="btn sm ghost" data-a2close aria-label="Close">Not now</button></div></div>`}
 document.addEventListener("click",async e=>{if(e.target.closest("[data-a2close]")){store.set("orla.a2hs","done");renderA2hs();return}
   if(e.target.closest("[data-a2install]")&&a2Prompt){const p=a2Prompt;a2Prompt=null;p.prompt();try{const r=await p.userChoice;if(r.outcome==="accepted")store.set("orla.a2hs","done")}catch(x){}renderA2hs()}});
+
+/* ---------------- Invitations: the admin and every Orla agent ---------------- */
+function inviteMsg(nm,r){const me=(meInfo&&meInfo.name)||"",sign=me&&!isAdmin?`\n\n${me.split(" ")[0]}, Orla Properties`:"";
+  return `Hi ${String(nm).split(" ")[0]}, your Peninsula Offers account is ready.\n\nSign in here: ${r.url}\nEmail: ${r.email}\nPassword: ${r.password}\n\nPut Peninsula on your phone's home screen (20 seconds, with pictures): ${location.origin}/home-screen/${sign}`}
+function inviteDoneHTML(nm,r,msg){const ph=String(r.phone||"").replace(/[^0-9]/g,"");
+  return `<div class="ow"><span class="ok">Account created</span><b>${esc(nm)}</b><span class="num">${esc(r.email)}</span><span class="num">Password: ${esc(r.password)}</span><small>Send these now: the password isn't shown again. They can sign in straight away.</small></div>
+    <div class="actions"><a class="btn primary" target="_blank" rel="noopener" href="${esc(ph?waTo(ph,msg):"https://wa.me/?text="+encodeURIComponent(msg))}">${ic("chat")}${ph?"Send on WhatsApp to "+esc(String(nm).split(" ")[0]):"Send on WhatsApp"}</a><button class="btn" type="button" data-copy-invite>${ic("copy")}Copy message</button></div>${a2hsInviteHTML()}`}
+let lastInviteMsg="";document.addEventListener("click",e=>{const b=e.target.closest("[data-copy-invite]");if(b)copy(b.closest("[data-msg]")?b.closest("[data-msg]").dataset.msg:lastInviteMsg)});
+let invites=[];
+async function loadInvites(){if(!SRV||!isTeam())return;try{invites=(await api("team/invites")).invites||[]}catch(e){invites=[]}renderInvites()}
+function renderInvites(){const el=$("#iv-list");if(!el)return;
+  el.innerHTML=invites.length?`<h4 style="margin:16px 0 6px">${isAdmin?"Invited by the team":"People you invited"} · ${invites.length}</h4><div class="stack">${invites.map(u=>`<div class="ivrow"><div><b>${esc(u.name||u.email)}</b><span>${u.role==="broker"?"External agent"+(u.company?" · "+esc(u.company):""):"Client"} · ${esc(u.email)}${u.phone?" · "+esc(u.phone):""}${isAdmin&&u.invited_by_name?" · by "+esc(u.invited_by_name.split(" ")[0]):""}</span></div>
+      <span class="pill ${u.status==="blocked"?"bad":u.last_seen?"ok":"pending"}">${u.status==="blocked"?"Blocked":u.last_seen?"Signed in":"Not signed in yet"}</span></div>`).join("")}</div>`:""}
+$("#iv-role").addEventListener("change",()=>{$("#iv-company-wrap").hidden=$("#iv-role").value!=="broker"});
+$("#iv-form").addEventListener("submit",async e=>{e.preventDefault();const g=k=>$(k).value.trim(),b=$("#iv-go");b.disabled=true;
+  try{const r=await api("team/invite",{name:g("#iv-name"),email:g("#iv-email"),phone:g("#iv-phone"),role:$("#iv-role").value,company:g("#iv-company")});
+    const nm=g("#iv-name"),msg=inviteMsg(nm,r);lastInviteMsg=msg;const d=$("#iv-done");d.hidden=false;lastInviteMsg=msg;d.innerHTML=inviteDoneHTML(nm,r,msg);
+    $("#iv-form").reset();$("#iv-company-wrap").hidden=true;d.scrollIntoView({behavior:"smooth",block:"nearest"});loadInvites()}
+  catch(x){toast(x.message)}finally{b.disabled=false}});
 
 /* ---------------- Start-up ---------------- */
 function startApp(){if(!SRV)setRole(isAdmin?"admin":"team");updateAcct();const ch=$("#userchip");

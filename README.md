@@ -64,6 +64,14 @@ It runs on Claude (Anthropic). Add `ANTHROPIC_API_KEY` in Vercel to turn it on. 
 
 Every unit can carry its tower: **Tower A** or **Tower B**. The team sees it next to the building on cards ("P4A"), in the offer details ("Peninsula Four · Tower B") and in the AI assistant; clients and external agents don't get it. Peninsula Four has two towers, so its units without one are flagged "Tower A or B?", and Home and My units list them with Tower A / Tower B buttons: each agent sets their own units, the admin sets anyone's. The My units form has a Tower field and won't save a Peninsula Four unit without it. Units whose floor said "Tower A" or "Tower B" were set automatically.
 
+## Agents invite clients
+
+Every Orla agent can invite a client or an external agent: **Clients › Invite to the website**, or **Invite a client** on Home. The account is ready straight away. The agent gets the same message the admin sends (sign-in link, email, password, the home-screen guide link, signed with their name), a button that opens WhatsApp straight to the client's number, and the home-screen picture to send. Below, "People you invited" shows who has signed in. Agents can only create client and external-agent accounts (up to 40 a day each). The admin sees "Invited by …" in Users, and every invitation is in Activity.
+
+## What the AI assistant knows
+
+`lib/knowledge.js` gives the assistant, on every request, Talal's playbook (the rules he set while building the app: no "over market", show below-market homes, three options with a big gap, sales offer style, privacy, the team goal, Tower A/B), the building facts and drive times, the fees and mortgage assumptions, the DLD market figures and comparable sales, and the full text of his November 2026 decks (2 Bedroom Selection, 1 Bedroom Selection, Investor Selection, Studios for Rent). It's cached, so it costs little after the first request. With its tools it searches every offer live, picks three options (premium, middle, value), prepares the sales offer with the client's name, checks the team's progress, finds units and contacts and writes portal listings. In basic mode (no key) it still finds three options when an agent types a request like "2 bed to buy, budget 3.5M".
+
 ## Peninsula contacts (team only)
 
 The admin uploads the Peninsula contacts database in **Admin › Peninsula contacts**: an Excel (.xlsx) or CSV file. The app matches the columns itself (name, phones, email, building, unit, type, size, floor, view, owner or tenant, nationality, notes); you can change any match before importing, and other columns are kept as extra details. Choose **Replace all contacts** or **Add to existing**. The file is read in your browser and sent to the database in parts.

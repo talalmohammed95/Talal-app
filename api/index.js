@@ -428,7 +428,7 @@ const routes = {
     await limit("ai:" + c.user.id, 80, 3600);
     if (!aiEnabled()) return assistOffline(c.user, history);
     const { rows: [st] } = await q("select data from settings where id = 'app'");
-    try { return await assist(c.user, history, (st && st.data && st.data.agents) || SETTINGS.agents); }
+    try { return await assist(c.user, history, (st && st.data && st.data.agents) || SETTINGS.agents, { teamStats }); }
     catch (e) {
       if (e instanceof Anthropic.AuthenticationError) fail(503, "The AI key isn't valid. The admin needs to update ANTHROPIC_API_KEY.", "ai_key");
       if (e instanceof Anthropic.RateLimitError) fail(429, "The assistant is busy. Try again in a minute.", "ai_busy");
@@ -476,6 +476,36 @@ const routes = {
     await q("update offers set data = $2, updated_at = now(), updated_by = $3 where id = $1", [id, data, c.user.id]);
     await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `Set ${str(o.data.title, 80) || id} to ${tower ? "Tower " + tower : "no tower"}`]);
     return { ok: true, tower };
+  },
+
+  // Orla agents invite their own clients and external agents: the account is ready straight away, like the admin's.
+  "POST team/invite": async c => {
+    requireTeam(c);
+    const name = str(c.body.name, 100), email = checkEmail(c.body.email), phone = str(c.body.phone, 40);
+    const role = c.body.role === "broker" ? "broker" : "client", company = str(c.body.company, 120);
+    if (!name) fail(400, "Enter their full name.", "no_name");
+    if (role === "broker" && !company) fail(400, "Enter the name of their agency.", "no_company");
+    if (phone && phone.replace(/[^0-9]/g, "").length < 7) fail(400, "Check the mobile number.", "bad_phone");
+    await limit("invite:" + c.user.id, 40, 86400);
+    const ABC = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const password = Array.from(crypto.randomBytes(10), b => ABC[b % ABC.length]).join("");
+    try {
+      await q(`insert into users (email, name, pass_hash, role, status, email_verified, company, phone, invited_by)
+               values ($1, $2, $3, $4, 'active', true, $5, $6, $7)`, [email, name, await hashPassword(password), role, company, phone, c.user.id]);
+    } catch (e) {
+      if (e.code === "23505") fail(409, "This email already has an account. Ask the admin for a new password link if they forgot it.", "exists");
+      throw e;
+    }
+    await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `Invited ${name} (${email}) as ${role === "broker" ? "an external agent" : "a client"}`]);
+    return { email, password, phone, url: appUrl(c.req) + "/app/" };
+  },
+  "GET team/invites": async c => {
+    requireTeam(c);
+    const admin = c.user.role === "admin";
+    const { rows } = await q(`select u.id, u.name, u.email, u.phone, u.role, u.company, u.status, u.created_at, i.name as invited_by_name,
+        (select max(s.created_at) from sessions s where s.user_id = u.id) as last_seen
+      from users u join users i on i.id = u.invited_by ${admin ? "" : "where u.invited_by = $1"} order by u.created_at desc limit 200`, admin ? [] : [c.user.id]);
+    return { invites: rows };
   },
 
   // Team performance: counts per agent only (no unit numbers, owners or prices). The admin and the Orla team see it.
@@ -634,7 +664,8 @@ const routes = {
 
   "GET admin/users": async c => {
     requireAdmin(c);
-    const { rows } = await q("select id, email, name as full_name, role, status, email_verified, created_at, company, phone, agent_key from users order by created_at");
+    const { rows } = await q(`select u.id, u.email, u.name as full_name, u.role, u.status, u.email_verified, u.created_at, u.company, u.phone, u.agent_key, i.name as invited_by_name
+                              from users u left join users i on i.id = u.invited_by order by u.created_at`);
     return { users: rows };
   },
 
