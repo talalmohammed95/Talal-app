@@ -10,6 +10,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { assist, assistOffline, aiEnabled } from "../lib/assistant.js";
 import { importContacts, contactStats, searchContacts, claimWarning } from "../lib/contacts.js";
 import { importDeals, dealStats } from "../lib/deals.js";
+import { runWeekly, buildWeekly, weeklyText } from "../lib/weekly.js";
 
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
 const COOKIE = "orla_session";
@@ -632,6 +633,25 @@ const routes = {
     if (!seesAll(c.user)) fail(403, "Only the admin and the CEO delete tasks.", "not_allowed");
     await q("delete from tasks where id = $1", [parseInt(c.body.id, 10) || 0]);
     return { ok: true };
+  },
+
+  // The CEO's weekly summary. Vercel Cron calls this every Sunday morning (see vercel.json); it runs once per week.
+  "GET cron/weekly": async c => {
+    const secret = process.env.CRON_SECRET, auth = c.req.headers.authorization || "";
+    if (secret ? auth !== "Bearer " + secret : !/vercel-cron/i.test(c.req.headers["user-agent"] || "")) fail(401, "Not allowed.");
+    return runWeekly(teamStats, appUrl(c.req));
+  },
+  "GET team/weekly": async c => {
+    requireStaff(c);
+    if (!seesAll(c.user)) fail(403, "Only the CEO and the admin see the weekly summary.", "not_allowed");
+    const { rows } = await q("select week, data, created_at from weekly_reports order by week desc limit 8");
+    const live = new URL(c.req.url, "http://localhost").searchParams.get("live") === "1" ? await buildWeekly(teamStats) : null;
+    const reports = rows.map(r => ({ week: r.week, data: r.data, text: weeklyText(r.data, c.user.role === "ceo" ? c.user.name : ""), at: r.created_at }));
+    return { reports, live: live && { data: live, text: weeklyText(live, c.user.role === "ceo" ? c.user.name : "") } };
+  },
+  "POST team/weekly/send": async c => {
+    requireAdmin(c);
+    return runWeekly(teamStats, appUrl(c.req), { force: true });
   },
 
   // Team performance: counts per agent only (no unit numbers, owners or prices). The admin and the Orla team see it.

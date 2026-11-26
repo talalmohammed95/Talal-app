@@ -80,6 +80,10 @@ The admin creates the CEO's account (Munir Al Deraawi) in **Admin › Create an 
 
 **Team chat** (top bar, or More on a phone) is one group for the admin, the agents and the CEO. It refreshes every 15 seconds, shows an unread count, and each person can delete their own messages (the admin any). Agents are asked not to post owners' or clients' numbers there.
 
+## The CEO's weekly summary
+
+Every Sunday at 9:00 Dubai time (05:00 UTC), Vercel Cron calls `/api/cron/weekly` (see `crons` in `vercel.json`). It builds the week's summary once and saves it: team units and online against the goal, units added and gone online this week, client requests and viewings, clients invited, tasks done and overdue, how many listings a week the team needs to reach the goal, the top achiever, who made the most progress, and per agent (units, online with the change from last week, new units, requests, registration quality, tasks). When email is set up (SMTP), it's emailed to the CEO and the admin. The CEO's Home and the admin's Home show a **Weekly summary** card; **Read it** opens this week so far and the last 8 weeks, with **Share on WhatsApp** and **Copy**. The admin also has **Email it now**. Optional: set `CRON_SECRET` in Vercel so only Vercel can trigger it (otherwise it accepts Vercel's cron and runs at most once a week).
+
 ## Agent review and tasks (the admin and the CEO)
 
 **More › Agent review** (or tap an agent in the CEO's table) shows one agent at a time: units, online on both platforms against the goal, partly online, off market, client requests in the last 30 days, clients invited, and a registration-quality score. **How the units are registered** lists every unit the agent has (My units and offers), incomplete ones first, with what's missing: unit number, owner, owner phone, size, floor, view, price, furnishing, status, tower (Peninsula Four) and whether it's online. **Task: complete the missing details** fills a task with the list.
@@ -125,6 +129,7 @@ To change an offer's photos, open Admin › Edit offer › Photos and floor plan
    | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | For email | Your email provider's SMTP settings, for example Bird, Resend, SendGrid, Brevo, Google Workspace or Microsoft 365 |
    | `MAIL_FROM` | For email | e.g. `Orla Properties <no-reply@yourdomain.com>` |
    | `ANTHROPIC_API_KEY` | For the AI assistant | An API key from console.anthropic.com. Without it the assistant runs in basic mode |
+   | `CRON_SECRET` | No | Any long random text: only Vercel Cron can then run the weekly summary |
    | `APP_URL` | No | Your site's address for links in emails, if you use your own domain. Vercel's address is used otherwise |
 
 4. **Deploy.** The build checks the settings, creates the database tables and loads the 20 starting offers the first time. Every later push to GitHub deploys automatically, and the database keeps its data.

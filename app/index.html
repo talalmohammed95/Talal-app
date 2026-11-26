@@ -821,6 +821,10 @@ body.guest .tab[data-view="chat"]{display:none!important}
 .chm{gap:8px;align-items:flex-end}.chav{width:30px;height:30px;border-radius:50%;flex:none;object-fit:cover}
 .ceohead{display:flex;gap:16px;align-items:center}.ceohead img{width:84px;height:84px;border-radius:50%;flex:none}.ceohead h2{margin:0}
 @media (max-width:620px){.ceohead img{width:60px;height:60px}}
+#wkly{position:fixed;inset:0;z-index:80;background:rgba(15,12,10,.55);display:grid;place-items:center;padding:16px}#wkly[hidden]{display:none}
+.wkcard{width:min(720px,100%);max-height:calc(100vh - 32px);overflow:auto;background:var(--surface);border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:12px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.wkhead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.wktext{margin:0;white-space:pre-wrap;font:14px/1.6 var(--body,Inter,system-ui,sans-serif);background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
 </style>
 <script src="/config.js"></script>
 </head>
@@ -1642,7 +1646,7 @@ const today=()=>new Date().toISOString().slice(0,10);
 const isDue=c=>c.follow&&c.follow<=today()&&c.status!=="Closed"&&c.status!=="Lost";
 function renderDash(){if(!isTeam()){renderShowroom();return}clearInterval(heroT);if(isCEO()){$("#dash").innerHTML=ceoHome();return}renderTeamDash();
   const myl=renderMyListings();if(myl){const r=$("#dash").children[0];if(r)r.insertAdjacentHTML("afterend",myl);else $("#dash").insertAdjacentHTML("afterbegin",myl)}
-  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+myTasksHTML()+towerTodoHTML()+leadsHTML()+remindersHTML())}
+  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+(isAdmin?weeklyPanel():"")+myTasksHTML()+towerTodoHTML()+leadsHTML()+remindersHTML())}
 // The top achiever: first in the team ranking (online, then units), once they have a unit.
 let topPub=null;
 async function loadTop(){try{topPub=(await api("public/top")).top}catch(e){}}
@@ -2306,7 +2310,7 @@ async function loadAll(first){
       else if(owner&&owner!==uid){mine=[];clients=[];starred=new Set();persist()}
       else if(mine.length||clients.length||starred.size)persist();
       store.set("orla.localOwner",uid)}
-    migrateOvr();if(!isTeam())await loadTop();if(isTeam()){await loadListings();await loadPerf(true);await loadLeads();await loadTasks();if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
+    migrateOvr();if(!isTeam())await loadTop();if(isTeam()){await loadListings();await loadPerf(true);await loadLeads();await loadTasks();if(isAdmin||isCEO())loadWeekly();if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
   catch(e){if(e.status===401||e.status===403){location.reload();return}
     if(first){OFFERS=store.get("orla.cache.offers",[]);applySettings(store.get("orla.cache.settings",{}))}
     if(first||!loadAll.warned){loadAll.warned=true;toast("Offline: showing what's saved on this device")}}
@@ -3206,8 +3210,8 @@ function ceoHome(){const h=new Date().getHours(),first=((meInfo&&meInfo.name)||"
     <div class="ceohead"><img src="${CEO_IMG}" alt=""><div><p class="kick">Good ${h<12?"morning":h<18?"afternoon":"evening"}${first?", "+esc(first):""}</p><h2>Here's the Orla team today.</h2></div></div>
     ${top?`<p class="th-top"><span class="topstar">★</span> Top achiever: <b>${esc(top.name.split(" ")[0])}</b> with ${top.listings} unit${top.listings===1?"":"s"}${top.online?" · "+top.online+" online":""}</p>`:""}
     <div class="th-stats">${stat(sum("listings"),"team units")}${stat(sum("online")+"<small>/"+goal+"</small>","online, team goal")}${stat(L.reduce((t,x)=>t+x.week,0),"client requests this week")}${stat(days,"days left")}</div>
-    <div class="th-cta"><button class="btn primary big" data-goto="team">${ic("target")}Team performance</button><button class="btn big ghost" data-goto="chat">${ic("chat2")}Team chat</button><button class="btn big ghost" data-goto="assist">${ic("spark")}AI assistant</button><button class="btn big ghost" data-goto="train">${ic("spark")}Train the AI</button><button class="btn big ghost" data-goto="offers">${ic("building")}All offers</button></div></div></section>${leadsHTML()}
-  <div class="panel"><h2>The team</h2><p class="lede">Tap an agent to see their units, how they're registered, and their tasks. Units, platforms, client requests (last 30 days) and clients invited to the website, per agent. Goal: ${g.target} listings each online on ${esc(g.platforms.map(p=>p.n).join(" and "))} by ${esc(new Date(g.deadline+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"long"}))}.</p>
+    <div class="th-cta"><button class="btn primary big" data-weekly>${ic("file")}Weekly summary</button><button class="btn big ghost" data-goto="team">${ic("target")}Team performance</button><button class="btn big ghost" data-goto="chat">${ic("chat2")}Team chat</button><button class="btn big ghost" data-goto="assist">${ic("spark")}AI assistant</button><button class="btn big ghost" data-goto="train">${ic("spark")}Train the AI</button><button class="btn big ghost" data-goto="offers">${ic("building")}All offers</button></div></div></section>${leadsHTML()}
+  ${weeklyPanel()}<div class="panel"><h2>The team</h2><p class="lede">Tap an agent to see their units, how they're registered, and their tasks. Units, platforms, client requests (last 30 days) and clients invited to the website, per agent. Goal: ${g.target} listings each online on ${esc(g.platforms.map(p=>p.n).join(" and "))} by ${esc(new Date(g.deadline+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"long"}))}.</p>
     <div class="tablewrap"><table class="ceotab"><tr><th>Agent</th><th>Units</th><th>Online</th><th>Partly</th><th>Off market</th><th>Requests</th><th>Invited</th><th>Goal</th></tr>${ag.map(a=>{const l=lead(a.key),v=inv(a),pc=Math.min(100,Math.round(a.online/g.target*100));
       return `<tr class="rvlink" data-review="${esc(a.key)}"><td><b>${esc(a.name)}</b>${top&&top.key===a.key?' <span class="topstar">★</span>':""}</td><td>${a.listings}</td><td>${a.online}</td><td>${a.partly}</td><td>${a.offMarket}</td><td>${l.all||0}${l.open?` <small class="src">(${l.open} open)</small>`:""}</td><td>${v.sent}${v.sent?` <small class="src">(${v.in} in)</small>`:""}</td><td><div class="gbar"><i style="width:${pc}%"></i></div><small class="src">${pc}%</small></td></tr>`}).join("")}</table></div></div>
   <div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Team chat</h2><p class="lede">The latest messages.</p></div><button class="btn" data-goto="chat">${ic("chat2")}Open the chat</button></div>
@@ -3310,6 +3314,27 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-rv-task]")
   const d=new Date();d.setDate(d.getDate()+3);$("#tk-due").value=d.toISOString().slice(0,10);$("#tk-title").focus()});
 
 $("#view-review").addEventListener("click",e=>{const b=e.target.closest("[data-id]");if(!b)return;state.sel=b.dataset.id;show("offers");renderList();renderDetail()});
+
+/* ---------------- The CEO's weekly summary ---------------- */
+let weekly=null,wkSel=0;
+async function loadWeekly(){try{weekly=await api("team/weekly?live=1");if(!$("#view-dash").hidden)renderDash()}catch(e){weekly=null}}
+function wkList(){if(!weekly)return[];const l=weekly.reports.map(r=>({label:"Week to "+new Date(r.week+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"}),data:r.data,text:r.text}));
+  return weekly.live?[{label:"This week so far",data:weekly.live.data,text:weekly.live.text}].concat(l):l}
+function weeklyPanel(){const l=wkList();if(!l.length)return"";const saved=weekly.reports[0],r=(saved||weekly.live).data,T=r.team,tile=(v,t)=>`<div class="cmt"><span>${esc(t)}</span><b>${v}</b></div>`;
+  return `<div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Weekly summary</h2><p class="lede">${saved?`Sent ${esc(new Date(saved.at).toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"short"}))}. `:""}Made every Sunday at 9:00 for ${isCEO()?"you":"Munir"}${isAdmin?" (and you)":""}.</p></div>
+    <div class="actions"><button class="btn primary" data-weekly>${ic("file")}Read it</button>${isAdmin?`<button class="btn" data-weekly-send>Email it now</button>`:""}</div></div>
+    <div class="cmtiles">${tile(T.online+"<small>/"+T.goalTotal+"</small>","online, team goal")}${tile(T.newOnline,"went online")}${tile(T.newUnits,"new units")}${tile(T.requests,"client requests")}${tile(T.tasksDone+(T.tasksLate?` <small>(${T.tasksLate} late)</small>`:""),"tasks done")}${r.starOfWeek?tile(esc(r.starOfWeek.name.split(" ")[0]),"most progress"):""}</div></div>`}
+function openWeekly(i){const l=wkList();if(!l.length){toast("The first summary is made on Sunday");return}wkSel=Math.max(0,Math.min(l.length-1,i||0));const w=l[wkSel];
+  let el=$("#wkly");if(!el){document.body.insertAdjacentHTML("beforeend",'<div id="wkly" role="dialog" aria-modal="true" aria-label="Weekly summary"><div class="wkcard"></div></div>');el=$("#wkly");
+    el.addEventListener("click",e=>{if(e.target.id==="wkly"||e.target.closest("[data-wk-close]")){el.hidden=true;document.body.classList.remove("lbopen");return}
+      if(e.target.closest("[data-wk-copy]")){copy(wkList()[wkSel].text);return}const s=e.target.closest("[data-wk-i]");if(s)openWeekly(+s.dataset.wkI)})}
+  el.querySelector(".wkcard").innerHTML=`<div class="wkhead"><div><p class="kick" style="margin:0">Peninsula · Orla Properties</p><h2 style="margin:2px 0 0">Weekly summary</h2></div><button class="btn sm" data-wk-close aria-label="Close">${ic("x")}</button></div>
+    <div class="rvagents">${l.map((x,j)=>`<button class="chip${j===wkSel?" on":""}" data-wk-i="${j}">${esc(x.label)}</button>`).join("")}</div>
+    <pre class="wktext">${esc(w.text)}</pre>
+    <div class="actions"><a class="btn primary" href="https://wa.me/?text=${encodeURIComponent(w.text)}" target="_blank" rel="noopener">${ic("chat")}Share on WhatsApp</a><button class="btn" data-wk-copy>${ic("copy")}Copy</button></div>`;
+  el.hidden=false;document.body.classList.add("lbopen")}
+document.addEventListener("click",async e=>{if(e.target.closest("[data-weekly]")){openWeekly(0);return}
+  const b=e.target.closest("[data-weekly-send]");if(!b)return;b.disabled=true;try{const r=await api("team/weekly/send",{});toast(r.emailed?`Emailed to ${r.emailed} ${r.emailed===1?"person":"people"}`:"Saved. Email isn't set up, so use Share on WhatsApp.");await loadWeekly()}catch(x){toast(x.message)}finally{b.disabled=false}});
 
 /* ---------------- Start-up ---------------- */
 function startApp(){if(!SRV)setRole(isAdmin?"admin":"team");updateAcct();const ch=$("#userchip");
