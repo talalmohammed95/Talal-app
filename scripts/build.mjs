@@ -68,6 +68,9 @@ if (dbUrl) {
   console.log(env.SMTP_HOST && env.MAIL_FROM
     ? "✔ Email on: new users confirm their email; password resets by email."
     : "! Email off: no confirmation emails. The admin still approves every account and can make password-reset links. Add SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS and MAIL_FROM to turn email on.");
+  console.log(env.ANTHROPIC_API_KEY
+    ? "✔ AI assistant on."
+    : "! AI assistant in basic mode (unit lookup and starter listings). Add ANTHROPIC_API_KEY to turn on the full assistant.");
 } else {
   console.warn("! Building the device-only version (ALLOW_LOCAL_MODE=1): PIN lock, no accounts, data on the device.");
 }

@@ -48,6 +48,14 @@ scripts/     build.mjs (Vercel build) and dev.mjs (run it on your computer)
 
 On any home, **Sales offer** makes a one-page A4 PDF in the style of the Orla flyers: the building bar, "Prepared for" the client's name with date and reference, the main photo, price and price per sq ft, unit details, full purchase cost (or rent and payment), estimated yield and mortgage, two more photos and the floor plan, the building and its amenities, drive times, and the agent's card with the RERA QR code. Choose the agent on the offer and whether to show the floor plan, yield, the highlight and the exact floor (a floor band by default). **Share PDF** sends it straight to WhatsApp on phones; **Download PDF**, **Image** and a ready **WhatsApp message** are there too. The 3 options from "New client request" and the Shortlist make one PDF with a page per home. The PDF is made in the browser with html2canvas and jsPDF, included in `app/vendor` (MIT).
 
+## AI assistant (team only)
+
+**AI assistant** (top bar on a laptop, More on a phone, or the button on Home) is a chat for the Orla team. An agent types a unit number, for example `1203`, and sees the unit with the owner's name and phone, with Call and WhatsApp buttons. Then it writes the listing for Bayut and Property Finder (title, description, what's missing before it goes live, tips), suggests a price from the team's units and the saved market research, and answers questions like "which of my units aren't online yet?". **Put into My units form** fills the listing form, including the new portal title and description fields; the agent checks it and saves.
+
+Privacy is the same as everywhere else: the lookups run on our server, and each agent sees owners only on their own units (the admin sees all). For a teammate's unit it says only which teammate has it. Clients and external agents can't open it.
+
+It runs on Claude (Anthropic). Add `ANTHROPIC_API_KEY` in Vercel to turn it on. Without the key it runs in basic mode: the unit lookup with the owner works, and it fills a starter listing.
+
 ## Brochures & plans (team only)
 
 More › **Brochures & plans** is the team's library, filtered by building (P1–P5, Community) with search. It starts with the floor plans and every building's photos and renders that are in the app. Anyone on the team can add a brochure, floor plan, price list or payment plan as a file (PDF, JPG, PNG, up to 60 MB, uploaded in 2 MB parts to stay under Vercel's request limit) or as a link, and open, download or share it (on phones, Share sends the file straight to WhatsApp). Each offer has a button to its building's documents. Clients and external agents can't open it.
@@ -70,6 +78,7 @@ To change an offer's photos, open Admin › Edit offer › Photos and floor plan
    | `ADMIN_EMAIL` | Yes | The admin's email address |
    | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | For email | Your email provider's SMTP settings, for example Bird, Resend, SendGrid, Brevo, Google Workspace or Microsoft 365 |
    | `MAIL_FROM` | For email | e.g. `Orla Properties <no-reply@yourdomain.com>` |
+   | `ANTHROPIC_API_KEY` | For the AI assistant | An API key from console.anthropic.com. Without it the assistant runs in basic mode |
    | `APP_URL` | No | Your site's address for links in emails, if you use your own domain. Vercel's address is used otherwise |
 
 4. **Deploy.** The build checks the settings, creates the database tables and loads the 20 starting offers the first time. Every later push to GitHub deploys automatically, and the database keeps its data.

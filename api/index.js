@@ -6,6 +6,8 @@ import { ensureSchema } from "../lib/schema.js";
 import { hashPassword, checkPassword, newToken, sha256 } from "../lib/auth.js";
 import { mailEnabled, sendMail, trySendMail } from "../lib/mail.js";
 import { SETTINGS } from "../lib/seed.js";
+import Anthropic from "@anthropic-ai/sdk";
+import { assist, assistOffline, aiEnabled } from "../lib/assistant.js";
 
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
 const COOKIE = "orla_session";
@@ -412,6 +414,27 @@ const routes = {
     await q("update listings set data = $2, updated_at = now() where id = $1", [id, data]);
     if (data.sharedOffer) await shareListing(id, c.user.email);
     return { ok: true, offerId: data.sharedOffer || null };
+  },
+
+  // The AI assistant for the Orla team: finds a unit and its owner (own units only), and drafts the listing.
+  "GET ai/status": async c => { requireTeam(c); return { enabled: aiEnabled() }; },
+  "POST ai/assist": async c => {
+    requireTeam(c);
+    const raw = Array.isArray(c.body.messages) ? c.body.messages.slice(-16) : [];
+    const history = raw.map(m => ({ role: m && m.role === "assistant" ? "assistant" : "user", text: str(m && m.text, 4000) })).filter(m => m.text);
+    while (history.length && history[0].role !== "user") history.shift();
+    if (!history.length || history[history.length - 1].role !== "user") fail(400, "Type a message.");
+    await limit("ai:" + c.user.id, 80, 3600);
+    if (!aiEnabled()) return assistOffline(c.user, history);
+    const { rows: [st] } = await q("select data from settings where id = 'app'");
+    try { return await assist(c.user, history, (st && st.data && st.data.agents) || SETTINGS.agents); }
+    catch (e) {
+      if (e instanceof Anthropic.AuthenticationError) fail(503, "The AI key isn't valid. The admin needs to update ANTHROPIC_API_KEY.", "ai_key");
+      if (e instanceof Anthropic.RateLimitError) fail(429, "The assistant is busy. Try again in a minute.", "ai_busy");
+      if (e instanceof Anthropic.APIConnectionError) fail(503, "Couldn't reach the AI service. Try again.", "ai_down");
+      if (e instanceof Anthropic.APIError) { console.error("assistant", e.status, e.message); fail(502, "The assistant couldn't answer. Try again.", "ai_error"); }
+      throw e;
+    }
   },
 
   // Team performance: counts per agent only (no unit numbers, owners or prices). The admin and the Orla team see it.
