@@ -82,9 +82,12 @@ const publicUser = u => ({ id: u.id, email: u.email, name: u.name, role: u.role,
 
 // Roles: admin and agent (the Orla team) see everything. Brokers (agents at other agencies) and clients
 // never receive unit numbers, owner details or internal notes: they're removed here, on the server.
-const ROLES = ["agent", "broker", "client"];
+const ROLES = ["agent", "ceo", "broker", "client"];
+const SIGNUP_ROLES = ["agent", "broker", "client"]; // the CEO account is made by the admin only
 const ROLE_NAME = { admin: "Admin", agent: "Orla team agent", broker: "External agent", client: "Buyer or tenant" };
 const isTeam = u => u && (u.role === "admin" || u.role === "agent");
+// The CEO sees what the team sees (team offers, floors, performance, chat) but no unit numbers or owners, and changes nothing.
+const isStaff = u => isTeam(u) || (u && u.role === "ceo");
 const TEAM_ONLY = ["tower", "unit", "owner", "ownerPhone", "ownerNote", "notes", "check", "internal"];
 const OWNER = ["owner", "ownerPhone", "ownerNote"];
 // Clients and external agents see a floor band (low, mid, high), not the exact floor: they ask the agent for it.
@@ -97,7 +100,7 @@ function hideFloor(d) {
 }
 function forRole(data, user) {
   if (user && user.role === "admin") return data;
-  if (isTeam(user)) {
+  if (isStaff(user)) {
     // An agent sees the owner's contact only on offers listed under their own name.
     // Unit numbers and owners' details are for the agent the offer is listed under (and the admin) only.
     if (data.agent && data.agent === user.agent_key) return data;
@@ -149,6 +152,7 @@ const requireActive = c => {
   if (!c.user) fail(401, "Sign in first.", "signed_out");
   if (c.user.status !== "active") fail(403, "Your account doesn't have access yet.", "not_active");
 };
+const requireStaff = c => { requireActive(c); if (!isStaff(c.user)) fail(403, "Only the Orla team can do this.", "not_team"); };
 const requireTeam = c => { requireActive(c); if (c.user.role !== "admin" && c.user.role !== "agent") fail(403, "Only the Orla team can do this.", "not_team"); };
 const requireAdmin = c => { requireActive(c); if (c.user.role !== "admin") fail(403, "Only the admin can do this.", "not_admin"); };
 
@@ -264,7 +268,7 @@ const routes = {
 
   "POST auth/register": async c => {
     const name = str(c.body.name, 100), email = checkEmail(c.body.email), password = checkNewPassword(c.body.password);
-    const role = ROLES.includes(c.body.role) ? c.body.role : "client", company = str(c.body.company, 120), phone = str(c.body.phone, 40);
+    const role = SIGNUP_ROLES.includes(c.body.role) ? c.body.role : "client", company = str(c.body.company, 120), phone = str(c.body.phone, 40);
     if (role === "broker" && !company) fail(400, "Enter the name of your agency.", "no_company");
     if (!name) fail(400, "Enter your full name.", "no_name");
     await limit("register:" + c.ip, 10, 3600);
@@ -350,7 +354,7 @@ const routes = {
       q("select data from settings where id = 'app'"),
       q("select data from user_state where user_id = $1", [c.user.id])
     ]);
-    const rows = isTeam(c.user) ? offers.rows : offers.rows.filter(r => !r.data.teamOnly);
+    const rows = isStaff(c.user) ? offers.rows : offers.rows.filter(r => !r.data.teamOnly);
     return { offers: rows.map(r => ({ ...r, data: forRole(r.data, c.user) })), settings: settings.rows[0]?.data || {}, state: state.rows[0]?.data || null };
   },
 
@@ -526,9 +530,46 @@ const routes = {
     return dealStats();
   },
 
+  // The team chat. Everyone on the team and the CEO; the newest 200 messages, or those after the last one seen.
+  "GET team/chat": async c => {
+    requireStaff(c);
+    const after = Math.max(0, parseInt(new URL(c.req.url, "http://localhost").searchParams.get("after") || "0", 10) || 0);
+    const { rows } = after
+      ? await q("select id, user_id, name, role, text, at, deleted from team_chat where id > $1 order by id limit 200", [after])
+      : await q("select * from (select id, user_id, name, role, text, at, deleted from team_chat order by id desc limit 200) x order by id");
+    return { messages: rows.map(m => ({ id: +m.id, mine: m.user_id === c.user.id, name: m.name, role: m.role, text: m.deleted ? "" : m.text, deleted: m.deleted, at: m.at })) };
+  },
+  "POST team/chat": async c => {
+    requireStaff(c);
+    const text = String(c.body.text || "").replace(/\r/g, "").trim().slice(0, 2000);
+    if (!text) fail(400, "Type a message.");
+    await limit("chat:" + c.user.id, 120, 3600);
+    const { rows: [m] } = await q("insert into team_chat (user_id, name, role, text) values ($1, $2, $3, $4) returning id, at",
+      [c.user.id, c.user.name || c.user.email, c.user.role, text]);
+    return { id: +m.id, at: m.at };
+  },
+  "POST team/chat/delete": async c => {
+    requireStaff(c);
+    const { rowCount } = await q("update team_chat set deleted = true where id = $1 and (user_id = $2 or $3)", [parseInt(c.body.id, 10) || 0, c.user.id, c.user.role === "admin"]);
+    if (!rowCount) fail(404, "Message not found.");
+    return { ok: true };
+  },
+  // The CEO's page: the team's numbers in one place (counts only, no clients or owners).
+  "GET team/overview": async c => {
+    requireStaff(c);
+    const [{ rows: leads }, { rows: invites }, { rows: offers }] = await Promise.all([
+      q(`select agent_key, count(*)::int as all, count(*) filter (where kind = 'viewing')::int as viewings, count(*) filter (where not done)::int as open,
+           count(*) filter (where at > now() - interval '7 days')::int as week from leads where at > now() - interval '30 days' group by agent_key`),
+      q(`select i.agent_key, i.name, count(*)::int as sent, count(*) filter (where exists (select 1 from sessions s where s.user_id = u.id))::int as signed_in
+         from users u join users i on i.id = u.invited_by group by i.agent_key, i.name`),
+      q(`select count(*) filter (where coalesce(data->>'avail', 'Available') !~* 'sold|rented|reserved')::int as available,
+           count(*) filter (where data->>'deal' <> 'rent')::int as sale, count(*) filter (where data->>'deal' <> 'sale')::int as rent from offers`)]);
+    return { leads, invites, offers: offers[0] };
+  },
+
   // Team performance: counts per agent only (no unit numbers, owners or prices). The admin and the Orla team see it.
   "GET team/performance": async c => {
-    requireTeam(c);
+    requireStaff(c);
     return { ...(await teamStats()), now: new Date().toISOString() };
   },
 
@@ -589,7 +630,7 @@ const routes = {
 
   // ---------- Documents library (team and admin) ----------
   "GET team/docs": async c => {
-    requireTeam(c);
+    requireStaff(c);
     const { rows } = await q(`select d.id, d.title, d.building, d.kind, d.beds, d.mime, d.size, d.parts, d.url, d.by_user, d.by_name, d.created_at,
       (select count(*)::int from doc_parts p where p.doc_id = d.id) as have from docs d order by d.created_at desc`);
     return { docs: rows.map(r => ({ ...r, ready: !!r.url || r.have === r.parts, mine: r.by_user === c.user.id })) };
@@ -623,7 +664,7 @@ const routes = {
   },
 
   "GET team/docs/part": async c => {
-    requireTeam(c);
+    requireStaff(c);
     const u = new URL(c.req.url, "http://localhost"), id = u.searchParams.get("id") || "", idx = Math.floor(+u.searchParams.get("idx"));
     if (!/^[0-9a-f-]{36}$/.test(id)) fail(404, "Not found.");
     const { rows: [p] } = await q("select data from doc_parts where doc_id = $1 and idx = $2", [id, idx]);
