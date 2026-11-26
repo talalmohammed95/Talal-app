@@ -786,6 +786,9 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
 .aolab.premium{background:#1C1A18;color:#F7A94E}.aolab.middle{background:var(--accent-soft);color:var(--accent-ink)}.aolab.value{background:var(--good-soft);color:var(--good)}
 .aiso{display:flex;gap:6px;flex-wrap:wrap}.aiso input{flex:1;min-width:150px;padding:9px 12px;border-radius:12px;border:1.5px solid var(--line-strong);background:var(--bg);color:var(--fg);font-size:15px}
 @media (max-width:620px){.aior{grid-template-columns:minmax(0,1fr)}.aop{justify-content:space-between}}
+.cmtiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.cmt{border-radius:12px;background:var(--sunk);padding:9px 12px}.cmt span{display:block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.cmt b{display:block;font:800 16px var(--display)}.cmt small{font-size:12px;color:var(--muted)}
+.cmtab{font-size:13px}.cmtab td,.cmtab th{padding:6px 8px;white-space:nowrap}
 </style>
 <script src="/config.js"></script>
 </head>
@@ -857,7 +860,7 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
             <button data-deal="rent" aria-pressed="false">For rent</button>
           </div>
           <div class="frow">
-            <select id="f-type" aria-label="Unit type"><option value="">All unit types</option><option value="0">Studio</option><option value="1">1 bedroom</option><option value="2">2 bedroom</option><option value="3">3 bedroom</option></select>
+            <select id="f-type" aria-label="Unit type"><option value="">All unit types</option><option value="0">Studio</option><option value="1">1 bedroom</option><option value="2">2 bedroom</option><option value="3">3 bedroom</option><option value="4">4 bedroom</option><option value="simplex">Simplexes</option><option value="duplex">Duplexes &amp; lofts</option></select>
             <select id="f-bld" aria-label="Building"><option value="">All buildings</option><option value="1">Peninsula One</option><option value="2">Peninsula Two</option><option value="3">Peninsula Three</option><option value="4">Peninsula Four</option><option value="5">Peninsula Five</option></select>
           </div>
           <div class="frow">
@@ -1011,8 +1014,8 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
         <form id="mine-form" class="fgrid" autocomplete="off"><input type="hidden" id="m-id">
           <div class="field"><label for="m-unit">Unit no.</label><input id="m-unit" placeholder="e.g. 3305"></div>
           <div class="field"><label for="m-bld">Building</label><select id="m-bld"><option value="3">Peninsula Three</option><option value="1">Peninsula One</option><option value="2">Peninsula Two</option><option value="4">Peninsula Four</option><option value="5">Peninsula Five</option></select></div>
-          <div class="field"><label for="m-tower">Tower</label><select id="m-tower"><option value="">Not set</option><option value="A">Tower A</option><option value="B">Tower B</option></select></div>
-          <div class="field"><label for="m-type">Type</label><select id="m-type"><option value="0">Studio</option><option value="1">1 Bedroom</option><option value="2">2 Bedroom</option><option value="3">3 Bedroom</option></select></div>
+          <div class="field" id="m-tower-wrap"><label for="m-tower">Tower</label><select id="m-tower"><option value="">Not set</option><option value="A">Tower A</option><option value="B">Tower B</option></select></div>
+          <div class="field"><label for="m-type">Type</label><select id="m-type"></select></div>
           <div class="field"><label for="m-deal">Sale / Rent</label><select id="m-deal"><option value="sale">Sale</option><option value="rent">Rent</option></select></div>
           <div class="field"><label for="m-floor">Floor</label><input id="m-floor" placeholder="e.g. 33rd"></div>
           <div class="field"><label for="m-view">View</label><input id="m-view" placeholder="e.g. Canal & Burj"></div>
@@ -1141,6 +1144,10 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
         <p id="ct-stats" class="src"></p>
         <div class="actions"><label class="btn primary" for="ct-file"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Choose Excel or CSV file</label><input type="file" id="ct-file" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden><button class="btn" id="ct-clear" hidden>Delete all contacts</button></div>
         <div id="ct-map" hidden></div></div>
+      <div class="panel" id="ad-dl-panel" hidden><h2>Market deals (DXB Interact)</h2><p class="lede">Upload an export of registered deals from DXB Interact (or DLD), Excel or CSV. Only Peninsula One to Five rows are kept. Agents then get a market comparison for any unit: on the unit page (Market comparison) or by asking the AI assistant.</p>
+        <p id="dl-stats" class="src"></p>
+        <div class="actions"><label class="btn primary" for="dl-file"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Choose Excel or CSV file</label><input type="file" id="dl-file" accept=".xlsx,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden><button class="btn" id="dl-clear" hidden>Delete all deals</button></div>
+        <div id="dl-map" hidden></div></div>
       <div class="panel" id="ad-log-panel"><h2>Activity</h2><p class="lede">The latest 50 changes to offers and settings, and lookups in the Peninsula contacts.</p><div class="tablewrap"><table id="ad-log"></table></div></div>
     </div>
   </section>
@@ -1170,13 +1177,23 @@ const AGENTS={ // defaults; admins can change them
 };
 const MEDIA={"offer":{"p3-studio-410":[["p3-studio","Studio living and sleeping area","r"],["p3-kitchen","Kitchen and dining","r"],["p3-pooldeck","Pool deck with Burj Khalifa views","r"],["p3-bath","Bathroom","r"]],"p3-studio-425-sale":[["p3-canal-sunset","Peninsula Three on the Dubai Canal","r"],["p3-studio","Studio living and sleeping area","r"],["p3-kitchen","Kitchen and dining","r"],["p3-pooldeck","Pool deck with Burj Khalifa views","r"]],"p3-studio-f6":[["p3-kitchen","Kitchen and dining","r"],["p3-studio","Studio living and sleeping area","r"],["p3-bath","Bathroom","r"],["p3-pooldeck","Pool deck with Burj Khalifa views","r"]],"p3-studio-69":[["p3-studio","Studio living and sleeping area","r"],["p3-kitchen","Kitchen and dining","r"],["p3-pooldeck","Pool deck with Burj Khalifa views","r"]],"p3-studio-33":[["p3-pooldeck","Pool deck with Burj Khalifa views","r"],["p3-studio","Studio living and sleeping area","r"],["p3-kitchen","Kitchen and dining","r"],["p3-bath","Bathroom","r"]],"p3-1bed-674":[["p3-living","Living room","r"],["p3-skyline-night","The Peninsula skyline at night","r"],["p3-bedroom","Bedroom with skyline view","r"],["p3-bath","Bathroom","r"]],"p3-1bed-685-sale":[["p3-skyline-night","The Peninsula skyline at night","r"],["p3-living","Living room","r"],["p3-kitchen","Kitchen and dining","r"],["p3-bath","Bathroom","r"]],"p3-1bed-685-rent":[["p3-bedroom","Bedroom with skyline view","r"],["p3-living","Living room","r"],["p3-bath","Bathroom","r"],["p3-pooldeck","Pool deck with Burj Khalifa views","r"]],"p3-2bed-945":[["p3-aerial","The Peninsula from above","r"],["p3-living2","Living and dining","r"],["p3-bedroom","Bedroom with skyline view","r"],["p3-pooldeck","Pool deck with Burj Khalifa views","r"]],"p3-2bed-1011":[["p3-living2","Living and dining","r"],["p3-canal-sunset","Peninsula Three on the Dubai Canal","r"],["p3-bedroom","Bedroom with skyline view","r"],["p3-pooldeck","Pool deck with Burj Khalifa views","r"]],"p3-2bed-925-rent":[["p3-living2","Living and dining","r"],["p3-bedroom","Bedroom with skyline view","r"],["p3-pooldeck","Pool deck with Burj Khalifa views","r"],["p3-bath","Bathroom","r"]],"p2-1bed-688":[["p2-1bed-living","Living room with lit feature wall","p"],["p2-1bed-kitchen","Upgraded kitchen with breakfast bar","p"],["p2-1bed-entrance","Kitchen and entrance","p"]],"p2-studio-80":[["p1-promenade","Promenade cafés","r"],["p1-promenade-night","The canal promenade at night","r"],["p1-pool","Residents' pool","r"]],"p4-1bed-553":[["p4-kitchen","Kitchen and dining","r"],["p4-bedroom","Bedroom","r"],["p4-plaza","Peninsula Four, The Plaza","r"],["p4-pool","Tower pool","r"],["p4-gym","Residents' gym","r"]],"p4-1bed-861":[["p4-1bed-view","Burj Khalifa and canal view from the unit","p"],["p4-1bed-living","Living room with corner glazing","p"],["p4-1bed-kitchen","Fitted kitchen","p"],["p4-1bed-bedroom","Bedroom with balcony access","p"],["p4-1bed-bath","Bathroom with walk-in shower","p"]],"p4-studio-100":[["p4-studio","Furnished studio","r"],["p4-canal","Peninsula Four on the Dubai Canal","r"],["p4-bath","Bathroom","r"],["p4-resort-pool","Resort pool","r"]],"p4-2bed-1453":[["p4-living","Living area","r"],["p4-canal","Peninsula Four on the Dubai Canal","r"],["p4-bedroom2","Bedroom","r"],["p4-resort-pool","Resort pool","r"]],"p5-2bed-1307":[["p5-living","Living area","r"],["p5-sunset","Peninsula Five at sunset","r"],["p5-bedroom","Bedroom","r"],["p5-pool","Pool deck","r"]],"p5-studio-120":[["p5-sunset","Peninsula Five at sunset","r"],["p5-living","Living area","r"],["p5-bedroom","Bedroom","r"],["p5-pool","Pool deck","r"]],"p1-3bed-maid":[["p1-waterfront","Canal-front homes","r"],["p1-promenade-night","The canal promenade at night","r"],["p1-promenade","Promenade cafés","r"],["p1-pool","Residents' pool","r"]]},"plan":{"p3-1bed-674":["plan-p3-1bed-d","Floor plan · 1 bedroom Type D · 674 sq ft","f"],"p2-1bed-688":["plan-p2-1bed-ta","Floor plan · 1 bedroom Type TA · 688 sq ft","f"]},"bld":{"1":{"cover":["p1-promenade-night","The canal promenade at night","r"],"all":[["p1-waterfront","Canal-front homes","r"],["p1-promenade-night","The canal promenade at night","r"],["p1-promenade","Promenade cafés","r"],["p1-pool","Residents' pool","r"]]},"2":{"cover":["p2-1bed-living","Living room with lit feature wall","p"],"all":[["p1-promenade","Promenade cafés","r"],["p1-promenade-night","The canal promenade at night","r"],["p1-pool","Residents' pool","r"]]},"3":{"cover":["p3-canal-sunset","Peninsula Three on the Dubai Canal","r"],"all":[["p3-canal-sunset","Peninsula Three on the Dubai Canal","r"],["p3-living","Living room","r"],["p3-bedroom","Bedroom with skyline view","r"],["p3-pooldeck","Pool deck with Burj Khalifa views","r"]],"0":[["p3-studio","Studio living and sleeping area","r"],["p3-kitchen","Kitchen and dining","r"],["p3-pooldeck","Pool deck with Burj Khalifa views","r"]],"2":[["p3-living2","Living and dining","r"],["p3-bedroom","Bedroom with skyline view","r"],["p3-pooldeck","Pool deck with Burj Khalifa views","r"]]},"4":{"cover":["p4-plaza","Peninsula Four, The Plaza","r"],"all":[["p4-plaza","Peninsula Four, The Plaza","r"],["p4-living","Living area","r"],["p4-bedroom2","Bedroom","r"],["p4-resort-pool","Resort pool","r"]],"0":[["p4-studio","Furnished studio","r"],["p4-canal","Peninsula Four on the Dubai Canal","r"],["p4-bath","Bathroom","r"]],"1":[["p4-kitchen","Kitchen and dining","r"],["p4-bedroom","Bedroom","r"],["p4-pool","Tower pool","r"]]},"5":{"cover":["p5-sunset","Peninsula Five at sunset","r"],"all":[["p5-sunset","Peninsula Five at sunset","r"],["p5-living","Living area","r"],["p5-bedroom","Bedroom","r"],["p5-pool","Pool deck","r"]]}},"agent":{"talal":"agent-talal","giulia":"agent-giulia","blendjana":"agent-blendjana","derya":"agent-derya"},"lib":[["p3-studio","Studio living and sleeping area","r"],["p3-kitchen","Kitchen and dining","r"],["p3-pooldeck","Pool deck with Burj Khalifa views","r"],["p3-bedroom","Bedroom with skyline view","r"],["p3-living","Living room","r"],["p3-bath","Bathroom","r"],["p3-living2","Living and dining","r"],["p3-canal-sunset","Peninsula Three on the Dubai Canal","r"],["p3-skyline-night","The Peninsula skyline at night","r"],["p3-aerial","The Peninsula from above","r"],["p2-1bed-living","Living room with lit feature wall","p"],["p2-1bed-kitchen","Upgraded kitchen with breakfast bar","p"],["p2-1bed-entrance","Kitchen and entrance","p"],["p4-plaza","Peninsula Four, The Plaza","r"],["p4-kitchen","Kitchen and dining","r"],["p4-bedroom","Bedroom","r"],["p4-pool","Tower pool","r"],["p4-gym","Residents' gym","r"],["p4-canal","Peninsula Four on the Dubai Canal","r"],["p4-living","Living area","r"],["p4-bedroom2","Bedroom","r"],["p4-resort-pool","Resort pool","r"],["p4-studio","Furnished studio","r"],["p4-bath","Bathroom","r"],["p4-1bed-view","Burj Khalifa and canal view from the unit","p"],["p4-1bed-living","Living room with corner glazing","p"],["p4-1bed-kitchen","Fitted kitchen","p"],["p4-1bed-bedroom","Bedroom with balcony access","p"],["p4-1bed-bath","Bathroom with walk-in shower","p"],["p5-sunset","Peninsula Five at sunset","r"],["p5-living","Living area","r"],["p5-bedroom","Bedroom","r"],["p5-pool","Pool deck","r"],["p1-promenade-night","The canal promenade at night","r"],["p1-waterfront","Canal-front homes","r"],["p1-promenade","Promenade cafés","r"],["p1-pool","Residents' pool","r"],["plan-p3-1bed-d","Floor plan · 1 bedroom Type D · 674 sq ft","f"],["plan-p2-1bed-ta","Floor plan · 1 bedroom Type TA · 688 sq ft","f"]]};
 const BLD={1:"Peninsula One",2:"Peninsula Two",3:"Peninsula Three",4:"Peninsula Four",5:"Peninsula Five"};
-const TYPE=["Studio","1 Bedroom","2 Bedroom","3 Bedroom"];
+const TYPE=["Studio","1 Bedroom","2 Bedroom","3 Bedroom","4 Bedroom"];
+const LAYOUT={simplex:"Simplex",duplex:"Duplex",loft:"Duplex Loft",semipenthouse:"Semi-Penthouse"};
+// What each building is, from Select Group's material: which towers, which unit types.
+const BLDINFO={
+  1:{towers:[],floors:"36-floor tower, simplexes in the podium and on the waterfront",types:[[0,""],[1,""],[2,""],[3,""],[1,"simplex"],[2,"simplex"],[3,"simplex"]]},
+  2:{towers:[],floors:"36-storey tower",types:[[0,""],[1,""],[2,""]]},
+  3:{towers:[],floors:"49-floor tower",types:[[0,""],[1,""],[2,""]]},
+  4:{towers:["A","B"],floors:"Two 52-floor towers: Tower A and Tower B",types:[[0,""],[1,""],[2,""],[3,""],[4,""],[3,"loft"],[4,"loft"]]},
+  5:{towers:[],floors:"36-storey tower plus two waterfront duplex blocks",types:[[0,""],[1,""],[2,""],[3,""],[3,"semipenthouse"],[1,"duplex"],[2,"duplex"],[3,"duplex"],[4,"duplex"]]}};
+const typeOf=x=>{if(!x||x.beds==null||x.beds==="")return"";const t=TYPE[+x.beds]||"";return x.layout&&LAYOUT[x.layout]?(+x.beds===0?"Studio ":t+" ")+LAYOUT[x.layout]:t};
+const hasTowers=b=>!!(BLDINFO[+b]&&BLDINFO[+b].towers.length);
 const TOWER={
-  1:"Low-rise waterfront residences on the Peninsula promenade along Dubai Canal, steps from cafés, parks and RTA water taxis.",
+  1:"A 36-floor tower by Select Group with simplexes in its podium and along the Dubai Canal waterfront, steps from cafés, parks and RTA water taxis.",
   2:"36-storey tower by Select Group with views over Burj Khalifa, the Downtown skyline and the Dubai Canal.",
   3:"49-floor waterfront tower by Select Group with skyline, canal and Burj Khalifa views.",
-  4:"Two 52-floor towers (The Plaza) by Select Group plus low-rise waterfront lofts, at the heart of the Peninsula.",
-  5:"The Signature Collection: a 36-storey waterfront tower with 2.9 m ceilings and 180° water views."
+  4:"Two 52-floor towers, Tower A and Tower B (The Plaza), by Select Group, with 16 duplex lofts, at the heart of the Peninsula.",
+  5:"The Signature Collection: a 36-storey waterfront tower with 2.9 m ceilings and 180° water views, plus two blocks of waterfront duplexes."
 };
 const AMEN={
   1:["Canal promenade","Parks & gardens","Cafés & restaurants","RTA water taxi","Business Bay Metro"],
@@ -1297,7 +1314,7 @@ const isDone=o=>o.avail==="Sold"||o.avail==="Rented";
 const FDEF={deal:"all",type:"",bld:"",sort:"price-asc",q:"",pmin:"",pmax:"",smin:"",smax:"",view:"",furn:"",band:"",avail:"",agent:"",ymin:"",value:false,checkOnly:false,starOnly:false,hide:true,reduced:false};
 const state=Object.assign({},FDEF,store.get("orla.filters",{}),{client:null,sel:store.get("orla.sel",null)});
 
-function mineToOffer(m){return{id:m.id,b:+m.b,tower:m.tower||"",beds:+m.beds,deal:m.deal,title:(m.unit?"Unit "+m.unit+" · ":"")+TYPE[+m.beds],price:m.deal==="sale"?+m.price:undefined,rent:m.deal==="rent"?+m.price:undefined,
+function mineToOffer(m){return{id:m.id,b:+m.b,tower:m.tower||"",layout:m.layout||"",beds:+m.beds,deal:m.deal,title:(m.unit?"Unit "+m.unit+" · ":"")+typeOf(m),price:m.deal==="sale"?+m.price:undefined,rent:m.deal==="rent"?+m.price:undefined,
   size:m.size?+m.size:null,floor:m.floor||"On request",view:m.view||"On request",furn:m.furn,status:m.status,agent:m.agent,hl:m.notes||"",mine:true,future:!!m.future,unit:m.unit||null,owner:m.owner,ownerPhone:m.phone,date:m.date,by:m._by||null,own:m._own!==false,shared:m.sharedOffer||null,shareTo:m.shareTo,shareNote:m.shareNote,src:SRV?(m._by?"Added by "+(m._by.name||m._by.email):"Added by you"):"Added on this device"}}
 // A unit an agent has shared shows once, as its shared offer.
 const all=()=>{const live=new Set(OFFERS.map(o=>o.id));return OFFERS.concat(mine.concat(teamListings).filter(m=>!(m.sharedOffer&&live.has(m.sharedOffer))).map(mineToOffer)).map(enrich)};
@@ -1325,7 +1342,7 @@ function pills(o){
 function cardHTML(o,cur){
   const p=priceLine(o);
   return `<button class="card" data-id="${esc(o.id)}" aria-current="${cur}">
-    <div class="tower ph" aria-hidden="true"><img loading="lazy" src="${esc(imgSrc(photosOf(o)[0].k,true))}" alt=""><b>P${o.b}${isTeam()&&o.tower?esc(o.tower):""}</b></div>
+    <div class="tower ph" aria-hidden="true"><img loading="lazy" src="${esc(imgSrc(photosOf(o)[0].k,true))}" alt=""><b>P${o.b}${isTeam()&&o.tower&&hasTowers(o.b)?esc(o.tower):""}</b></div>
     <div style="min-width:0"><h3>${starred.has(o.id)?'<span class="star" aria-label="Shortlisted">★</span> ':""}${esc(o.title)}</h3>
       <div class="meta">${esc(bldT(o))} · ${o.size?fmt(o.size)+" sq ft":"size on request"} · ${esc(o.floor)}${o.x&&o.x.psf?" · AED "+fmt(o.x.psf)+"/sq ft":""}</div>
       <div class="pills">${pills(o)}${needsTower(o)?'<span class="pill pending">Tower A or B?</span>':""}</div></div>
@@ -1337,7 +1354,7 @@ function cardHTML(o,cur){
 function priceOf(o){return (state.deal==="rent"||o.deal==="rent")?o.rent:o.price}
 function filtered(){
   const F=state,q=String(F.q||"").trim().toLowerCase();
-  const l=all().filter(o=>(F.deal==="all"||o.deal===F.deal||o.deal==="both")&&(F.type===""||o.beds===+F.type)&&(F.bld===""||o.b===+F.bld)&&(!F.hide||!isDone(o))
+  const l=all().filter(o=>(F.deal==="all"||o.deal===F.deal||o.deal==="both")&&(F.type===""||(F.type==="simplex"?o.layout==="simplex":F.type==="duplex"?(o.layout==="duplex"||o.layout==="loft"):o.beds===+F.type))&&(F.bld===""||o.b===+F.bld)&&(!F.hide||!isDone(o))
     &&(!F.pmin||(priceOf(o)||0)>=+F.pmin)&&(!F.pmax||(priceOf(o)||Infinity)<=+F.pmax)
     &&(!F.smin||(o.size||0)>=+F.smin)&&(!F.smax||(o.size&&o.size<=+F.smax))
     &&(!F.view||o.x.views.includes(F.view))&&(!F.furn||o.x.furn===F.furn)&&(!F.band||o.x.band===F.band)&&(!F.avail||o.avail===F.avail)&&(!F.agent||o.agent===F.agent)
@@ -1366,7 +1383,7 @@ function renderList(){
 function kv(k,v,cls=""){return `<div class="kv ${cls}"><span>${esc(k)}</span><span class="num">${esc(v)}</span></div>`}
 function offerText(o){
   const a=agentOf(o),p=priceLine(o);
-  let t=`*${BLD[o.b]} – ${TYPE[o.beds]}* (${o.deal==="rent"?"for rent":o.deal==="both"?"for sale or rent":"for sale"})\n`;
+  let t=`*${BLD[o.b]} – ${typeOf(o)}* (${o.deal==="rent"?"for rent":o.deal==="both"?"for sale or rent":"for sale"})\n`;
   t+=`${o.title}\n💰 ${p.big}${p.sub?" ("+p.sub+")":""}\n`;
   if(o.size)t+=`📐 ${fmt(o.size)} sq ft\n`;
   t+=`🏢 Floor: ${o.floor} · View: ${o.view}\n`;
@@ -1395,7 +1412,7 @@ function renderDetail(){
     +metric("Security deposit",aed(o.rent*dep),(dep*100)+"% of annual rent");
   const pos=o.deal!=="rent"&&x.psf&&x.mS?{v:x.psf,m:x.mS.psf,f:v=>"AED "+fmt(v),t:"Asking price per sq ft against the building's registered average"}:(x.vsR!=null?{v:o.rent,m:x.mR.avg,f:v=>short(v),t:"Annual rent against the building's average registered lease"}:null);
   const tags=x.views.map(v=>`<span class="tag">${esc(VIEWS[v])}</span>`).join("")+(x.band?`<span class="tag">${esc(BAND[x.band])}</span>`:"")+(x.furn?`<span class="tag">${esc(FURN[x.furn])}</span>`:"");
-  const unit=(isTeam()&&o.unit?[["Unit number",o.unit]]:[]).concat([["Unit type",TYPE[o.beds]]]);unit.push(["Size",o.size?fmt(o.size)+" sq ft · "+(o.size*0.092903).toFixed(1)+" m²":"On request"]);
+  const unit=(isTeam()&&o.unit?[["Unit number",o.unit]]:[]).concat([["Unit type",typeOf(o)]]);unit.push(["Size",o.size?fmt(o.size)+" sq ft · "+(o.size*0.092903).toFixed(1)+" m²":"On request"]);
   if(o.balcony)unit.push(["Balcony",o.balcony+" sq ft"]);
   unit.push(["Bathrooms",String(o.baths??"—")],["Floor",o.floor||"On request"],["View",o.view||"On request"],["Furnishing",o.furn||"—"],["Handover",o.status||"—"],["Availability",o.avail]);
   if(o.parking)unit.push(["Parking",o.parking]);
@@ -1425,7 +1442,7 @@ function renderDetail(){
       ${galleryHTML(o)}
       ${isTeam()?"":askBox(o)}
       <div class="actions">
-        ${isTeam()&&SRV?`<button class="btn primary" id="d-so">${ic("file")}Sales offer</button>`:""}
+        ${isTeam()&&SRV?`<button class="btn primary" id="d-so">${ic("file")}Sales offer</button><button class="btn" data-cmp-offer="${esc(o.id)}">${ic("chart")}Market comparison</button>`:""}
         <button class="btn${isTeam()&&SRV?"":" primary"}" id="d-star">${ic("star")}${starred.has(o.id)?"On shortlist":"Add to shortlist"}</button>
         <button class="btn" id="d-present">${ic("monitor")}${ROLE==="client"?"View full screen":"Present to client"}</button>
         ${ROLE==="client"?"":`<button class="btn" id="d-copy">${ic("copy")}Copy offer text</button>
@@ -1440,7 +1457,7 @@ function renderDetail(){
       ${check}
       <div class="dsec"><h4>Unit</h4>${tags?`<div class="tagrow">${tags}</div>`:""}<div class="cols"><div>${unit.slice(0,Math.ceil(unit.length/2)).map(f=>kv(f[0],f[1])).join("")}</div><div>${unit.slice(Math.ceil(unit.length/2)).map(f=>kv(f[0],f[1])).join("")}</div></div></div>
       <div class="dsec"><div class="cols">${money}${inv}</div></div>
-      ${(mrows||compT)&&x.value==="below"?`<div class="dsec"><h4><span class="pill below" style="margin-right:6px">Below market</span>Market in ${esc(BLD[o.b])} · ${esc(TYPE[o.beds])}</h4>${mrows}${compT}</div>`:""}
+      ${(mrows||compT)&&x.value==="below"?`<div class="dsec"><h4><span class="pill below" style="margin-right:6px">Below market</span>Market in ${esc(BLD[o.b])} · ${esc(typeOf(o))}</h4>${mrows}${compT}</div>`:""}
       <div class="dsec team-only"><h4>History</h4><p class="hl" style="margin-bottom:6px">${x.listed?"Listed "+esc(dateS(x.listed))+" · "+x.dom+" day"+(x.dom===1?"":"s")+" on the market":"Listing date not recorded"}${x.pc.length?" · "+x.pc.length+" price change"+(x.pc.length===1?"":"s"):""}</p>${x.hist.length?histRows(x.hist,false):""}</div>
       ${isTeam()?`<button class="btn" data-docs-bld="${o.b}" style="align-self:flex-start">${ic("folder")}Brochures &amp; plans for ${esc(BLD[o.b])}</button>`:""}
       <div class="dsec"><h4>The building</h4><p class="hl" style="margin-bottom:8px">${esc(TOWER[o.b])}</p><div class="chips">${AMEN[o.b].map(t=>'<span class="chip">'+esc(t)+'</span>').join("")}</div></div>
@@ -1498,11 +1515,11 @@ function calc(){
 /* ---------------- Market ---------------- */
 function renderMarket(){renderMarketBase();$("#market").insertAdjacentHTML("beforeend",sourcesHTML())}
 function renderMarketBase(){
-  const sRows=MKT.sale.map(m=>`<tr><td>${esc(BLD[m.b])}</td><td>${esc(TYPE[m.beds])}</td><td class="r">${m.deals}</td><td>${esc(m.period)}</td><td class="r">${m.avg?fmt(m.avg):"—"}</td><td class="r">${fmt(m.psf)}</td><td>${esc(m.note||(m.lo?"Range "+short(m.lo)+" – "+short(m.hi):""))}</td></tr>`).join("");
-  const rRows=MKT.rent.map(m=>`<tr><td>${esc(BLD[m.b])}</td><td>${esc(TYPE[m.beds])}</td><td class="r">${m.deals||"—"}</td><td>${esc(m.period)}</td><td class="r">${m.avg?fmt(m.avg):"—"}</td><td>${esc((m.lo?"Range "+short(m.lo)+" – "+short(m.hi)+(m.note?" · ":""):"")+(m.note||""))}</td></tr>`).join("");
-  const psfBars=[...MKT.sale].sort((a,b)=>b.psf-a.psf).map(m=>({label:BLD[m.b].replace("Peninsula ","P. ")+" · "+TYPE[m.beds],v:m.psf,text:"AED "+fmt(m.psf),tip:`${BLD[m.b]} · ${TYPE[m.beds]}\n${m.deals} registered sales (${m.period})\nAED ${fmt(m.psf)} / sq ft`}));
-  const rentBars=MKT.rent.filter(m=>m.avg).sort((a,b)=>b.avg-a.avg).map(m=>({label:BLD[m.b].replace("Peninsula ","P. ")+" · "+TYPE[m.beds],v:m.avg,text:short(m.avg)+" / yr",tip:`${BLD[m.b]} · ${TYPE[m.beds]}\n${m.deals} registered leases (${m.period})\nAverage AED ${fmt(m.avg)} / yr`}));
-  const mYield=MKT.sale.filter(m=>m.avg).map(m=>{const r=MKT.rent.find(z=>z.b===m.b&&z.beds===m.beds&&z.avg);return r?[BLD[m.b],TYPE[m.beds],fmt(m.avg),fmt(r.avg),(r.avg/m.avg*100).toFixed(1)+"%"]:null}).filter(Boolean);
+  const sRows=MKT.sale.map(m=>`<tr><td>${esc(BLD[m.b])}</td><td>${esc(typeOf(m))}</td><td class="r">${m.deals}</td><td>${esc(m.period)}</td><td class="r">${m.avg?fmt(m.avg):"—"}</td><td class="r">${fmt(m.psf)}</td><td>${esc(m.note||(m.lo?"Range "+short(m.lo)+" – "+short(m.hi):""))}</td></tr>`).join("");
+  const rRows=MKT.rent.map(m=>`<tr><td>${esc(BLD[m.b])}</td><td>${esc(typeOf(m))}</td><td class="r">${m.deals||"—"}</td><td>${esc(m.period)}</td><td class="r">${m.avg?fmt(m.avg):"—"}</td><td>${esc((m.lo?"Range "+short(m.lo)+" – "+short(m.hi)+(m.note?" · ":""):"")+(m.note||""))}</td></tr>`).join("");
+  const psfBars=[...MKT.sale].sort((a,b)=>b.psf-a.psf).map(m=>({label:BLD[m.b].replace("Peninsula ","P. ")+" · "+typeOf(m),v:m.psf,text:"AED "+fmt(m.psf),tip:`${BLD[m.b]} · ${typeOf(m)}\n${m.deals} registered sales (${m.period})\nAED ${fmt(m.psf)} / sq ft`}));
+  const rentBars=MKT.rent.filter(m=>m.avg).sort((a,b)=>b.avg-a.avg).map(m=>({label:BLD[m.b].replace("Peninsula ","P. ")+" · "+typeOf(m),v:m.avg,text:short(m.avg)+" / yr",tip:`${BLD[m.b]} · ${typeOf(m)}\n${m.deals} registered leases (${m.period})\nAverage AED ${fmt(m.avg)} / yr`}));
+  const mYield=MKT.sale.filter(m=>m.avg).map(m=>{const r=MKT.rent.find(z=>z.b===m.b&&z.beds===m.beds&&z.avg);return r?[BLD[m.b],typeOf(m),fmt(m.avg),fmt(r.avg),(r.avg/m.avg*100).toFixed(1)+"%"]:null}).filter(Boolean);
   const comps=COMPS.map(c=>{const avg=c.rows.reduce((s,r)=>s+r[2]/r[1],0)/c.rows.length;
     return `<div class="panel"><h3 class="ph">${esc(c.t)}</h3><div class="tablewrap"><table><tr><th>Date</th><th class="r">Size (sq ft)</th><th class="r">Price (AED)</th><th class="r">AED / sq ft</th></tr>
     ${c.rows.map(r=>`<tr><td>${r[0]}</td><td class="r">${fmt(r[1])}</td><td class="r">${fmt(r[2])}</td><td class="r">${fmt(r[2]/r[1])}</td></tr>`).join("")}
@@ -1532,23 +1549,29 @@ function renderMine(){
   $("#mine-list").innerHTML=towerTodoHTML().replace('class="panel twtodo"','class="twtodo inl"')+mineSections();
   const head=["Unit No.","Type","Floor","View","Size (sq ft)","Sale / Rent","Price (AED)","AED per sq ft","Status","Furnishing","Owner / Client","Owner Phone","Date Listed","Notes"];
   const q=v=>{v=String(v??"");return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
-  $("#csv-text").value=mine.length?[head.join(",")].concat(mine.map(m=>[m.unit,TYPE[m.beds],m.floor,m.view,m.size,m.deal==="sale"?"Sale":"Rent",m.price,m.size&&m.price?Math.round(m.price/m.size):"",m.status,m.furn,m.owner,m.phone,m.date,m.notes].map(q).join(","))).join("\n"):"";
+  $("#csv-text").value=mine.length?[head.join(",")].concat(mine.map(m=>[m.unit,typeOf(m),m.floor,m.view,m.size,m.deal==="sale"?"Sale":"Rent",m.price,m.size&&m.price?Math.round(m.price/m.size):"",m.status,m.furn,m.owner,m.phone,m.date,m.notes].map(q).join(","))).join("\n"):"";
 }
 $("#mine-form").addEventListener("submit",async e=>{e.preventDefault();
   const g=id=>$(id).value.trim();
   const price=parseFloat(g("#m-price").replace(/[^0-9.]/g,""));
   if(!price&&!$("#m-future").checked){toast("Enter a price");$("#m-price").focus();return}
   if($("#m-future").checked&&!g("#m-remind")){toast("Pick a reminder date");$("#m-remind").focus();return}
-  if(g("#m-bld")==="4"&&!g("#m-tower")){toast("Peninsula Four: choose Tower A or Tower B");$("#m-tower").focus();return}
-  const m={id:g("#m-id")||"l-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),unit:g("#m-unit"),b:g("#m-bld"),tower:g("#m-tower")||undefined,beds:g("#m-type"),deal:g("#m-deal"),floor:g("#m-floor"),view:g("#m-view"),size:g("#m-size").replace(/[^0-9.]/g,""),price,status:g("#m-status"),furn:g("#m-furn"),owner:g("#m-owner"),phone:g("#m-phone"),agent:g("#m-agent"),date:g("#m-date"),notes:g("#m-notes"),online:onlineFromForm(),future:$("#m-future").checked||undefined,availableFrom:g("#m-avail")||undefined,remindAt:g("#m-remind")||undefined,remindNote:g("#m-rnote")||undefined,adTitle:g("#m-adtitle")||undefined,adText:g("#m-adtext")||undefined};
+  if(hasTowers(g("#m-bld"))&&!g("#m-tower")){toast(BLD[g("#m-bld")]+": choose Tower A or Tower B");$("#m-tower").focus();return}
+  const m={id:g("#m-id")||"l-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),unit:g("#m-unit"),b:g("#m-bld"),tower:hasTowers(g("#m-bld"))&&g("#m-tower")||undefined,layout:mTypeVal().layout||undefined,beds:String(mTypeVal().beds),deal:g("#m-deal"),floor:g("#m-floor"),view:g("#m-view"),size:g("#m-size").replace(/[^0-9.]/g,""),price,status:g("#m-status"),furn:g("#m-furn"),owner:g("#m-owner"),phone:g("#m-phone"),agent:g("#m-agent"),date:g("#m-date"),notes:g("#m-notes"),online:onlineFromForm(),future:$("#m-future").checked||undefined,availableFrom:g("#m-avail")||undefined,remindAt:g("#m-remind")||undefined,remindNote:g("#m-rnote")||undefined,adTitle:g("#m-adtitle")||undefined,adText:g("#m-adtext")||undefined};
   if(SRV){const prev=mine.concat(teamListings).find(x=>x.id===m.id)||{};const{id,...data}=Object.assign({},prev,m);delete data._by;delete data._own;let r;try{r=await api("data/listings",{id,data},"PUT")}catch(x){toast(x.message);return}await loadListings();if(r&&r.warning){resetMineForm();renderAll();setTimeout(()=>toast(r.warning),50);return}}
   else{const i=mine.findIndex(x=>x.id===m.id);if(i>=0)mine[i]=m;else mine.push(m);persist()}
   const was=!!g("#m-id");resetMineForm();renderAll();toast(was?"Listing updated":"Listing saved");
 });
-function resetMineForm(){$("#mine-form").reset();drawOnlineBoxes({});$("#m-id").value="";$("#m-save").textContent="Save listing";$("#m-cancel").hidden=true;try{$("#m-date").valueAsDate=new Date()}catch(e){}const k=myKey();if(k&&AGENTS[k])$("#m-agent").value=k}
+function mTypeVal(){const v=String($("#m-type").value||"0|").split("|");return{beds:+v[0]||0,layout:v[1]||""}}
+function mFillTypes(beds,layout){const b=+$("#m-bld").value||3,info=BLDINFO[b],cur=beds!=null&&beds!==""?(+beds)+"|"+(layout||""):$("#m-type").value;
+  let opts=info.types.map(([n,l])=>[n+"|"+l,typeOf({beds:n,layout:l})]);if(cur&&!opts.some(o=>o[0]===cur)){const[n,l]=cur.split("|");opts.push([cur,typeOf({beds:+n,layout:l})+" (not in this building)"])}
+  $("#m-type").innerHTML=opts.map(([v,t])=>`<option value="${esc(v)}">${esc(t)}</option>`).join("");if(cur&&opts.some(o=>o[0]===cur))$("#m-type").value=cur;
+  $("#m-tower-wrap").hidden=!hasTowers(b);if(!hasTowers(b))$("#m-tower").value=""}
+$("#m-bld").addEventListener("change",()=>mFillTypes());mFillTypes(0,"");
+function resetMineForm(){$("#mine-form").reset();mFillTypes(0,"");drawOnlineBoxes({});$("#m-id").value="";$("#m-save").textContent="Save listing";$("#m-cancel").hidden=true;try{$("#m-date").valueAsDate=new Date()}catch(e){}const k=myKey();if(k&&AGENTS[k])$("#m-agent").value=k}
 $("#m-cancel").onclick=resetMineForm;
 function editListing(id){const m=mine.concat(teamListings).find(x=>x.id===id);if(!m)return;show("mine");
-  const set=(k,v)=>{$(k).value=v??""};set("#m-id",m.id);set("#m-unit",m.unit);set("#m-bld",m.b);set("#m-tower",m.tower);set("#m-type",m.beds);set("#m-deal",m.deal);set("#m-floor",m.floor);set("#m-view",m.view);set("#m-size",m.size);set("#m-price",m.price?fmt(m.price):"");
+  const set=(k,v)=>{$(k).value=v??""};set("#m-id",m.id);set("#m-unit",m.unit);set("#m-bld",m.b);mFillTypes(m.beds,m.layout);set("#m-tower",m.tower);set("#m-deal",m.deal);set("#m-floor",m.floor);set("#m-view",m.view);set("#m-size",m.size);set("#m-price",m.price?fmt(m.price):"");
   set("#m-status",m.status);set("#m-furn",m.furn);set("#m-owner",m.owner);set("#m-phone",m.phone);if(AGENTS[m.agent])set("#m-agent",m.agent);set("#m-date",m.date);set("#m-notes",m.notes);$("#m-future").checked=!!m.future;set("#m-avail",m.availableFrom);set("#m-remind",m.remindAt);set("#m-rnote",m.remindNote);set("#m-adtitle",m.adTitle);set("#m-adtext",m.adText);drawOnlineBoxes(m.online||{});
   $("#m-save").textContent="Save changes";$("#m-cancel").hidden=false;setTimeout(()=>{$("#mine-form").scrollIntoView({behavior:"smooth",block:"start"});$("#m-owner").focus({preventScroll:true})},60)}
 // Each agent's own units live on the server. Units saved before (in the agent's private app data) move there once.
@@ -1590,7 +1613,7 @@ function teamHero(){const h=new Date().getHours(),first=((meInfo&&meInfo.name)||
 function renderMyListings(){const k=myKey();const l=OFFERS.filter(o=>k&&AGENTS[k]&&o.agent===k&&(o.teamUnit||o.fromListing)).concat(SRV?mine.map(mineToOffer):[]).map(enrich).sort((a,b)=>a.b-b.b||a.beds-b.beds);if(!l.length)return"";
   const withOwner=l.filter(o=>o.ownerPhone).length;
   return `<div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Listed under you</h2><p class="lede">${l.length} offer${l.length===1?"":"s"} in your name${withOwner<l.length?` · ${l.length-withOwner} without an owner's number yet`:""}. Only you can see these owners' contacts.</p></div><button class="btn" data-mine-all>See them in Offers${ic("arrowr")}</button></div>
-    <div class="mylist">${l.map(o=>`<div class="myrow"><img src="${esc(imgSrc(photosOf(o)[0].k,true))}" alt=""><div class="t"><b>${o.unit?"Unit "+esc(o.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(TYPE[o.beds])}</b><span>${esc(o.deal==="rent"?aed(o.rent)+" / yr":aed(o.price))}${o.owner?" · Owner: "+esc(o.owner):""}${o.ownerPhone?" · "+esc(o.ownerPhone):" · No owner number yet"}</span></div>
+    <div class="mylist">${l.map(o=>`<div class="myrow"><img src="${esc(imgSrc(photosOf(o)[0].k,true))}" alt=""><div class="t"><b>${o.unit?"Unit "+esc(o.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(typeOf(o))}</b><span>${esc(o.deal==="rent"?aed(o.rent)+" / yr":aed(o.price))}${o.owner?" · Owner: "+esc(o.owner):""}${o.ownerPhone?" · "+esc(o.ownerPhone):" · No owner number yet"}</span></div>
       <div class="actions">${o.ownerPhone?`<a class="btn sm" href="tel:${esc(telOf(o.ownerPhone))}">${ic("phone")}Call</a><a class="btn sm" href="${esc(ownerWa(o))}" target="_blank" rel="noopener">${ic("chat")}WhatsApp</a>`:""}<button class="btn sm" data-id="${esc(o.id)}">Open</button></div></div>`).join("")}</div></div>`}
 function renderTeamDash(){setTimeout(()=>{const dp=$("#dash-pending");if(dp)dp.onclick=()=>{show("admin");setTimeout(()=>$("#ad-users-panel").scrollIntoView({behavior:"smooth"}),300)}});
   const A=all(),act=A.filter(o=>!isDone(o)),sale=act.filter(o=>o.deal!=="rent"&&o.price),rent=act.filter(o=>o.deal!=="sale"&&o.rent);
@@ -1679,7 +1702,7 @@ $("#present").addEventListener("click",e=>{const b=e.target.closest("[data-pph]"
 function renderPresent(){
   const o=all().find(x=>x.id===pres.ids[pres.i]);if(!o){closePresent();return}
   const p=priceLine(o),a=agentOf(o);
-  const f=[["Unit",TYPE[o.beds]],["Size",o.size?fmt(o.size)+" sq ft":"On request"],["Floor",o.floor],["View",o.view],["Bathrooms",String(o.baths??"—")],["Furnishing",o.furn&&o.furn!=="—"?o.furn:"On request"],["Status",o.avail==="Available"?(o.status||"Ready"):o.avail]];
+  const f=[["Unit",typeOf(o)],["Size",o.size?fmt(o.size)+" sq ft":"On request"],["Floor",o.floor],["View",o.view],["Bathrooms",String(o.baths??"—")],["Furnishing",o.furn&&o.furn!=="—"?o.furn:"On request"],["Status",o.avail==="Available"?(o.status||"Ready"):o.avail]];
   f.push(o.parking?["Parking",o.parking]:o.cheques?["Cheques",o.cheques]:["Community","The Peninsula"]);
   let money="";
   if(o.deal!=="rent"){const c=costs(o.price);money+=`<div class="panel"><h4>Total purchase cost</h4>${kv("Price",aed(o.price))}${kv(dldLabel(),aed(c.dld))}${kv("Trustee office fee",aed(FEES.trustee))}${kv("Admin fee",aed(FEES.admin))}${kv("Total cost",aed(c.total),"total")}</div>`}
@@ -1753,7 +1776,7 @@ const valueChip=x=>x.value==="below"?`<span class="vchip below">${pct(x.ref)} be
 /* ---------------- Filters ---------------- */
 const FLABEL={pmin:v=>"From "+short(+v),pmax:v=>"Up to "+short(+v),smin:v=>"From "+fmt(+v)+" sq ft",smax:v=>"Up to "+fmt(+v)+" sq ft",
   view:v=>VIEWS[v]+" view",furn:v=>FURN[v],band:v=>BAND[v],avail:v=>v,agent:v=>(AGENTS[v]&&AGENTS[v].name)||v,ymin:v=>"Yield "+v+"%+",
-  value:()=>"Below market",reduced:()=>"Price reduced",checkOnly:()=>"Figures to confirm",starOnly:()=>"Shortlisted",type:v=>TYPE[+v],bld:v=>BLD[+v],q:v=>"“"+v+"”",hide:()=>"Showing sold & rented"};
+  value:()=>"Below market",reduced:()=>"Price reduced",checkOnly:()=>"Figures to confirm",starOnly:()=>"Shortlisted",type:v=>v==="simplex"?"Simplexes":v==="duplex"?"Duplexes & lofts":TYPE[+v],bld:v=>BLD[+v],q:v=>"“"+v+"”",hide:()=>"Showing sold & rented"};
 function activeFilters(){return Object.keys(FLABEL).filter(k=>k==="hide"?state.hide===false:state[k]!==""&&state[k]!==false&&state[k]!=null)}
 function saveFilters(){const f={};Object.keys(FDEF).forEach(k=>f[k]=state[k]);store.set("orla.filters",f)}
 function renderChips(){const act=activeFilters(),n=act.filter(k=>!["type","bld","q"].includes(k)).length,c=$("#f-count");if(c){c.hidden=!n;c.textContent=n}
@@ -1950,14 +1973,14 @@ async function downloadFile(name,text){
 const stamp=()=>new Date().toISOString().slice(0,10);
 const r1=v=>v==null?"":Math.round(v*10)/10;
 function exportOffers(){const rows=[["Offer ID","Building","Type","Offer","Status","Headline","Price (AED)","Rent (AED/yr)","Size (sq ft)","AED per sq ft","Rent per sq ft","Gross yield %","Vs market %","Value","Floor","Floor band","View","Furnishing","Bathrooms","Handover","Agent","Listed","Days on market","Last price change","Source"]];
-  all().forEach(o=>{const x=o.x,last=x.pc[0];rows.push([o.id,BLD[o.b],TYPE[o.beds],o.deal==="both"?"Sale or rent":o.deal==="rent"?"Rent":"Sale",o.avail,o.title,o.deal!=="rent"?o.price:"",o.deal!=="sale"?o.rent:"",o.size||"",x.psf?Math.round(x.psf):"",x.rpsf?Math.round(x.rpsf):"",x.gy?r1(x.gy*100):"",x.ref!=null?r1(x.ref*100):"",{below:"Below market",above:"Higher than average",at:"At market"}[x.value]||"",o.floor||"",BAND[x.band]||"",o.view||"",o.furn||"",o.baths??"",o.status||"",agentOf(o).name,x.listed?x.listed.slice(0,10):"",x.dom??"",last?histText(last,false)+" on "+dateS(last.at):"",o.src||""])});
+  all().forEach(o=>{const x=o.x,last=x.pc[0];rows.push([o.id,BLD[o.b],typeOf(o),o.deal==="both"?"Sale or rent":o.deal==="rent"?"Rent":"Sale",o.avail,o.title,o.deal!=="rent"?o.price:"",o.deal!=="sale"?o.rent:"",o.size||"",x.psf?Math.round(x.psf):"",x.rpsf?Math.round(x.rpsf):"",x.gy?r1(x.gy*100):"",x.ref!=null?r1(x.ref*100):"",{below:"Below market",above:"Higher than average",at:"At market"}[x.value]||"",o.floor||"",BAND[x.band]||"",o.view||"",o.furn||"",o.baths??"",o.status||"",agentOf(o).name,x.listed?x.listed.slice(0,10):"",x.dom??"",last?histText(last,false)+" on "+dateS(last.at):"",o.src||""])});
   downloadFile("peninsula-offers-"+stamp()+".csv",csv(rows))}
 function exportClients(){const rows=[["Name","Phone","Looking to","Unit type","Budget (AED)","Stage","Follow-up","Source","Notes","Saved offers","Matching offers"]];
   clients.forEach(c=>rows.push([c.name,c.phone||"",c.intent,c.beds!==""&&c.beds!=null?TYPE[+c.beds]:"Any",c.budget||"",c.status,c.follow||"",c.source||"",c.notes||"",(c.short||[]).length,matches(c).length]));
   downloadFile("peninsula-clients-"+stamp()+".csv",csv(rows))}
 function exportMarket(){const rows=[["Kind","Building","Type","Deals","Period","Average (AED)","AED per sq ft","Low (AED)","High (AED)","Note"]];
-  MKT.sale.forEach(m=>rows.push(["Sale",BLD[m.b],TYPE[m.beds],m.deals??"",m.period||"",m.avg||"",m.psf||"",m.lo||"",m.hi||"",m.note||""]));
-  MKT.rent.forEach(m=>rows.push(["Rent / yr",BLD[m.b],TYPE[m.beds],m.deals??"",m.period||"",m.avg||"","",m.lo||"",m.hi||"",m.note||""]));
+  MKT.sale.forEach(m=>rows.push(["Sale",BLD[m.b],typeOf(m),m.deals??"",m.period||"",m.avg||"",m.psf||"",m.lo||"",m.hi||"",m.note||""]));
+  MKT.rent.forEach(m=>rows.push(["Rent / yr",BLD[m.b],typeOf(m),m.deals??"",m.period||"",m.avg||"","",m.lo||"",m.hi||"",m.note||""]));
   downloadFile("peninsula-market-"+stamp()+".csv",csv(rows))}
 function exportHistory(){const rows=[["Date","Offer ID","Offer","Change","From","To","By"]];
   HISTORY.forEach(h=>rows.push([String(h.at).slice(0,10),h.offer,h.title||"",{listed:"Listed",removed:"Removed",price:"Price",rent:"Rent",avail:"Status"}[h.kind]||h.kind,h.old??"",h.nw??"",h.by||""]));
@@ -2133,12 +2156,12 @@ function renderAdmin(){$("#tab-admin").hidden=!isAdmin;$("#sheet-admin").hidden=
   $("#ad-access").textContent=SRV?"You're the admin. Anyone can register with their email and a password. After they confirm their email, their account waits for your approval in Users below; nobody sees any data until you approve them. People register as a client, an external agent or an Orla team agent; you can change that in the Role column. Clients and external agents see the simple showroom and never receive unit numbers or owner details. Orla team agents see everything except Admin.":CLOUD?"You're an admin because you have Edit access to this app. Changes you make here reach the whole team straight away. To add people, use Share: Edit access makes someone an admin, Contributor access makes them an agent who can browse offers and keep their own clients, and Viewer access lets them browse only.":"This copy runs only on this device, so whoever unlocks it with the PIN is the admin. Changes stay on this device; use Backup to copy them elsewhere.";
   const l=[...OFFERS].sort((a,b)=>a.b-b.b||a.beds-b.beds||(keyPrice(a)||0)-(keyPrice(b)||0));
   $("#ad-offers-lede").textContent=l.length+" offers. Change a status here, or tap Edit to change everything about an offer.";
-  $("#ad-table").innerHTML='<tr><th>Offer</th><th>Deal</th><th class="r">Price</th><th class="r">Rent / yr</th><th>Status</th><th></th></tr>'+l.map(o=>`<tr><td><b>P${o.b}</b> · ${esc(TYPE[o.beds])} · ${esc(o.title)}${o.check?' <span class="pill check">Check</span>':""}</td><td>${o.deal==="both"?"Sale or rent":o.deal==="rent"?"Rent":"Sale"}</td><td class="r">${o.deal!=="rent"&&o.price?fmt(o.price):"—"}</td><td class="r">${o.deal!=="sale"&&o.rent?fmt(o.rent):"—"}</td><td><select data-st="${esc(o.id)}" aria-label="Status">${STATUS.map(x=>`<option${x===(o.avail||"Available")?" selected":""}>${x}</option>`).join("")}</select></td><td><button class="btn sm" data-edit="${esc(o.id)}">Edit</button></td></tr>`).join("");
+  $("#ad-table").innerHTML='<tr><th>Offer</th><th>Deal</th><th class="r">Price</th><th class="r">Rent / yr</th><th>Status</th><th></th></tr>'+l.map(o=>`<tr><td><b>P${o.b}</b> · ${esc(typeOf(o))} · ${esc(o.title)}${o.check?' <span class="pill check">Check</span>':""}</td><td>${o.deal==="both"?"Sale or rent":o.deal==="rent"?"Rent":"Sale"}</td><td class="r">${o.deal!=="rent"&&o.price?fmt(o.price):"—"}</td><td class="r">${o.deal!=="sale"&&o.rent?fmt(o.rent):"—"}</td><td><select data-st="${esc(o.id)}" aria-label="Status">${STATUS.map(x=>`<option${x===(o.avail||"Available")?" selected":""}>${x}</option>`).join("")}</select></td><td><button class="btn sm" data-edit="${esc(o.id)}">Edit</button></td></tr>`).join("");
   const a=document.activeElement?.id||"";
   if(a!=="ad-notice")$("#ad-notice").value=settings.notice||"";
   if(!["ad-dld","ad-trustee","ad-admin"].includes(a)){$("#ad-dld").value=+(FEES.dld*100).toFixed(3);$("#ad-trustee").value=fmt(FEES.trustee);$("#ad-admin").value=fmt(FEES.admin)}
   if(!$("#ad-agents").contains(document.activeElement)){agentDraft=Object.entries(AGENTS).map(([k,x])=>({k,name:x.name,phone:x.phone}));drawAgents()}
-  $("#ad-log-panel").hidden=!(CLOUD||SRV);$("#ad-ct-panel").hidden=!SRV;if(SRV&&!ctStatsLoaded)loadCtStats();$("#ad-users-panel").hidden=!SRV;renderMarketEditor();renderOwnTable();if(document.activeElement?.id!=="nu-agent")fillNuAgent()}
+  $("#ad-log-panel").hidden=!(CLOUD||SRV);$("#ad-ct-panel").hidden=!SRV;if(SRV&&!ctStatsLoaded)loadCtStats();$("#ad-dl-panel").hidden=!SRV;if(SRV&&!dlStatsLoaded)loadDlStats();$("#ad-users-panel").hidden=!SRV;renderMarketEditor();renderOwnTable();if(document.activeElement?.id!=="nu-agent")fillNuAgent()}
 function drawAgents(){$("#ad-agents").innerHTML=agentDraft.map((x,i)=>`<div class="fgrid"><div class="field"><label for="ag-n${i}">Name</label><input id="ag-n${i}" data-ai="${i}" data-af="name" value="${esc(x.name)}"></div><div class="field"><label for="ag-p${i}">Phone</label><input id="ag-p${i}" data-ai="${i}" data-af="phone" inputmode="tel" value="${esc(x.phone)}"></div></div>`).join("")}
 $("#ad-agents").addEventListener("input",e=>{const t=e.target;if(t.dataset.ai!=null)agentDraft[+t.dataset.ai][t.dataset.af]=t.value});
 $("#ad-agent-add").onclick=()=>{agentDraft.push({k:"a"+Date.now().toString(36),name:"",phone:""});drawAgents();$("#ag-n"+(agentDraft.length-1)).focus()};
@@ -2148,7 +2171,7 @@ $("#ad-fees-save").onclick=async()=>{const d=nv("#ad-dld");if(d<0||d>20){toast("
 $("#ad-table").addEventListener("change",async e=>{const el=e.target.closest("[data-st]");if(!el)return;const o=OFFERS.find(x=>x.id===el.dataset.st);if(!o)return;if(await saveOffer(Object.assign({},o,{avail:el.value}),`Set ${BLD[o.b]} · ${o.title} to ${el.value}`))toast("Status saved")});
 $("#ad-table").addEventListener("click",e=>{const b=e.target.closest("[data-edit]");if(b)openOfferForm(b.dataset.edit)});
 $("#ad-csv").onclick=()=>{const q=v=>{v=String(v??"");return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
-  const t=[["Building","Type","Headline","Offer","Status","Price (AED)","Rent (AED / yr)","Size (sq ft)","Floor","View","Furnishing","Agent"].join(",")].concat(OFFERS.map(o=>[BLD[o.b],TYPE[o.beds],o.title,o.deal,o.avail||"Available",o.deal!=="rent"?o.price:"",o.deal!=="sale"?o.rent:"",o.size||"",o.floor,o.view,o.furn,agentOf(o).name].map(q).join(","))).join("\n");
+  const t=[["Building","Type","Headline","Offer","Status","Price (AED)","Rent (AED / yr)","Size (sq ft)","Floor","View","Furnishing","Agent"].join(",")].concat(OFFERS.map(o=>[BLD[o.b],typeOf(o),o.title,o.deal,o.avail||"Available",o.deal!=="rent"?o.price:"",o.deal!=="sale"?o.rent:"",o.size||"",o.floor,o.view,o.furn,agentOf(o).name].map(q).join(","))).join("\n");
   const box=$("#ad-csv-text");box.hidden=false;box.value=t;copy(t,box)};
 function openOfferForm(id){const o=id?OFFERS.find(x=>x.id===id):null;$("#ad-form").reset();$("#ad-form-panel").hidden=false;$("#ad-form-title").textContent=o?"Edit offer":"Add offer";$("#o-id").value=o?o.id:"";
   const set=(k,v)=>{$(k).value=v??""};
@@ -2326,7 +2349,7 @@ document.addEventListener("click",e=>{const g=e.target.closest("[data-gal]");if(
 (()=>{let x0=null;document.addEventListener("touchstart",e=>{const g=e.target.closest(".gmain");x0=g?e.touches[0].clientX:null},{passive:true});
   document.addEventListener("touchend",e=>{if(x0==null)return;const g=e.target.closest("[data-gal]");const dx=e.changedTouches[0].clientX-x0;x0=null;if(g&&Math.abs(dx)>50)galGo(g,+g.dataset.i+(dx<0?1:-1))},{passive:true})})();
 let lb=null;
-function openLightbox(id,i){const o=all().find(x=>x.id===id);if(!o)return;openViewer(mediaOf(o),BLD[o.b]+" · "+TYPE[o.beds],i)}
+function openLightbox(id,i){const o=all().find(x=>x.id===id);if(!o)return;openViewer(mediaOf(o),BLD[o.b]+" · "+typeOf(o),i)}
 function openViewer(m,title,i){lb={title,m,i:i||0};let el=$("#lightbox");
   if(!el){document.body.insertAdjacentHTML("beforeend",`<div id="lightbox" role="dialog" aria-modal="true" aria-label="Photos"><div class="lbbar"><span class="lbt"></span><button class="lbx" aria-label="Close photos">${ic("x")}</button></div><div class="lbstage"><button class="lbn prev" aria-label="Previous photo">${ic("arrow")}</button><img alt=""><button class="lbn next" aria-label="Next photo">${ic("arrowr")}</button></div><div class="lbcap"></div></div>`);
     el=$("#lightbox");el.querySelector(".lbx").onclick=closeLightbox;el.querySelector(".prev").onclick=()=>lbGo(-1);el.querySelector(".next").onclick=()=>lbGo(1);
@@ -2347,7 +2370,7 @@ const isAvail=o=>!o.avail||o.avail==="Available";
 function homeCard(o,label){const c=photosOf(o)[0],p=o.deal==="rent"?short(o.rent)+" / yr":short(o.price);
   return `<button class="hcard" data-id="${esc(o.id)}">
     <div class="hph"><img loading="lazy" src="${esc(imgSrc(c.k,true))}" alt="${esc(c.c)}"><span class="hbadge ${o.deal==="rent"?"rent":""}">${dealWord(o)}</span>${hasRealPhotos(o)?'<span class="hreal">Real photos</span>':""}${planOf(o)?'<span class="hplan">Floor plan</span>':""}${label?`<span class="hlabel">${esc(label)}</span>`:""}</div>
-    <div class="hb"><div class="hp num">AED ${esc(p)}</div><h3>${esc(bedsWord(o.beds))} · ${esc(BLD[o.b])}</h3><p>${o.size?fmt(o.size)+" sq ft":"Size on request"}${o.view&&o.view!=="On request"?" · "+esc(o.view):""}</p></div>
+    <div class="hb"><div class="hp num">AED ${esc(p)}</div><h3>${esc(o.layout?typeOf(o):bedsWord(o.beds))} · ${esc(BLD[o.b])}</h3><p>${o.size?fmt(o.size)+" sq ft":"Size on request"}${o.view&&o.view!=="On request"?" · "+esc(o.view):""}</p></div>
   </button>`}
 
 /* ---------------- Welcome page for clients and external agents ---------------- */
@@ -2409,7 +2432,7 @@ $("#dash").addEventListener("click",e=>{const f=e.target.closest("[data-find]");
 let wz={step:0,a:{}};
 const WQ=[
   {k:"deal",q:"Buy or rent?",sub:"We'll only show homes on the right kind of deal.",opts:[["sale","Buy","building"],["rent","Rent","key"]]},
-  {k:"type",q:"What kind of home?",sub:"Pick one, or let us show you everything.",opts:[["0","Studio","home"],["1","1 bedroom","home"],["2","2 bedrooms","home"],["3","3 bedrooms","home"],["any","Show me all","list"]]},
+  {k:"type",q:"What kind of home?",sub:"Pick one, or let us show you everything.",opts:[["0","Studio","home"],["1","1 bedroom","home"],["2","2 bedrooms","home"],["3","3 bedrooms","home"],["4","4 bedrooms or duplex","home"],["any","Show me all","list"]]},
   {k:"goal",q:"What is it for?",sub:"This changes what we highlight on each option.",opts:[["live","To live in","home"],["invest","To invest and rent out","trend"],["both","Both","star"]]},
   {k:"budget",q:"What's the budget?",sub:"Optional. We'll still show a premium option, so you can see what more money buys."}
 ];
@@ -2478,7 +2501,7 @@ function drawResults(c){const a=wz.a,R=pick3(a);wz.r=R.list;const r=R.list;
     ${r.length>1?`<div class="spread" aria-label="Price spread"><div class="sline"></div>${r.map(x=>`<div class="sdot" style="left:${pos(x.p)}%"><i></i><span class="num">${esc(short(x.p))}</span><small>${esc(x.label)}</small></div>`).join("")}</div>`:""}
     <div class="wres">${r.map(x=>{const o=x.o,cv=photosOf(o)[0];return `<article class="wcard">
       <div class="wph"><img src="${esc(imgSrc(cv.k,true))}" alt="${esc(cv.c)}"><span class="wlab ${x.label==="Premium"?"prem":x.label==="Best value"?"val":"bal"}">${esc(x.label)}</span>${planOf(o)?'<span class="hplan">Floor plan</span>':""}</div>
-      <div class="wb"><div class="hp num">AED ${esc(a.deal==="rent"?fmt(o.rent)+" / yr":fmt(o.price))}</div><h3>${esc(bedsWord(o.beds))} · ${esc(BLD[o.b])}</h3>
+      <div class="wb"><div class="hp num">AED ${esc(a.deal==="rent"?fmt(o.rent)+" / yr":fmt(o.price))}</div><h3>${esc(o.layout?typeOf(o):bedsWord(o.beds))} · ${esc(BLD[o.b])}</h3>
         <p class="wmeta">${o.size?fmt(o.size)+" sq ft":"Size on request"}${o.floor&&o.floor!=="On request"?" · "+esc(o.floor):""}${o.furn&&o.furn!=="—"?" · "+esc(o.furn):""}</p>
         <div class="wm">${metric(x)}</div><p class="why">${esc(whyLine(x,r,a))}</p>
         <button class="btn" data-view-id="${esc(o.id)}">See photos and details${ic("arrowr")}</button></div></article>`}).join("")}</div>
@@ -2527,7 +2550,7 @@ $("#o-up-plan").onchange=e=>{if(e.target.files.length)phUpload(e.target.files,tr
 function myKey(){if(profile&&profile.agentKey)return profile.agentKey;const a=myAgent();return a?Object.keys(AGENTS).find(k=>AGENTS[k]===a):""}
 const telOf=p=>String(p||"").replace(/[^0-9+]/g,"");
 function ownerWa(o){const me=(meInfo&&meInfo.name)||"your agent";
-  const msg=`Hello${o.owner?" "+String(o.owner).split(" ")[0]:""}, this is ${me} from Orla Properties. About your ${TYPE[o.beds].toLowerCase()} in ${BLD[o.b]}${o.unit?" (unit "+o.unit+")":""}: I have a client interested. When would suit you for a viewing?`;
+  const msg=`Hello${o.owner?" "+String(o.owner).split(" ")[0]:""}, this is ${me} from Orla Properties. About your ${typeOf(o).toLowerCase()} in ${BLD[o.b]}${o.unit?" (unit "+o.unit+")":""}: I have a client interested. When would suit you for a viewing?`;
   return "https://wa.me/"+telOf(o.ownerPhone).replace(/^\+/,"")+"?text="+encodeURIComponent(msg)}
 function ownerCard(o){if(!isTeam()||(o.mine&&!SRV))return"";const a=agentOf(o);
   if(o.fromListing&&!o.mine){const L=mine.concat(teamListings).find(m=>m.id===o.fromListing);if(L)return ownerCard(mineToOffer(L))+shareBox(mineToOffer(L),o)}
@@ -2544,7 +2567,7 @@ let ownDirty=false;
 function renderOwnTable(force){if(!isAdmin)return;const t=$("#own-table");if(!t||(!force&&(ownDirty||$("#ad-own-panel").contains(document.activeElement))))return;
   const l=[...OFFERS].sort((a,b)=>a.b-b.b||a.beds-b.beds||(keyPrice(a)||0)-(keyPrice(b)||0));
   const agOpts=k=>Object.entries(AGENTS).map(([x,a])=>`<option value="${esc(x)}"${x===k?" selected":""}>${esc(a.name)}</option>`).join("");
-  t.innerHTML='<tr><th>Offer</th><th>Listed under</th><th>Unit no.</th><th>Owner\'s name</th><th>Owner\'s phone</th></tr>'+l.map(o=>`<tr data-own="${esc(o.id)}"><td><b>P${o.b}</b> · ${esc(TYPE[o.beds])} · ${esc(o.deal==="rent"?short(o.rent)+" / yr":short(o.price))}<div class="src">${esc(o.title)}</div></td>
+  t.innerHTML='<tr><th>Offer</th><th>Listed under</th><th>Unit no.</th><th>Owner\'s name</th><th>Owner\'s phone</th></tr>'+l.map(o=>`<tr data-own="${esc(o.id)}"><td><b>P${o.b}</b> · ${esc(typeOf(o))} · ${esc(o.deal==="rent"?short(o.rent)+" / yr":short(o.price))}<div class="src">${esc(o.title)}</div></td>
     <td><select data-k="agent" aria-label="Listed under">${agOpts(o.agent)}</select></td><td><input data-k="unit" value="${esc(o.unit||"")}" placeholder="—" aria-label="Unit number" style="width:80px"></td>
     <td><input class="ow" data-k="owner" value="${esc(o.owner||"")}" aria-label="Owner's name"></td><td><input class="ow" data-k="ownerPhone" inputmode="tel" value="${esc(o.ownerPhone||"")}" placeholder="+971 …" aria-label="Owner's phone"></td></tr>`).join("")}
 $("#own-table").addEventListener("input",()=>{ownDirty=true});$("#own-table").addEventListener("change",()=>{ownDirty=true});
@@ -2640,7 +2663,7 @@ async function renderTeam(){const el=$("#team");if(!SRV){el.innerHTML='<div clas
       <small style="color:var(--muted)">${p.left?`Needs ${p.left} more · about ${Math.ceil(p.perWeek)} a week`:"Done. Keep going!"}</small></div>`};
   const myOffers=OFFERS.filter(o=>o.teamUnit&&!o.fromListing&&(isAdmin||(mk&&o.agent===mk))).sort((a,b)=>(a.agent||"").localeCompare(b.agent||"")||a.b-b.b||a.beds-b.beds);
   const plats=(on,attr)=>`<div class="plats">${platBoxes(on,attr)}</div>`;
-  const offRow=o=>`<div class="ochk" data-off="${esc(o.id)}"><div><b>${isAdmin&&AGENTS[o.agent]?esc(AGENTS[o.agent].name.split(" ")[0])+" · ":""}${o.unit?"Unit "+esc(o.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(TYPE[o.beds])} · ${esc(o.title)}</b><span class="s">${esc(o.deal==="rent"?aed(o.rent)+" / yr":aed(o.price))}${isOnline(o,g)?" · counts towards the goal":""}</span></div>${plats(o.online,"data-otog")}</div>`;
+  const offRow=o=>`<div class="ochk" data-off="${esc(o.id)}"><div><b>${isAdmin&&AGENTS[o.agent]?esc(AGENTS[o.agent].name.split(" ")[0])+" · ":""}${o.unit?"Unit "+esc(o.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(typeOf(o))} · ${esc(o.title)}</b><span class="s">${esc(o.deal==="rent"?aed(o.rent)+" / yr":aed(o.price))}${isOnline(o,g)?" · counts towards the goal":""}</span></div>${plats(o.online,"data-otog")}</div>`;
   const own=mine.filter(m=>m);
   el.innerHTML=`<div class="gband"><div><p class="kick">Goal until ${esc(dl)}</p><h2>${g.target} listings each, live on ${esc(plist)}</h2><p>A listing counts once it's online on every platform. ${tp.daysLeft} days left.</p>
       <div class="gbar" aria-label="Team progress"><i style="width:${Math.min(100,tot/goalT*100)}%"></i><em style="left:${tf*100}%" title="Where we should be today"></em></div><p style="margin-top:8px;font-size:13px">${tot} of ${goalT} for the team · the white line is where we should be today (${tp.expected})</p></div>
@@ -2653,7 +2676,7 @@ async function renderTeam(){const el=$("#team");if(!SRV){el.innerHTML='<div clas
       <tr class="total"><td></td><td>Team total</td><td class="c num">${ag.reduce((x,a)=>x+a.listings,0)}</td><td class="c num">${ag.reduce((x,a)=>x+a.forSale,0)}</td><td class="c num">${ag.reduce((x,a)=>x+a.forRent,0)}</td><td class="c num">${tot}</td><td class="c num">${ag.reduce((x,a)=>x+a.offMarket,0)}</td><td class="c num">${Math.max(0,goalT-tot)}</td><td></td></tr></table></div></div>
   <div class="panel"><h2>Units by agent</h2><p class="lede">Every unit each of us has, with its floor. Unit numbers and owners stay with the listing agent.</p><div class="stack">${ag.map(a=>unitsByAgent(a,g,photo)).join("")}</div></div>
   <div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Your listings</h2><p class="lede">Tick each platform once the listing is live there.${isAdmin?" You can tick for every agent.":" Only you and the admin can change these."}</p></div><button class="btn primary" data-goto-mine>${ic("list")}Add a unit</button></div>
-    <div class="stack" id="team-own">${myOffers.length?`<h4 style="margin:4px 0 0">${isAdmin?"Team offers":"Your offers"} · ${myOffers.length}</h4>`+myOffers.map(offRow).join("")+(own.length?`<h4 style="margin:8px 0 0">${isAdmin?"Your own units":"Your own units"} · ${own.length}</h4>`:""):""}${own.length?own.map(m=>{const o=mineToOffer(m);return `<div class="ochk" data-lst="${esc(m.id)}"><div><b>${o.unit?"Unit "+esc(o.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(TYPE[o.beds])}</b><span class="s">${esc(o.deal==="rent"?aed(o.rent)+" / yr":aed(o.price))}${isOnline(m,g)?" · counts towards the goal":""}</span></div>${plats(m.online,"data-tog")}</div>`}).join(""):(myOffers.length?"":'<div class="empty">No listings yet. Add your units in Listings, then tick the platforms they\'re live on.</div>')}</div></div>
+    <div class="stack" id="team-own">${myOffers.length?`<h4 style="margin:4px 0 0">${isAdmin?"Team offers":"Your offers"} · ${myOffers.length}</h4>`+myOffers.map(offRow).join("")+(own.length?`<h4 style="margin:8px 0 0">${isAdmin?"Your own units":"Your own units"} · ${own.length}</h4>`:""):""}${own.length?own.map(m=>{const o=mineToOffer(m);return `<div class="ochk" data-lst="${esc(m.id)}"><div><b>${o.unit?"Unit "+esc(o.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(typeOf(o))}</b><span class="s">${esc(o.deal==="rent"?aed(o.rent)+" / yr":aed(o.price))}${isOnline(m,g)?" · counts towards the goal":""}</span></div>${plats(m.online,"data-tog")}</div>`}).join(""):(myOffers.length?"":'<div class="empty">No listings yet. Add your units in Listings, then tick the platforms they\'re live on.</div>')}</div></div>
   ${isAdmin?`<div class="panel"><h2>Goal settings</h2><p class="lede">Only you can change these. Everyone on the team sees the result.</p><div class="fgrid">
     <div class="field"><label for="gl-target">Listings per agent</label><input id="gl-target" inputmode="numeric" value="${g.target}"></div>
     <div class="field"><label for="gl-start">Counting from</label><input id="gl-start" type="date" value="${esc(g.start)}"></div>
@@ -2698,7 +2721,7 @@ function leadsHTML(){if(!leads.length)return"";const open=leads.filter(l=>!l.don
     <div class="stack">${shown.map(l=>{const o=OFFERS.find(x=>x.id===l.offer_id),ph=String(l.phone||"").replace(/[^0-9]/g,""),who=l.name||l.email||"Someone";
       const msg=`Hello ${String(who).split(" ")[0]}, this is ${(meInfo&&meInfo.name)||"Orla Properties"} from Orla Properties about the ${o?bedsWord(o.beds).toLowerCase()+" in "+BLD[o.b]:"home"} you asked about.`;
       return `<div class="lead${l.done?" done":""}"><div class="lw"><span class="lk ${l.kind}">${l.kind==="viewing"?"Viewing":"Full details"}</span><b>${esc(who)}</b><span>${l.role==="broker"?"External agent"+(l.company?" · "+esc(l.company):""):"Client"} · ${esc(l.email||"")}${l.phone?" · "+esc(l.phone):""}</span>
-        <span>${o?`<button class="lnk" data-id="${esc(o.id)}">${esc(BLD[o.b]+" · "+TYPE[o.beds]+" · "+o.title)}</button>`:esc(l.title||l.offer_id)}${isAdmin&&AGENTS[l.agent_key]?" · for "+esc(AGENTS[l.agent_key].name.split(" ")[0]):""} · ${ago(l.at)}</span></div>
+        <span>${o?`<button class="lnk" data-id="${esc(o.id)}">${esc(BLD[o.b]+" · "+typeOf(o)+" · "+o.title)}</button>`:esc(l.title||l.offer_id)}${isAdmin&&AGENTS[l.agent_key]?" · for "+esc(AGENTS[l.agent_key].name.split(" ")[0]):""} · ${ago(l.at)}</span></div>
         <div class="actions">${ph?`<a class="btn sm primary" href="${esc(waTo(ph,msg))}" target="_blank" rel="noopener">${ic("chat")}WhatsApp</a><a class="btn sm" href="tel:+${esc(ph)}">${ic("phone")}Call</a>`:l.email?`<a class="btn sm" href="mailto:${esc(l.email)}">Email</a>`:""}<button class="btn sm" data-lead-done="${l.id}" data-v="${l.done?0:1}">${l.done?"Reopen":"Done"}</button></div></div>`}).join("")}</div></div>`}
 $("#dash").addEventListener("click",async e=>{const b=e.target.closest("[data-lead-done]");if(!b)return;b.disabled=true;try{await api("team/leads/done",{id:+b.dataset.leadDone,done:b.dataset.v==="1"});await loadLeads();renderDash()}catch(x){toast(x.message);b.disabled=false}});
 
@@ -2708,7 +2731,7 @@ const dShort=d=>d?new Date(d+"T12:00:00").toLocaleDateString("en-GB",{weekday:"s
 const isDueR=m=>m.remindAt&&m.remindAt<=todayISO();
 function reminderRow(m){const o=mineToOffer(m),due=isDueR(m),late=due&&m.remindAt<todayISO();
   return `<div class="rem${due?" due":""}" data-rem="${esc(m.id)}"><div class="rw"><span class="rk">${late?"Overdue":due?"Today":dShort(m.remindAt)}</span>
-    <b>${o.unit?"Unit "+esc(o.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(TYPE[o.beds])}${m.future?' <span class="pill pending">Coming soon</span>':""}</b>
+    <b>${o.unit?"Unit "+esc(o.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(typeOf(o))}${m.future?' <span class="pill pending">Coming soon</span>':""}</b>
     <span>${esc(m.remindNote||"Follow up on this unit")}${m.availableFrom?" · available from "+esc(dShort(m.availableFrom)):""}${m.owner?" · owner: "+esc(m.owner):""}</span></div>
     <div class="actions">${m.phone?`<a class="btn sm primary" href="tel:${esc(telOf(m.phone))}">${ic("phone")}Call owner</a>`:""}<button class="btn sm" data-ics="${esc(m.id)}">${ic("calendar")}Add to calendar</button><button class="btn sm" data-snooze="${esc(m.id)}">+1 week</button>${m.future?`<button class="btn sm" data-golive="${esc(m.id)}">It's live now</button>`:""}<button class="btn sm" data-rdone="${esc(m.id)}">Done</button><button class="btn sm" data-id="${esc(m.id)}">Open</button></div></div>`}
 function mineSections(){if(!mine.length)return'<div class="empty">Listings you add appear here and in Offers. Add future listings too, with a reminder.</div>';
@@ -2725,7 +2748,7 @@ async function saveMine(m,msg){const{id,...data}=m;delete data._by;delete data._
   renderAll();if(msg)toast(msg)}
 function icsFor(m){const o=mineToOffer(m),d=(m.remindAt||todayISO()).replace(/-/g,""),nd=new Date(m.remindAt+"T12:00:00");nd.setDate(nd.getDate()+1);
   const d2=nd.getFullYear()+String(nd.getMonth()+1).padStart(2,"0")+String(nd.getDate()).padStart(2,"0"),x=t=>String(t||"").replace(/[\\,;]/g,c=>"\\"+c).replace(/\n/g,"\\n");
-  const title=`Peninsula: ${o.unit?"unit "+o.unit+", ":""}${BLD[o.b]} ${TYPE[o.beds]}`;
+  const title=`Peninsula: ${o.unit?"unit "+o.unit+", ":""}${BLD[o.b]} ${typeOf(o)}`;
   return ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Orla Properties//Peninsula//EN","BEGIN:VEVENT","UID:"+m.id+"-"+d+"@peninsula","DTSTAMP:"+new Date().toISOString().replace(/[-:]/g,"").slice(0,15)+"Z",
     "DTSTART;VALUE=DATE:"+d,"DTEND;VALUE=DATE:"+d2,"SUMMARY:"+x(title),"DESCRIPTION:"+x((m.remindNote||"Follow up on this unit")+(m.owner?"\nOwner: "+m.owner:"")+(m.phone?"\nPhone: "+m.phone:"")+(m.availableFrom?"\nAvailable from: "+m.availableFrom:"")),
     "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+x(title),"TRIGGER:PT9H","END:VALARM","END:VEVENT","END:VCALENDAR"].join("\r\n")}
@@ -2758,7 +2781,7 @@ async function renderDocs(){const el=$("#docs");if(docs===null){el.innerHTML='<d
   const chips=[["","All"],...[1,2,3,4,5].map(b=>[String(b),"P"+b]),["0","Community"]].map(([v,t])=>`<button class="dchip" data-dbld="${v}" aria-pressed="${docF.b===v}">${t}</button>`).join("");
   const card=d=>{const tag=d.url?"Link":d.builtin?(d.kind==="photos"?"Photos":"Image"):(d.mime==="application/pdf"?"PDF":"Image");
     return `<div class="dcard" data-doc="${esc(d.id)}"><div class="dthumb ${d.kind}">${d.img?`<img src="${esc(imgSrc(d.img,true))}" alt="">`:d.photos?`<img src="${esc(imgSrc(d.photos[0][0],true))}" alt="">`:`<span>${tag}</span>`}</div>
-      <div class="dbody"><b>${esc(d.title)}</b><span>${esc(BLDNAME(d.building))}${d.beds!=null?" · "+esc(TYPE[d.beds]||""):""}${+d.size?" · "+fsize(+d.size):""}${d.by_name?" · added by "+esc(String(d.by_name).split(" ")[0]):""}${d.builtin?" · in the app":""}${d.ready===false?" · uploading…":""}</span>
+      <div class="dbody"><b>${esc(d.title)}</b><span>${esc(BLDNAME(d.building))}${d.beds!=null?" · "+esc(typeOf(d)||""):""}${+d.size?" · "+fsize(+d.size):""}${d.by_name?" · added by "+esc(String(d.by_name).split(" ")[0]):""}${d.builtin?" · in the app":""}${d.ready===false?" · uploading…":""}</span>
       <div class="actions"><button class="btn sm primary" data-dact="open">Open</button>${d.url?"":`<button class="btn sm" data-dact="download">${ic("download")}Download</button>`}<button class="btn sm" data-dact="share">${ic("share")}Share</button>${d.mine||(isAdmin&&!d.builtin)?`<button class="btn sm" data-dact="delete">Delete</button>`:""}</div></div></div>`};
   const sections=DKIND.map(([k,t])=>{const x=l.filter(d=>d.kind===k);return x.length?`<div class="dsect"><h4 class="mh">${esc(t)} · ${x.length}</h4><div class="dgrid">${x.map(card).join("")}</div></div>`:""}).join("");
   el.innerHTML=`<div class="panel"><div class="dfil"><div class="dchips">${chips}</div><input id="doc-q" placeholder="Search brochures, plans…" value="${esc(docF.q)}"></div></div>
@@ -2813,7 +2836,7 @@ async function soLibs(){await loadScriptOnce("/vendor/html2canvas-1.4.1.min.js")
 function soPage(o,opt){const x=o.x||{},a=AGENTS[opt.agent]||agentOf(o),photos=photosOf(o),plan=opt.plan?planOf(o):null,sale=o.deal!=="rent";
   const row=(k,v)=>v?`<div class="so-row"><span>${esc(k)}</span><b>${esc(v)}</b></div>`:"";
   const fl=opt.exactFloor?String(o.floor||"On request"):soFloor(o.floor);
-  const details=row("Unit type",TYPE[o.beds]+" apartment")+row("Size",o.size?fmt(o.size)+" sq ft ("+(o.size*0.092903).toFixed(1)+" m²)":"On request")+(o.balcony?row("Balcony",o.balcony+" sq ft"):"")
+  const details=row("Unit type",typeOf(o)+" apartment")+row("Size",o.size?fmt(o.size)+" sq ft ("+(o.size*0.092903).toFixed(1)+" m²)":"On request")+(o.balcony?row("Balcony",o.balcony+" sq ft"):"")
     +row("Floor",fl)+row("View",o.view&&o.view!=="On request"?o.view:"On request")+row("Furnishing",o.furn&&o.furn!=="—"?o.furn:"On request")+(o.baths&&o.baths!=="—"?row("Bathrooms",String(o.baths)):"")+row("Status",o.status||"Ready")+(o.parking?row("Parking",o.parking):"");
   let money="";
   if(sale){const c=costs(o.price);money=`<h3>TOTAL PURCHASE COST</h3>${row("Price",aed(o.price))}${row(dldLabel(),aed(c.dld))}${row("Trustee office fee",aed(FEES.trustee))}${row("Admin fee",aed(FEES.admin))}<div class="so-row tot"><span>Total cost</span><b>${aed(c.total)}</b></div>
@@ -2828,7 +2851,7 @@ function soPage(o,opt){const x=o.x||{},a=AGENTS[opt.agent]||agentOf(o),photos=ph
     ${opt.client?`<div class="so-for"><span class="pf">Prepared for <b>${esc(opt.client)}</b></span><span>${esc(date)} · Ref ${esc(o.id.toUpperCase())}</span></div>`:`<div class="so-for"><span>${esc(date)} · Ref ${esc(o.id.toUpperCase())}</span></div>`}
     <img class="so-hero" src="${esc(imgSrc(photos[0].k))}" crossorigin="anonymous" alt="">
     <div class="so-body">
-      <div class="so-title"><div><span class="so-k">${esc(o.hlTitle||"SPECIAL "+(o.deal==="rent"?"RENTAL":"SALE")+" OFFER")}</span><h1>${esc(TYPE[o.beds]+" Apartment")}</h1><p>${esc(o.title)}</p></div>
+      <div class="so-title"><div><span class="so-k">${esc(o.hlTitle||"SPECIAL "+(o.deal==="rent"?"RENTAL":"SALE")+" OFFER")}</span><h1>${esc(o.layout?typeOf(o):typeOf(o)+" Apartment")}</h1><p>${esc(o.title)}</p></div>
         <div class="so-price"><b>${esc(sale?aed(o.price):aed(o.rent))}</b><span>${sale?(o.size?"AED "+fmt(o.price/o.size)+" / sq ft":""):"per year"}${o.deal==="both"?" · or rent "+esc(aed(o.rent))+" / yr":""}</span></div></div>
       ${o.hl&&opt.hl?`<p class="so-hl">${esc(o.hl)}</p>`:""}
       <div class="so-cols"><div><h3>UNIT DETAILS</h3>${details}</div><div class="so-money">${money}</div></div>
@@ -2897,7 +2920,7 @@ function aiUnitCard(u,i,j){const me=(meInfo&&meInfo.name)||"Orla Properties",bl=
     <div class="actions"><button class="btn sm primary" data-ai-say="Write the Bayut and Property Finder listing for unit ${esc(u.unit||"")}">${ic("spark")}Write the listing</button>${u.kind==="listing"?`<button class="btn sm" data-ai-edit="${esc(u.id)}">Open in My units</button>`:`<button class="btn sm" data-ai-fill="${i}:${j}">Add to My units</button>`}</div></div>`}
 function aiDraftCard(d,i,j){return `<div class="aicard draft"><div class="aic-h">${ic("spark")}<b>Listing draft${d.unit?" · unit "+esc(d.unit):""}</b><span class="pill ok">Ready to check</span></div>
     <div class="aiad"><div class="aiad-t">${esc(d.adTitle||"")}</div><div class="aiad-d">${esc(d.adText||"")}</div></div>
-    <dl class="aidl">${[["Building",BLD[d.b]],["Tower",d.tower?"Tower "+d.tower:""],["Type",TYPE[d.beds]],["Price",d.price?aiMoney(d.price):""],["Rent",d.rent?aiMoney(d.rent)+" a year":""],["Size",d.size?fmt(d.size)+" sq ft":""],["Floor",d.floor],["View",d.view]].filter(r=>r[1]).map(r=>`<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join("")}</dl>
+    <dl class="aidl">${[["Building",BLD[d.b]],["Tower",d.tower?"Tower "+d.tower:""],["Type",typeOf(d)],["Price",d.price?aiMoney(d.price):""],["Rent",d.rent?aiMoney(d.rent)+" a year":""],["Size",d.size?fmt(d.size)+" sq ft":""],["Floor",d.floor],["View",d.view]].filter(r=>r[1]).map(r=>`<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join("")}</dl>
     ${d.missing&&d.missing.length?`<div class="aichk"><b>Before it goes live</b><ul>${d.missing.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
     ${d.tips&&d.tips.length?`<div class="aichk tips"><b>Tips</b><ul>${d.tips.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
     <div class="actions"><button class="btn sm primary" data-ai-fill="${i}:${j}">${ic("list")}Put into My units form</button><button class="btn sm" data-ai-copy="${i}:${j}:t">${ic("copy")}Copy title</button><button class="btn sm" data-ai-copy="${i}:${j}:d">${ic("copy")}Copy description</button></div></div>`}
@@ -2920,16 +2943,32 @@ function aiContactCard(ct,i,j){if(ct.taken)return `<div class="aicard taken"><di
       <div class="field"><label>View</label><input name="view" value="${esc(ct.view||"")}"></div>
     </div><div class="actions" style="margin-top:8px"><button class="btn sm primary" type="submit">${ic("file")}Make the sales offer</button></div></form></div>`}
 function aiOfferRow(o){const pr=o.deal==="rent"||(!o.price&&o.rent)?aiMoney(o.rent)+" a year":aiMoney(o.price)+(o.deal==="both"&&o.rent?" · or "+aiMoney(o.rent)+" a year":"");
-  return `<div class="aior">${o.label?`<span class="aolab ${esc(o.label.toLowerCase())}">${esc(o.label)}</span>`:""}<div class="aoi"><b>${esc((o.building||BLD[o.b]||"").replace(/ \(.*\)/,""))}${o.tower?" · "+esc(o.tower):""} · ${esc(o.type||TYPE[o.beds]||"")}</b><span>${esc([o.size?fmt(o.size)+" sq ft":"",o.floor,o.view&&o.view!=="On request"?o.view:"",o.furnishing&&o.furnishing!=="—"?o.furnishing:""].filter(Boolean).join(" · "))}</span></div>
+  return `<div class="aior">${o.label?`<span class="aolab ${esc(o.label.toLowerCase())}">${esc(o.label)}</span>`:""}<div class="aoi"><b>${esc((o.building||BLD[o.b]||"").replace(/ \(.*\)/,""))}${o.tower?" · "+esc(o.tower):""} · ${esc(o.type||typeOf(o)||"")}</b><span>${esc([o.size?fmt(o.size)+" sq ft":"",o.floor,o.view&&o.view!=="On request"?o.view:"",o.furnishing&&o.furnishing!=="—"?o.furnishing:""].filter(Boolean).join(" · "))}</span></div>
     <div class="aop"><b>${esc(pr)}</b><button class="btn sm" data-ai-open="${esc(o.id)}">Open</button></div></div>`}
 function aiOffersCard(c,i,j){const ids=c.items.map(o=>o.id);
   return `<div class="aicard offers"><div class="aic-h">${ic(c.three?"star":"building")}<b>${c.three?"Three options":c.items.length+" home"+(c.items.length===1?"":"s")}</b></div>${c.items.map(aiOfferRow).join("")}
     <form class="aiso" data-ai-so="${esc(ids.join(","))}"><input name="client" placeholder="Client's name (for the sales offer)" maxlength="80"><button class="btn sm primary" type="submit">${ic("file")}Sales offer${ids.length>1?" ("+ids.length+" pages)":""}</button></form></div>`}
 function aiSalesCard(c){return `<div class="aicard draft"><div class="aic-h">${ic("file")}<b>Sales offer${c.client?" for "+esc(c.client):""}</b><span class="pill ok">${c.ids.length} page${c.ids.length===1?"":"s"}</span></div>${c.items.map(aiOfferRow).join("")}
     <form class="aiso" data-ai-so="${esc(c.ids.join(","))}"><input name="client" value="${esc(c.client||"")}" placeholder="Client's name" maxlength="80"><button class="btn sm primary" type="submit">${ic("file")}Open the sales offer</button></form></div>`}
-function aiCardHTML(c,i,j){if(c.type==="offers")return aiOffersCard(c,i,j);if(c.type==="salesoffer")return aiSalesCard(c);if(c.type==="contact")return aiContactCard(c.contact,i,j);if(c.type==="unit")return aiUnitCard(c.unit,i,j);if(c.type==="draft")return aiDraftCard(c.draft,i,j);
+function cmpText(r,full){const k=r.kind==="rent",L=[`${r.label} · market comparison`,`${r.deals} registered ${k?"leases":"sales"} of the same type in ${r.buildingName}, last ${r.months} months (DXB Interact, DLD data).`];
+  if(k){if(r.avgPrice)L.push(`Average rent: AED ${fmt(r.avgPrice)} a year (AED ${fmt(r.minPrice)} to ${fmt(r.maxPrice)}).`)}
+  else{if(r.avgPsf)L.push(`Average: AED ${fmt(r.avgPsf)} per sq ft (AED ${fmt(r.minPsf)} to ${fmt(r.maxPsf)}).`);if(r.medianPrice)L.push(`Median price: AED ${fmt(r.medianPrice)}.`)}
+  if(r.recent.length){L.push("","Latest deals:");r.recent.slice(0,5).forEach(d=>L.push(`• ${d.date?new Date(d.date+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):"—"} · ${d.size?fmt(d.size)+" sq ft · ":""}AED ${fmt(d.price)}${d.psf&&!k?" (AED "+fmt(d.psf)+"/sq ft)":""}`))}
+  // For the client, the position only when it's in the client's favour.
+  if(r.vsAverage!=null&&(full||r.vsAverage<0))L.push("",r.vsAverage<0?`This home: ${Math.abs(r.vsAverage)}% under the average${k?" rent":" price per sq ft"}.`:`This home: ${r.vsAverage}% over the average (internal).`);
+  return L.join("\n")}
+let CMP=[];
+function aiCompareCard(r){const k=r.kind==="rent",i=CMP.push(r)-1,pos=r.vsAverage;
+  const tile=(l,v,sub)=>`<div class="cmt"><span>${esc(l)}</span><b>${esc(v)}</b>${sub?`<small>${esc(sub)}</small>`:""}</div>`;
+  return `<div class="aicard compare"><div class="aic-h">${ic("chart")}<b>Market comparison · ${esc(r.label)}</b>${pos!=null?`<span class="pill ${pos<0?"ok":""}">${pos<0?Math.abs(pos)+"% under the average":pos+"% over the average · internal"}</span>`:""}</div>
+    <div class="cmtiles">${tile(k?"Leases":"Sales",String(r.deals),"last "+r.months+" months"+(r.similarSize?", similar size":""))}${k?tile("Average rent",r.avgPrice?"AED "+fmt(r.avgPrice):"—",r.minPrice?"AED "+fmt(r.minPrice)+" – "+fmt(r.maxPrice):""):tile("Average / sq ft",r.avgPsf?"AED "+fmt(r.avgPsf):"—",r.minPsf?"AED "+fmt(r.minPsf)+" – "+fmt(r.maxPsf):"")}${k?"":tile("Median price",r.medianPrice?"AED "+fmt(r.medianPrice):"—","")}${r.unit&&(r.unit.psf||r.unit.price)?tile("This unit",k?(r.unit.price?"AED "+fmt(r.unit.price):"—"):(r.unit.psf?"AED "+fmt(r.unit.psf)+" / sq ft":"—"),r.unit.size?fmt(r.unit.size)+" sq ft":""):""}</div>
+    ${r.recent.length?`<div class="tablewrap"><table class="cmtab"><tr><th>Date</th><th>Size</th><th>${k?"Rent / yr":"Price"}</th>${k?"":"<th>AED / sq ft</th>"}<th>Floor</th></tr>${r.recent.map(d=>`<tr><td>${esc(d.date?new Date(d.date+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"2-digit"}):"—")}</td><td>${d.size?fmt(d.size):"—"}</td><td>${fmt(d.price)}</td>${k?"":`<td>${d.psf?fmt(d.psf):"—"}</td>`}<td>${esc((d.tower?"T"+d.tower+" ":"")+(d.floor||""))||"—"}</td></tr>`).join("")}</table></div>`:""}
+    <p class="src" style="margin:0">${esc(r.source)}. Compared with ${esc(r.type||"the same type")} in ${esc(r.buildingName)}.</p>
+    <div class="actions"><button class="btn sm primary" data-cmp-copy="${i}:c">${ic("copy")}Copy for the client</button><button class="btn sm" data-cmp-copy="${i}:f">${ic("copy")}Copy full (internal)</button></div></div>`}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-cmp-copy]");if(!b)return;const[i,m]=b.dataset.cmpCopy.split(":");const r=CMP[+i];if(r)copy(cmpText(r,m==="f"))});
+function aiCardHTML(c,i,j){if(c.type==="compare")return aiCompareCard(c.r);if(c.type==="offers")return aiOffersCard(c,i,j);if(c.type==="salesoffer")return aiSalesCard(c);if(c.type==="contact")return aiContactCard(c.contact,i,j);if(c.type==="unit")return aiUnitCard(c.unit,i,j);if(c.type==="draft")return aiDraftCard(c.draft,i,j);
   if(c.type==="notfound")return `<div class="aicard"><div class="aic-h">${ic("building")}<b>Unit ${esc(c.query||"")}</b></div><p>${c.teammates&&c.teammates.length?`It's listed by a teammate (${esc(c.teammates.join(", "))}). Only they and the admin can see the owner.`:"It isn't in your units yet."}</p><div class="actions"><button class="btn sm" data-ai-new="${esc(c.query||"")}">${ic("list")}Add it as a new listing</button></div></div>`;return""}
-function aiRender(){const th=$("#ai-thread");if(!th)return;const first=((meInfo&&meInfo.name)||"").split(" ")[0];
+function aiRender(){const th=$("#ai-thread");if(!th)return;CMP=[];const first=((meInfo&&meInfo.name)||"").split(" ")[0];
   let h=`<div class="aimsg bot"><div class="aiav">${ic("spark")}</div><div class="aib"><p><b>Hi${first?" "+esc(first):""}! I'm your listing assistant.</b></p><p>Type a client's phone number or a unit number and I'll find them, with the unit details. Tell me what a client wants and I'll pick three homes (premium, middle, value) and make the sales offer. I know our homes, the market figures and Talal's decks, and I can write your Bayut and Property Finder listings.</p></div></div>`;
   h+=aiMsgs.map((m,i)=>m.role==="user"?`<div class="aimsg me"><div class="aib">${esc(m.text)}</div></div>`:`<div class="aimsg bot"><div class="aiav">${ic("spark")}</div><div class="aib">${m.error?`<p class="aierr">${esc(m.text)}</p>`:aiMd(m.text)}${(m.cards||[]).map((c,j)=>aiCardHTML(c,i,j)).join("")}</div></div>`).join("");
   if(aiBusy)h+=`<div class="aimsg bot"><div class="aiav">${ic("spark")}</div><div class="aib"><span class="aidots"><i></i><i></i><i></i></span></div></div>`;
@@ -2948,7 +2987,7 @@ async function aiOpen(){aiRender();if(aiStatus===null&&SRV){try{aiStatus=(await 
 function aiFill(d){const m=d.listingId&&mine.concat(teamListings).find(x=>x.id===d.listingId);
   if(m)editListing(m.id);else{show("mine");resetMineForm()}
   const set=(k,v)=>{if(v!==undefined&&v!==null&&v!=="")$(k).value=v};
-  set("#m-unit",d.unit);set("#m-bld",d.b);set("#m-tower",d.tower);set("#m-type",d.beds);const deal=d.deal==="rent"?"rent":"sale";set("#m-deal",deal);set("#m-floor",d.floor);set("#m-view",d.view);set("#m-size",d.size);
+  set("#m-unit",d.unit);set("#m-bld",d.b);mFillTypes(d.beds,d.layout);set("#m-tower",d.tower);const deal=d.deal==="rent"?"rent":"sale";set("#m-deal",deal);set("#m-floor",d.floor);set("#m-view",d.view);set("#m-size",d.size);
   const pr=deal==="rent"?d.rent:d.price;if(pr)set("#m-price",fmt(pr));set("#m-status",d.status);set("#m-furn",d.furn);set("#m-owner",d.owner);set("#m-phone",d.phone);if(AGENTS[d.agent])set("#m-agent",d.agent);
   set("#m-adtitle",d.adTitle);set("#m-adtext",d.adText);if(d.deal==="both"&&d.rent&&!/rent/i.test($("#m-notes").value))$("#m-notes").value=($("#m-notes").value?$("#m-notes").value+"\n":"")+"Also for rent: AED "+fmt(d.rent)+" a year";
   setTimeout(()=>{$("#mine-form").scrollIntoView({behavior:"smooth",block:"start"})},80);toast("Filled in. Check the details, then tap "+$("#m-save").textContent)}
@@ -3017,11 +3056,11 @@ $("#ad-ct-panel").addEventListener("click",async e=>{const m=e.target.closest("[
   catch(x){toast(x.message);go.disabled=false;$("#ct-prog").textContent=done?`${fmt(done)} imported before the error. Try again.`:""}});
 
 /* ---------------- Tower A / Tower B ---------------- */
-const bldT=o=>BLD[o.b]+(isTeam()&&o.tower?" · Tower "+o.tower:"");
-const needsTower=o=>isTeam()&&+o.b===4&&!o.tower;
+const bldT=o=>BLD[o.b]+(isTeam()&&o.tower&&hasTowers(o.b)?" · Tower "+o.tower:"");
+const needsTower=o=>isTeam()&&hasTowers(o.b)&&!o.tower;
 const canTower=o=>isAdmin||(o.mine?o.own!==false:!!(o.agent&&o.agent===myKey()));
-function towerBar(o){if(o.tower)return canTower(o)?`<div class="twbar set"><span>${ic("building")}<b>Tower ${esc(o.tower)}</b></span><span class="twbtns"><button class="btn sm" data-tower-set="${esc(o.id)}:${o.tower==="A"?"B":"A"}">Change to Tower ${o.tower==="A"?"B":"A"}</button></span></div>`:"";
-  if(+o.b!==4)return canTower(o)?`<div class="twbar set"><span class="src">Tower not set</span><span class="twbtns"><button class="btn sm" data-tower-set="${esc(o.id)}:A">Tower A</button><button class="btn sm" data-tower-set="${esc(o.id)}:B">Tower B</button></span></div>`:"";
+function towerBar(o){if(o.tower&&!hasTowers(o.b))return"";if(o.tower)return canTower(o)?`<div class="twbar set"><span>${ic("building")}<b>Tower ${esc(o.tower)}</b></span><span class="twbtns"><button class="btn sm" data-tower-set="${esc(o.id)}:${o.tower==="A"?"B":"A"}">Change to Tower ${o.tower==="A"?"B":"A"}</button></span></div>`:"";
+  if(!hasTowers(o.b))return"";
   return `<div class="twbar"><span>${ic("building")}<b>Tower A or Tower B?</b> Peninsula Four has two towers.${canTower(o)?" Choose this unit's tower.":" Ask "+esc(agentOf(o).name.split(" ")[0])+" which tower."}</span>${canTower(o)?`<span class="twbtns"><button class="btn sm primary" data-tower-set="${esc(o.id)}:A">Tower A</button><button class="btn sm primary" data-tower-set="${esc(o.id)}:B">Tower B</button></span>`:""}</div>`}
 async function setTower(id,t){const o=all().find(x=>x.id===id);if(!o)return;
   if(o.mine){const m=mine.concat(teamListings).find(x=>x.id===id);if(!m)return;await saveMine(Object.assign({},m,{tower:t}),"Saved: Tower "+t);return}
@@ -3030,7 +3069,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-tower-set]
 // Peninsula Four units with no tower yet: each agent sees their own; the admin sees the team's.
 function towerTodoHTML(){if(!isTeam())return"";const l=all().filter(o=>needsTower(o)&&canTower(o)&&!isDone(o));if(!l.length)return"";
   return `<div class="panel twtodo"><h2>Tower A or Tower B? <span class="count num">${l.length}</span></h2><p class="lede">${isAdmin?"Peninsula Four units in the system":"Your Peninsula Four units"} without a tower yet. Choose one for each, so every agent knows where the unit is.</p>
-    <div class="stack">${l.map(o=>`<div class="twrow"><button class="lnk" data-id="${esc(o.id)}"><b>${esc(o.unit&&!String(o.title).includes(o.unit)?"Unit "+o.unit+" · ":"")}${esc(o.title)}</b><span>${esc([TYPE[o.beds],o.size?fmt(o.size)+" sq ft":"",o.floor,isAdmin?agentOf(o).name.split(" ")[0]:""].filter(Boolean).join(" · "))}</span></button>
+    <div class="stack">${l.map(o=>`<div class="twrow"><button class="lnk" data-id="${esc(o.id)}"><b>${esc(o.unit&&!String(o.title).includes(o.unit)?"Unit "+o.unit+" · ":"")}${esc(o.title)}</b><span>${esc([typeOf(o),o.size?fmt(o.size)+" sq ft":"",o.floor,isAdmin?agentOf(o).name.split(" ")[0]:""].filter(Boolean).join(" · "))}</span></button>
       <span class="twbtns"><button class="btn sm" data-tower-set="${esc(o.id)}:A">Tower A</button><button class="btn sm" data-tower-set="${esc(o.id)}:B">Tower B</button></span></div>`).join("")}</div></div>`}
 
 /* ---------------- Home screen: the guide and the reminder ---------------- */
@@ -3068,6 +3107,38 @@ $("#iv-form").addEventListener("submit",async e=>{e.preventDefault();const g=k=>
     const nm=g("#iv-name"),msg=inviteMsg(nm,r);lastInviteMsg=msg;const d=$("#iv-done");d.hidden=false;lastInviteMsg=msg;d.innerHTML=inviteDoneHTML(nm,r,msg);
     $("#iv-form").reset();$("#iv-company-wrap").hidden=true;d.scrollIntoView({behavior:"smooth",block:"nearest"});loadInvites()}
   catch(x){toast(x.message)}finally{b.disabled=false}});
+
+/* ---------------- Market deals (DXB Interact): comparisons and the admin's import ---------------- */
+document.addEventListener("click",e=>{const b=e.target.closest("[data-cmp-offer]");if(!b)return;const o=all().find(x=>x.id===b.dataset.cmpOffer);if(!o)return;
+  show("assist");aiSend(o.mine?`Compare my listing ${o.id}${o.unit?" (unit "+o.unit+")":""} with recent Peninsula deals`:`Compare offer ${o.id} (${BLD[o.b]}, ${typeOf(o)}) with recent Peninsula deals`)});
+let dlStatsLoaded=false,dlImport=null;
+const DL_FIELDS=[["date","Date",/date|registered|time/i],["kind","Sale or rent",/^(type|transaction|procedure|deal|kind)$|transaction type|sale.?\/.?rent|procedure/i],["building","Building / project",/building|project|tower|location|community|sub.?area/i],["type","Rooms / unit type",/room|bed|unit type|property type|layout|^type$/i],["size","Size",/size|area|sq|bua/i],["price","Price or rent (AED)",/price|amount|value|rent|aed/i],["floor","Floor",/floor|level/i],["unit","Unit",/unit no|unit number|^unit$/i]];
+async function loadDlStats(){dlStatsLoaded=true;try{dlShow(await api("admin/deals"))}catch(e){}}
+function dlShow(r){$("#dl-stats").innerHTML=r.count?`<b>${fmt(r.count)}</b> Peninsula deals: ${fmt(r.sales)} sales, ${fmt(r.rents)} rents${r.first?`, ${esc(new Date(r.first).toLocaleDateString("en-GB",{month:"short",year:"numeric"}))} to ${esc(new Date(r.last).toLocaleDateString("en-GB",{month:"short",year:"numeric"}))}`:""}. Last import ${esc(new Date(r.importedAt).toLocaleDateString("en-GB",{day:"numeric",month:"short"}))}.`:"No deals yet.";$("#dl-clear").hidden=!r.count}
+function dlGuess(h){const used=new Set(),map={};for(const[k,,re]of DL_FIELDS){const i=h.findIndex((x,ix)=>!used.has(ix)&&re.test(String(x).trim()));if(i>=0){map[k]=i;used.add(i)}}return map}
+function dlDraw(){const C=dlImport,h=C.rows[C.head]||[],opts=`<option value="">—</option>`+h.map((x,i)=>`<option value="${i}">${esc(String(x||"Column "+(i+1)).slice(0,40))}</option>`).join(""),n=C.rows.length-C.head-1;
+  $("#dl-map").innerHTML=`<h4 style="margin-top:14px">${esc(C.file)} · ${fmt(n)} rows</h4><p class="src">Only Peninsula One to Five rows are kept. Check which column is which.</p>
+    <div class="fgrid">${DL_FIELDS.map(([k,l])=>`<div class="field"><label>${esc(l)}</label><select data-dlf="${k}">${opts}</select></div>`).join("")}
+      <div class="field"><label>If there's no sale/rent column, this file is</label><select id="dl-kind"><option value="sale">Sales</option><option value="rent">Rents</option></select></div>
+      <div class="field"><label class="tog" style="margin-top:26px"><input type="checkbox" id="dl-sqm"${C.sqm?" checked":""}> Sizes are in square metres</label></div></div>
+    <div class="tablewrap" style="margin-top:10px"><table><tr>${h.map(x=>`<th>${esc(String(x).slice(0,24))}</th>`).join("")}</tr>${C.rows.slice(C.head+1,C.head+4).map(r=>`<tr>${h.map((_,i)=>`<td>${esc(String(r[i]??"").slice(0,30))}</td>`).join("")}</tr>`).join("")}</table></div>
+    <div class="seg" role="group" style="margin-top:12px"><button data-dlmode="add" aria-pressed="true">Add to existing</button><button data-dlmode="replace" aria-pressed="false">Replace all deals</button></div>
+    <div class="actions" style="margin-top:10px"><button class="btn primary" id="dl-go">Import</button><button class="btn" id="dl-cancel">Cancel</button><span class="src" id="dl-prog"></span></div>`;
+  for(const[k,v]of Object.entries(C.map))$(`[data-dlf="${k}"]`).value=v;$("#dl-map").hidden=false}
+$("#dl-file").addEventListener("change",async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;
+  try{const rows=await ctRead(f);if(rows.length<2){toast("That file has no rows");return}let head=0;for(let i=0;i<Math.min(10,rows.length);i++){if(Object.keys(dlGuess(rows[i])).length>=3){head=i;break}}
+    const map=dlGuess(rows[head]);dlImport={file:f.name,rows,head,map,mode:"add",sqm:map.size!==undefined&&/sq\.?\s*m|sqm|m2|m²/i.test(rows[head][map.size])&&!/ft/i.test(rows[head][map.size])};dlDraw()}
+  catch(x){toast(x.message||"Couldn't read that file. Save it as .xlsx or .csv and try again.")}});
+$("#ad-dl-panel").addEventListener("change",e=>{const t=e.target.closest("[data-dlf]");if(t&&dlImport){if(t.value==="")delete dlImport.map[t.dataset.dlf];else dlImport.map[t.dataset.dlf]=+t.value}});
+$("#ad-dl-panel").addEventListener("click",async e=>{const m=e.target.closest("[data-dlmode]");if(m&&dlImport){dlImport.mode=m.dataset.dlmode;document.querySelectorAll("[data-dlmode]").forEach(b=>b.setAttribute("aria-pressed",b===m));return}
+  if(e.target.closest("#dl-cancel")){dlImport=null;$("#dl-map").hidden=true;return}
+  if(e.target.closest("#dl-clear")){if(!confirm("Delete all the imported Peninsula deals?"))return;try{dlShow(await api("admin/deals/clear",{}))}catch(x){toast(x.message)}return}
+  const go=e.target.closest("#dl-go");if(!go||!dlImport)return;const C=dlImport;if(C.map.price===undefined){toast("Choose the price column");return}
+  const recs=C.rows.slice(C.head+1).map(r=>{const o={};for(const[k,i]of Object.entries(C.map))o[k]=String(r[i]??"").trim();o.project=r.join(" ");return o});
+  go.disabled=true;let done=0,skipped=0,res;try{for(let k=0;k<recs.length;k+=1000){$("#dl-prog").textContent=`Importing ${fmt(Math.min(k+1000,recs.length))} of ${fmt(recs.length)}…`;
+      res=await api("admin/deals/import",{rows:recs.slice(k,k+1000),replace:C.mode==="replace"&&k===0,last:k+1000>=recs.length,file:C.file,kind:$("#dl-kind").value,sqm:$("#dl-sqm").checked});done+=res.imported;skipped+=res.skipped}
+    dlShow(res);dlImport=null;$("#dl-map").hidden=true;toast(`Imported ${fmt(done)} Peninsula deals${skipped?` (${fmt(skipped)} other rows skipped)`:""}`)}
+  catch(x){toast(x.message);go.disabled=false}});
 
 /* ---------------- Start-up ---------------- */
 function startApp(){if(!SRV)setRole(isAdmin?"admin":"team");updateAcct();const ch=$("#userchip");

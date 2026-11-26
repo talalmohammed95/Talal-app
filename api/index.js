@@ -9,6 +9,7 @@ import { SETTINGS } from "../lib/seed.js";
 import Anthropic from "@anthropic-ai/sdk";
 import { assist, assistOffline, aiEnabled } from "../lib/assistant.js";
 import { importContacts, contactStats, searchContacts, claimWarning } from "../lib/contacts.js";
+import { importDeals, dealStats } from "../lib/deals.js";
 
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
 const COOKIE = "orla_session";
@@ -112,7 +113,7 @@ function forRole(data, user) {
   delete d.plan; d.planOnRequest = true;
   return hideFloor(d);
 }
-const PUBLIC_FIELDS = ["b", "beds", "deal", "title", "price", "rent", "size", "floor", "view", "furn", "baths", "status", "avail", "hl", "photos", "plan", "balcony", "cheques"];
+const PUBLIC_FIELDS = ["b", "beds", "layout", "deal", "title", "price", "rent", "size", "floor", "view", "furn", "baths", "status", "avail", "hl", "photos", "plan", "balcony", "cheques"];
 const forPublic = data => hideFloor(Object.fromEntries(PUBLIC_FIELDS.filter(k => data[k] !== undefined && k !== "plan").map(k => [k, data[k]])));
 
 async function currentUser(req) {
@@ -207,7 +208,7 @@ async function teamStats() {
     else if (on.off) { a.offMarket++; status = "off"; }
     else if (n) { a.partly++; status = "partly"; }
     const d = r.data, num = v => Number(String(v ?? "").replace(/[^0-9.]/g, "")) || null;
-    a.units.push({ b: +d.b || null, tower: ["A", "B"].includes(d.tower) ? d.tower : null, beds: d.beds === undefined || d.beds === "" ? null : +d.beds, size: num(d.size), floor: str(d.floor, 40), view: str(d.view, 80), deal: d.deal,
+    a.units.push({ b: +d.b || null, tower: ["A", "B"].includes(d.tower) ? d.tower : null, layout: d.layout || null, beds: d.beds === undefined || d.beds === "" ? null : +d.beds, size: num(d.size), floor: str(d.floor, 40), view: str(d.view, 80), deal: d.deal,
       price: d.deal === "rent" ? null : num(d.price), rent: d.deal === "rent" ? num(d.rent ?? d.price) : d.deal === "both" ? num(d.rent) : null, status,
       on: goal.platforms.filter(p => on[p.k]).map(p => p.k) });
     for (const p of goal.platforms) if (on[p.k]) a.platforms[p.k] = (a.platforms[p.k] || 0) + 1;
@@ -223,14 +224,15 @@ const SHARE_STATUS = { Ready: "Ready", Vacant: "Ready · vacant", Tenanted: "Ten
 async function shareListing(listingId, email) {
   const { rows: [l] } = await q("select l.data, u.agent_key from listings l join users u on u.id = l.user_id where l.id = $1", [listingId]);
   if (!l || !l.data.sharedOffer) return;
-  const d = l.data, beds = Math.max(0, Math.min(3, parseInt(d.beds, 10) || 0)), price = Number(d.price) || null;
+  const d = l.data, beds = Math.max(0, Math.min(4, parseInt(d.beds, 10) || 0)), price = Number(d.price) || null;
+  const LAYOUTS = { simplex: "simplex", duplex: "duplex", loft: "duplex loft", semipenthouse: "semi-penthouse" }, layout = LAYOUTS[d.layout] ? d.layout : undefined;
   const offer = {
     b: Math.max(1, Math.min(5, parseInt(d.b, 10) || 3)), beds, deal: d.deal === "rent" ? "rent" : "sale",
-    title: `${["Studio", "1 bed", "2 bed", "3 bed"][beds]}, ${str(d.floor, 40)}${/floor/i.test(d.floor || "") ? "" : " floor"}`,
+    title: `${["Studio", "1 bed", "2 bed", "3 bed", "4 bed"][beds]}${layout ? " " + LAYOUTS[layout] : ""}, ${str(d.floor, 40)}${/floor/i.test(d.floor || "") ? "" : " floor"}`, layout,
     price: d.deal === "rent" ? null : price, rent: d.deal === "rent" ? price : null, size: Number(d.size) || null,
     floor: str(d.floor, 40), view: str(d.view, 80) || "On request", furn: str(d.furn, 40) || "—", baths: "—",
     status: SHARE_STATUS[d.status] || "Ready", avail: "Available", agent: str(d.agent, 40) || l.agent_key || "",
-    hl: str(d.shareNote, 500), teamOnly: d.shareTo !== "all", fromListing: listingId, tower: ["A", "B"].includes(d.tower) ? d.tower : undefined, src: "Shared by the listing agent"
+    hl: str(d.shareNote, 500), teamOnly: d.shareTo !== "all", fromListing: listingId, tower: +d.b === 4 && ["A", "B"].includes(d.tower) ? d.tower : undefined, src: "Shared by the listing agent"
   };
   const { rows: [prev] } = await q("select data from offers where id = $1", [d.sharedOffer]);
   await q(`insert into offers (id, data, updated_at) values ($1, $2, now())
@@ -506,6 +508,22 @@ const routes = {
         (select max(s.created_at) from sessions s where s.user_id = u.id) as last_seen
       from users u join users i on i.id = u.invited_by ${admin ? "" : "where u.invited_by = $1"} order by u.created_at desc limit 200`, admin ? [] : [c.user.id]);
     return { invites: rows };
+  },
+
+  // Registered Peninsula deals for comparisons: the admin imports a DXB Interact (or DLD) export.
+  "GET admin/deals": async c => { requireAdmin(c); return dealStats(); },
+  "POST admin/deals/import": async c => {
+    requireAdmin(c);
+    const rows = Array.isArray(c.body.rows) ? c.body.rows : [];
+    if (rows.length > 2000) fail(400, "Send at most 2,000 rows at a time.");
+    const r = await importDeals(rows, { replace: c.body.replace === true, kind: c.body.kind === "rent" ? "rent" : "sale", sqm: c.body.sqm === true, source: str(c.body.file, 60) });
+    if (c.body.last) await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `Imported Peninsula deals (${str(c.body.file, 120) || "file"})`]);
+    return { ...r, ...(c.body.last ? await dealStats() : {}) };
+  },
+  "POST admin/deals/clear": async c => {
+    requireAdmin(c);
+    await q("delete from market_deals");
+    return dealStats();
   },
 
   // Team performance: counts per agent only (no unit numbers, owners or prices). The admin and the Orla team see it.
