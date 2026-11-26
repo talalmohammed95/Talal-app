@@ -44,6 +44,10 @@ scripts/     build.mjs (Vercel build) and dev.mjs (run it on your computer)
   - Only the admin can change offers or settings, there can only be one admin, and pending or blocked accounts get no data.
 - Each device can also add a PIN lock (My listings › Login & security).
 
+## Sales offers (team only)
+
+On any home, **Sales offer** makes a one-page A4 PDF in the style of the Orla flyers: the building bar, "Prepared for" the client's name with date and reference, the main photo, price and price per sq ft, unit details, full purchase cost (or rent and payment), estimated yield and mortgage, two more photos and the floor plan, the building and its amenities, drive times, and the agent's card with the RERA QR code. Choose the agent on the offer and whether to show the floor plan, yield, the highlight and the exact floor (a floor band by default). **Share PDF** sends it straight to WhatsApp on phones; **Download PDF**, **Image** and a ready **WhatsApp message** are there too. The 3 options from "New client request" and the Shortlist make one PDF with a page per home. The PDF is made in the browser with html2canvas and jsPDF, included in `app/vendor` (MIT).
+
 ## Brochures & plans (team only)
 
 More › **Brochures & plans** is the team's library, filtered by building (P1–P5, Community) with search. It starts with the floor plans and every building's photos and renders that are in the app. Anyone on the team can add a brochure, floor plan, price list or payment plan as a file (PDF, JPG, PNG, up to 60 MB, uploaded in 2 MB parts to stay under Vercel's request limit) or as a link, and open, download or share it (on phones, Share sends the file straight to WhatsApp). Each offer has a button to its building's documents. Clients and external agents can't open it.

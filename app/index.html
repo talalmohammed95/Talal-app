@@ -699,6 +699,42 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
 .dthumb img{width:100%;height:100%;object-fit:cover}.dthumb.floorplan img{object-fit:contain;background:#fff}.dthumb.brochure{background:#1F1D1B;color:#F59A3E}.dthumb.pricelist{background:var(--good-soft);color:var(--good)}
 .dbody{display:flex;flex-direction:column;gap:4px;min-width:0}.dbody b{font:700 14.5px var(--display)}.dbody span{font-size:12.5px;color:var(--muted)}
 .dbody .actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}.dbody .btn.sm+.btn.sm{margin-left:0}
+
+#so{position:fixed;inset:0;z-index:72;background:rgba(10,9,8,.6);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:max(12px,env(safe-area-inset-top,0px)) 12px max(12px,env(safe-area-inset-bottom,0px))}
+#so[hidden]{display:none}
+.so-card{width:100%;max-width:900px;max-height:100%;overflow-y:auto;background:var(--surface);color:var(--fg);border-radius:22px;padding:clamp(16px,2.6vw,26px);box-shadow:0 30px 80px rgba(0,0,0,.35)}
+.so-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.so-head h2{margin:0;font:800 24px var(--display)}
+.so-ctl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}@media (max-width:620px){.so-ctl{grid-template-columns:minmax(0,1fr)}}
+.so-togs{grid-column:1/-1;display:flex;gap:14px;flex-wrap:wrap}
+.so-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;position:sticky;top:-26px;background:var(--surface);padding:8px 0;z-index:2}
+.so-prev{display:flex;flex-direction:column;align-items:center;gap:16px;background:var(--sunk);border-radius:16px;padding:14px 2px}
+.so-scale{overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.18);border-radius:4px;background:#fff}.so-scale .so-page{transform-origin:top left}
+#so-stage{position:fixed;left:-12000px;top:0;width:794px;pointer-events:none}
+.so-page{width:794px;height:1123px;box-sizing:border-box;background:#fff;color:#1F1D1B;font-family:Montserrat,Inter,Arial,sans-serif;display:flex;flex-direction:column;overflow:hidden;text-align:left}
+.so-top{height:52px;background:#F28C28;display:flex;align-items:center;justify-content:space-between;padding:0 36px;flex:none}
+.so-top span{font-size:13px;font-weight:700;letter-spacing:3px;color:#1F1D1B}.so-top em{font-style:normal;font-size:12.5px;font-weight:800;letter-spacing:2px;color:#fff;background:#1F1D1B;padding:7px 13px;border-radius:4px}
+.so-for{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 36px;background:#FFF6EC;font-size:14px;color:#1F1D1B;flex:none}.so-for b{font-weight:800}.so-for span{font-size:11.5px;color:#6B655E}
+.so-hero{width:794px;height:198px;object-fit:cover;display:block;flex:none}
+.so-body{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;padding:12px 36px 14px}
+.so-title{display:flex;justify-content:space-between;align-items:flex-end;gap:20px}.so-k{font-size:11px;font-weight:700;letter-spacing:2px;color:#5A5550}
+.so-title h1{margin:2px 0 0;font-size:28px;font-weight:800;line-height:1.05;color:#1F1D1B}.so-title p{margin:3px 0 0;font-size:12.5px;color:#5A5550}
+.so-price{text-align:right;white-space:nowrap}.so-price b{display:block;font-size:31px;font-weight:800;color:#C2410C;line-height:1}.so-price span{font-size:12.5px;font-weight:600;color:#5A5550}
+.so-hl{margin:0;font-size:12px;line-height:1.4;color:#1F1D1B;background:#F7F4EF;border-left:3px solid #F28C28;padding:7px 10px;border-radius:4px}
+.so-cols{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.so-page h3{margin:0 0 4px;font-size:12.5px;font-weight:800;letter-spacing:1px;color:#C2410C}
+.so-row{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid #E7E2DA;font-size:12px}.so-row span{color:#5A5550}.so-row b{font-weight:600;text-align:right}
+.so-row.tot{border-bottom:0;border-top:2px solid #1F1D1B;font-size:13px}.so-row.tot span{color:#1F1D1B;font-weight:700}.so-row.tot b{font-weight:800}
+.so-money{background:#FFF6EC;border-radius:8px;padding:10px 14px}.so-money h3+.so-row{margin-top:0}.so-money h3:not(:first-child){margin-top:8px}
+.so-inv{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}.so-inv div{background:#fff;border-radius:6px;padding:6px 8px}.so-inv b{display:block;font-size:13.5px;font-weight:800;color:#1F1D1B}.so-inv span{font-size:10px;color:#5A5550}
+.so-pics{display:flex;gap:10px}.so-pics figure{margin:0;flex:1;min-width:0}.so-pics img{width:100%;height:96px;object-fit:cover;border-radius:6px;display:block}.so-pics .plan img{object-fit:contain;background:#fff;border:1px solid #E7E2DA}
+.so-pics figcaption{font-size:10.5px;color:#5A5550;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.so-bld p{margin:0 0 6px;font-size:12px;line-height:1.45}.so-chips{display:flex;flex-wrap:wrap;gap:5px}.so-chips span{font-size:10.5px;padding:3px 9px;border:1px solid #F2B880;border-radius:999px;background:#FFF6EC}
+.so-dist{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;border-top:1px solid #E7E2DA;padding-top:6px}.so-dist b{display:block;font-size:15px;font-weight:700;color:#C2410C}.so-dist span{font-size:10.5px;color:#5A5550}
+.so-agent{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:14px;background:#1F1D1B;color:#fff;border-radius:8px;padding:9px 16px;flex:none}
+.so-who{display:flex;align-items:center;gap:12px}.so-who img{width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid #F28C28}.so-who b{display:block;font-size:14.5px}.so-who span{display:block;font-size:11px;color:#D9D4CC}
+.so-call{display:flex;align-items:center;gap:12px;text-align:right}.so-call b{display:block;font-size:15px;color:#F28C28}.so-call span{font-size:11px;color:#D9D4CC}.so-call img{width:58px;height:58px;background:#fff;border-radius:4px}
+.so-page.t1 .so-hl{display:none}.so-page.t2 .so-inv{display:none}.so-page.t3 .so-pics img{height:70px}.so-page.t3 .so-chips span:nth-child(n+5){display:none}
+.so-note{margin:0;font-size:9.5px;line-height:1.35;color:#6B655E}
 </style>
 <script src="/config.js"></script>
 </head>
@@ -820,7 +856,7 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
       </div>
       <div class="frow" style="align-items:flex-end"><div class="field" style="flex:1;min-width:200px"><label for="short-client">For client</label><select id="short-client"><option value="">No client selected</option></select></div><button class="btn" id="short-save">Save shortlist to client</button></div>
       <div class="list" id="shortlist"></div>
-      <div class="actions"><button class="btn primary" id="present-short">Present to client</button><button class="btn" id="copy-short">Copy message for client</button><button class="btn" id="clear-short">Clear shortlist</button></div>
+      <div class="actions"><button class="btn primary team-only" id="so-short">Sales offer (PDF)</button><button class="btn" id="present-short">Present to client</button><button class="btn" id="copy-short">Copy message for client</button><button class="btn" id="clear-short">Clear shortlist</button></div>
       <textarea class="copybox" id="short-text" readonly aria-label="Shortlist message"></textarea>
     </div>
   </section>
@@ -1310,7 +1346,8 @@ function renderDetail(){
       ${galleryHTML(o)}
       ${isTeam()?"":askBox(o)}
       <div class="actions">
-        <button class="btn primary" id="d-star">${ic("star")}${starred.has(o.id)?"On shortlist":"Add to shortlist"}</button>
+        ${isTeam()&&SRV?`<button class="btn primary" id="d-so">${ic("file")}Sales offer</button>`:""}
+        <button class="btn${isTeam()&&SRV?"":" primary"}" id="d-star">${ic("star")}${starred.has(o.id)?"On shortlist":"Add to shortlist"}</button>
         <button class="btn" id="d-present">${ic("monitor")}${ROLE==="client"?"View full screen":"Present to client"}</button>
         ${ROLE==="client"?"":`<button class="btn" id="d-copy">${ic("copy")}Copy offer text</button>
         <a class="btn" href="${wa}" target="_blank" rel="noopener">${ic("chat")}Share on WhatsApp</a>`}
@@ -1346,6 +1383,7 @@ function renderDetail(){
     if(await saveOffer(n,`Updated ${BLD[n.b]} · ${n.title}: ${n.avail}${n.deal!=="rent"?", "+aed(n.price):""}${n.deal!=="sale"?", rent "+aed(n.rent):""}`))toast("Offer updated for everyone")};
   const ef=$("#e-full");if(ef)ef.onclick=()=>{show("admin");openOfferForm(o.id)};
   const dc=$("#d-calc");if(dc)dc.onclick=()=>{loadCalc(o.id);show("calc")};
+  const dso=$("#d-so");if(dso)dso.onclick=()=>openSalesOffer([o.id]);
   const de=$("#d-edit");if(de)de.onclick=()=>editListing(o.id);
   const dd=$("#d-del");if(dd)dd.onclick=async()=>{if(dd.dataset.armed){if(SRV){try{await api("data/listings/delete",{id:o.id});await loadListings()}catch(x){toast(x.message);return}}else{mine=mine.filter(m=>m.id!==o.id);persist()}starred.delete(o.id);saveStar();renderAll();toast("Listing deleted")}else{dd.dataset.armed=1;dd.textContent="Tap again to delete"}};
 }
@@ -1585,6 +1623,7 @@ function renderPresent(){
   $("#p-close").onclick=closePresent;$("#p-prev").onclick=()=>stepPresent(-1);$("#p-next").onclick=()=>stepPresent(1);
 }
 (()=>{let x0=null;const P=$("#present");P.addEventListener("touchstart",e=>{x0=e.touches[0].clientX},{passive:true});P.addEventListener("touchend",e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>70)stepPresent(dx<0?1:-1)},{passive:true})})();
+$("#so-short").onclick=()=>openSalesOffer(all().filter(o=>starred.has(o.id)).map(o=>o.id));
 $("#present-short").onclick=()=>openPresent(all().filter(o=>starred.has(o.id)).map(o=>o.id));
 
 /* ---------------- Structured market data (DLD-registered deals, Aug–Nov 2026, from the flyers) ---------------- */
@@ -2317,6 +2356,7 @@ function drawWizard(){const c=$("#wiz .wzcard");if(wz.step>=WQ.length){drawResul
 function wizClick(e){if(e.target.id==="wiz"){closeWizard();return}
   const w=e.target.closest("[data-wz]");if(w){const a=w.dataset.wz;if(a==="close")closeWizard();if(a==="back"){wz.step=Math.max(0,wz.step-1);drawWizard()}if(a==="again"){wz={step:0,a:{}};drawWizard()}if(a==="edit"){wz.step=0;drawWizard()}
     if(a==="present"){const ids=wz.r.map(x=>x.o.id);closeWizard();openPresent(ids,ids[0])}
+    if(a==="so"){const ids=wz.r.map(x=>x.o.id),nm=wz.client;closeWizard();openSalesOffer(ids,nm)}
     if(a==="star"){wz.r.forEach(x=>starred.add(x.o.id));saveStar();renderList();renderShort();toast("Added to your shortlist")}
     if(a==="copy")copy(wizText());
     return}
@@ -2367,7 +2407,7 @@ function drawResults(c){const a=wz.a,R=pick3(a);wz.r=R.list;const r=R.list;
         <div class="wm">${metric(x)}</div><p class="why">${esc(whyLine(x,r,a))}</p>
         <button class="btn" data-view-id="${esc(o.id)}">See photos and details${ic("arrowr")}</button></div></article>`}).join("")}</div>
     ${isTeam()||ROLE==="broker"?`<div class="field wcl"><label for="wz-name">Client's name, for the message (optional)</label><input id="wz-name" value="${esc(wz.client||"")}" placeholder="e.g. Sara"></div>`:""}
-    <div class="wzfoot wrap"><div class="actions"><button class="btn primary" data-wz="present">${ic("monitor")}Present these</button><a class="btn" id="wz-wa" href="#" target="_blank" rel="noopener">${ic("chat")}${ROLE==="client"?(topAgent()?"Ask "+esc(topAgent().name.split(" ")[0])+" ★ on WhatsApp":"Ask about these on WhatsApp"):"Send on WhatsApp"}</a><button class="btn" data-wz="copy">${ic("copy")}Copy text</button><button class="btn" data-wz="star">${ic("star")}Add to shortlist</button></div><button class="btn ghost" data-wz="again">Start again</button></div>`;
+    <div class="wzfoot wrap"><div class="actions">${isTeam()&&SRV?`<button class="btn primary" data-wz="so">${ic("file")}Sales offer (PDF)</button>`:""}<button class="btn${isTeam()&&SRV?"":" primary"}" data-wz="present">${ic("monitor")}Present these</button><a class="btn" id="wz-wa" href="#" target="_blank" rel="noopener">${ic("chat")}${ROLE==="client"?(topAgent()?"Ask "+esc(topAgent().name.split(" ")[0])+" ★ on WhatsApp":"Ask about these on WhatsApp"):"Send on WhatsApp"}</a><button class="btn" data-wz="copy">${ic("copy")}Copy text</button><button class="btn" data-wz="star">${ic("star")}Add to shortlist</button></div><button class="btn ghost" data-wz="again">Start again</button></div>`;
   const nm=c.querySelector("#wz-name");const upd=()=>{wz.client=nm?nm.value.trim():"";const ph=ROLE==="client"?String((topAgent()&&topAgent().phone)||agentOf(r[0].o).phone||"").replace(/[^0-9]/g,""):"";c.querySelector("#wz-wa").href="https://wa.me/"+ph+"?text="+encodeURIComponent(wizText())};
   if(nm)nm.addEventListener("input",upd);upd();c.scrollTop=0}
 function wizText(){const a=wz.a,r=wz.r||[],nm=wz.client;
@@ -2688,6 +2728,79 @@ async function addDoc(){if(docBusy)return;const file=$("#doc-file").files[0],url
     pr.textContent="";toast("Added to the library");await loadDocs();renderDocs()}
   catch(x){pr.textContent="";toast(x.message)}finally{docBusy=false;const a=$("#doc-add");if(a)a.disabled=false}}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-docs-bld]");if(!b)return;docF.b=b.dataset.docsBld;show("docs")});
+
+/* ---------------- Sales offer: a one-page PDF per home, with the client's name ---------------- */
+const BLDFULL={1:"Peninsula One",2:"Peninsula Two",3:"Peninsula Three",4:"Peninsula Four – The Plaza",5:"Peninsula Five – Signature Collection"};
+const soFloor=f=>{const m=String(f||"").match(/\d{1,2}/);if(!m||/low|mid|high|podium/i.test(f))return String(f||"On request").replace(/\s*·.*$/,"");const n=+m[0];return n<=10?"Low floor":n<=25?"Mid floor":"High floor"};
+let soState=null;
+function loadScriptOnce(src){return new Promise((ok,no)=>{if(document.querySelector(`script[src="${src}"]`)){const w=()=>window.html2canvas&&window.jspdf?ok():setTimeout(w,50);return w()}const s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=()=>no(new Error("The PDF maker couldn't load. Check your connection."));document.head.appendChild(s)})}
+async function soLibs(){await loadScriptOnce("/vendor/html2canvas-1.4.1.min.js");await loadScriptOnce("/vendor/jspdf-2.5.1.umd.min.js")}
+function soPage(o,opt){const x=o.x||{},a=AGENTS[opt.agent]||agentOf(o),photos=photosOf(o),plan=opt.plan?planOf(o):null,sale=o.deal!=="rent";
+  const row=(k,v)=>v?`<div class="so-row"><span>${esc(k)}</span><b>${esc(v)}</b></div>`:"";
+  const fl=opt.exactFloor?String(o.floor||"On request"):soFloor(o.floor);
+  const details=row("Unit type",TYPE[o.beds]+" apartment")+row("Size",o.size?fmt(o.size)+" sq ft ("+(o.size*0.092903).toFixed(1)+" m²)":"On request")+(o.balcony?row("Balcony",o.balcony+" sq ft"):"")
+    +row("Floor",fl)+row("View",o.view&&o.view!=="On request"?o.view:"On request")+row("Furnishing",o.furn&&o.furn!=="—"?o.furn:"On request")+(o.baths&&o.baths!=="—"?row("Bathrooms",String(o.baths)):"")+row("Status",o.status||"Ready")+(o.parking?row("Parking",o.parking):"");
+  let money="";
+  if(sale){const c=costs(o.price);money=`<h3>TOTAL PURCHASE COST</h3>${row("Price",aed(o.price))}${row(dldLabel(),aed(c.dld))}${row("Trustee office fee",aed(FEES.trustee))}${row("Admin fee",aed(FEES.admin))}<div class="so-row tot"><span>Total cost</span><b>${aed(c.total)}</b></div>
+    ${opt.invest&&x.gy?`<div class="so-inv"><div><b>${(x.gy*100).toFixed(1)}%</b><span>est. gross yield</span></div><div><b>${aed(x.mort)}</b><span>mortgage / month*</span></div>${x.rentFor?`<div><b>${short(x.rentFor)}</b><span>est. rent / year</span></div>`:""}</div>`:""}`}
+  if(o.deal==="both")money+=`<div class="so-row tot" style="border-top:1px solid #E7E2DA;margin-top:6px"><span>Or rent</span><b>${aed(o.rent)} / year</b></div>`;
+  else if(o.deal==="rent"){const dep=parseFloat(o.deposit||"5")/100;money+=`<h3>RENT AND PAYMENT</h3>${row("Annual rent",aed(o.rent))}${row("Monthly equivalent",aed(o.rent/12))}${row("Cheques",o.cheques||"On request")}${row("Security deposit ("+(dep*100)+"%)",aed(o.rent*dep))}`}
+  const pics=photos.slice(1,plan?3:4);
+  const fig=(k,c,cls="")=>`<figure class="${cls}"><img src="${esc(imgSrc(k))}" crossorigin="anonymous" alt=""><figcaption>${esc(c)}</figcaption></figure>`;
+  const date=new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"});
+  return `<div class="so-page">
+    <div class="so-top"><span>${esc(BLDFULL[o.b].toUpperCase())} · BUSINESS BAY</span><em>${o.deal==="rent"?"FOR RENT":o.deal==="both"?"FOR SALE OR RENT":"FOR SALE"}</em></div>
+    ${opt.client?`<div class="so-for"><span class="pf">Prepared for <b>${esc(opt.client)}</b></span><span>${esc(date)} · Ref ${esc(o.id.toUpperCase())}</span></div>`:`<div class="so-for"><span>${esc(date)} · Ref ${esc(o.id.toUpperCase())}</span></div>`}
+    <img class="so-hero" src="${esc(imgSrc(photos[0].k))}" crossorigin="anonymous" alt="">
+    <div class="so-body">
+      <div class="so-title"><div><span class="so-k">${esc(o.hlTitle||"SPECIAL "+(o.deal==="rent"?"RENTAL":"SALE")+" OFFER")}</span><h1>${esc(TYPE[o.beds]+" Apartment")}</h1><p>${esc(o.title)}</p></div>
+        <div class="so-price"><b>${esc(sale?aed(o.price):aed(o.rent))}</b><span>${sale?(o.size?"AED "+fmt(o.price/o.size)+" / sq ft":""):"per year"}${o.deal==="both"?" · or rent "+esc(aed(o.rent))+" / yr":""}</span></div></div>
+      ${o.hl&&opt.hl?`<p class="so-hl">${esc(o.hl)}</p>`:""}
+      <div class="so-cols"><div><h3>UNIT DETAILS</h3>${details}</div><div class="so-money">${money}</div></div>
+      ${pics.length||plan?`<div class="so-pics">${pics.map(p=>fig(p.k,p.c||KIND[p.t])).join("")}${plan?fig(plan.k,"Floor plan","plan"):""}</div>`:""}
+      <div class="so-bld"><h3>THE BUILDING</h3><p>${esc(TOWER[o.b])}</p><div class="so-chips">${AMEN[o.b].map(t=>`<span>${esc(t)}</span>`).join("")}</div></div>
+      <div class="so-dist"><div><b>7 min</b><span>Dubai Mall / Burj Khalifa</span></div><div><b>7 min</b><span>Business Bay Metro</span></div><div><b>12 min</b><span>DIFC</span></div><div><b>16 min</b><span>DXB Airport</span></div></div>
+      <div class="so-agent"><div class="so-who"><img src="${esc(agentPhotoOf(opt.agent||o.agent,a.name))}" crossorigin="anonymous" alt=""><div><b>${esc(a.name)}</b><span>Orla Properties L.L.C</span><span>Licensed broker · BRN 41837</span></div></div>
+        <div class="so-call"><div><b>${esc(a.phone||"")}</b><span>Call or WhatsApp</span></div><img src="/img/qr-brn-41837.png" alt=""></div></div>
+      <p class="so-note">${sale&&opt.invest?"*Mortgage at "+MORT.down*100+"% down, "+(MORT.rate*100).toFixed(1)+"%, "+MORT.years+" years. ":""}Images are developer renders for illustration${photos.some(p=>p.t==="p")?", except photos of the home":""}. Market figures: DLD-registered deals, ${esc(MKT.asOf||"Aug–Nov 2026")}. Prices and availability subject to confirmation.</p>
+    </div></div>`}
+function openSalesOffer(ids,client){ids=ids.filter(id=>all().some(o=>o.id===id));if(!ids.length){toast("Nothing to put in the offer");return}
+  const me=myKey(),first=all().find(o=>o.id===ids[0]);
+  soState={ids,opt:{client:client||"",agent:me&&AGENTS[me]?me:first.agent,exactFloor:false,plan:true,invest:true,hl:true}};
+  let el=$("#so");if(!el){document.body.insertAdjacentHTML("beforeend",'<div id="so" role="dialog" aria-modal="true" aria-label="Sales offer"><div class="so-card"></div></div><div id="so-stage" aria-hidden="true"></div>');el=$("#so");
+    el.addEventListener("click",soClick);el.addEventListener("input",soInput);el.addEventListener("change",soInput)}
+  el.hidden=false;document.body.classList.add("lbopen");soDraw(true)}
+function soDraw(full){const S=soState,c=$("#so .so-card"),offers=S.ids.map(id=>all().find(o=>o.id===id)).filter(Boolean);
+  if(full)c.innerHTML=`<div class="so-head"><div><p class="kick">Sales offer · ${offers.length} page${offers.length===1?"":"s"}</p><h2>Ready to send</h2></div><button class="iconbtn" data-so="close" aria-label="Close">${ic("x")}</button></div>
+    <div class="so-ctl"><div class="field"><label for="so-client">Client's name</label><input id="so-client" placeholder="e.g. Mr Ahmed" value="${esc(S.opt.client)}"></div>
+      <div class="field"><label for="so-agent">Agent on the offer</label><select id="so-agent">${Object.entries(AGENTS).map(([k,a])=>`<option value="${esc(k)}"${k===S.opt.agent?" selected":""}>${esc(a.name)}</option>`).join("")}</select></div>
+      <div class="so-togs"><label class="tog"><input type="checkbox" id="so-plan"${S.opt.plan?" checked":""}> Floor plan</label><label class="tog"><input type="checkbox" id="so-invest"${S.opt.invest?" checked":""}> Yield &amp; mortgage</label><label class="tog"><input type="checkbox" id="so-hl"${S.opt.hl?" checked":""}> Highlight text</label><label class="tog"><input type="checkbox" id="so-floor"${S.opt.exactFloor?" checked":""}> Exact floor</label></div></div>
+    <div class="so-acts"><button class="btn primary" data-so="share">${ic("share")}Share PDF</button><button class="btn" data-so="pdf">${ic("download")}Download PDF</button><button class="btn" data-so="img">${ic("download")}Image</button><a class="btn" data-so="wa" target="_blank" rel="noopener">${ic("chat")}WhatsApp message</a><span class="src" id="so-status"></span></div>
+    <div class="so-prev" id="so-prev"></div>`;
+  $("#so-prev").innerHTML=offers.map(o=>`<div class="so-scale">${soPage(o,S.opt)}</div>`).join("");
+  const wa=$('#so [data-so="wa"]');const nm=S.opt.client?S.opt.client:"",a=AGENTS[S.opt.agent]||{};
+  wa.href="https://wa.me/?text="+encodeURIComponent(`${nm?"Dear "+nm+",\n\n":""}Please find the sales offer${offers.length>1?"s":""} for ${offers.map(o=>bedsWord(o.beds).toLowerCase()+" in "+BLD[o.b]).join(", ")} at the Peninsula, Business Bay.\n\n${offers.map(o=>"• "+bedsWord(o.beds)+", "+BLD[o.b]+": "+(o.deal==="rent"?aed(o.rent)+" / year":aed(o.price))+(o.size?" · "+fmt(o.size)+" sq ft":"")).join("\n")}\n\nI'm happy to arrange a viewing at your convenience.\n\n${a.name||""}\nOrla Properties · BRN 41837\n${a.phone||""}`);
+  soFit()}
+function soTighten(pg){const body=pg.querySelector(".so-body");const steps=["t1","t2","t3"];for(const s of steps){if(body.scrollHeight<=body.clientHeight+1)break;pg.classList.add(s)}}
+function soFit(){const p=$("#so-prev");if(!p)return;p.querySelectorAll(".so-page").forEach(soTighten);const w=p.clientWidth-4,s=Math.min(1,w/794);p.querySelectorAll(".so-scale").forEach(x=>{x.style.width=794*s+"px";x.style.height=1123*s+"px";x.firstElementChild.style.transform=`scale(${s})`})}
+addEventListener("resize",()=>{if($("#so")&&!$("#so").hidden)soFit()});
+function soInput(e){const S=soState,t=e.target;if(t.id==="so-client")S.opt.client=t.value.trim();if(t.id==="so-agent")S.opt.agent=t.value;if(t.id==="so-plan")S.opt.plan=t.checked;if(t.id==="so-invest")S.opt.invest=t.checked;if(t.id==="so-hl")S.opt.hl=t.checked;if(t.id==="so-floor")S.opt.exactFloor=t.checked;
+  clearTimeout(soInput.t);soInput.t=setTimeout(()=>soDraw(false),t.id==="so-client"?250:0)}
+function closeSO(){const el=$("#so");if(el)el.hidden=true;document.body.classList.remove("lbopen")}
+const soFile=(ext)=>{const offers=soState.ids.map(id=>all().find(o=>o.id===id)).filter(Boolean),o=offers[0];return ("Peninsula-"+(offers.length>1?offers.length+"-homes":BLD[o.b].replace("Peninsula ","")+"-"+bedsWord(o.beds).replace(" ","-"))+(soState.opt.client?"-for-"+soState.opt.client:"")).replace(/[^\w-]+/g,"-").replace(/-+/g,"-")+"."+ext};
+async function soCanvases(){await soLibs();const S=soState,offers=S.ids.map(id=>all().find(o=>o.id===id)).filter(Boolean),stage=$("#so-stage"),out=[];
+  for(const o of offers){stage.innerHTML=soPage(o,S.opt);const pg=stage.firstElementChild;soTighten(pg);
+    await Promise.all([...pg.querySelectorAll("img")].map(i=>i.complete&&i.naturalWidth?0:new Promise(r=>{i.onload=i.onerror=r})));try{await document.fonts.ready}catch(e){}
+    out.push(await html2canvas(pg,{scale:2,useCORS:true,backgroundColor:"#ffffff",logging:false,width:794,height:1123,windowWidth:1200}))}
+  stage.innerHTML="";return out}
+async function soPdfBlob(){const cs=await soCanvases(),{jsPDF}=window.jspdf,pdf=new jsPDF({unit:"px",format:[794,1123],orientation:"portrait",hotfixes:["px_scaling"]});
+  cs.forEach((c,i)=>{if(i)pdf.addPage([794,1123],"portrait");pdf.addImage(c.toDataURL("image/jpeg",0.9),"JPEG",0,0,794,1123)});return pdf.output("blob")}
+async function soClick(e){if(e.target.id==="so"){closeSO();return}const b=e.target.closest("[data-so]");if(!b)return;const a=b.dataset.so;if(a==="close"){closeSO();return}if(a==="wa")return;
+  const st=$("#so-status");b.disabled=true;st.textContent="Making the PDF…";
+  try{if(a==="img"){const cs=await soCanvases();for(const [i,c] of cs.entries()){const blob=await new Promise(r=>c.toBlob(r,"image/jpeg",0.92));await shareFile(blob,soFile("jpg").replace(".jpg",cs.length>1?"-"+(i+1)+".jpg":".jpg"),"Sales offer")}}
+    else{const blob=await soPdfBlob();if(a==="share")await shareFile(blob,soFile("pdf"),"Sales offer");else{const l=document.createElement("a");l.href=URL.createObjectURL(blob);l.download=soFile("pdf");document.body.appendChild(l);l.click();setTimeout(()=>{URL.revokeObjectURL(l.href);l.remove()},2000)}}
+    st.textContent="";logAct&&isAdmin&&logAct("Made a sales offer"+(soState.opt.client?" for "+soState.opt.client:""))}
+  catch(x){st.textContent="";toast(x.message||"The PDF couldn't be made")}finally{b.disabled=false}}
 
 /* ---------------- Start-up ---------------- */
 function startApp(){if(!SRV)setRole(isAdmin?"admin":"team");updateAcct();const ch=$("#userchip");
