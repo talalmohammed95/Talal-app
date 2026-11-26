@@ -10,7 +10,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { assist, assistOffline, aiEnabled } from "../lib/assistant.js";
 import { importContacts, contactStats, searchContacts, claimWarning } from "../lib/contacts.js";
 import { importDeals, dealStats } from "../lib/deals.js";
-import { runWeekly, buildWeekly, weeklyText, runDaily } from "../lib/weekly.js";
+import { runWeekly, buildWeekly, weeklyText, runDaily, greet } from "../lib/weekly.js";
 
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
 const COOKIE = "orla_session";
@@ -654,8 +654,8 @@ const routes = {
     if (!seesAll(c.user)) fail(403, "Only the CEO and the admin see the weekly summary.", "not_allowed");
     const { rows } = await q("select week, data, created_at from weekly_reports order by week desc limit 8");
     const live = new URL(c.req.url, "http://localhost").searchParams.get("live") === "1" ? await buildWeekly(teamStats) : null;
-    const reports = rows.map(r => ({ week: r.week, data: r.data, text: weeklyText(r.data, c.user.role === "ceo" ? c.user.name : ""), at: r.created_at }));
-    return { reports, live: live && { data: live, text: weeklyText(live, c.user.role === "ceo" ? c.user.name : "") } };
+    const reports = rows.map(r => ({ week: r.week, data: r.data, text: weeklyText(r.data, c.user.role === "ceo" ? greet(c.user) : ""), at: r.created_at }));
+    return { reports, live: live && { data: live, text: weeklyText(live, c.user.role === "ceo" ? greet(c.user) : "") } };
   },
   "POST team/weekly/send": async c => {
     requireAdmin(c);

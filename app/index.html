@@ -1662,7 +1662,7 @@ function topAgent(){if(!perf)return topPub?{key:topPub.key,name:topPub.name,phon
 const topStar=k=>{const t=topAgent();return t&&t.key===k?'<span class="topstar" title="Top achiever">★</span>':""};
 function welcomeTop(){const t=topAgent();if(!t||t.key!==myKey())return;try{if(sessionStorage.getItem("orla.topwelcome"))return;sessionStorage.setItem("orla.topwelcome","1")}catch(e){}
   setTimeout(()=>toast("★ You're #1 on the team, "+t.name.split(" ")[0]+"!"),900)}
-function teamHero(){const h=new Date().getHours(),first=((meInfo&&meInfo.name)||"").split(" ")[0],k=myKey();
+function teamHero(){const h=new Date().getHours(),first=hello(),k=myKey();
   const me=perf&&perf.agents.find(a=>a.key===k),g=perf?perf.goal:goalOf(),ag=perf?[...perf.agents].sort((a,b)=>b.online-a.online||b.listings-a.listings):[],rank=me?ag.indexOf(me)+1:null;
   const days=Math.max(0,Math.ceil((Date.parse(g.deadline+"T23:59:59")-Date.now())/864e5)),units=me?me.listings:OFFERS.filter(o=>k&&o.agent===k).length+mine.length;
   const stat=(v,l)=>`<div><b class="num">${v}</b><span>${l}</span></div>`;
@@ -2107,10 +2107,10 @@ const ic=(n,cls="")=>`<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="tr
 const PAGES={dash:["home","Dashboard",""],offers:["building","Offers","Browse, filter, compare and present every unit"],analysis:["chart","Analysis","How your offers compare with each other and the market"],
   reports:["file","Reports","Portfolio report and Excel-ready downloads"],shortlist:["star","Client shortlist","Offers you've starred, ready to present or send"],clients:["users","Clients","Buyers, investors and tenants you're working with"],
   calc:["calc","Deal calculator","Purchase costs, yield, resale return and mortgage"],market:["trend","Market data","Registered sales and rents in the Peninsula"],docs:["folder","Brochures & plans","Brochures, floor plans, price lists and photos for every building. Open, download or share them on WhatsApp."],team:["target","Team performance","Our goal: 15 listings each, online on every platform, by the end of the year. Only the Orla team sees this."],review:["tasks","Agent review","Each agent's performance, how they register their units, and the tasks you give them. Only the admin and the CEO see this page."],train:["spark","AI training","Teach the AI assistant: rules to follow, knowledge from experience, and quick questions for the team. The CEO and the admin can edit; the whole team benefits."],chat:["chat2","Team chat","The Orla team and the CEO, in one place. Only the team sees it."],assist:["spark","AI assistant","Type a client's phone number or a unit number: see the person and the unit, make a sales offer, and get the listing written for Bayut and Property Finder."],mine:["list","My units","Your own units with the owners' details. Only you and the admin can see them."],admin:["shield","Admin","Users, offers, market data, fees and agents"]};
-function setPageHead(v){const p=PAGES[v]||PAGES.dash,h=new Date().getHours(),first=((meInfo&&meInfo.name)||"").split(" ")[0];
+function setPageHead(v){const p=PAGES[v]||PAGES.dash,h=new Date().getHours(),first=hello();
   const sub=v==="dash"?(first?`Good ${h<12?"morning":h<18?"afternoon":"evening"}, ${first}. Here's your portfolio today.`:"Your portfolio at a glance"):p[2];
   $("#pagehead").innerHTML=`<div class="phi">${ic(p[0])}</div><div><h1>${esc(p[1])}</h1><p>${esc(sub)}</p></div>`}
-function updateAcct(){const n=(meInfo&&meInfo.name)||(CLOUD?"Account":"Admin");const top=isTeam()&&topAgent()&&topAgent().key===myKey();$("#acct-name").textContent=n.split(" ")[0]+(top?" ★":"");$("#acct-btn").classList.toggle("top",!!top);
+function updateAcct(){const n=(meInfo&&meInfo.name)||(CLOUD?"Account":"Admin");const top=isTeam()&&topAgent()&&topAgent().key===myKey();$("#acct-name").textContent=firstName(n,profile&&profile.role)+(top?" ★":"");$("#acct-btn").classList.toggle("top",!!top);
   $("#acct-img").src=(meInfo&&meInfo.avatarUrl)||(isCEO()||(profile&&profile.role==="ceo")?CEO_IMG:"")||(myKey()&&MEDIA.agent[myKey()]?agentPhotoOf(myKey()):"")||initialsAvatar(n);$("#menu-site").hidden=CLOUD;$("#gate-back").hidden=CLOUD}
 function closeMenus(){$("#tmore-pop").hidden=true;$("#tmore-btn").setAttribute("aria-expanded","false");$("#acct-menu").hidden=true;$("#acct-btn").setAttribute("aria-expanded","false");$("#more-sheet").hidden=true}
 $("#tmore-btn").onclick=e=>{e.stopPropagation();const p=$("#tmore-pop"),open=p.hidden;closeMenus();p.hidden=!open;$("#tmore-btn").setAttribute("aria-expanded",String(open))};
@@ -2389,6 +2389,11 @@ let ROLE="admin";
 const isTeam=()=>ROLE==="admin"||ROLE==="team"||ROLE==="ceo";
 const isCEO=()=>ROLE==="ceo";
 const CEO_IMG="/img/ceo-munir.webp",CEO_NAME="Munir Al Deraawi";
+// The CEO is always "Mr Munir".
+const isCeoName=n=>String(n||"").trim().toLowerCase()===CEO_NAME.toLowerCase();
+const fullName=(n,role)=>(role==="ceo"||isCeoName(n))&&n?"Mr "+String(n).trim():n;
+const firstName=(n,role)=>{const f=String(n||"").trim().split(" ")[0];return (role==="ceo"||isCeoName(n))&&f?"Mr "+f:f};
+const hello=()=>firstName((meInfo&&meInfo.name)||"",isCEO()||(profile&&profile.role==="ceo")?"ceo":"");
 const CEO_HIDE=["mine","clients","admin"];
 const canTrain=()=>isAdmin||isCEO();
 const ROLE_LABEL={admin:"Admin",ceo:"CEO",team:"Orla team",broker:"External agent",client:"Client"};
@@ -2443,7 +2448,7 @@ function homeCard(o,label){const c=photosOf(o)[0],p=o.deal==="rent"?short(o.rent
 
 /* ---------------- Welcome page for clients and external agents ---------------- */
 let heroT=null;
-function renderShowroom(){const A=all().filter(o=>!isDone(o)),first=((meInfo&&meInfo.name)||"").split(" ")[0];
+function renderShowroom(){const A=all().filter(o=>!isDone(o)),first=hello();
   const covers=[1,2,3,4,5].map(b=>MEDIA.bld[b].cover).map(toItem).filter(x=>x.k!=="p2-1bed-living").concat([toItem(["p3-skyline-night","The Peninsula skyline at night","r"])]);
   const from=(beds,deal)=>{const l=A.filter(o=>o.beds===beds&&(deal==="rent"?o.deal!=="sale":o.deal!=="rent")).map(o=>deal==="rent"?o.rent:o.price).filter(Boolean);return l.length?Math.min(...l):null};
   const types=[0,1,2,3].map(b=>({b,s:from(b,"sale"),r:from(b,"rent")})).filter(t=>t.s||t.r);
@@ -3036,7 +3041,7 @@ function aiCompareCard(r){const k=r.kind==="rent",i=CMP.push(r)-1,pos=r.vsAverag
 document.addEventListener("click",e=>{const b=e.target.closest("[data-cmp-copy]");if(!b)return;const[i,m]=b.dataset.cmpCopy.split(":");const r=CMP[+i];if(r)copy(cmpText(r,m==="f"))});
 function aiCardHTML(c,i,j){if(c.type==="compare")return aiCompareCard(c.r);if(c.type==="offers")return aiOffersCard(c,i,j);if(c.type==="salesoffer")return aiSalesCard(c);if(c.type==="contact")return aiContactCard(c.contact,i,j);if(c.type==="unit")return aiUnitCard(c.unit,i,j);if(c.type==="draft")return aiDraftCard(c.draft,i,j);
   if(c.type==="notfound")return `<div class="aicard"><div class="aic-h">${ic("building")}<b>Unit ${esc(c.query||"")}</b></div><p>${c.teammates&&c.teammates.length?`It's listed by a teammate (${esc(c.teammates.join(", "))}). Only they and the admin can see the owner.`:"It isn't in your units yet."}</p><div class="actions"><button class="btn sm" data-ai-new="${esc(c.query||"")}">${ic("list")}Add it as a new listing</button></div></div>`;return""}
-function aiRender(){const th=$("#ai-thread");if(!th)return;CMP=[];const first=((meInfo&&meInfo.name)||"").split(" ")[0];
+function aiRender(){const th=$("#ai-thread");if(!th)return;CMP=[];const first=hello();
   let h=`<div class="aimsg bot"><div class="aiav">${ic("spark")}</div><div class="aib"><p><b>Hi${first?" "+esc(first):""}! I'm your listing assistant.</b></p><p>Type a client's phone number or a unit number and I'll find them, with the unit details. Tell me what a client wants and I'll pick three homes (premium, middle, value) and make the sales offer. I know our homes, the market figures and Talal's decks, and I can write your Bayut and Property Finder listings.</p></div></div>`;
   h+=aiMsgs.map((m,i)=>m.role==="user"?`<div class="aimsg me"><div class="aib">${esc(m.text)}</div></div>`:`<div class="aimsg bot"><div class="aiav">${ic("spark")}</div><div class="aib">${m.error?`<p class="aierr">${esc(m.text)}</p>`:aiMd(m.text)}${(m.cards||[]).map((c,j)=>aiCardHTML(c,i,j)).join("")}</div></div>`).join("");
   if(aiBusy)h+=`<div class="aimsg bot"><div class="aiav">${ic("spark")}</div><div class="aib"><span class="aidots"><i></i><i></i><i></i></span></div></div>`;
@@ -3211,7 +3216,7 @@ $("#ad-dl-panel").addEventListener("click",async e=>{const m=e.target.closest("[
 /* ---------------- The CEO's page ---------------- */
 let overview=null;
 async function loadOverview(){try{overview=await api("team/overview")}catch(e){overview=null}}
-function ceoHome(){const h=new Date().getHours(),first=((meInfo&&meInfo.name)||"").split(" ")[0],g=perf?perf.goal:goalOf(),ag=perf?[...perf.agents].filter(a=>a.listings||AGENTS[a.key]).sort((a,b)=>b.online-a.online||b.listings-a.listings):[];
+function ceoHome(){const h=new Date().getHours(),first=hello(),g=perf?perf.goal:goalOf(),ag=perf?[...perf.agents].filter(a=>a.listings||AGENTS[a.key]).sort((a,b)=>b.online-a.online||b.listings-a.listings):[];
   const days=Math.max(0,Math.ceil((Date.parse(g.deadline+"T23:59:59")-Date.now())/864e5)),sum=k=>ag.reduce((t,a)=>t+(a[k]||0),0),goal=g.target*Math.max(1,ag.length);
   const L=(overview&&overview.leads)||[],I=(overview&&overview.invites)||[],lead=k=>L.find(x=>x.agent_key===k)||{},inv=a=>I.filter(x=>x.agent_key===a.key||(x.name&&a.name&&x.name===a.name)).reduce((t,x)=>({sent:t.sent+x.sent,in:t.in+x.signed_in}),{sent:0,in:0});
   const stat=(v,l)=>`<div><b class="num">${v}</b><span>${l}</span></div>`,top=topAgent(),last=chatMsgs.filter(m=>!m.deleted).slice(-3);
@@ -3224,7 +3229,7 @@ function ceoHome(){const h=new Date().getHours(),first=((meInfo&&meInfo.name)||"
     <div class="tablewrap"><table class="ceotab"><tr><th>Agent</th><th>Units</th><th>Online</th><th>Partly</th><th>Off market</th><th>Requests</th><th>Invited</th><th>Pace</th><th>Goal</th></tr>${ag.map(a=>{const l=lead(a.key),v=inv(a),pc=Math.min(100,Math.round(a.online/g.target*100));
       return `<tr class="rvlink" data-review="${esc(a.key)}"><td><b>${esc(a.name)}</b>${top&&top.key===a.key?' <span class="topstar">★</span>':""}</td><td>${a.listings}</td><td>${a.online}</td><td>${a.partly}</td><td>${a.offMarket}</td><td>${l.all||0}${l.open?` <small class="src">(${l.open} open)</small>`:""}</td><td>${v.sent}${v.sent?` <small class="src">(${v.in} in)</small>`:""}</td><td>${pacePill(paceOf(a.online,g))}</td><td><div class="gbar"><i style="width:${pc}%"></i></div><small class="src">${pc}%</small></td></tr>`}).join("")}</table></div></div>
   <div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Team chat</h2><p class="lede">The latest messages.</p></div><button class="btn" data-goto="chat">${ic("chat2")}Open the chat</button></div>
-    <div class="stack">${last.length?last.map(m=>`<div class="ivrow"><div><b>${esc(m.name)}</b><span>${esc(m.text.slice(0,160))}</span></div><span class="src">${esc(chatWhen(m.at))}</span></div>`).join(""):'<div class="empty">No messages yet.</div>'}</div></div>
+    <div class="stack">${last.length?last.map(m=>`<div class="ivrow"><div><b>${esc(fullName(m.name,m.role))}</b><span>${esc(m.text.slice(0,160))}</span></div><span class="src">${esc(chatWhen(m.at))}</span></div>`).join(""):'<div class="empty">No messages yet.</div>'}</div></div>
   ${overview?`<div class="panel"><h2>Offers</h2><p class="lede">${overview.offers.available} homes available: ${overview.offers.sale} for sale, ${overview.offers.rent} for rent.</p></div>`:""}`}
 
 /* ---------------- Team chat ---------------- */
@@ -3241,7 +3246,7 @@ function chatBadge(){const n=chatMsgs.filter(m=>!m.mine&&!m.deleted&&m.id>chatSe
 function chatMarkSeen(){if(chatMsgs.length)store.set("orla.chat.seen",chatMsgs[chatMsgs.length-1].id);chatBadge()}
 function chatRender(){const th=$("#chat-thread");if(!th)return;const atEnd=th.scrollHeight-th.scrollTop-th.clientHeight<80;let day="",h="";
   for(const m of chatMsgs){const d=new Date(m.at).toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});if(d!==day){day=d;h+=`<div class="chday">${esc(d)}</div>`}
-    h+=`<div class="chm${m.mine?" me":""}">${m.mine?"":`<img class="chav" src="${esc(chatAvatar(m))}" alt="">`}<div class="chb">${m.mine?"":`<b>${esc(m.name)}${chatRole(m.role)?` <span class="chrole">${chatRole(m.role)}</span>`:""}</b>`}${m.deleted?'<i class="src">Message deleted</i>':`<p>${linkify(m.text)}</p>`}<span class="cht">${esc(new Date(m.at).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}))}${!m.deleted&&(m.mine||isAdmin)?` · <button class="lnk" data-chat-del="${m.id}">Delete</button>`:""}</span></div></div>`}
+    h+=`<div class="chm${m.mine?" me":""}">${m.mine?"":`<img class="chav" src="${esc(chatAvatar(m))}" alt="">`}<div class="chb">${m.mine?"":`<b>${esc(fullName(m.name,m.role))}${chatRole(m.role)?` <span class="chrole">${chatRole(m.role)}</span>`:""}</b>`}${m.deleted?'<i class="src">Message deleted</i>':`<p>${linkify(m.text)}</p>`}<span class="cht">${esc(new Date(m.at).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}))}${!m.deleted&&(m.mine||isAdmin)?` · <button class="lnk" data-chat-del="${m.id}">Delete</button>`:""}</span></div></div>`}
   th.innerHTML=h||'<div class="empty">No messages yet. Say hello to the team.</div>';if(atEnd||!th.dataset.ready){th.scrollTop=th.scrollHeight;th.dataset.ready=1}}
 async function chatOpen(){await chatPoll();chatRender();chatMarkSeen();$("#chat-thread").scrollTop=$("#chat-thread").scrollHeight;setTimeout(()=>$("#chat-in").focus({preventScroll:true}),80)}
 $("#chat-form").addEventListener("submit",async e=>{e.preventDefault();const t=$("#chat-in").value.trim();if(!t)return;$("#chat-send").disabled=true;
@@ -3259,7 +3264,7 @@ function trCount(){const n=aiNotes.filter(x=>x.id!==+$("#tr-id").value).reduce((
 function trainRender(){const on=aiNotes.filter(n=>n.active).length;
   $("#tr-lede").textContent=aiNotes.length?`${on} active note${on===1?"":"s"}${aiNotes.length>on?`, ${aiNotes.length-on} paused`:""}. Rules come first; quick questions show as buttons in the assistant.`:"Nothing yet. Add the first note on the left.";
   $("#tr-list").innerHTML=aiNotes.map(n=>`<div class="trn${n.active?"":" off"}"><div class="trh"><span class="trk ${n.kind}">${TR_KIND[n.kind]}</span><b>${esc(n.title||n.text.slice(0,60))}</b></div>
-    <p>${esc(n.text.length>320?n.text.slice(0,320)+"…":n.text)}</p><small class="src">${esc(n.by_name||"")} · ${esc(new Date(n.updated_at).toLocaleDateString("en-GB",{day:"numeric",month:"short"}))}${n.active?"":" · paused"}</small>
+    <p>${esc(n.text.length>320?n.text.slice(0,320)+"…":n.text)}</p><small class="src">${esc(fullName(n.by_name||""))} · ${esc(new Date(n.updated_at).toLocaleDateString("en-GB",{day:"numeric",month:"short"}))}${n.active?"":" · paused"}</small>
     <div class="actions"><button class="btn sm" data-tr-edit="${n.id}">Edit</button><button class="btn sm" data-tr-toggle="${n.id}">${n.active?"Pause":"Turn on"}</button><button class="btn sm" data-tr-del="${n.id}">Delete</button></div></div>`).join("")}
 function trReset(){$("#tr-form").reset();$("#tr-id").value="";$("#tr-save").textContent="Save";$("#tr-cancel").hidden=true;$("#tr-h").textContent="Teach the assistant";trCount()}
 $("#tr-text").addEventListener("input",trCount);$("#tr-cancel").onclick=trReset;
@@ -3276,7 +3281,7 @@ $("#tr-list").addEventListener("click",async e=>{const ed=e.target.closest("[dat
 let tasks=[],rvAgent=null;
 async function loadTasks(){if(!SRV||!isTeam())return;try{tasks=(await api("team/tasks")).tasks||[]}catch(e){tasks=[]}}
 const dueTxt=d=>{if(!d)return"";const t=todayISO();return d<t?"Overdue · "+dShort(d):d===t?"Due today":"Due "+dShort(d)};
-function taskRow(t,manage){return `<div class="tkrow${t.done?" done":""}${!t.done&&t.due&&t.due<todayISO()?" late":""}"><div><b>${esc(t.title)}</b>${t.notes?`<span>${esc(t.notes)}</span>`:""}<small>${esc([t.due?dueTxt(t.due):"",t.by_name?"from "+t.by_name.split(" ")[0]:"",t.done&&t.done_at?"done "+dShort(String(t.done_at).slice(0,10)):""].filter(Boolean).join(" · "))}</small></div>
+function taskRow(t,manage){return `<div class="tkrow${t.done?" done":""}${!t.done&&t.due&&t.due<todayISO()?" late":""}"><div><b>${esc(t.title)}</b>${t.notes?`<span>${esc(t.notes)}</span>`:""}<small>${esc([t.due?dueTxt(t.due):"",t.by_name?"from "+firstName(t.by_name):"",t.done&&t.done_at?"done "+dShort(String(t.done_at).slice(0,10)):""].filter(Boolean).join(" · "))}</small></div>
   <div class="actions"><button class="btn sm${t.done?"":" primary"}" data-task-done="${t.id}" data-v="${t.done?0:1}">${t.done?"Reopen":"Done"}</button>${manage?`<button class="btn sm" data-task-edit="${t.id}">Edit</button><button class="btn sm" data-task-del="${t.id}">Delete</button>`:""}</div></div>`}
 function myTasksHTML(){const k=myKey();if(!k||isCEO())return"";const l=tasks.filter(t=>t.agent_key===k),open=l.filter(t=>!t.done);if(!l.length)return"";
   return `<div class="panel"><h2>Your tasks${open.length?` <span class="count num">${open.length}</span>`:""}</h2><p class="lede">Only you, the admin and the CEO see these.</p><div class="stack">${open.concat(l.filter(t=>t.done).slice(0,2)).map(t=>taskRow(t,false)).join("")||'<div class="empty">All done.</div>'}</div></div>`}
@@ -3330,7 +3335,7 @@ async function loadWeekly(){try{weekly=await api("team/weekly?live=1");if(!$("#v
 function wkList(){if(!weekly)return[];const l=weekly.reports.map(r=>({label:"Week to "+new Date(r.week+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"}),data:r.data,text:r.text}));
   return weekly.live?[{label:"This week so far",data:weekly.live.data,text:weekly.live.text}].concat(l):l}
 function weeklyPanel(){const l=wkList();if(!l.length)return"";const saved=weekly.reports[0],r=(saved||weekly.live).data,T=r.team,tile=(v,t)=>`<div class="cmt"><span>${esc(t)}</span><b>${v}</b></div>`;
-  return `<div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Weekly summary</h2><p class="lede">${saved?`Sent ${esc(new Date(saved.at).toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"short"}))}. `:""}Made every Sunday at 9:00 for ${isCEO()?"you":"Munir"}${isAdmin?" (and you)":""}.</p></div>
+  return `<div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Weekly summary</h2><p class="lede">${saved?`Sent ${esc(new Date(saved.at).toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"short"}))}. `:""}Made every Sunday at 9:00 for ${isCEO()?"you":"Mr Munir"}${isAdmin?" (and you)":""}.</p></div>
     <div class="actions"><button class="btn primary" data-weekly>${ic("file")}Read it</button>${isAdmin?`<button class="btn" data-weekly-send>Email it now</button>`:""}</div></div>
     <div class="cmtiles">${tile(T.online+"<small>/"+T.goalTotal+"</small>","online, team goal")}${tile(T.newOnline,"went online")}${tile(T.newUnits,"new units")}${tile(T.requests,"client requests")}${tile(T.tasksDone+(T.tasksLate?` <small>(${T.tasksLate} late)</small>`:""),"tasks done")}${r.starOfWeek?tile(esc(r.starOfWeek.name.split(" ")[0]),"most progress"):""}</div></div>`}
 function openWeekly(i){const l=wkList();if(!l.length){toast("The first summary is made on Sunday");return}wkSel=Math.max(0,Math.min(l.length-1,i||0));const w=l[wkSel];
@@ -3357,7 +3362,7 @@ function paceTeamText(g,ag){const by=k=>ag.filter(a=>a.p.status===k);const L=[`P
   for(const k of ["behind","close","track","done"]){const l=by(k);if(l.length){L.push("",`${PACE[k][0]} (${l.length}):`);l.forEach(a=>L.push(`• ${a.name}: ${a.p.online} online${k==="done"?"":`, ${a.p.expected} expected, ${a.p.perWeek}/week needed`}`))}}return L.join("\n")}
 function paceModal(){if(!perf||!isTeam())return;const wz=$("#wiz"),so=$("#so");if((wz&&!wz.hidden)||(so&&!so.hidden)){setTimeout(paceModal,1500);return}const k="orla.pace."+todayISO()+"."+(uid||"");if(store.get(k))return;const g=perf.goal,me=perf.agents.find(a=>a.key===myKey());let h="";
   if(isCEO()||isAdmin){const ag=perf.agents.filter(a=>a.name).map(a=>({key:a.key,name:a.name,p:paceOf(a.online,g)})).sort((x,y)=>["behind","close","track","done"].indexOf(x.p.status)-["behind","close","track","done"].indexOf(y.p.status)||x.p.online-y.p.online);
-    const n=s=>ag.filter(a=>a.p.status===s).length,first=((meInfo&&meInfo.name)||"").split(" ")[0],txt=paceTeamText(g,ag);
+    const n=s=>ag.filter(a=>a.p.status===s).length,first=hello(),txt=paceTeamText(g,ag);
     h=`<p class="kick" style="margin:0">Good ${new Date().getHours()<12?"morning":new Date().getHours()<18?"afternoon":"evening"}${first?", "+esc(first):""}</p><h2 style="margin:2px 0 6px">${n("behind")?`${n("behind")} agent${n("behind")===1?" is":"s are"} behind today`:"The team is on track"}</h2>
       <p class="lede" style="margin:0 0 8px">By today each agent should have <b>${ag[0]?ag[0].p.expected:0}</b> of ${g.target} listings online on ${esc(g.platforms.map(p=>p.n).join(" and "))}. ${ag[0]?ag[0].p.daysLeft:0} days left.</p>
       <div class="pcgroups">${["behind","close","track","done"].map(s=>{const l=ag.filter(a=>a.p.status===s);return l.length?`<div class="pcg ${s}"><b>${PACE[s][0]} · ${l.length}</b>${l.map(a=>`<button class="pcrow" data-review="${esc(a.key)}" data-pace-close><img src="${esc(agentPhotoOf(a.key))}" alt=""><span><b>${esc(a.name)}</b><small>${a.p.online} online · ${a.p.expected} expected${s==="done"?"":" · "+a.p.perWeek+"/week needed"}</small></span></button>`).join("")}</div>`:""}).join("")}</div>
