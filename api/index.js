@@ -446,7 +446,7 @@ const routes = {
     await limit("ai:" + c.user.id, 80, 3600);
     if (!aiEnabled()) return assistOffline(c.user, history);
     const { rows: [st] } = await q("select data from settings where id = 'app'");
-    try { return await assist(c.user, history, (st && st.data && st.data.agents) || SETTINGS.agents, { teamStats }); }
+    try { return await assist(c.user, history, (st && st.data && st.data.agents) || SETTINGS.agents, { teamStats, appUrl: appUrl(c.req) }); }
     catch (e) {
       if (e instanceof Anthropic.AuthenticationError) fail(503, "The AI key isn't valid. The admin needs to update ANTHROPIC_API_KEY.", "ai_key");
       if (e instanceof Anthropic.RateLimitError) fail(429, "The assistant is busy. Try again in a minute.", "ai_busy");

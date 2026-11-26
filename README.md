@@ -56,6 +56,8 @@ Privacy is the same as everywhere else: the lookups run on our server, and each 
 
 It runs on Claude (Anthropic). Add `ANTHROPIC_API_KEY` in Vercel to turn it on. Without the key it runs in basic mode: the unit lookup with the owner works, and it fills a starter listing.
 
+**The whole database.** Besides homes, units, owners and contacts, the assistant can look up: the agents' client lists (Clients page), client requests from the website, the Peninsula contacts by building and bedrooms, app accounts and their activity, tasks, website visitors, imported DXB Interact or DLD deals, the Brochures & plans library, and the team's pace to the goal. It combines them (for example, follow-ups due today with homes that match each client's budget). It only receives what the person asking may see: the admin and the CEO see everything, an agent sees their own clients, owners, requests and tasks, and accounts and visitors are for the admin and the CEO. Lookups of clients, requests, accounts and contacts are written to Activity.
+
 ## Home-screen guide
 
 `/home-screen/` is a page, with the picture `app/img/home-screen-guide.jpg`, showing how to put Peninsula on an iPhone (Safari: Share, Add to Home Screen, Add) or Android (Chrome: ⋮, Add to home screen or Install app) home screen. It shows the steps for the visitor's phone, and on Android an Install button when Chrome offers one. When the admin creates an account, the invitation message links to it, and **Send the picture** shares the picture straight to WhatsApp on a phone (or downloads it on a laptop). Anyone who opens the app in a phone's browser sees a reminder on Home ("Show me how", or "Install" on Android) until they add it or tap "Not now".
