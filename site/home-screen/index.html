@@ -46,5 +46,6 @@ let ev=null;addEventListener("beforeinstallprompt",e=>{e.preventDefault();ev=e;c
 document.getElementById("install").onclick=async()=>{if(!ev)return;ev.prompt();await ev.userChoice.catch(()=>{});ev=null;document.getElementById("install").hidden=true};
 if(navigator.serviceWorker)navigator.serviceWorker.register("/sw.js").catch(()=>{});
 </script>
+<script src="/track.js" defer></script>
 </body>
 </html>

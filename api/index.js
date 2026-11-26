@@ -662,6 +662,41 @@ const routes = {
     return runWeekly(teamStats, appUrl(c.req), { force: true });
   },
 
+  // Anonymous visits from the website and the app (see app/track.js).
+  "POST track": async c => {
+    const ua = String(c.req.headers["user-agent"] || "");
+    if (/bot|crawl|spider|slurp|preview|headless/i.test(ua)) return { ok: true };
+    await limit("track:" + c.ip, 600, 3600);
+    const vid = str(c.body.vid, 40).replace(/[^a-z0-9]/gi, "");
+    if (!vid) return { ok: true };
+    const w = Number(c.body.w) || 0, device = /ipad|tablet/i.test(ua) || (w >= 700 && w < 1100 && /mobile|android/i.test(ua)) ? "Tablet" : /mobi|iphone|android/i.test(ua) ? "Phone" : "Computer";
+    const ref = str(c.body.ref, 80).toLowerCase().replace(/^www\./, ""), path = str(c.body.path, 120);
+    await q("insert into visits (vid, path, ref, country, device, lang, role, offer_id) values ($1, $2, $3, $4, $5, $6, $7, $8)",
+      [vid, path, ref, str(c.req.headers["x-vercel-ip-country"], 4).toUpperCase(), device, str(c.body.lang, 8), c.user ? c.user.role : "visitor", str(c.body.offer, 80) || null]);
+    return { ok: true };
+  },
+  // Daily visitors for the admin and the CEO. The Orla team's own visits are left out.
+  "GET team/visitors": async c => {
+    requireStaff(c);
+    if (!seesAll(c.user)) fail(403, "Only the CEO and the admin see the visitors.", "not_allowed");
+    const days = Math.min(90, Math.max(7, parseInt(new URL(c.req.url, "http://localhost").searchParams.get("days") || "30", 10) || 30));
+    const W = `role not in ('admin', 'agent', 'ceo') and day > (now() at time zone 'Asia/Dubai')::date - $1::int`;
+    const top = (col, n = 8, extra = "") => q(`select ${col} as k, count(distinct vid)::int as n from visits where ${W} ${extra} group by 1 order by 2 desc limit ${n}`, [days]);
+    const [{ rows: daily }, { rows: [tot] }, { rows: pages }, { rows: refs }, { rows: countries }, { rows: devices }, { rows: offers }, { rows: [signups] }] = await Promise.all([
+      q(`with f as (select vid, min(day) as first from visits where role not in ('admin', 'agent', 'ceo') group by vid)
+         select v.day, count(distinct v.vid)::int as visitors, count(*)::int as views, count(distinct v.vid) filter (where f.first = v.day)::int as new,
+           count(distinct v.vid) filter (where v.role in ('client', 'broker'))::int as signed_in
+         from visits v join f using (vid) where ${W.replace(/role/g, "v.role").replace("day >", "v.day >")} group by v.day order by v.day`, [days]),
+      q(`select count(distinct vid) filter (where day = (now() at time zone 'Asia/Dubai')::date)::int as today,
+           count(distinct vid) filter (where day = (now() at time zone 'Asia/Dubai')::date - 1)::int as yesterday,
+           count(distinct vid) filter (where day > (now() at time zone 'Asia/Dubai')::date - 7)::int as week,
+           count(distinct vid)::int as period, count(*)::int as views from visits where ${W}`, [days]),
+      top("case when path like '/app%' then '/app/' else path end"), top("coalesce(nullif(ref, ''), 'direct')"), top("nullif(country, '')", 8, "and country <> ''"), top("device", 3),
+      q(`select offer_id as k, count(distinct vid)::int as n from visits where ${W} and offer_id is not null group by 1 order by 2 desc limit 8`, [days]),
+      q(`select count(*)::int as n from users where role in ('client', 'broker') and created_at > now() - ($1::int || ' days')::interval`, [days])]);
+    return { days, daily: daily.map(d => ({ ...d, day: new Date(d.day).toISOString().slice(0, 10) })), totals: { ...tot, signups: signups.n }, pages, refs, countries, devices, offers };
+  },
+
   // Team performance: counts per agent only (no unit numbers, owners or prices). The admin and the Orla team see it.
   "GET team/performance": async c => {
     requireStaff(c);
