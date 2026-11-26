@@ -84,7 +84,7 @@ const publicUser = u => ({ id: u.id, email: u.email, name: u.name, role: u.role,
 const ROLES = ["agent", "broker", "client"];
 const ROLE_NAME = { admin: "Admin", agent: "Orla team agent", broker: "External agent", client: "Buyer or tenant" };
 const isTeam = u => u && (u.role === "admin" || u.role === "agent");
-const TEAM_ONLY = ["unit", "owner", "ownerPhone", "ownerNote", "notes", "check", "internal"];
+const TEAM_ONLY = ["tower", "unit", "owner", "ownerPhone", "ownerNote", "notes", "check", "internal"];
 const OWNER = ["owner", "ownerPhone", "ownerNote"];
 // Clients and external agents see a floor band (low, mid, high), not the exact floor: they ask the agent for it.
 const band = n => n <= 10 ? "Low floor" : n <= 25 ? "Mid floor" : "High floor";
@@ -207,7 +207,7 @@ async function teamStats() {
     else if (on.off) { a.offMarket++; status = "off"; }
     else if (n) { a.partly++; status = "partly"; }
     const d = r.data, num = v => Number(String(v ?? "").replace(/[^0-9.]/g, "")) || null;
-    a.units.push({ b: +d.b || null, beds: d.beds === undefined || d.beds === "" ? null : +d.beds, size: num(d.size), floor: str(d.floor, 40), view: str(d.view, 80), deal: d.deal,
+    a.units.push({ b: +d.b || null, tower: ["A", "B"].includes(d.tower) ? d.tower : null, beds: d.beds === undefined || d.beds === "" ? null : +d.beds, size: num(d.size), floor: str(d.floor, 40), view: str(d.view, 80), deal: d.deal,
       price: d.deal === "rent" ? null : num(d.price), rent: d.deal === "rent" ? num(d.rent ?? d.price) : d.deal === "both" ? num(d.rent) : null, status,
       on: goal.platforms.filter(p => on[p.k]).map(p => p.k) });
     for (const p of goal.platforms) if (on[p.k]) a.platforms[p.k] = (a.platforms[p.k] || 0) + 1;
@@ -230,7 +230,7 @@ async function shareListing(listingId, email) {
     price: d.deal === "rent" ? null : price, rent: d.deal === "rent" ? price : null, size: Number(d.size) || null,
     floor: str(d.floor, 40), view: str(d.view, 80) || "On request", furn: str(d.furn, 40) || "—", baths: "—",
     status: SHARE_STATUS[d.status] || "Ready", avail: "Available", agent: str(d.agent, 40) || l.agent_key || "",
-    hl: str(d.shareNote, 500), teamOnly: d.shareTo !== "all", fromListing: listingId, src: "Shared by the listing agent"
+    hl: str(d.shareNote, 500), teamOnly: d.shareTo !== "all", fromListing: listingId, tower: ["A", "B"].includes(d.tower) ? d.tower : undefined, src: "Shared by the listing agent"
   };
   const { rows: [prev] } = await q("select data from offers where id = $1", [d.sharedOffer]);
   await q(`insert into offers (id, data, updated_at) values ($1, $2, now())
@@ -462,6 +462,20 @@ const routes = {
     await q("delete from contacts");
     await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, "Deleted the Peninsula contacts"]);
     return contactStats();
+  },
+
+  // Tower A or B on an offer: the agent it's listed under, or the admin, sets it.
+  "POST data/offers/tower": async c => {
+    requireTeam(c);
+    const id = str(c.body.id, 80), tower = ["A", "B"].includes(c.body.tower) ? c.body.tower : null;
+    const { rows: [o] } = await q("select data from offers where id = $1", [id]);
+    if (!o) fail(404, "Offer not found.");
+    if (c.user.role !== "admin" && !(c.user.agent_key && o.data.agent === c.user.agent_key)) fail(403, "Only the agent this unit is listed under, or the admin, can set its tower.");
+    const data = { ...o.data };
+    if (tower) data.tower = tower; else delete data.tower;
+    await q("update offers set data = $2, updated_at = now(), updated_by = $3 where id = $1", [id, data, c.user.id]);
+    await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `Set ${str(o.data.title, 80) || id} to ${tower ? "Tower " + tower : "no tower"}`]);
+    return { ok: true, tower };
   },
 
   // Team performance: counts per agent only (no unit numbers, owners or prices). The admin and the Orla team see it.

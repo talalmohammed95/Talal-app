@@ -765,6 +765,12 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
 .aicard.taken{border-color:var(--bad);background:var(--bad-soft)}.aicard.taken p{margin:0;font-size:14px}
 .ctso{border-top:1px dashed var(--line-strong);padding-top:10px}
 .aiown b+b{margin-top:2px}
+.twbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-radius:14px;padding:10px 14px;background:var(--warn-soft,var(--accent-soft));border:1.5px dashed var(--primary);font-size:14px}
+.twbar.set{background:var(--sunk);border:1px solid var(--line)}.twbar span{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}.twbar .ic{width:17px;height:17px;color:var(--accent-ink)}
+.twbtns{display:inline-flex;gap:6px}
+.twrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.twrow .lnk{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:2px;background:none;border:0;padding:0;cursor:pointer;color:inherit;font:inherit;min-width:0}.twrow .lnk span{font-size:12.5px;color:var(--muted)}
+.twtodo.inl{margin-bottom:12px}.twtodo.inl h2{font-size:16px}
 </style>
 <script src="/config.js"></script>
 </head>
@@ -977,6 +983,7 @@ table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
         <form id="mine-form" class="fgrid" autocomplete="off"><input type="hidden" id="m-id">
           <div class="field"><label for="m-unit">Unit no.</label><input id="m-unit" placeholder="e.g. 3305"></div>
           <div class="field"><label for="m-bld">Building</label><select id="m-bld"><option value="3">Peninsula Three</option><option value="1">Peninsula One</option><option value="2">Peninsula Two</option><option value="4">Peninsula Four</option><option value="5">Peninsula Five</option></select></div>
+          <div class="field"><label for="m-tower">Tower</label><select id="m-tower"><option value="">Not set</option><option value="A">Tower A</option><option value="B">Tower B</option></select></div>
           <div class="field"><label for="m-type">Type</label><select id="m-type"><option value="0">Studio</option><option value="1">1 Bedroom</option><option value="2">2 Bedroom</option><option value="3">3 Bedroom</option></select></div>
           <div class="field"><label for="m-deal">Sale / Rent</label><select id="m-deal"><option value="sale">Sale</option><option value="rent">Rent</option></select></div>
           <div class="field"><label for="m-floor">Floor</label><input id="m-floor" placeholder="e.g. 33rd"></div>
@@ -1262,7 +1269,7 @@ const isDone=o=>o.avail==="Sold"||o.avail==="Rented";
 const FDEF={deal:"all",type:"",bld:"",sort:"price-asc",q:"",pmin:"",pmax:"",smin:"",smax:"",view:"",furn:"",band:"",avail:"",agent:"",ymin:"",value:false,checkOnly:false,starOnly:false,hide:true,reduced:false};
 const state=Object.assign({},FDEF,store.get("orla.filters",{}),{client:null,sel:store.get("orla.sel",null)});
 
-function mineToOffer(m){return{id:m.id,b:+m.b,beds:+m.beds,deal:m.deal,title:(m.unit?"Unit "+m.unit+" · ":"")+TYPE[+m.beds],price:m.deal==="sale"?+m.price:undefined,rent:m.deal==="rent"?+m.price:undefined,
+function mineToOffer(m){return{id:m.id,b:+m.b,tower:m.tower||"",beds:+m.beds,deal:m.deal,title:(m.unit?"Unit "+m.unit+" · ":"")+TYPE[+m.beds],price:m.deal==="sale"?+m.price:undefined,rent:m.deal==="rent"?+m.price:undefined,
   size:m.size?+m.size:null,floor:m.floor||"On request",view:m.view||"On request",furn:m.furn,status:m.status,agent:m.agent,hl:m.notes||"",mine:true,future:!!m.future,unit:m.unit||null,owner:m.owner,ownerPhone:m.phone,date:m.date,by:m._by||null,own:m._own!==false,shared:m.sharedOffer||null,shareTo:m.shareTo,shareNote:m.shareNote,src:SRV?(m._by?"Added by "+(m._by.name||m._by.email):"Added by you"):"Added on this device"}}
 // A unit an agent has shared shows once, as its shared offer.
 const all=()=>{const live=new Set(OFFERS.map(o=>o.id));return OFFERS.concat(mine.concat(teamListings).filter(m=>!(m.sharedOffer&&live.has(m.sharedOffer))).map(mineToOffer)).map(enrich)};
@@ -1290,10 +1297,10 @@ function pills(o){
 function cardHTML(o,cur){
   const p=priceLine(o);
   return `<button class="card" data-id="${esc(o.id)}" aria-current="${cur}">
-    <div class="tower ph" aria-hidden="true"><img loading="lazy" src="${esc(imgSrc(photosOf(o)[0].k,true))}" alt=""><b>P${o.b}</b></div>
+    <div class="tower ph" aria-hidden="true"><img loading="lazy" src="${esc(imgSrc(photosOf(o)[0].k,true))}" alt=""><b>P${o.b}${isTeam()&&o.tower?esc(o.tower):""}</b></div>
     <div style="min-width:0"><h3>${starred.has(o.id)?'<span class="star" aria-label="Shortlisted">★</span> ':""}${esc(o.title)}</h3>
-      <div class="meta">${esc(BLD[o.b])} · ${o.size?fmt(o.size)+" sq ft":"size on request"} · ${esc(o.floor)}${o.x&&o.x.psf?" · AED "+fmt(o.x.psf)+"/sq ft":""}</div>
-      <div class="pills">${pills(o)}</div></div>
+      <div class="meta">${esc(bldT(o))} · ${o.size?fmt(o.size)+" sq ft":"size on request"} · ${esc(o.floor)}${o.x&&o.x.psf?" · AED "+fmt(o.x.psf)+"/sq ft":""}</div>
+      <div class="pills">${pills(o)}${needsTower(o)?'<span class="pill pending">Tower A or B?</span>':""}</div></div>
     <div class="p num">${esc(o.deal==="rent"?short(o.rent):short(o.price))}<small>${o.deal==="rent"?"AED / yr":"AED"}</small></div>
   </button>`;
 }
@@ -1383,9 +1390,10 @@ function renderDetail(){
   const check=o.check?`<div class="notes"><b>Figures to confirm</b><ul>${o.check.map(c=>"<li>"+esc(c)+"</li>").join("")}</ul></div>`:"";
   const wa="https://wa.me/?text="+encodeURIComponent(offerText(o));
   el.innerHTML=`<article class="detail">
-    <div class="dhead"><div><div class="eyebrow">${esc(BLD[o.b].toUpperCase())} · ${o.deal==="rent"?"FOR RENT":o.deal==="both"?"FOR SALE OR RENT":"FOR SALE"}</div><h2>${esc(o.title)}</h2></div>
+    <div class="dhead"><div><div class="eyebrow">${esc(bldT(o).toUpperCase())} · ${o.deal==="rent"?"FOR RENT":o.deal==="both"?"FOR SALE OR RENT":"FOR SALE"}</div><h2>${esc(o.title)}</h2></div>
       <div class="big num"><b>${esc(p.big)}</b><span>${esc(p.sub)}</span></div></div>
     <div class="dbody">
+      ${isTeam()?towerBar(o):""}
       ${galleryHTML(o)}
       ${isTeam()?"":askBox(o)}
       <div class="actions">
@@ -1493,7 +1501,7 @@ function renderMine(){
   const tp=$("#team-listings-panel");tp.hidden=!(SRV&&isAdmin);
   if(SRV&&isAdmin){const g={};teamListings.forEach(m=>{const k=m._by?m._by.id:"?";(g[k]=g[k]||{by:m._by,l:[]}).l.push(m)});const groups=Object.values(g).sort((a,b)=>String(a.by&&a.by.name).localeCompare(String(b.by&&b.by.name)));
     $("#team-listings").innerHTML=groups.length?groups.map(x=>`<div><h4>${esc((x.by&&(x.by.name||x.by.email))||"Agent")} · ${x.l.length} unit${x.l.length===1?"":"s"}</h4><div class="list">${x.l.map(m=>cardHTML(enrich(mineToOffer(m)),false)).join("")}</div></div>`).join(""):'<div class="empty">No agent has added a unit yet.</div>'}
-  $("#mine-list").innerHTML=mineSections();
+  $("#mine-list").innerHTML=towerTodoHTML().replace('class="panel twtodo"','class="twtodo inl"')+mineSections();
   const head=["Unit No.","Type","Floor","View","Size (sq ft)","Sale / Rent","Price (AED)","AED per sq ft","Status","Furnishing","Owner / Client","Owner Phone","Date Listed","Notes"];
   const q=v=>{v=String(v??"");return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
   $("#csv-text").value=mine.length?[head.join(",")].concat(mine.map(m=>[m.unit,TYPE[m.beds],m.floor,m.view,m.size,m.deal==="sale"?"Sale":"Rent",m.price,m.size&&m.price?Math.round(m.price/m.size):"",m.status,m.furn,m.owner,m.phone,m.date,m.notes].map(q).join(","))).join("\n"):"";
@@ -1503,7 +1511,8 @@ $("#mine-form").addEventListener("submit",async e=>{e.preventDefault();
   const price=parseFloat(g("#m-price").replace(/[^0-9.]/g,""));
   if(!price&&!$("#m-future").checked){toast("Enter a price");$("#m-price").focus();return}
   if($("#m-future").checked&&!g("#m-remind")){toast("Pick a reminder date");$("#m-remind").focus();return}
-  const m={id:g("#m-id")||"l-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),unit:g("#m-unit"),b:g("#m-bld"),beds:g("#m-type"),deal:g("#m-deal"),floor:g("#m-floor"),view:g("#m-view"),size:g("#m-size").replace(/[^0-9.]/g,""),price,status:g("#m-status"),furn:g("#m-furn"),owner:g("#m-owner"),phone:g("#m-phone"),agent:g("#m-agent"),date:g("#m-date"),notes:g("#m-notes"),online:onlineFromForm(),future:$("#m-future").checked||undefined,availableFrom:g("#m-avail")||undefined,remindAt:g("#m-remind")||undefined,remindNote:g("#m-rnote")||undefined,adTitle:g("#m-adtitle")||undefined,adText:g("#m-adtext")||undefined};
+  if(g("#m-bld")==="4"&&!g("#m-tower")){toast("Peninsula Four: choose Tower A or Tower B");$("#m-tower").focus();return}
+  const m={id:g("#m-id")||"l-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),unit:g("#m-unit"),b:g("#m-bld"),tower:g("#m-tower")||undefined,beds:g("#m-type"),deal:g("#m-deal"),floor:g("#m-floor"),view:g("#m-view"),size:g("#m-size").replace(/[^0-9.]/g,""),price,status:g("#m-status"),furn:g("#m-furn"),owner:g("#m-owner"),phone:g("#m-phone"),agent:g("#m-agent"),date:g("#m-date"),notes:g("#m-notes"),online:onlineFromForm(),future:$("#m-future").checked||undefined,availableFrom:g("#m-avail")||undefined,remindAt:g("#m-remind")||undefined,remindNote:g("#m-rnote")||undefined,adTitle:g("#m-adtitle")||undefined,adText:g("#m-adtext")||undefined};
   if(SRV){const prev=mine.concat(teamListings).find(x=>x.id===m.id)||{};const{id,...data}=Object.assign({},prev,m);delete data._by;delete data._own;let r;try{r=await api("data/listings",{id,data},"PUT")}catch(x){toast(x.message);return}await loadListings();if(r&&r.warning){resetMineForm();renderAll();setTimeout(()=>toast(r.warning),50);return}}
   else{const i=mine.findIndex(x=>x.id===m.id);if(i>=0)mine[i]=m;else mine.push(m);persist()}
   const was=!!g("#m-id");resetMineForm();renderAll();toast(was?"Listing updated":"Listing saved");
@@ -1511,7 +1520,7 @@ $("#mine-form").addEventListener("submit",async e=>{e.preventDefault();
 function resetMineForm(){$("#mine-form").reset();drawOnlineBoxes({});$("#m-id").value="";$("#m-save").textContent="Save listing";$("#m-cancel").hidden=true;try{$("#m-date").valueAsDate=new Date()}catch(e){}const k=myKey();if(k&&AGENTS[k])$("#m-agent").value=k}
 $("#m-cancel").onclick=resetMineForm;
 function editListing(id){const m=mine.concat(teamListings).find(x=>x.id===id);if(!m)return;show("mine");
-  const set=(k,v)=>{$(k).value=v??""};set("#m-id",m.id);set("#m-unit",m.unit);set("#m-bld",m.b);set("#m-type",m.beds);set("#m-deal",m.deal);set("#m-floor",m.floor);set("#m-view",m.view);set("#m-size",m.size);set("#m-price",m.price?fmt(m.price):"");
+  const set=(k,v)=>{$(k).value=v??""};set("#m-id",m.id);set("#m-unit",m.unit);set("#m-bld",m.b);set("#m-tower",m.tower);set("#m-type",m.beds);set("#m-deal",m.deal);set("#m-floor",m.floor);set("#m-view",m.view);set("#m-size",m.size);set("#m-price",m.price?fmt(m.price):"");
   set("#m-status",m.status);set("#m-furn",m.furn);set("#m-owner",m.owner);set("#m-phone",m.phone);if(AGENTS[m.agent])set("#m-agent",m.agent);set("#m-date",m.date);set("#m-notes",m.notes);$("#m-future").checked=!!m.future;set("#m-avail",m.availableFrom);set("#m-remind",m.remindAt);set("#m-rnote",m.remindNote);set("#m-adtitle",m.adTitle);set("#m-adtext",m.adText);drawOnlineBoxes(m.online||{});
   $("#m-save").textContent="Save changes";$("#m-cancel").hidden=false;setTimeout(()=>{$("#mine-form").scrollIntoView({behavior:"smooth",block:"start"});$("#m-owner").focus({preventScroll:true})},60)}
 // Each agent's own units live on the server. Units saved before (in the agent's private app data) move there once.
@@ -1531,7 +1540,7 @@ const today=()=>new Date().toISOString().slice(0,10);
 const isDue=c=>c.follow&&c.follow<=today()&&c.status!=="Closed"&&c.status!=="Lost";
 function renderDash(){if(!isTeam()){renderShowroom();return}clearInterval(heroT);renderTeamDash();
   const myl=renderMyListings();if(myl){const r=$("#dash").children[0];if(r)r.insertAdjacentHTML("afterend",myl);else $("#dash").insertAdjacentHTML("afterbegin",myl)}
-  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+leadsHTML()+remindersHTML())}
+  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+towerTodoHTML()+leadsHTML()+remindersHTML())}
 // The top achiever: first in the team ranking (online, then units), once they have a unit.
 let topPub=null;
 async function loadTop(){try{topPub=(await api("public/top")).top}catch(e){}}
@@ -2850,7 +2859,7 @@ function aiMd(t){let h=esc(t).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>");
 const aiMoney=v=>v?"AED "+fmt(v):"";
 function aiPlat(o){const on=o||{};if(on.off)return"Off market";const p=(perf&&perf.goal&&perf.goal.platforms)||[{k:"bayut",n:"Bayut"},{k:"pf",n:"Property Finder"}],l=p.filter(x=>on[x.k]).map(x=>x.n);return l.length?"Online: "+l.join(", "):"Not online yet"}
 function aiUnitCard(u,i,j){const me=(meInfo&&meInfo.name)||"Orla Properties",bl=(u.building||"").replace(/ \(.*\)/,"");
-  const rows=[["Building",u.building],["Type",u.type],["Size",u.size?fmt(u.size)+" sq ft":""],["Floor",u.floor],["View",u.view],[u.deal==="rent"?"Rent":"Price",u.deal==="rent"?aiMoney(u.rent)+(u.rent?" a year":""):aiMoney(u.price)],[u.deal==="both"?"Rent":"",u.deal==="both"&&u.rent?aiMoney(u.rent)+" a year":""],["Status",u.status],["Furnishing",u.furnishing],["Portals",aiPlat(u.online)],["Listed by",isAdmin&&u.listedBy?(AGENTS[u.listedBy]?AGENTS[u.listedBy].name:u.listedBy):""]].filter(r=>r[0]&&r[1]);
+  const rows=[["Building",u.building],["Tower",u.tower||(u.b===4?"Not set yet: ask or set it in My units":"")],["Type",u.type],["Size",u.size?fmt(u.size)+" sq ft":""],["Floor",u.floor],["View",u.view],[u.deal==="rent"?"Rent":"Price",u.deal==="rent"?aiMoney(u.rent)+(u.rent?" a year":""):aiMoney(u.price)],[u.deal==="both"?"Rent":"",u.deal==="both"&&u.rent?aiMoney(u.rent)+" a year":""],["Status",u.status],["Furnishing",u.furnishing],["Portals",aiPlat(u.online)],["Listed by",isAdmin&&u.listedBy?(AGENTS[u.listedBy]?AGENTS[u.listedBy].name:u.listedBy):""]].filter(r=>r[0]&&r[1]);
   const wa=u.ownerPhone?waTo(u.ownerPhone,`Hello ${String(u.owner||"").split(" ")[0]||""}, this is ${me} from Orla Properties about your ${String(u.type||"apartment").toLowerCase()} in ${bl||"the Peninsula"}.`):"";
   return `<div class="aicard unit"><div class="aic-h">${ic("building")}<b>Unit ${esc(u.unit||"")}</b>${u.future?'<span class="pill pending">Coming soon</span>':""}<span class="pill">${u.kind==="listing"?"My units":"Offer"}</span></div>
     <dl class="aidl">${rows.map(r=>`<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join("")}</dl>
@@ -2860,7 +2869,7 @@ function aiUnitCard(u,i,j){const me=(meInfo&&meInfo.name)||"Orla Properties",bl=
     <div class="actions"><button class="btn sm primary" data-ai-say="Write the Bayut and Property Finder listing for unit ${esc(u.unit||"")}">${ic("spark")}Write the listing</button>${u.kind==="listing"?`<button class="btn sm" data-ai-edit="${esc(u.id)}">Open in My units</button>`:`<button class="btn sm" data-ai-fill="${i}:${j}">Add to My units</button>`}</div></div>`}
 function aiDraftCard(d,i,j){return `<div class="aicard draft"><div class="aic-h">${ic("spark")}<b>Listing draft${d.unit?" · unit "+esc(d.unit):""}</b><span class="pill ok">Ready to check</span></div>
     <div class="aiad"><div class="aiad-t">${esc(d.adTitle||"")}</div><div class="aiad-d">${esc(d.adText||"")}</div></div>
-    <dl class="aidl">${[["Building",BLD[d.b]],["Type",TYPE[d.beds]],["Price",d.price?aiMoney(d.price):""],["Rent",d.rent?aiMoney(d.rent)+" a year":""],["Size",d.size?fmt(d.size)+" sq ft":""],["Floor",d.floor],["View",d.view]].filter(r=>r[1]).map(r=>`<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join("")}</dl>
+    <dl class="aidl">${[["Building",BLD[d.b]],["Tower",d.tower?"Tower "+d.tower:""],["Type",TYPE[d.beds]],["Price",d.price?aiMoney(d.price):""],["Rent",d.rent?aiMoney(d.rent)+" a year":""],["Size",d.size?fmt(d.size)+" sq ft":""],["Floor",d.floor],["View",d.view]].filter(r=>r[1]).map(r=>`<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join("")}</dl>
     ${d.missing&&d.missing.length?`<div class="aichk"><b>Before it goes live</b><ul>${d.missing.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
     ${d.tips&&d.tips.length?`<div class="aichk tips"><b>Tips</b><ul>${d.tips.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>`:""}
     <div class="actions"><button class="btn sm primary" data-ai-fill="${i}:${j}">${ic("list")}Put into My units form</button><button class="btn sm" data-ai-copy="${i}:${j}:t">${ic("copy")}Copy title</button><button class="btn sm" data-ai-copy="${i}:${j}:d">${ic("copy")}Copy description</button></div></div>`}
@@ -2903,7 +2912,7 @@ async function aiOpen(){aiRender();if(aiStatus===null&&SRV){try{aiStatus=(await 
 function aiFill(d){const m=d.listingId&&mine.concat(teamListings).find(x=>x.id===d.listingId);
   if(m)editListing(m.id);else{show("mine");resetMineForm()}
   const set=(k,v)=>{if(v!==undefined&&v!==null&&v!=="")$(k).value=v};
-  set("#m-unit",d.unit);set("#m-bld",d.b);set("#m-type",d.beds);const deal=d.deal==="rent"?"rent":"sale";set("#m-deal",deal);set("#m-floor",d.floor);set("#m-view",d.view);set("#m-size",d.size);
+  set("#m-unit",d.unit);set("#m-bld",d.b);set("#m-tower",d.tower);set("#m-type",d.beds);const deal=d.deal==="rent"?"rent":"sale";set("#m-deal",deal);set("#m-floor",d.floor);set("#m-view",d.view);set("#m-size",d.size);
   const pr=deal==="rent"?d.rent:d.price;if(pr)set("#m-price",fmt(pr));set("#m-status",d.status);set("#m-furn",d.furn);set("#m-owner",d.owner);set("#m-phone",d.phone);if(AGENTS[d.agent])set("#m-agent",d.agent);
   set("#m-adtitle",d.adTitle);set("#m-adtext",d.adText);if(d.deal==="both"&&d.rent&&!/rent/i.test($("#m-notes").value))$("#m-notes").value=($("#m-notes").value?$("#m-notes").value+"\n":"")+"Also for rent: AED "+fmt(d.rent)+" a year";
   setTimeout(()=>{$("#mine-form").scrollIntoView({behavior:"smooth",block:"start"})},80);toast("Filled in. Check the details, then tap "+$("#m-save").textContent)}
@@ -2968,6 +2977,23 @@ $("#ad-ct-panel").addEventListener("click",async e=>{const m=e.target.closest("[
       res=await api("admin/contacts/import",{rows:part,replace:C.mode==="replace"&&k===0,last:k+1000>=recs.length,file:C.file});done+=res.imported}
     ctShowStats(res);ctImport=null;$("#ct-map").hidden=true;toast(`Imported ${fmt(done)} contacts`);loadLog&&loadLog()}
   catch(x){toast(x.message);go.disabled=false;$("#ct-prog").textContent=done?`${fmt(done)} imported before the error. Try again.`:""}});
+
+/* ---------------- Tower A / Tower B ---------------- */
+const bldT=o=>BLD[o.b]+(isTeam()&&o.tower?" · Tower "+o.tower:"");
+const needsTower=o=>isTeam()&&+o.b===4&&!o.tower;
+const canTower=o=>isAdmin||(o.mine?o.own!==false:!!(o.agent&&o.agent===myKey()));
+function towerBar(o){if(o.tower)return canTower(o)?`<div class="twbar set"><span>${ic("building")}<b>Tower ${esc(o.tower)}</b></span><span class="twbtns"><button class="btn sm" data-tower-set="${esc(o.id)}:${o.tower==="A"?"B":"A"}">Change to Tower ${o.tower==="A"?"B":"A"}</button></span></div>`:"";
+  if(+o.b!==4)return canTower(o)?`<div class="twbar set"><span class="src">Tower not set</span><span class="twbtns"><button class="btn sm" data-tower-set="${esc(o.id)}:A">Tower A</button><button class="btn sm" data-tower-set="${esc(o.id)}:B">Tower B</button></span></div>`:"";
+  return `<div class="twbar"><span>${ic("building")}<b>Tower A or Tower B?</b> Peninsula Four has two towers.${canTower(o)?" Choose this unit's tower.":" Ask "+esc(agentOf(o).name.split(" ")[0])+" which tower."}</span>${canTower(o)?`<span class="twbtns"><button class="btn sm primary" data-tower-set="${esc(o.id)}:A">Tower A</button><button class="btn sm primary" data-tower-set="${esc(o.id)}:B">Tower B</button></span>`:""}</div>`}
+async function setTower(id,t){const o=all().find(x=>x.id===id);if(!o)return;
+  if(o.mine){const m=mine.concat(teamListings).find(x=>x.id===id);if(!m)return;await saveMine(Object.assign({},m,{tower:t}),"Saved: Tower "+t);return}
+  try{await api("data/offers/tower",{id,tower:t});const r=OFFERS.find(x=>x.id===id);if(r)r.tower=t;renderAll();toast("Saved: Tower "+t)}catch(x){toast(x.message)}}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-tower-set]");if(!b)return;e.stopPropagation();e.preventDefault();const s=b.dataset.towerSet,i=s.lastIndexOf(":");b.disabled=true;setTower(s.slice(0,i),s.slice(i+1))},true);
+// Peninsula Four units with no tower yet: each agent sees their own; the admin sees the team's.
+function towerTodoHTML(){if(!isTeam())return"";const l=all().filter(o=>needsTower(o)&&canTower(o)&&!isDone(o));if(!l.length)return"";
+  return `<div class="panel twtodo"><h2>Tower A or Tower B? <span class="count num">${l.length}</span></h2><p class="lede">${isAdmin?"Peninsula Four units in the system":"Your Peninsula Four units"} without a tower yet. Choose one for each, so every agent knows where the unit is.</p>
+    <div class="stack">${l.map(o=>`<div class="twrow"><button class="lnk" data-id="${esc(o.id)}"><b>${esc(o.unit&&!String(o.title).includes(o.unit)?"Unit "+o.unit+" · ":"")}${esc(o.title)}</b><span>${esc([TYPE[o.beds],o.size?fmt(o.size)+" sq ft":"",o.floor,isAdmin?agentOf(o).name.split(" ")[0]:""].filter(Boolean).join(" · "))}</span></button>
+      <span class="twbtns"><button class="btn sm" data-tower-set="${esc(o.id)}:A">Tower A</button><button class="btn sm" data-tower-set="${esc(o.id)}:B">Tower B</button></span></div>`).join("")}</div></div>`}
 
 /* ---------------- Start-up ---------------- */
 function startApp(){if(!SRV)setRole(isAdmin?"admin":"team");updateAcct();const ch=$("#userchip");

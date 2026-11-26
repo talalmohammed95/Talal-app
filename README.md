@@ -56,6 +56,10 @@ Privacy is the same as everywhere else: the lookups run on our server, and each 
 
 It runs on Claude (Anthropic). Add `ANTHROPIC_API_KEY` in Vercel to turn it on. Without the key it runs in basic mode: the unit lookup with the owner works, and it fills a starter listing.
 
+## Tower A / Tower B (team only)
+
+Every unit can carry its tower: **Tower A** or **Tower B**. The team sees it next to the building on cards ("P4A"), in the offer details ("Peninsula Four · Tower B") and in the AI assistant; clients and external agents don't get it. Peninsula Four has two towers, so its units without one are flagged "Tower A or B?", and Home and My units list them with Tower A / Tower B buttons: each agent sets their own units, the admin sets anyone's. The My units form has a Tower field and won't save a Peninsula Four unit without it. Units whose floor said "Tower A" or "Tower B" were set automatically.
+
 ## Peninsula contacts (team only)
 
 The admin uploads the Peninsula contacts database in **Admin › Peninsula contacts**: an Excel (.xlsx) or CSV file. The app matches the columns itself (name, phones, email, building, unit, type, size, floor, view, owner or tenant, nationality, notes); you can change any match before importing, and other columns are kept as extra details. Choose **Replace all contacts** or **Add to existing**. The file is read in your browser and sent to the database in parts.
