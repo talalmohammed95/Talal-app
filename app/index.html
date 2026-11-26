@@ -2125,7 +2125,7 @@ function setPageHead(v){const p=PAGES[v]||PAGES.dash,h=new Date().getHours(),fir
   const sub=v==="dash"?(first?`Good ${h<12?"morning":h<18?"afternoon":"evening"}, ${first}. Here's your portfolio today.`:"Your portfolio at a glance"):p[2];
   $("#pagehead").innerHTML=`<div class="phi">${ic(p[0])}</div><div><h1>${esc(p[1])}</h1><p>${esc(sub)}</p></div>`}
 function updateAcct(){const n=(meInfo&&meInfo.name)||(CLOUD?"Account":"Admin");const top=isTeam()&&topAgent()&&topAgent().key===myKey();$("#acct-name").textContent=firstName(n,profile&&profile.role)+(top?" ★":"");$("#acct-btn").classList.toggle("top",!!top);
-  $("#acct-img").src=(meInfo&&meInfo.avatarUrl)||(isCEO()||(profile&&profile.role==="ceo")?CEO_IMG:"")||(myKey()&&MEDIA.agent[myKey()]?agentPhotoOf(myKey()):"")||initialsAvatar(n);$("#menu-site").hidden=CLOUD;$("#gate-back").hidden=CLOUD}
+  $("#acct-img").src=myPhoto()||(meInfo&&meInfo.avatarUrl)||initialsAvatar(n);$("#menu-site").hidden=CLOUD;$("#gate-back").hidden=CLOUD}
 function closeMenus(){$("#tmore-pop").hidden=true;$("#tmore-btn").setAttribute("aria-expanded","false");$("#acct-menu").hidden=true;$("#acct-btn").setAttribute("aria-expanded","false");$("#more-sheet").hidden=true}
 $("#tmore-btn").onclick=e=>{e.stopPropagation();const p=$("#tmore-pop"),open=p.hidden;closeMenus();p.hidden=!open;$("#tmore-btn").setAttribute("aria-expanded",String(open))};
 $("#tmore-pop").addEventListener("click",e=>{e.stopPropagation();if(e.target.closest(".tab"))setTimeout(closeMenus,0)});
@@ -2407,6 +2407,8 @@ const CEO_IMG="/img/ceo-munir.webp",CEO_NAME="Munir Al Deraawi";
 const isCeoName=n=>String(n||"").trim().toLowerCase()===CEO_NAME.toLowerCase();
 const fullName=(n,role)=>(role==="ceo"||isCeoName(n))&&n?"Mr "+String(n).trim():n;
 const firstName=(n,role)=>{const f=String(n||"").trim().split(" ")[0];return (role==="ceo"||isCeoName(n))&&f?"Mr "+f:f};
+// The signed-in person's photo: the CEO's, or their agent photo (matched by agent key or by name); never initials when a photo exists.
+function myPhoto(){if(isCEO()||(profile&&profile.role==="ceo"))return CEO_IMG;const k=myKey();return k&&(MEDIA.agent[k]||(AGENTS[k]&&AGENTS[k].photo))?agentPhotoOf(k):""}
 const hello=()=>firstName((meInfo&&meInfo.name)||"",isCEO()||(profile&&profile.role==="ceo")?"ceo":"");
 const CEO_HIDE=["mine","clients","admin"];
 const canTrain=()=>isAdmin||isCEO();
@@ -3453,7 +3455,7 @@ $("#visitors").addEventListener("input",e=>{if(e.target.id!=="us-q")return;usQue
 
 /* ---------------- Start-up ---------------- */
 function startApp(){if(!SRV)setRole(isAdmin?"admin":"team");updateAcct();const ch=$("#userchip");
-  if(meInfo){ch.innerHTML=`<img alt="" src="${esc(meInfo.avatarUrl)}"><span></span>`;ch.querySelector("span").textContent=(meInfo.name||"You")+" · "+ROLE_LABEL[ROLE]}else ch.textContent="Admin · this device";
+  if(meInfo){ch.innerHTML=`<img alt="" src="${esc(myPhoto()||meInfo.avatarUrl)}"><span></span>`;ch.querySelector("span").textContent=(meInfo.name||"You")+" · "+ROLE_LABEL[ROLE]}else ch.textContent="Admin · this device";
   syncFilters();renderAll();renderMarket();const first=OFFERS.find(o=>o.deal!=="rent"&&o.price);if(first&&!pick.value)loadCalc(first.id);else calc();show(store.get("orla.tab","dash"))}
 async function boot(){
   if(SRV){bootServer();return}
