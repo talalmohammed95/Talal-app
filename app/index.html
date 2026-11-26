@@ -616,6 +616,24 @@ body.lbopen{overflow:hidden}
 @media (max-width:620px){.ochk{grid-template-columns:minmax(0,1fr)}}
 .goalcard{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:space-between}
 .goalcard .gc-l{flex:1;min-width:220px}
+.plat.off:has(input:checked){border-color:var(--line-strong);background:var(--sunk);color:var(--fg)}
+table.rank th,table.utable th{background:var(--accent);color:#1C1A18;border-color:var(--accent)}
+table.rank td,table.utable td{vertical-align:middle}
+table.rank .c,table.utable .c{text-align:center}table.utable .r{text-align:right}
+table.rank tr:nth-child(even) td{background:var(--accent-soft)}
+table.rank .rk{font:800 18px var(--display);color:var(--accent-ink)}
+table.rank .tot{font:800 18px var(--display)}table.rank td.on{font-weight:800;color:var(--good)}
+table.rank .who{display:inline-flex;align-items:center;gap:10px;font-weight:700;white-space:nowrap}table.rank .who img{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid var(--accent)}
+table.rank tr.me td{box-shadow:inset 0 0 0 9999px rgba(184,72,14,.06)}
+table.rank tr.total td{font-weight:800;border-top:2px solid var(--line-strong);background:var(--surface)}
+.uagent{border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.uhead{display:flex;align-items:center;gap:12px;background:#1F1D1B;color:#fff;padding:12px 16px}
+.uhead img{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #F28C28}.uhead b{display:block;font:800 17px var(--display)}.uhead span{font-size:12.5px;color:#D9D4CC}
+.uagent .tablewrap{border:0;border-radius:0}
+table.utable th{background:var(--accent-soft);color:var(--accent-ink)}
+table.utable .pr{color:var(--accent-ink);font-weight:700;white-space:nowrap}
+.ust{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;background:var(--sunk);color:var(--muted)}
+.ust.online{background:var(--good-soft);color:var(--good)}.ust.partly{background:var(--accent-soft);color:var(--accent-ink)}.ust.off{background:var(--rent-soft);color:var(--rent)}
 </style>
 <script src="/config.js"></script>
 </head>
@@ -831,7 +849,7 @@ body.lbopen{overflow:hidden}
           <div class="field"><label for="m-phone">Owner's phone</label><input id="m-phone" inputmode="tel" autocomplete="off" placeholder="+971 …"></div>
           <div class="field"><label for="m-agent">Agent</label><select id="m-agent"><option value="talal">Talal Al Deraawi</option><option value="giulia">Giulia Perego</option><option value="blendjana">Blendjana</option></select></div>
           <div class="field"><label for="m-date">Date listed</label><input id="m-date" type="date"></div>
-          <div class="field wide" id="m-online-wrap"><label>Online on</label><div class="plats" id="m-online"></div><p class="src" style="margin:4px 0 0">Counts towards the team goal once it's live on all of them.</p></div>
+          <div class="field wide" id="m-online-wrap"><label>Listed on</label><div class="plats" id="m-online"></div><p class="src" style="margin:4px 0 0">Tick each platform it's live on, or Off market. It counts towards the team goal once it's live on every platform.</p></div>
           <div class="field wide"><label for="m-notes">Notes</label><textarea id="m-notes" rows="2"></textarea></div>
           <div class="wide actions"><button class="btn primary" type="submit" id="m-save">Save listing</button><button class="btn" type="button" id="m-cancel" hidden>Cancel editing</button></div>
         </form>
@@ -2343,7 +2361,11 @@ $("#detail").addEventListener("click",async e=>{const box=e.target.closest("[dat
 const DEFAULT_GOAL={target:15,start:"2026-11-20",deadline:"2026-12-31",platforms:[{k:"bayut",n:"Bayut"},{k:"pf",n:"Property Finder"}]};
 const goalOf=()=>Object.assign({},DEFAULT_GOAL,settings.goal||{});
 let perf=null,perfAt=0;
-function drawOnlineBoxes(on){$("#m-online").innerHTML=goalOf().platforms.map(p=>`<label class="plat"><input type="checkbox" data-plat="${esc(p.k)}"${on[p.k]?" checked":""}>${esc(p.n)}</label>`).join("")}
+const platBoxes=(on,attr)=>goalOf().platforms.map(p=>`<label class="plat"><input type="checkbox" ${attr}="${esc(p.k)}"${on&&on[p.k]?" checked":""}>${esc(p.n)}</label>`).join("")+`<label class="plat off"><input type="checkbox" ${attr}="off"${on&&on.off?" checked":""}>Off market</label>`;
+function drawOnlineBoxes(on){$("#m-online").innerHTML=platBoxes(on,"data-plat")}
+// Off market and the platforms exclude each other.
+function exclusive(box,attr){const wrap=box.closest(".plats");if(!box.checked)return;wrap.querySelectorAll(`[${attr}]`).forEach(x=>{if(x!==box&&(box.getAttribute(attr)==="off"||x.getAttribute(attr)==="off"))x.checked=false})}
+document.addEventListener("change",e=>{const b=e.target.closest("#m-online [data-plat]");if(b)exclusive(b,"data-plat")});
 function onlineFromForm(){const o={};document.querySelectorAll("#m-online [data-plat]").forEach(c=>{if(c.checked)o[c.dataset.plat]=true});return o}
 const isOnline=(m,g)=>g.platforms.length&&g.platforms.every(p=>m.online&&m.online[p.k]);
 function pace(a,g,now){const t0=Date.parse(g.start),t1=Date.parse(g.deadline+"T23:59:59"),t=Math.min(Math.max(now,t0),t1);
@@ -2359,14 +2381,23 @@ function weeklyText(){if(!perf)return"";const g=perf.goal,now=Date.now(),ag=[...
   const tp=pace({online:tot},Object.assign({},g,{target:goalT}),now),medal=["🥇","🥈","🥉"],first=n=>String(n).split(" ")[0];
   const bar=n=>{const f=Math.round(Math.min(1,n/g.target)*10);return "🟩".repeat(f)+"⬜".repeat(10-f)};
   const date=new Date().toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}),dl=new Date(g.deadline).toLocaleDateString("en-GB",{day:"numeric",month:"short"});
-  let t=`*Peninsula team: weekly leaderboard* 🏆\n${date}\n\n*Goal:* ${g.target} listings each, live on ${g.platforms.map(p=>p.n).join(", ").replace(/, ([^,]*)$/," and $1")} by ${dl}\n*Team:* ${tot} of ${goalT} online (${Math.round(tot/goalT*100)}%) · ${wk} went live this week · ${tp.daysLeft} days left\n\n`;
+  let t=`*Peninsula team: weekly leaderboard* 🏆\n${date}\n\n*Goal:* ${g.target} listings each, live on ${g.platforms.map(p=>p.n).join(", ").replace(/, ([^,]*)$/," and $1")} by ${dl}\n*Team:* ${ag.reduce((x,a)=>x+a.listings,0)} units · ${tot} of ${goalT} online (${Math.round(tot/goalT*100)}%) · ${wk} went live this week · ${tp.daysLeft} days left\n\n`;
   ag.forEach((a,i)=>{const p=pace(a,g,now),w=week(a);
     t+=`${medal[i]||(i+1)+"."} *${first(a.name)}*: ${a.online}/${g.target} ${p.status==="done"?"✅":p.status==="ok"?"👍":"⏳"}\n${bar(a.online)}\n`;
-    t+=`   ${a.listings} unit${a.listings===1?"":"s"} · ${w?"+"+w+" live this week":"none live this week"}${a.partly?" · "+a.partly+" on some platforms":""}${p.left?" · needs ~"+Math.ceil(p.perWeek)+"/week":" · goal reached!"}\n\n`});
+    t+=`   ${a.listings} unit${a.listings===1?"":"s"}${a.offMarket?" · "+a.offMarket+" off market":""} · ${w?"+"+w+" live this week":"none live this week"}${a.partly?" · "+a.partly+" on some platforms":""}${p.left?" · needs ~"+Math.ceil(p.perWeek)+"/week":" · goal reached!"}\n\n`});
   const top=ag.filter(a=>week(a)>0).sort((a,b)=>week(b)-week(a))[0];
   if(top)t+=`⭐ Top this week: ${first(top.name)} with ${week(top)} listing${week(top)===1?"":"s"} live.\n`;
   t+=tp.status==="behind"?`We should be at ${tp.expected} by now. Let's push this week 💪`:`We're on track. Keep it going 💪`;
   return t}
+const BLDLONG={1:"Peninsula One",2:"Peninsula Two",3:"Peninsula Three",4:"Peninsula Four – The Plaza",5:"Peninsula Five – Signature Collection"};
+const STATUS_LABEL={online:"Online",partly:"Partly online",off:"Off market",none:"Not listed yet"};
+function unitsByAgent(a,g,photo){const typ=b=>b==null?"–":b===0?"Studio":b+" Bed",units=[...a.units].sort((x,y)=>(x.b||0)-(y.b||0)||(x.beds||0)-(y.beds||0));
+  const price=u=>[u.price?"AED "+fmt(u.price):"",u.rent?"AED "+fmt(u.rent)+" / yr":""].filter(Boolean).join(" · ")||"On request";
+  return `<div class="uagent"><div class="uhead"><img src="${esc(photo(a.key))}" alt=""><div><b>${esc(a.name)}</b><span>${a.phone?esc(a.phone)+" · ":""}${a.listings} unit${a.listings===1?"":"s"}</span></div></div>
+    <div class="tablewrap"><table class="utable"><tr><th>Building</th><th>Type</th><th class="c">Size</th><th>Floor</th><th>View</th><th>For</th><th class="r">Price</th><th>Status</th></tr>
+    ${units.length?units.map(u=>`<tr><td>${esc(BLDLONG[u.b]||"–")}</td><td>${esc(typ(u.beds))}</td><td class="c num">${u.size?fmt(u.size)+" sq ft":"–"}</td><td>${esc(u.floor||"On request")}</td><td>${esc(u.view||"On request")}</td><td>${u.deal==="both"?"Sale or rent":u.deal==="rent"?"Rent":"Sale"}</td><td class="r num pr">${esc(price(u))}</td>
+      <td><span class="ust ${u.status}">${esc(STATUS_LABEL[u.status])}</span>${u.status==="partly"?`<small class="src"> ${esc(u.on.map(k=>(g.platforms.find(p=>p.k===k)||{}).n).filter(Boolean).join(", "))}</small>`:""}</td></tr>`).join("")
+      :`<tr><td colspan="8" class="c" style="color:var(--muted);font-style:italic">${a.key==="love"||!a.lastAdded?"New to the team – first listings coming soon":"No units yet"}</td></tr>`}</table></div></div>`}
 async function renderTeam(){const el=$("#team");if(!SRV){el.innerHTML='<div class="empty">Team performance uses the online version of the app, where everyone signs in.</div>';return}
   if(!perf)el.innerHTML='<div class="empty">Loading…</div>';await loadPerf();if(!perf){el.innerHTML='<div class="empty">Team performance couldn\'t be loaded. Check your connection.</div>';return}
   const g=perf.goal,now=Date.now(),ag=[...perf.agents].sort((a,b)=>b.online-a.online||b.listings-a.listings||a.name.localeCompare(b.name)),tot=ag.reduce((s,a)=>s+a.online,0),goalT=g.target*ag.length;
@@ -2382,16 +2413,21 @@ async function renderTeam(){const el=$("#team");if(!SRV){el.innerHTML='<div clas
       <div class="chips">${g.platforms.map(x=>`<span>${esc(x.n)} ${a.platforms[x.k]||0}</span>`).join("")}${a.partly?`<span>${a.partly} on some platforms</span>`:""}</div>
       <small style="color:var(--muted)">${p.left?`Needs ${p.left} more · about ${Math.ceil(p.perWeek)} a week`:"Done. Keep going!"}</small></div>`};
   const myOffers=OFFERS.filter(o=>o.teamUnit&&!o.fromListing&&(isAdmin||(mk&&o.agent===mk))).sort((a,b)=>(a.agent||"").localeCompare(b.agent||"")||a.b-b.b||a.beds-b.beds);
-  const plats=(on,attr)=>`<div class="plats">${g.platforms.map(p=>`<label class="plat"><input type="checkbox" ${attr}="${esc(p.k)}"${on&&on[p.k]?" checked":""}>${esc(p.n)}</label>`).join("")}</div>`;
+  const plats=(on,attr)=>`<div class="plats">${platBoxes(on,attr)}</div>`;
   const offRow=o=>`<div class="ochk" data-off="${esc(o.id)}"><div><b>${isAdmin&&AGENTS[o.agent]?esc(AGENTS[o.agent].name.split(" ")[0])+" · ":""}${o.unit?"Unit "+esc(o.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(TYPE[o.beds])} · ${esc(o.title)}</b><span class="s">${esc(o.deal==="rent"?aed(o.rent)+" / yr":aed(o.price))}${isOnline(o,g)?" · counts towards the goal":""}</span></div>${plats(o.online,"data-otog")}</div>`;
   const own=mine.filter(m=>m);
   el.innerHTML=`<div class="gband"><div><p class="kick">Goal until ${esc(dl)}</p><h2>${g.target} listings each, live on ${esc(plist)}</h2><p>A listing counts once it's online on every platform. ${tp.daysLeft} days left.</p>
       <div class="gbar" aria-label="Team progress"><i style="width:${Math.min(100,tot/goalT*100)}%"></i><em style="left:${tf*100}%" title="Where we should be today"></em></div><p style="margin-top:8px;font-size:13px">${tot} of ${goalT} for the team · the white line is where we should be today (${tp.expected})</p></div>
     <div class="gstats"><div><b class="num">${tot}</b><span>online on every platform</span></div><div><b class="num">${Math.max(0,goalT-tot)}</b><span>still to go</span></div><div><b class="num">${wk}</b><span>went live this week</span></div></div></div>
-  <div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Leaderboard</h2><p class="lede">Green: online on every platform. Orange: on some platforms so far.</p></div>
-    <div class="actions"><a class="btn primary" id="wk-wa" href="https://wa.me/?text=${encodeURIComponent(weeklyText())}" target="_blank" rel="noopener">${ic("chat")}Send weekly update</a><button class="btn" type="button" id="wk-copy">${ic("copy")}Copy</button></div></div><div class="lboard">${ag.map(card).join("")}</div></div>
+  <div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Ranking</h2><p class="lede">From ${esc(new Date(g.start).toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"short"}))} to today. Units for sale or rent count in both columns.</p></div>
+    <div class="actions"><a class="btn primary" id="wk-wa" href="https://wa.me/?text=${encodeURIComponent(weeklyText())}" target="_blank" rel="noopener">${ic("chat")}Send weekly update</a><button class="btn" type="button" id="wk-copy">${ic("copy")}Copy</button></div></div>
+    <div class="tablewrap"><table class="rank"><tr><th class="c">Rank</th><th>Agent</th><th class="c">Total units</th><th class="c">For sale</th><th class="c">For rent</th><th class="c">Online</th><th class="c">Off market</th><th class="c">Still to list online</th><th>Progress</th></tr>
+      ${ag.map((a,i)=>{const p=pace(a,g,now);return `<tr class="${a.key===mk?"me":""}"><td class="c rk">${i+1}</td><td><span class="who"><img src="${esc(photo(a.key))}" alt="">${esc(a.name)}</span></td><td class="c tot num">${a.listings}</td><td class="c num">${a.forSale}</td><td class="c num">${a.forRent}</td><td class="c num on">${a.online}</td><td class="c num">${a.offMarket}</td><td class="c num">${Math.max(0,g.target-a.online)}</td>
+        <td><div class="gprog" style="min-width:110px" title="${a.online} online, ${a.partly} on some platforms"><i class="on" style="width:${Math.min(100,a.online/g.target*100)}%"></i><i class="pt" style="width:${Math.min(100,a.partly/g.target*100)}%"></i></div><span class="stat ${p.status}" style="margin-top:6px;display:inline-block">${p.status==="done"?"Goal reached":p.status==="ok"?"On track":"Behind"}</span></td></tr>`}).join("")}
+      <tr class="total"><td></td><td>Team total</td><td class="c num">${ag.reduce((x,a)=>x+a.listings,0)}</td><td class="c num">${ag.reduce((x,a)=>x+a.forSale,0)}</td><td class="c num">${ag.reduce((x,a)=>x+a.forRent,0)}</td><td class="c num">${tot}</td><td class="c num">${ag.reduce((x,a)=>x+a.offMarket,0)}</td><td class="c num">${Math.max(0,goalT-tot)}</td><td></td></tr></table></div></div>
+  <div class="panel"><h2>Units by agent</h2><p class="lede">Every unit each of us has, with its floor. Unit numbers and owners stay with the listing agent.</p><div class="stack">${ag.map(a=>unitsByAgent(a,g,photo)).join("")}</div></div>
   <div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Your listings</h2><p class="lede">Tick each platform once the listing is live there.${isAdmin?" You can tick for every agent.":" Only you and the admin can change these."}</p></div><button class="btn primary" data-goto-mine>${ic("list")}Add a listing</button></div>
-    <div class="stack" id="team-own">${myOffers.length?`<h4 style="margin:4px 0 0">${isAdmin?"Team offers":"Your offers"} · ${myOffers.length}</h4>`+myOffers.map(offRow).join("")+(own.length?`<h4 style="margin:8px 0 0">${isAdmin?"Your own units":"Your own units"} · ${own.length}</h4>`:""):""}${own.length?own.map(m=>{const o=mineToOffer(m);return `<div class="ochk" data-lst="${esc(m.id)}"><div><b>${o.unit?"Unit "+esc(o.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(TYPE[o.beds])}</b><span class="s">${esc(o.deal==="rent"?aed(o.rent)+" / yr":aed(o.price))}${isOnline(m,g)?" · counts towards the goal":""}</span></div><div class="plats">${g.platforms.map(p=>`<label class="plat"><input type="checkbox" data-tog="${esc(p.k)}"${m.online&&m.online[p.k]?" checked":""}>${esc(p.n)}</label>`).join("")}</div></div>`}).join(""):(myOffers.length?"":'<div class="empty">No listings yet. Add your units in Listings, then tick the platforms they\'re live on.</div>')}</div></div>
+    <div class="stack" id="team-own">${myOffers.length?`<h4 style="margin:4px 0 0">${isAdmin?"Team offers":"Your offers"} · ${myOffers.length}</h4>`+myOffers.map(offRow).join("")+(own.length?`<h4 style="margin:8px 0 0">${isAdmin?"Your own units":"Your own units"} · ${own.length}</h4>`:""):""}${own.length?own.map(m=>{const o=mineToOffer(m);return `<div class="ochk" data-lst="${esc(m.id)}"><div><b>${o.unit?"Unit "+esc(o.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(TYPE[o.beds])}</b><span class="s">${esc(o.deal==="rent"?aed(o.rent)+" / yr":aed(o.price))}${isOnline(m,g)?" · counts towards the goal":""}</span></div>${plats(m.online,"data-tog")}</div>`}).join(""):(myOffers.length?"":'<div class="empty">No listings yet. Add your units in Listings, then tick the platforms they\'re live on.</div>')}</div></div>
   ${isAdmin?`<div class="panel"><h2>Goal settings</h2><p class="lede">Only you can change these. Everyone on the team sees the result.</p><div class="fgrid">
     <div class="field"><label for="gl-target">Listings per agent</label><input id="gl-target" inputmode="numeric" value="${g.target}"></div>
     <div class="field"><label for="gl-start">Counting from</label><input id="gl-start" type="date" value="${esc(g.start)}"></div>
@@ -2406,10 +2442,12 @@ $("#team").addEventListener("click",e=>{if(e.target.closest("[data-goto-mine]"))
     saveSettings({goal:{target:n,start:st,deadline:en,platforms:plats}},`Set the team goal: ${n} listings each by ${en}`).then(ok=>{if(ok){perf=null;toast("Goal saved");renderTeam()}})}});
 $("#team").addEventListener("change",async e=>{const oc=e.target.closest("[data-otog]");
   if(oc){const id=oc.closest("[data-off]").dataset.off;oc.disabled=true;
+    exclusive(oc,"data-otog");
     try{const r=await api("team/online",{id,platform:oc.dataset.otog,on:oc.checked});const o=OFFERS.find(x=>x.id===id);if(o)o.online=r.online;perf=null;await renderTeam();toast(o&&isOnline(o,goalOf())?"Online everywhere: it counts towards the goal":"Saved")}
     catch(x){toast(x.message);oc.checked=!oc.checked;oc.disabled=false}return}
   const c=e.target.closest("[data-tog]");if(!c)return;const id=c.closest("[data-lst]").dataset.lst,m=mine.find(x=>x.id===id);if(!m)return;
-  const data=Object.assign({},m,{online:Object.assign({},m.online||{},{[c.dataset.tog]:c.checked})});delete data.id;c.disabled=true;
+  const on=Object.assign({},m.online||{},{[c.dataset.tog]:c.checked});if(c.checked){if(c.dataset.tog==="off")Object.keys(on).forEach(k=>{if(k!=="off")delete on[k]});else delete on.off}
+  const data=Object.assign({},m,{online:on});delete data.id;c.disabled=true;
   try{await api("data/listings",{id,data},"PUT");await loadListings();perf=null;await renderTeam();toast(isOnline(data,goalOf())?"Online everywhere: it counts towards the goal":"Saved")}catch(x){toast(x.message);c.checked=!c.checked;c.disabled=false}});
 
 /* ---------------- Start-up ---------------- */

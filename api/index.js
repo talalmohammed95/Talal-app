@@ -334,6 +334,7 @@ const routes = {
     if (prev && prev.user_id !== c.user.id && c.user.role !== "admin") fail(403, "This listing belongs to another agent.");
     // The day a listing first went live on every platform counts towards the team goal.
     const goal = await teamGoal(), on = data.online && typeof data.online === "object" ? data.online : {};
+    if (on.off) { for (const p of goal.platforms) delete on[p.k]; data.online = { off: true }; }
     if (goal.platforms.length && goal.platforms.every(p => on[p.k])) data.onlineAt = (prev && prev.data.onlineAt) || new Date().toISOString();
     else delete data.onlineAt;
     if (!prev) {
@@ -379,7 +380,7 @@ const routes = {
     // The team's offers count too, under the agent each is listed under. A shared listing is counted once, as the listing.
     const rows = lrows.concat(orows.filter(r => r.data.teamUnit && !r.data.fromListing).map(r => ({ data: r.data, created_at: r.created_at, agent_key: "", name: "" })));
     const agents = (st && st.data && st.data.agents) || SETTINGS.agents, by = {};
-    const blank = k => ({ key: k, name: agents[k] ? agents[k].name : k, listings: 0, online: 0, partly: 0, platforms: {}, onlineDates: [], lastAdded: null });
+    const blank = k => ({ key: k, name: agents[k] ? agents[k].name : k, phone: agents[k] ? agents[k].phone || "" : "", listings: 0, online: 0, partly: 0, offMarket: 0, forSale: 0, forRent: 0, platforms: {}, onlineDates: [], lastAdded: null, units: [] });
     for (const k of Object.keys(agents)) by[k] = blank(k);
     for (const r of rows) {
       const k = r.data.agent || r.agent_key || "";
@@ -387,11 +388,18 @@ const routes = {
       const a = by[k] || (by[k] = { ...blank(k), name: agents[k] ? agents[k].name : r.name });
       const on = r.data.online || {}, n = goal.platforms.filter(p => on[p.k]).length;
       a.listings++;
-      if (n && n === goal.platforms.length) { a.online++; a.onlineDates.push(r.data.onlineAt || r.created_at); } else if (n) a.partly++;
+      let status = "none";
+      if (n && n === goal.platforms.length) { a.online++; a.onlineDates.push(r.data.onlineAt || r.created_at); status = "online"; }
+      else if (on.off) { a.offMarket++; status = "off"; }
+      else if (n) { a.partly++; status = "partly"; }
+      const d = r.data, num = v => Number(String(v ?? "").replace(/[^0-9.]/g, "")) || null;
+      a.units.push({ b: +d.b || null, beds: d.beds === undefined || d.beds === "" ? null : +d.beds, size: num(d.size), floor: str(d.floor, 40), view: str(d.view, 80), deal: d.deal,
+        price: d.deal === "rent" ? null : num(d.price), rent: d.deal === "rent" ? num(d.rent ?? d.price) : d.deal === "both" ? num(d.rent) : null, status,
+        on: goal.platforms.filter(p => on[p.k]).map(p => p.k) });
       for (const p of goal.platforms) if (on[p.k]) a.platforms[p.k] = (a.platforms[p.k] || 0) + 1;
       if (!a.lastAdded || r.created_at > a.lastAdded) a.lastAdded = r.created_at;
-      if (r.data.deal !== "rent") a.forSale = (a.forSale || 0) + 1;
-      if (r.data.deal === "rent" || r.data.deal === "both") a.forRent = (a.forRent || 0) + 1;
+      if (r.data.deal !== "rent") a.forSale++;
+      if (r.data.deal === "rent" || r.data.deal === "both") a.forRent++;
     }
     return { goal, agents: Object.values(by), now: new Date().toISOString() };
   },
@@ -401,11 +409,13 @@ const routes = {
     requireTeam(c);
     const id = str(c.body.id, 64), platform = str(c.body.platform, 40);
     const goal = await teamGoal();
-    if (!goal.platforms.some(p => p.k === platform)) fail(400, "Unknown platform.");
+    if (platform !== "off" && !goal.platforms.some(p => p.k === platform)) fail(400, "Unknown platform.");
     const { rows: [o] } = await q("select data from offers where id = $1", [id]);
     if (!o) fail(404, "Offer not found.");
     if (c.user.role !== "admin" && (!o.data.agent || o.data.agent !== c.user.agent_key)) fail(403, "Only the agent this offer is listed under can change it.");
     const data = { ...o.data, online: { ...(o.data.online || {}), [platform]: !!c.body.on } };
+    // Off market and the platforms exclude each other.
+    if (c.body.on) { if (platform === "off") data.online = { off: true }; else delete data.online.off; }
     if (goal.platforms.every(p => data.online[p.k])) data.onlineAt = o.data.onlineAt || new Date().toISOString(); else delete data.onlineAt;
     await q("update offers set data = $2, updated_at = now() where id = $1", [id, data]);
     return { ok: true, online: data.online };
