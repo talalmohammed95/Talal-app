@@ -5,6 +5,7 @@ import { q, dbUrl } from "../lib/db.js";
 import { ensureSchema } from "../lib/schema.js";
 import { hashPassword, checkPassword, newToken, sha256 } from "../lib/auth.js";
 import { mailEnabled, sendMail, trySendMail } from "../lib/mail.js";
+import { SETTINGS } from "../lib/seed.js";
 
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
 const COOKIE = "orla_session";
@@ -161,6 +162,13 @@ async function guessAgentKey(u) {
   const first = s => String(s || "").trim().split(/\s+/)[0].toLowerCase();
   const key = Object.keys(agents).find(k => first(agents[k].name) && first(agents[k].name) === first(u.name));
   if (key) { await q("update users set agent_key = $2 where id = $1", [u.id, key]); u.agent_key = key; }
+}
+
+async function teamGoal() {
+  const { rows: [st] } = await q("select data from settings where id = 'app'");
+  const g = { ...SETTINGS.goal, ...((st && st.data && st.data.goal) || {}) };
+  if (!Array.isArray(g.platforms)) g.platforms = SETTINGS.goal.platforms;
+  return g;
 }
 
 // Writes the offer for a shared listing. Only these fields are copied: the unit number, the owner and the notes stay in the listing.
@@ -322,8 +330,12 @@ const routes = {
     const id = str(c.body.id, 64), data = c.body.data;
     if (!/^[A-Za-z0-9_-]{1,64}$/.test(id)) fail(400, "Invalid listing id.");
     if (!data || typeof data !== "object" || Array.isArray(data) || JSON.stringify(data).length > 20000) fail(400, "Invalid listing.");
-    const { rows: [prev] } = await q("select user_id from listings where id = $1", [id]);
+    const { rows: [prev] } = await q("select user_id, data from listings where id = $1", [id]);
     if (prev && prev.user_id !== c.user.id && c.user.role !== "admin") fail(403, "This listing belongs to another agent.");
+    // The day a listing first went live on every platform counts towards the team goal.
+    const goal = await teamGoal(), on = data.online && typeof data.online === "object" ? data.online : {};
+    if (goal.platforms.length && goal.platforms.every(p => on[p.k])) data.onlineAt = (prev && prev.data.onlineAt) || new Date().toISOString();
+    else delete data.onlineAt;
     if (!prev) {
       const { rows: [n] } = await q("select count(*)::int as n from listings where user_id = $1", [c.user.id]);
       if (n.n >= 1000) fail(400, "You've reached 1,000 listings. Delete old ones first.");
@@ -354,6 +366,29 @@ const routes = {
     await q("update listings set data = $2, updated_at = now() where id = $1", [id, data]);
     if (data.sharedOffer) await shareListing(id, c.user.email);
     return { ok: true, offerId: data.sharedOffer || null };
+  },
+
+  // Team performance: counts per agent only (no unit numbers, owners or prices). The admin and the Orla team see it.
+  "GET team/performance": async c => {
+    requireTeam(c);
+    const goal = await teamGoal();
+    const [{ rows }, { rows: [st] }] = await Promise.all([
+      q("select l.data, l.created_at, u.agent_key, u.name from listings l join users u on u.id = l.user_id"),
+      q("select data from settings where id = 'app'")]);
+    const agents = (st && st.data && st.data.agents) || SETTINGS.agents, by = {};
+    const blank = k => ({ key: k, name: agents[k] ? agents[k].name : k, listings: 0, online: 0, partly: 0, platforms: {}, onlineDates: [], lastAdded: null });
+    for (const k of Object.keys(agents)) by[k] = blank(k);
+    for (const r of rows) {
+      const k = r.data.agent || r.agent_key || "";
+      if (!k) continue;
+      const a = by[k] || (by[k] = { ...blank(k), name: agents[k] ? agents[k].name : r.name });
+      const on = r.data.online || {}, n = goal.platforms.filter(p => on[p.k]).length;
+      a.listings++;
+      if (n && n === goal.platforms.length) { a.online++; a.onlineDates.push(r.data.onlineAt || r.created_at); } else if (n) a.partly++;
+      for (const p of goal.platforms) if (on[p.k]) a.platforms[p.k] = (a.platforms[p.k] || 0) + 1;
+      if (!a.lastAdded || r.created_at > a.lastAdded) a.lastAdded = r.created_at;
+    }
+    return { goal, agents: Object.values(by), now: new Date().toISOString() };
   },
 
   "POST data/listings/delete": async c => {
