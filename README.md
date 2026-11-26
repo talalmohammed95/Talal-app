@@ -80,11 +80,15 @@ The admin creates the CEO's account (Munir Al Deraawi, always addressed as "Mr M
 
 **Team chat** (top bar, or More on a phone) is one group for the admin, the agents and the CEO. It refreshes every 15 seconds, shows an unread count, and each person can delete their own messages (the admin any). Agents are asked not to post owners' or clients' numbers there.
 
+## App users (the admin and the CEO)
+
+**More › Users & visitors** starts with **App users**: how many accounts there are in the Orla team, external agents and clients, how many were active this week (opened the app in the last 7 days) and how many are new; three small charts of active users per day (one per group, same scale); and every account in a list with type, last active, days active in the last 30, homes viewed, viewing or details requests sent, who invited them and when they joined. Filter by group or "Never opened", and search by name, email or agency. Accounts waiting for approval and blocked ones are marked. Activity comes from the app's visit counter (linked to the signed-in account) and sign-ins.
+
 ## Website visitors (the admin and the CEO)
 
 Every page of the website (English, Russian, German, Italian, the home-screen guide) and the app loads `track.js`, which records an anonymous visit: a random id kept in that browser (no cookies), the page, where the visitor came from (the referring site or `?utm_source=`), the country (from Vercel), the device and, in the app, which homes were opened. No names, emails or IP addresses are stored; bots and automated browsers are skipped; visits older than 400 days are deleted. The Orla team's own visits (admin, agents, CEO) are recorded as team and left out of the numbers.
 
-**More › Visitors** shows visitors per day (each person once a day) for 7, 30 or 90 days, with a hover for new, signed-in and pages viewed, and a table view; today, yesterday, the last 7 days, the period, the daily average and the best day; new accounts; where visitors come from (Google, Instagram, Bayut, Property Finder, direct or WhatsApp…), what they open, countries, devices, and the most viewed homes. The CEO's and the admin's Home show a small Website visitors card, the morning email adds yesterday's visitors (against the same day last week) and the last 7 days, and the weekly summary adds the week's visitors. Tip: links shared on Instagram or in campaigns can end with `?utm_source=instagram` to be counted by name.
+**More › Users & visitors** then shows visitors per day (each person once a day) for 7, 30 or 90 days, with a hover for new, signed-in and pages viewed, and a table view; today, yesterday, the last 7 days, the period, the daily average and the best day; new accounts; where visitors come from (Google, Instagram, Bayut, Property Finder, direct or WhatsApp…), what they open, countries, devices, and the most viewed homes. The CEO's and the admin's Home show a small Website visitors card, the morning email adds yesterday's visitors (against the same day last week) and the last 7 days, and the weekly summary adds the week's visitors. Tip: links shared on Instagram or in campaigns can end with `?utm_source=instagram` to be counted by name.
 
 ## Daily pace to the goal
 

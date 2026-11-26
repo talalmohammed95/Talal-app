@@ -671,10 +671,26 @@ const routes = {
     if (!vid) return { ok: true };
     const w = Number(c.body.w) || 0, device = /ipad|tablet/i.test(ua) || (w >= 700 && w < 1100 && /mobile|android/i.test(ua)) ? "Tablet" : /mobi|iphone|android/i.test(ua) ? "Phone" : "Computer";
     const ref = str(c.body.ref, 80).toLowerCase().replace(/^www\./, ""), path = str(c.body.path, 120);
-    await q("insert into visits (vid, path, ref, country, device, lang, role, offer_id) values ($1, $2, $3, $4, $5, $6, $7, $8)",
-      [vid, path, ref, str(c.req.headers["x-vercel-ip-country"], 4).toUpperCase(), device, str(c.body.lang, 8), c.user ? c.user.role : "visitor", str(c.body.offer, 80) || null]);
+    await q("insert into visits (vid, path, ref, country, device, lang, role, offer_id, user_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+      [vid, path, ref, str(c.req.headers["x-vercel-ip-country"], 4).toUpperCase(), device, str(c.body.lang, 8), c.user ? c.user.role : "visitor", str(c.body.offer, 80) || null, c.user ? c.user.id : null]);
     return { ok: true };
   },
+  // Who uses the app: every account (Orla agents, external agents, clients) with when they were last active, for the admin and the CEO.
+  "GET team/users": async c => {
+    requireStaff(c);
+    if (!seesAll(c.user)) fail(403, "Only the CEO and the admin see the users.", "not_allowed");
+    const days = Math.min(90, Math.max(7, parseInt(new URL(c.req.url, "http://localhost").searchParams.get("days") || "30", 10) || 30));
+    const [{ rows: users }, { rows: daily }] = await Promise.all([
+      q(`select u.id, u.name, u.email, u.phone, u.role, u.company, u.status, u.created_at, u.agent_key, i.name as invited_by,
+           greatest((select max(at) from visits v where v.user_id = u.id), (select max(created_at) from sessions s where s.user_id = u.id)) as last_seen,
+           (select count(distinct day)::int from visits v where v.user_id = u.id and v.day > (now() at time zone 'Asia/Dubai')::date - 30) as days_30,
+           (select count(distinct offer_id)::int from visits v where v.user_id = u.id and v.offer_id is not null) as homes,
+           (select count(*)::int from leads l where l.user_id = u.id) as requests
+         from users u left join users i on i.id = u.invited_by order by last_seen desc nulls last, u.created_at desc`),
+      q(`select day, role, count(distinct user_id)::int as n from visits where user_id is not null and day > (now() at time zone 'Asia/Dubai')::date - $1::int group by 1, 2 order by 1`, [days])]);
+    return { days, users: users.map(u => ({ ...u, me: u.id === c.user.id })), daily: daily.map(d => ({ ...d, day: new Date(d.day).toISOString().slice(0, 10) })) };
+  },
+
   // Daily visitors for the admin and the CEO. The Orla team's own visits are left out.
   "GET team/visitors": async c => {
     requireStaff(c);
