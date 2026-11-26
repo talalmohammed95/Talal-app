@@ -844,6 +844,13 @@ body.guest .tab[data-view="chat"]{display:none!important}
 .usminis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}.usmini{border:1px solid var(--line);border-radius:12px;padding:10px 12px}.usmh{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}.usmh span{color:var(--muted)}
 .usbar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin:16px 0 10px}#us-q{flex:1;min-width:180px;max-width:320px;padding:9px 12px;border-radius:12px;border:1.5px solid var(--line-strong);background:var(--bg);color:var(--fg);font-size:15px}
 .ustab td{vertical-align:top}.ustab td small{display:block;font-size:12px;color:var(--muted)}.ustab td.act{color:var(--good);font-weight:700}.ustab tr.blk{opacity:.5}
+#oinvm{position:fixed;inset:0;z-index:86;background:rgba(15,12,10,.6);display:grid;place-items:center;padding:16px}#oinvm[hidden]{display:none}
+.oinv{border-radius:14px;border:1.5px solid var(--primary);background:var(--accent-soft);padding:12px 14px;display:flex;flex-direction:column;gap:8px}.oinv b{display:block;font:800 15px var(--display)}.oinv span{font-size:13px;color:var(--muted)}.oinv-done{display:flex;flex-direction:column;gap:8px}
+.myprop{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:18px;padding:0;overflow:hidden}.mpimg{position:relative;min-height:220px}.mpimg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.mpimg span{position:absolute;left:14px;top:14px;background:#1C1A18;color:#F7A94E;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:5px 10px;border-radius:99px}
+.mpbody{padding:18px 18px 18px 0;display:flex;flex-direction:column;gap:10px}.mpbody h2{margin:0}.mpprice{margin:0;font:800 24px var(--display)}.mpprice small{font:600 13px inherit;color:var(--muted);margin-left:8px}
+.mpst{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;border-radius:12px;background:var(--sunk);padding:10px 12px}.mpst .pills{display:flex;gap:6px}
+.mpag{display:flex;gap:12px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:10px}.mpag img{width:48px;height:48px;border-radius:50%}.mpag span{display:block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.mpag b{font:800 15px var(--display)}.mpag .actions{margin-left:auto;display:flex;gap:6px}
+@media (max-width:760px){.myprop{grid-template-columns:1fr}.mpbody{padding:0 16px 16px}.mpimg{min-height:180px}}
 </style>
 <script src="/config.js"></script>
 <script src="/track.js" defer></script>
@@ -866,7 +873,7 @@ body.guest .tab[data-view="chat"]{display:none!important}
       <div class="field" id="g-name-wrap" hidden><label for="g-name">Full name</label><input id="g-name" autocomplete="name"></div>
       <div class="field" id="g-company-wrap" hidden><label for="g-company">Agency name</label><input id="g-company" autocomplete="organization"></div>
       <div class="field" id="g-phone-wrap" hidden><label for="g-phone">Mobile number (for viewings)</label><input id="g-phone" type="tel" autocomplete="tel" inputmode="tel"></div>
-      <div class="field" id="g-email-wrap" hidden><label for="g-email">Email</label><input id="g-email" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false"></div>
+      <div class="field" id="g-email-wrap" hidden><label for="g-email" id="g-email-l">Email</label><input id="g-email" type="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false"></div>
       <div class="field" id="g-pass-wrap" hidden><label for="g-pass" id="g-pass-label">Password</label><input id="g-pass" type="password" autocomplete="current-password"></div>
       <div class="field" id="g-pass2-wrap" hidden><label for="g-pass2">Repeat password</label><input id="g-pass2" type="password" autocomplete="new-password"></div>
       <div class="field" id="gate-pin-wrap"><label for="gate-pin" id="gate-pin-label">PIN</label><input id="gate-pin" type="password" inputmode="numeric" maxlength="12" autocomplete="off"></div>
@@ -1637,7 +1644,7 @@ $("#mine-form").addEventListener("submit",async e=>{e.preventDefault();
   const m={id:g("#m-id")||"l-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),unit:g("#m-unit"),b:g("#m-bld"),tower:hasTowers(g("#m-bld"))&&g("#m-tower")||undefined,layout:mTypeVal().layout||undefined,beds:String(mTypeVal().beds),deal:g("#m-deal"),floor:g("#m-floor"),view:g("#m-view"),size:g("#m-size").replace(/[^0-9.]/g,""),price,status:g("#m-status"),furn:g("#m-furn"),owner:g("#m-owner"),phone:g("#m-phone"),agent:g("#m-agent"),date:g("#m-date"),notes:g("#m-notes"),online:onlineFromForm(),future:$("#m-future").checked||undefined,availableFrom:g("#m-avail")||undefined,remindAt:g("#m-remind")||undefined,remindNote:g("#m-rnote")||undefined,adTitle:g("#m-adtitle")||undefined,adText:g("#m-adtext")||undefined};
   if(SRV){const prev=mine.concat(teamListings).find(x=>x.id===m.id)||{};const{id,...data}=Object.assign({},prev,m);delete data._by;delete data._own;let r;try{r=await api("data/listings",{id,data},"PUT")}catch(x){toast(x.message);return}await loadListings();if(r&&r.warning){resetMineForm();renderAll();setTimeout(()=>toast(r.warning),50);return}}
   else{const i=mine.findIndex(x=>x.id===m.id);if(i>=0)mine[i]=m;else mine.push(m);persist()}
-  const was=!!g("#m-id");resetMineForm();renderAll();toast(was?"Listing updated":"Listing saved");
+  const was=!!g("#m-id");resetMineForm();renderAll();toast(was?"Listing updated":"Listing saved");if(SRV&&m.phone)setTimeout(()=>ownerInvitePrompt(m.id),300);
 });
 function mTypeVal(){const v=String($("#m-type").value||"0|").split("|");return{beds:+v[0]||0,layout:v[1]||""}}
 function mFillTypes(beds,layout){const b=+$("#m-bld").value||3,info=BLDINFO[b],cur=beds!=null&&beds!==""?(+beds)+"|"+(layout||""):$("#m-type").value;
@@ -1666,7 +1673,7 @@ async function loadListings(){if(!SRV||!isTeam())return;
 /* ---------------- Dashboard ---------------- */
 const today=()=>new Date().toISOString().slice(0,10);
 const isDue=c=>c.follow&&c.follow<=today()&&c.status!=="Closed"&&c.status!=="Lost";
-function renderDash(){if(!isTeam()){renderShowroom();return}clearInterval(heroT);if(isCEO()){$("#dash").innerHTML=ceoHome();return}renderTeamDash();
+function renderDash(){if(!isTeam()){renderShowroom();if(myProps.length)$("#dash").insertAdjacentHTML("afterbegin",propertyHTML());return}clearInterval(heroT);if(isCEO()){$("#dash").innerHTML=ceoHome();return}renderTeamDash();
   const myl=renderMyListings();if(myl){const r=$("#dash").children[0];if(r)r.insertAdjacentHTML("afterend",myl);else $("#dash").insertAdjacentHTML("afterbegin",myl)}
   $("#dash").insertAdjacentHTML("afterbegin",teamHero()+(isAdmin?weeklyPanel()+visitorsPanel():"")+myTasksHTML()+towerTodoHTML()+leadsHTML()+remindersHTML())}
 // The top achiever: first in the team ranking (online, then units), once they have a unit.
@@ -2288,8 +2295,9 @@ document.querySelectorAll('input[name="g-role"]').forEach(r=>r.addEventListener(
 function initialsAvatar(n){const i=String(n||"?").split(/[\s@._-]+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join("").replace(/[^A-Z0-9]/g,"");
   return "data:image/svg+xml,"+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="64" height="64" rx="32" fill="#F28C28"/><text x="32" y="41" font-family="Arial,sans-serif" font-size="24" font-weight="700" text-anchor="middle" fill="#1F1D1B">${i||"?"}</text></svg>`)}
 function setAuthGate(mode,email){closePresent();$("#gate").hidden=false;authMode=mode;gateMode="auth";
+  {const si=mode==="signin",f=$("#g-email");f.type=si?"text":"email";f.setAttribute("inputmode",si?"text":"email");f.setAttribute("autocomplete",si?"username":"email");$("#g-email-l").textContent=si?"Email or mobile number":"Email"}
   const T={loading:["Sign in","Connecting…"],offline:["Can't connect","The server can't be reached. Check your internet connection and open the app again."],
-    signin:["Sign in","Use the email and password you registered with."],
+    signin:["Sign in","Use your email, or the mobile number your agent invited you with, and your password."],
     signup:["Create your account",emailOn?"Tell us who you are and register with your email. We'll send you a link to confirm it, then Orla Properties approves your account.":"Tell us who you are and register with your email. Orla Properties approves your account before you can open the app."],
     forgot:["Reset your password","Enter your email and we'll send you a link to set a new password."],
     "forgot-nomail":["Reset your password","Ask the admin for a password reset link. They can make one for you in Admin › Users."],
@@ -2316,7 +2324,7 @@ $("#g-links").addEventListener("click",async e=>{const b=e.target.closest("[data
 async function authSubmit(){const err=$("#gate-err"),go=$("#gate-go"),em=$("#g-email").value.trim().toLowerCase(),pw=$("#g-pass").value;err.textContent="";
   const need=(c,m)=>{if(!c)throw new Error(m)};go.disabled=true;
   try{
-    if(authMode==="signin"){need(/^\S+@\S+\.\S+$/.test(em),"Enter your email address.");need(pw,"Enter your password.");const r=await api("auth/login",{email:em,password:pw});await enterServer(r.user)}
+    if(authMode==="signin"){need(/^\S+@\S+\.\S+$/.test(em)||em.replace(/[^0-9]/g,"").length>=7,"Enter your email or mobile number.");need(pw,"Enter your password.");const r=await api("auth/login",{email:em,password:pw});await enterServer(r.user)}
     else if(authMode==="signup"){const nm=$("#g-name").value.trim();need(nm,"Enter your full name.");need(/^\S+@\S+\.\S+$/.test(em),"Enter a valid email address.");need(pw.length>=8,"Use at least 8 characters for your password.");need(pw===$("#g-pass2").value,"The two passwords don't match.");
       const role=roleVal(),co=$("#g-company").value.trim();need(role!=="broker"||co,"Enter the name of your agency.");
       const r=await api("auth/register",{name:nm,email:em,password:pw,role,company:co,phone:$("#g-phone").value.trim()});if(r.needsVerification)setAuthGate("sent",em);else await enterServer(r.user)}
@@ -2333,7 +2341,7 @@ async function loadAll(first){
       else if(owner&&owner!==uid){mine=[];clients=[];starred=new Set();persist()}
       else if(mine.length||clients.length||starred.size)persist();
       store.set("orla.localOwner",uid)}
-    migrateOvr();if(!isTeam())await loadTop();if(isTeam()){await loadListings();await loadPerf(true);await loadLeads();await loadTasks();if(isAdmin||isCEO()){loadWeekly();loadVisitorsBrief()}setTimeout(paceModal,700);if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
+    migrateOvr();if(!isTeam()){await loadTop();await loadMyProperty()}if(isTeam()){await loadListings();await loadPerf(true);await loadLeads();await loadTasks();if(isAdmin||isCEO()){loadWeekly();loadVisitorsBrief()}setTimeout(paceModal,700);if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
   catch(e){if(e.status===401||e.status===403){location.reload();return}
     if(first){OFFERS=store.get("orla.cache.offers",[]);applySettings(store.get("orla.cache.settings",{}))}
     if(first||!loadAll.warned){loadAll.warned=true;toast("Offline: showing what's saved on this device")}}
@@ -2644,7 +2652,8 @@ function ownerWa(o){const me=(meInfo&&meInfo.name)||"your agent";
 function ownerCard(o){if(!isTeam()||(o.mine&&!SRV))return"";const a=agentOf(o);
   if(o.fromListing&&!o.mine){const L=mine.concat(teamListings).find(m=>m.id===o.fromListing);if(L)return ownerCard(mineToOffer(L))+shareBox(mineToOffer(L),o)}
   if(o.mine){if(!o.owner&&!o.ownerPhone&&!o.unit)return"";const who=o.by?(o.by.name||o.by.email):"you";
-    return `<div class="ocard"><div class="ow"><span class="ok">${o.deal==="rent"?"Landlord":"Owner"}${o.unit?" · Unit "+esc(o.unit):""}</span><b>${esc(o.owner||"Owner's name not added")}</b>${o.ownerPhone?`<span class="num">${esc(o.ownerPhone)}</span>`:""}<small>${o.by?"Added by "+esc(who)+". Only they, the admin and the CEO can see it.":"Your own listing. Only you and the admin can see it."}</small></div>
+    const L0=mine.concat(teamListings).find(x=>x.id===o.id),inv=SRV&&L0&&L0.phone&&(o.own!==false||isAdmin)?ownerInviteBox(L0):"";
+    return inv+`<div class="ocard"><div class="ow"><span class="ok">${o.deal==="rent"?"Landlord":"Owner"}${o.unit?" · Unit "+esc(o.unit):""}</span><b>${esc(o.owner||"Owner's name not added")}</b>${o.ownerPhone?`<span class="num">${esc(o.ownerPhone)}</span>`:""}<small>${o.by?"Added by "+esc(who)+". Only they, the admin and the CEO can see it.":"Your own listing. Only you and the admin can see it."}</small></div>
       ${o.ownerPhone?`<div class="actions"><a class="btn primary" href="tel:${esc(telOf(o.ownerPhone))}">${ic("phone")}Call owner</a><a class="btn" href="${esc(ownerWa(o))}" target="_blank" rel="noopener">${ic("chat")}WhatsApp for a viewing</a></div>`:""}</div>`}
   if(o.owner||o.ownerPhone){const mineL=o.agent&&o.agent===myKey();
     return `<div class="ocard"><div class="ow"><span class="ok">${o.deal==="rent"?"Landlord":"Owner"}${o.unit?" · Unit "+esc(o.unit):""}</span><b>${esc(o.owner||"Owner")}</b>${o.ownerPhone?`<span class="num">${esc(o.ownerPhone)}</span>`:""}<small>${mineL?"Only you can see this: the offer is listed under your name.":"You see this as admin. Listed under "+esc(a.name)+"."}</small></div>
@@ -3452,6 +3461,57 @@ function usersHTML(){if(!appUsers)return"";const U=appUsers.users,wk=t=>t&&Date.
       <td class="${wk(u.last_seen)?"act":""}">${esc(agoTxt(u.last_seen))}</td><td>${u.days_30||0}</td><td>${u.homes||0}</td><td>${u.requests||0}</td><td>${esc(u.invited_by?firstName(u.invited_by):"—")}</td><td>${esc(new Date(u.created_at).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"2-digit"}))}</td></tr>`).join("")||'<tr><td colspan="8">Nobody here.</td></tr>'}</table></div></div>`}
 $("#visitors").addEventListener("click",e=>{const f=e.target.closest("[data-usf]");if(f){usFilter=f.dataset.usf;visitorsRender()}});
 $("#visitors").addEventListener("input",e=>{if(e.target.id!=="us-q")return;usQuery=e.target.value.trim().toLowerCase();const pos=e.target.selectionStart;visitorsRender();const i=$("#us-q");i.focus();i.setSelectionRange(pos,pos)});
+
+/* ---------------- Owners: invite them to follow their property ---------------- */
+const greetOf=n=>{const w=String(n||"").trim().split(/\s+/);if(!w[0])return"";return /^(mr|mrs|ms|miss|dr|sheikh|eng)\.?$/i.test(w[0])&&w[1]?w[0].replace(/\.$/,"")+" "+w[1]:w[0]};
+function ownerInviteMsg(m,r){const me=(meInfo&&meInfo.name)||"",f=firstName(me)||"Orla Properties",name=greetOf(m.owner),bl=BLD[m.b]||"the Peninsula",what=(typeOf(m)||"home").toLowerCase()+" in "+bl+(m.tower&&hasTowers(m.b)?" Tower "+m.tower:"");
+  return `Hello${name?" "+name:""},
+
+This is ${f} from Orla Properties. Thank you for trusting us with your ${what}.
+
+I've opened a private account for you on our Peninsula website, so you can follow your property any time:
+• where it's advertised (Bayut and Property Finder) and its status
+• how many people viewed it and asked for a viewing
+• the latest homes and prices in the Peninsula
+
+Open: ${r.url}
+Sign in with ${String(r.login||"").includes("@")?"your email: "+r.login:"your mobile number: "+(r.login||r.phone)}
+Password: ${r.password}
+
+Tip: save it on your phone's home screen, it takes 20 seconds: ${location.origin}/home-screen/
+
+Any question, just reply to me here.
+${f}, Orla Properties`}
+function ownerInviteBox(m){const L=mine.concat(teamListings).find(x=>x.id===m.id)||m,linked=!!L.ownerUserId,first=greetOf(L.owner)||"the owner";
+  return `<div class="oinv" data-oinv="${esc(L.id)}"><div><b>${linked?`${esc(first)} has an account`:`Invite ${esc(first)} to follow the property`}</b><span>${linked?"Send a new password and the link again on WhatsApp.":"One tap makes their account. They sign in with their mobile number and see the listing, the platforms, views and viewing requests."}</span></div>
+    <div class="actions"><button class="btn sm primary" type="button" data-oinv-go="${esc(L.id)}">${ic("chat")}${linked?"Send the invitation again":"Invite on WhatsApp"}</button></div><div class="oinv-done" hidden></div></div>`}
+function ownerInvitePrompt(id){const m=mine.concat(teamListings).find(x=>x.id===id);if(!m||!m.phone||m.ownerUserId)return;
+  let el=$("#oinvm");if(!el){document.body.insertAdjacentHTML("beforeend",'<div id="oinvm" role="dialog" aria-modal="true" aria-label="Invite the owner"><div class="pccard"></div></div>');el=$("#oinvm");
+    el.addEventListener("click",e=>{if(e.target.id==="oinvm"||e.target.closest("[data-oinv-close]")){el.hidden=true;document.body.classList.remove("lbopen")}})}
+  el.querySelector(".pccard").innerHTML=`<p class="kick" style="margin:0">Listing saved</p><h2 style="margin:2px 0 4px">Invite ${esc(greetOf(m.owner)||"the owner")} to the website?</h2><p class="lede" style="margin:0">They'll follow their ${esc((typeOf(m)||"home").toLowerCase())} in ${esc(BLD[m.b]||"the Peninsula")}: where it's listed, its status, views and viewing requests. No email needed: they sign in with ${esc(m.phone)}.</p>${ownerInviteBox(m)}<div class="actions"><button class="btn" data-oinv-close>Not now</button></div>`;
+  el.hidden=false;document.body.classList.add("lbopen")}
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-oinv-go]");if(!b)return;e.preventDefault();e.stopPropagation();const id=b.dataset.oinvGo,m=mine.concat(teamListings).find(x=>x.id===id);if(!m)return;
+  if(!m.phone){toast("Add the owner's mobile number first");return}b.disabled=true;
+  try{const r=await api("team/invite",{name:m.owner||"Owner",phone:m.phone,role:"client",listingId:id});const msg=ownerInviteMsg(m,r),box=b.closest("[data-oinv]").querySelector(".oinv-done");
+    box.innerHTML=`<p class="src" style="margin:0">Account ready${r.existing?" (they already had one: new password)":""}. Sign-in: <b>${esc(r.login)}</b> · password <b>${esc(r.password)}</b></p>
+      <div class="actions"><a class="btn primary" href="${esc(waTo(m.phone,msg))}" target="_blank" rel="noopener" data-msg="${esc(msg)}">${ic("chat")}Send on WhatsApp to ${esc(greetOf(m.owner)||"the owner")}</a><button class="btn" type="button" data-copy-invite>${ic("copy")}Copy</button><button class="btn" type="button" data-a2share>${ic("share")}Home-screen picture</button></div>`;
+    box.querySelector("[data-copy-invite]").closest(".actions").setAttribute("data-msg",msg);lastInviteMsg=msg;box.hidden=false;b.hidden=true;const cl=document.querySelector("#oinvm [data-oinv-close]");if(cl)cl.textContent="Done";await loadListings()}
+  catch(x){toast(x.message);b.disabled=false}},true);
+
+/* ---------------- An owner's own property ---------------- */
+let myProps=[];
+async function loadMyProperty(){if(!SRV||isTeam())return;try{myProps=(await api("my/property")).properties||[]}catch(e){myProps=[]}}
+function propertyHTML(){if(!myProps.length)return"";
+  return myProps.map(p=>{const fake={b:p.b,beds:p.beds,layout:p.layout,deal:p.deal},ph=photosOf(fake)[0],on=p.online||{},both=on.bayut&&on.pf,price=p.price?"AED "+fmt(p.price)+(p.deal==="rent"?" a year":""):"Price to confirm",a=p.agent||{};
+    const plat=(k,n)=>`<span class="pill ${on[k]?"ok":""}">${on[k]?"✓ ":""}${esc(n)}</span>`,status=p.future?"Coming soon"+(p.availableFrom?" · available from "+new Date(p.availableFrom+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"}):""):on.off?"Shared privately with selected buyers":both?"Live on Bayut and Property Finder":on.bayut||on.pf?"Live on "+(on.bayut?"Bayut":"Property Finder")+", the other one is on its way":"Your agent is preparing the advert";
+    const tile=(v,l)=>`<div class="cmt"><span>${esc(l)}</span><b>${v}</b></div>`;
+    return `<section class="panel myprop"><div class="mpimg"><img src="${esc(imgSrc(ph.k))}" alt=""><span>Your property</span></div><div class="mpbody">
+      <h2>${esc((typeOf(p)||"Home")+" · "+(BLD[p.b]||"Peninsula")+(p.tower?" · Tower "+p.tower:""))}</h2><p class="lede" style="margin:0">${esc([p.unit?"Unit "+p.unit:"",p.size?fmt(p.size)+" sq ft":"",p.floor&&p.floor!=="On request"?p.floor+(/floor/i.test(p.floor)?"":" floor"):"",p.view&&p.view!=="On request"?p.view+" view":""].filter(Boolean).join(" · "))}</p>
+      <p class="mpprice">${esc(price)}<small>${p.deal==="rent"?"for rent":"for sale"}</small></p>
+      <div class="mpst"><b>${esc(status)}</b><div class="pills">${plat("bayut","Bayut")}${plat("pf","Property Finder")}</div></div>
+      <div class="cmtiles">${tile(fmt(p.views),"people viewed it")}${tile(fmt(p.viewsWeek),"this week")}${tile(fmt(p.viewings),"viewing requests")}${tile(fmt(p.requests),"all requests")}</div>
+      <div class="mpag"><img src="${esc(agentPhotoOf(a.key,a.name))}" alt=""><div><span>Your agent</span><b>${esc(a.name||"Orla Properties")}</b></div><div class="actions">${a.phone?`<a class="btn primary" href="${esc(waTo(a.phone,`Hello ${firstName(a.name)}, it's ${hello()} about my ${(typeOf(p)||"home").toLowerCase()} in ${BLD[p.b]}.`))}" target="_blank" rel="noopener">${ic("chat")}WhatsApp</a><a class="btn" href="tel:${esc(telOf(a.phone))}">${ic("phone")}Call</a>`:""}</div></div>
+      <p class="src" style="margin:0">Listed since ${esc(new Date(p.listedAt).toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"}))}. Views count people who opened your home on this website.</p></div></section>`}).join("")}
 
 /* ---------------- Start-up ---------------- */
 function startApp(){if(!SRV)setRole(isAdmin?"admin":"team");updateAcct();const ch=$("#userchip");

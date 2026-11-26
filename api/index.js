@@ -304,12 +304,19 @@ const routes = {
   },
 
   "POST auth/login": async c => {
-    const email = checkEmail(c.body.email), password = String(c.body.password || "");
-    await limit("login:" + email, 10, 900);
+    // Owners invited by their agent sign in with their mobile number; everyone else with their email.
+    const login = String(c.body.email || "").trim(), password = String(c.body.password || ""), digits = login.replace(/[^0-9]/g, "");
+    const byPhone = !login.includes("@") && digits.length >= 7, email = byPhone ? "" : checkEmail(login);
+    await limit("login:" + (byPhone ? digits.slice(-9) : email), 10, 900);
     await limit("login-ip:" + c.ip, 50, 900);
-    const { rows: [user] } = await q("select * from users where email = $1", [email]);
+    let user;
+    if (byPhone) {
+      const { rows } = await q("select * from users where right(regexp_replace(phone, '[^0-9]', '', 'g'), 9) = $1 and status <> 'blocked'", [digits.slice(-9)]);
+      if (rows.length > 1) fail(400, "More than one account uses this number. Sign in with your email.", "phone_ambiguous");
+      user = rows[0];
+    } else ({ rows: [user] } = await q("select * from users where email = $1", [email]));
     const ok = await checkPassword(password, user && user.pass_hash);
-    if (!user || !ok) fail(401, "Wrong email or password.", "bad_login");
+    if (!user || !ok) fail(401, byPhone ? "Wrong mobile number or password." : "Wrong email or password.", "bad_login");
     if (user.status === "blocked") fail(403, "This account doesn't have access. Contact the admin.", "blocked");
     if (mailEnabled() && !user.email_verified) {
       const canResend = await limit("resend:" + email, 3, 3600).then(() => true, () => false);
@@ -389,6 +396,8 @@ const routes = {
     if (!data || typeof data !== "object" || Array.isArray(data) || JSON.stringify(data).length > 20000) fail(400, "Invalid listing.");
     const { rows: [prev] } = await q("select user_id, data from listings where id = $1", [id]);
     if (prev && prev.user_id !== c.user.id && c.user.role !== "admin") fail(403, "This listing belongs to another agent.");
+    // The owner's account is linked only by the invitation (team/invite), never by a save.
+    if (prev && prev.data.ownerUserId) data.ownerUserId = prev.data.ownerUserId; else delete data.ownerUserId;
     // The day a listing first went live on every platform counts towards the team goal.
     const goal = await teamGoal(), on = data.online && typeof data.online === "object" ? data.online : {};
     if (on.off) { for (const p of goal.platforms) delete on[p.k]; data.online = { off: true }; }
@@ -490,7 +499,28 @@ const routes = {
   // Orla agents invite their own clients and external agents: the account is ready straight away, like the admin's.
   "POST team/invite": async c => {
     requireTeam(c);
-    const name = str(c.body.name, 100), email = checkEmail(c.body.email), phone = str(c.body.phone, 40);
+    const name = str(c.body.name, 100), phone = str(c.body.phone, 40), digits = phone.replace(/[^0-9]/g, "");
+    // An owner invited from a listing may have no email: they sign in with their mobile number.
+    if (!str(c.body.email, 254) && digits.length < 7) fail(400, "Enter their email or mobile number.", "no_contact");
+    const email = str(c.body.email, 254) ? checkEmail(c.body.email) : `m${digits}@mobile.peninsula`;
+    const listingId = str(c.body.listingId, 64);
+    let listing = null;
+    if (listingId) {
+      ({ rows: [listing] } = await q("select id, user_id, data from listings where id = $1", [listingId]));
+      if (!listing || (listing.user_id !== c.user.id && !seesAll(c.user))) fail(404, "Listing not found.");
+    }
+    const ABC0 = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    // Already has an account (same email, or same mobile for a client): a new password and the property linked to it.
+    const { rows: [prev] } = await q(`select * from users where email = $1 or ($2 <> '' and role = 'client' and right(regexp_replace(phone, '[^0-9]', '', 'g'), 9) = $2) limit 1`, [email, digits.length >= 7 ? digits.slice(-9) : ""]);
+    if (prev && listing) {
+      if (prev.role !== "client") fail(409, "This person already has an account as " + (prev.role === "broker" ? "an external agent" : "part of the team") + ".", "exists");
+      if (prev.invited_by && prev.invited_by !== c.user.id && !seesAll(c.user)) fail(409, "This owner was invited by another agent.", "exists");
+      const pw = Array.from(crypto.randomBytes(10), b => ABC0[b % ABC0.length]).join("");
+      await q("update users set pass_hash = $2, status = case when status = 'blocked' then status else 'active' end, invited_by = coalesce(invited_by, $3), phone = case when phone = '' then $4 else phone end where id = $1", [prev.id, await hashPassword(pw), c.user.id, phone]);
+      await q("update listings set data = data || jsonb_build_object('ownerUserId', $2::text) where id = $1", [listing.id, prev.id]);
+      await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `Sent ${prev.name} a new invitation for their property`]);
+      return { email: prev.email, password: pw, phone: prev.phone || phone, login: prev.email.endsWith("@mobile.peninsula") ? (prev.phone || phone) : prev.email, existing: true, url: appUrl(c.req) + "/app/" };
+    }
     const role = c.body.role === "broker" ? "broker" : "client", company = str(c.body.company, 120);
     if (!name) fail(400, "Enter their full name.", "no_name");
     if (role === "broker" && !company) fail(400, "Enter the name of their agency.", "no_company");
@@ -499,14 +529,15 @@ const routes = {
     const ABC = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     const password = Array.from(crypto.randomBytes(10), b => ABC[b % ABC.length]).join("");
     try {
-      await q(`insert into users (email, name, pass_hash, role, status, email_verified, company, phone, invited_by)
-               values ($1, $2, $3, $4, 'active', true, $5, $6, $7)`, [email, name, await hashPassword(password), role, company, phone, c.user.id]);
+      const { rows: [nu] } = await q(`insert into users (email, name, pass_hash, role, status, email_verified, company, phone, invited_by)
+               values ($1, $2, $3, $4, 'active', true, $5, $6, $7) returning id`, [email, name, await hashPassword(password), role, company, phone, c.user.id]);
+      if (listing) await q("update listings set data = data || jsonb_build_object('ownerUserId', $2::text) where id = $1", [listing.id, nu.id]);
     } catch (e) {
       if (e.code === "23505") fail(409, "This email already has an account. Ask the admin for a new password link if they forgot it.", "exists");
       throw e;
     }
     await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `Invited ${name} (${email}) as ${role === "broker" ? "an external agent" : "a client"}`]);
-    return { email, password, phone, url: appUrl(c.req) + "/app/" };
+    return { email, password, phone, login: email.endsWith("@mobile.peninsula") ? phone : email, url: appUrl(c.req) + "/app/" };
   },
   "GET team/invites": async c => {
     requireStaff(c);
@@ -711,6 +742,27 @@ const routes = {
       q(`select offer_id as k, count(distinct vid)::int as n from visits where ${W} and offer_id is not null group by 1 order by 2 desc limit 8`, [days]),
       q(`select count(*)::int as n from users where role in ('client', 'broker') and created_at > now() - ($1::int || ' days')::interval`, [days])]);
     return { days, daily: daily.map(d => ({ ...d, day: new Date(d.day).toISOString().slice(0, 10) })), totals: { ...tot, signups: signups.n }, pages, refs, countries, devices, offers };
+  },
+
+  // An owner sees their own property: where it's listed, its status, how many people looked at it and asked for viewings.
+  "GET my/property": async c => {
+    requireActive(c);
+    const { rows } = await q(`select l.id, l.data, l.created_at, u.name as agent_name, u.agent_key from listings l join users u on u.id = l.user_id where l.data->>'ownerUserId' = $1`, [c.user.id]);
+    const { rows: [st] } = await q("select data from settings where id = 'app'");
+    const agents = (st && st.data && st.data.agents) || SETTINGS.agents;
+    const out = [];
+    for (const r of rows) {
+      const d = r.data, oid = d.sharedOffer || null;
+      const [{ rows: [v] }, { rows: [l] }] = oid ? await Promise.all([
+        q("select count(distinct vid)::int as views, count(distinct vid) filter (where at > now() - interval '7 days')::int as week from visits where offer_id = $1 and role not in ('admin', 'agent', 'ceo')", [oid]),
+        q("select count(*)::int as requests, count(*) filter (where kind = 'viewing')::int as viewings from leads where offer_id = $1", [oid])]) : [{ rows: [{ views: 0, week: 0 }] }, { rows: [{ requests: 0, viewings: 0 }] }];
+      const a = agents[d.agent || r.agent_key] || {};
+      out.push({ id: r.id, unit: str(d.unit, 20), b: +d.b || null, tower: +d.b === 4 ? d.tower || "" : "", beds: d.beds === undefined || d.beds === "" ? null : +d.beds, layout: d.layout || "",
+        size: Number(d.size) || null, floor: str(d.floor, 40), view: str(d.view, 80), deal: d.deal, price: Number(d.price) || null, status: str(d.status, 40), furn: str(d.furn, 40),
+        online: d.online || {}, future: !!d.future, availableFrom: d.availableFrom || null, listedAt: d.date || r.created_at, onlineAt: d.onlineAt || null, shared: !!oid,
+        views: v.views, viewsWeek: v.week, requests: l.requests, viewings: l.viewings, agent: { name: a.name || r.agent_name, phone: a.phone || "", key: d.agent || r.agent_key } });
+    }
+    return { properties: out };
   },
 
   // Team performance: counts per agent only (no unit numbers, owners or prices). The admin and the Orla team see it.

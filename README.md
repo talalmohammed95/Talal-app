@@ -64,6 +64,14 @@ It runs on Claude (Anthropic). Add `ANTHROPIC_API_KEY` in Vercel to turn it on. 
 
 Every unit can carry its tower: **Tower A** or **Tower B**. The team sees it next to the building on cards ("P4A"), in the offer details ("Peninsula Four · Tower B") and in the AI assistant; clients and external agents don't get it. Peninsula Four has two towers, so its units without one are flagged "Tower A or B?", and Home and My units list them with Tower A / Tower B buttons: each agent sets their own units, the admin sets anyone's. The My units form has a Tower field and won't save a Peninsula Four unit without it. Units whose floor said "Tower A" or "Tower B" were set automatically.
 
+## Owners follow their property
+
+Right after an agent saves a unit in My units with the owner's name and mobile, the app offers **Invite on WhatsApp**: one tap makes the owner's account (no email needed: they sign in with their mobile number) and links it to that listing; the next opens WhatsApp to the owner's number with a message from the agent explaining the website, the sign-in and password, and the home-screen guide. The same button is on the owner card of the agent's unit (and **Send the invitation again** gives a new password). An owner who already has a client account gets the property added to it.
+
+When the owner signs in, Home starts with **Your property**: the unit, size, floor, view and price; whether it's live on Bayut and Property Finder (or coming soon, or shared privately); how many people opened it on the website (in total and this week); viewing and other requests; and the agent's photo with WhatsApp and Call. The owner sees only their own property. Only the invitation links an owner to a listing, so a later save can't remove or change it, and agents can invite only the owners of their own units.
+
+The sign-in screen accepts an email or a mobile number.
+
 ## Agents invite clients
 
 Every Orla agent can invite a client or an external agent: **Clients › Invite to the website**, or **Invite a client** on Home. The account is ready straight away. The agent gets the same message the admin sends (sign-in link, email, password, the home-screen guide link, signed with their name), a button that opens WhatsApp straight to the client's number, and the home-screen picture to send. Below, "People you invited" shows who has signed in. Agents can only create client and external-agent accounts (up to 40 a day each). The admin sees "Invited by …" in Users, and every invitation is in Activity.
