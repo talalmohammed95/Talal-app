@@ -917,6 +917,21 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
 .c3load{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-weight:700;padding:20px;text-align:center}.c3load[hidden]{display:none}
 .c3labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}.c3labels span{position:absolute;left:0;top:0;background:rgba(20,18,16,.78);color:#fff;font:700 12.5px var(--body,inherit);padding:4px 8px;border-radius:999px;white-space:nowrap}
 .c3labels span.c3n{background:var(--primary);width:26px;height:26px;padding:0;display:grid;place-items:center;border-radius:50%}
+.c3labels.compact .c3pin b{display:none}.c3labels.compact .c3pin{padding:5px}.c3labels.compact .c3pin .ic{width:22px;height:22px}
+.c3filter .chip .ic{width:16px;height:16px;flex:none}.c3filter .chip{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:6px 12px;font-size:14px}
+.c3row{display:flex;align-items:center;gap:8px}.c3row>.ic{width:20px;height:20px;color:#E8901F;flex:none}.c3row select{min-height:38px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg);padding:0 8px;font:inherit;font-weight:700}.c3row input{flex:1;min-width:0;accent-color:#E8901F}
+.c3row2{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;font-weight:700}.c3dl{display:inline-flex;align-items:center;gap:4px;border:0;background:none;color:var(--muted);font:inherit;font-size:13px;cursor:pointer;padding:6px}.c3dl .ic{width:15px;height:15px}
+@media(max-width:600px){.c3hint{display:none}.c3bar b{flex:1}}
+.c3cats{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}.c3cats .chip .ic{width:16px;height:16px}
+.c3labels .c3pin{position:absolute;left:0;top:0;pointer-events:auto;display:flex;align-items:center;gap:5px;border:0;border-radius:999px;padding:5px 10px 5px 6px;font:700 12.5px var(--body,inherit);color:#fff;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35);white-space:nowrap;min-height:30px}
+.c3pin .ic{width:18px;height:18px;padding:2px;border-radius:50%;background:rgba(255,255,255,.25)}.c3pin::after{content:"";position:absolute;left:50%;bottom:-5px;margin-left:-5px;border:5px solid transparent;border-bottom:0;border-top-color:inherit}
+.c3-food{background:#B4462B;border-top-color:#B4462B}.c3-shops{background:#E07A12;border-top-color:#E07A12}.c3-sports{background:#2F8F4E;border-top-color:#2F8F4E}.c3-parks{background:#4C8C2B;border-top-color:#4C8C2B}.c3-around{background:#2A6FB8;border-top-color:#2A6FB8}
+.c3filter{position:absolute;left:0;right:0;top:0;display:flex;gap:6px;padding:10px;overflow-x:auto;scrollbar-width:none}.c3filter .chip{flex:none;background:rgba(255,255,255,.94);color:#1C1A18;box-shadow:0 2px 8px rgba(0,0,0,.2)}.c3filter .chip[aria-pressed="true"]{background:var(--primary);color:#fff}.c3filter .c3guidebtn{background:#1C1A18;color:#fff}
+.c3info,.c3guide{position:absolute;left:10px;right:10px;bottom:10px;max-width:440px;background:var(--surface);color:var(--fg);border-radius:18px;padding:16px;box-shadow:0 14px 40px rgba(0,0,0,.4)}.c3info[hidden],.c3guide[hidden]{display:none}
+.c3info .pcx,.c3guide .pcx{position:absolute;top:10px;right:10px}.c3info h3,.c3guide h3{margin:2px 40px 6px 0}.c3info p{margin:0;color:var(--muted)}.c3info .kick{margin:0}
+.c3guide{top:58px;overflow:auto}.c3guide h4{display:flex;align-items:center;gap:6px;margin:12px 0 6px}.c3guide h4 .ic{width:18px;height:18px;color:var(--primary)}
+.c3gi{display:flex;flex-direction:column;gap:2px;text-align:left;width:100%;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:12px;padding:10px 12px;margin-bottom:6px;font:inherit}.c3gi span{color:var(--muted);font-size:14px}.c3gi em{font-style:normal;color:var(--primary);font-weight:700;font-size:13px;display:flex;align-items:center;gap:4px}.c3gi em .ic{width:14px;height:14px}button.c3gi{cursor:pointer}
+.c3around{display:grid;grid-template-columns:1fr 1fr;gap:6px}.c3around div{border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column}.c3around span{color:var(--muted);font-size:13px}
 .c3ctl{padding:10px 14px max(12px,env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);background:var(--surface)}.c3m{grid-template-columns:repeat(12,minmax(44px,1fr));overflow-x:auto}.c3btns{display:flex;gap:8px;flex-wrap:wrap}.c3ctl .src{margin:0}
 .suncard{border:1.5px solid var(--line);border-radius:16px;background:var(--bg);padding:14px;margin:12px 0;display:flex;flex-direction:column;gap:10px}
 .sunh{display:flex;flex-direction:column;gap:2px}.sunh b{display:flex;align-items:center;gap:6px;font-size:17px}.sunh b .ic{width:20px;height:20px;color:#E8901F}.sunh span{color:var(--muted);font-size:14px}
@@ -1555,7 +1570,9 @@ function fillUnit(o){if(!isTeam()||!o||!o.unit)return o;const g=guideOf(o.b,o.to
 function mineToOffer(m){return{tour:m.tour||undefined,plan:m.plan||undefined,id:m.id,b:+m.b,tower:m.tower||"",layout:m.layout||"",beds:+m.beds,deal:m.deal,title:(m.unit?"Unit "+m.unit+" · ":"")+typeOf(m),price:m.deal==="sale"?+m.price:undefined,rent:m.deal==="rent"?+m.price:undefined,
   size:m.size?+m.size:null,floor:m.floor||"",view:m.view||"",furn:m.furn,status:m.status,agent:m.agent,hl:m.notes||"",mine:true,future:!!m.future,unit:m.unit||null,owner:m.owner,ownerPhone:m.phone,date:m.date,by:m._by||null,own:m._own!==false,shared:m.sharedOffer||null,shareTo:m.shareTo,shareNote:m.shareNote,src:SRV?(m._by?"Added by "+(m._by.name||m._by.email):"Added by you"):"Added on this device"}}
 // A unit an agent has shared shows once, as its shared offer.
-const all=()=>{const live=new Set(OFFERS.map(o=>o.id));
+// all() is called dozens of times in one redraw: it's worked out once and reused until the redraw ends (the next task).
+let ALLC=null;const all=()=>{if(ALLC)return ALLC;ALLC=allFresh();queueMicrotask(()=>{ALLC=null});return ALLC};
+const allFresh=()=>{const live=new Set(OFFERS.map(o=>o.id));
   // A shared listing shows once, as its offer; for whoever can see the listing (its agent, the admin) the offer keeps the unit number, owner and plan.
   const sh={};mine.concat(teamListings).forEach(m=>{if(m.sharedOffer)sh[m.sharedOffer]=m});
   const offers=OFFERS.map(o=>{const m=sh[o.id];return m?Object.assign({},o,{unit:m.unit||o.unit,owner:m.owner||o.owner,ownerPhone:m.phone||o.ownerPhone,plan:o.plan||m.plan,tour:o.tour||m.tour,tower:o.tower||m.tower,listingId:m.id}):o});
@@ -1659,27 +1676,36 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-tour-go]")
 /* ---------------- The Peninsula in 3D ---------------- */
 // The community from the developer's master plan: the plan as the ground, every building raised to its height, and the sun
 // (the same formulas as Sun & views) casting real shadows. Heights are approximate. three.js loads only when it's opened.
-const C3V="/vendor/three-0.170.0/";let C3=null;const C3S={m:new Date(Date.now()+4*3600e3).getUTCMonth(),h:16,mi:0};
+const C3V="/vendor/three-0.170.0/";let C3=null;const C3S={m:new Date(Date.now()+4*3600e3).getUTCMonth(),h:16,mi:0,cat:"all"};
+const C3CAT=[["all","Everything","globe"],["food","Cafés & dining","chat"],["shops","Shops & services","bag"],["sports","Sports","target"],["parks","Parks & walks","tree"],["around","Getting around","pin"]];
 function c3dCard(){return `<div class="panel c3card"><button type="button" class="c3thumb" data-c3d aria-label="Explore the Peninsula in 3D"><img loading="lazy" src="${esc(imgSrc("/img/plans/peninsula-master-plan.webp",true))}" alt=""><span>${ic("building")}Explore in 3D</span></button>
-  <div><h3>${ic("globe")}The Peninsula in 3D</h3><p class="lede">Spin around the whole community on the Dubai Canal, then move the sun through the day and the year to see the light and the shadows.</p><button type="button" class="btn primary" data-c3d>${ic("building")}Open the 3D model</button></div></div>`}
-document.addEventListener("click",e=>{if(e.target.closest("[data-c3d]")){e.preventDefault();c3dOpen()}});
+  <div><h3>${ic("globe")}Your guide to the Peninsula</h3><p class="lede">Explore the whole community in 3D: where the shops, cafés, courts, parks and the canal promenade are, and how the sun moves through the day.</p>
+    <div class="c3cats">${C3CAT.slice(1).map(([k,t,i])=>`<button type="button" class="chip" data-c3d data-c3-cat="${k}">${ic(i)}${esc(t)}</button>`).join("")}</div>
+    <button type="button" class="btn primary" data-c3d>${ic("building")}Open the 3D guide</button></div></div>`}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-c3d]");if(b){e.preventDefault();C3S.cat=b.dataset.c3Cat||"all";c3dOpen()}});
 async function c3dOpen(){let el=$("#c3d");
   if(!el){const mn=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     document.body.insertAdjacentHTML("beforeend",`<div id="c3d" role="dialog" aria-modal="true" aria-labelledby="c3d-t"><div class="c3bar"><b id="c3d-t">The Peninsula in 3D</b><span class="c3hint">Drag to turn · pinch or scroll to zoom</span><button class="pcx" data-c3-x aria-label="Close">${ic("x")}</button></div>
-      <div class="c3stage"><canvas></canvas><div class="c3labels"></div><div class="c3load">Loading the 3D model…</div></div>
-      <div class="c3ctl"><div class="sunmonths c3m" role="group" aria-label="Month">${mn.map((m,i)=>`<button type="button" data-c3-m="${i}" aria-pressed="${i===C3S.m}">${m}</button>`).join("")}</div>
-        <label class="sunslide"><span id="c3-time"></span><input type="range" min="5" max="20" step="0.25" value="${C3S.h}" data-c3-h aria-label="Time of day"></label>
-        <div class="c3btns"><button type="button" class="btn sm" data-c3-now>${ic("sun")}Now</button><button type="button" class="btn sm" data-c3-glb>${ic("download")}Download the model (.glb)</button></div>
-        <p class="src">Built from Select Group's master plan of the Peninsula. Building heights are approximate; the sun is worked out for Business Bay.</p></div></div>`);
+      <div class="c3stage"><canvas></canvas><div class="c3labels"></div><div class="c3filter" role="group" aria-label="Show">${C3CAT.map(([k,t,i])=>`<button type="button" class="chip" data-c3-f="${k}">${ic(i)}${esc(t)}</button>`).join("")}<button type="button" class="chip c3guidebtn" data-c3-guide>${ic("list")}Guide</button></div>
+        <div class="c3info" hidden></div><div class="c3guide" hidden></div><div class="c3load">Loading the 3D model…</div></div>
+      <div class="c3ctl"><div class="c3row">${ic("sun")}<select data-c3-msel aria-label="Month">${mn.map((m,i)=>`<option value="${i}"${i===C3S.m?" selected":""}>${m}</option>`).join("")}</select><input type="range" min="5" max="20" step="0.25" value="${C3S.h}" data-c3-h aria-label="Time of day"><button type="button" class="btn sm" data-c3-now>Now</button></div>
+        <div class="c3row2"><span id="c3-time"></span><button type="button" class="c3dl" data-c3-glb>${ic("download")}.glb</button></div>
+        <p class="src">From Select Group's master plan and brochures. Heights are approximate.</p></div></div>`);
     el=$("#c3d");
     el.addEventListener("click",e=>{const t=e.target;if(t.closest("[data-c3-x]")){c3dClose();return}
       const m=t.closest("[data-c3-m]");if(m){C3S.m=+m.dataset.c3M;el.querySelectorAll("[data-c3-m]").forEach(b=>b.setAttribute("aria-pressed",b===m));c3dSun()}
-      if(t.closest("[data-c3-now]")){const d=new Date(Date.now()+4*3600e3);C3S.m=d.getUTCMonth();C3S.h=d.getUTCHours()+d.getUTCMinutes()/60;el.querySelectorAll("[data-c3-m]").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.c3M===C3S.m));el.querySelector("[data-c3-h]").value=Math.min(20,Math.max(5,C3S.h));c3dSun()}
-      if(t.closest("[data-c3-glb]"))c3dGlb()});
+      if(t.closest("[data-c3-now]")){const d=new Date(Date.now()+4*3600e3);C3S.m=d.getUTCMonth();C3S.h=d.getUTCHours()+d.getUTCMinutes()/60;el.querySelector("[data-c3-msel]").value=C3S.m;el.querySelector("[data-c3-h]").value=Math.min(20,Math.max(5,C3S.h));c3dSun()}
+      if(t.closest("[data-c3-glb]"))c3dGlb();
+      const f=t.closest("[data-c3-f]");if(f){C3S.cat=f.dataset.c3F;c3dFilter()}
+      const pin=t.closest("[data-c3-p]");if(pin)c3dPlace(pin.dataset.c3P);
+      if(t.closest("[data-c3-guide]")){const g=el.querySelector(".c3guide");g.hidden=!g.hidden;el.querySelector(".c3info").hidden=true;if(!g.hidden)c3dGuide()}
+      if(t.closest("[data-c3-ix]")){el.querySelector(".c3info").hidden=true}
+      if(t.closest("[data-c3-gx]")){el.querySelector(".c3guide").hidden=true}});
     el.querySelector("[data-c3-h]").addEventListener("input",e=>{C3S.h=+e.target.value;c3dSun()});
+    el.querySelector("[data-c3-msel]").addEventListener("change",e=>{C3S.m=+e.target.value;c3dSun()});
     document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#c3d")&&!$("#c3d").hidden)c3dClose()})}
   el.hidden=false;document.body.classList.add("lbopen");el.querySelector(".c3load").hidden=!!C3;
-  try{if(!C3)C3=await c3dInit(el);el.querySelector(".c3load").hidden=true;C3.run=true;C3.resize();c3dSun();C3.loop()}
+  try{if(!C3)C3=await c3dInit(el);el.querySelector(".c3load").hidden=true;C3.run=true;C3.resize();c3dSun();c3dFilter();C3.loop()}
   catch(x){el.querySelector(".c3load").textContent="The 3D model couldn't load on this device. "+(x&&x.message||"")}}
 function c3dClose(){const el=$("#c3d");if(el)el.hidden=true;document.body.classList.remove("lbopen");if(C3)C3.run=false}
 async function c3dInit(el){const T=await import(C3V+"three.module.min.js"),{OrbitControls}=await import(C3V+"OrbitControls.js");
@@ -1691,10 +1717,10 @@ async function c3dInit(el){const T=await import(C3V+"three.module.min.js"),{Orbi
   const ground=new T.Mesh(new T.PlaneGeometry(W,H),new T.MeshStandardMaterial({map:tex,roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;ground.name="Master plan";model.add(ground);
   const sea=new T.Mesh(new T.PlaneGeometry(9000,9000),new T.MeshStandardMaterial({color:0x2c5d63,roughness:.9}));sea.rotation.x=-Math.PI/2;sea.position.y=-0.6;sea.receiveShadow=true;scene.add(sea);
   const P=(fx,fy)=>new T.Vector2((fx-0.5)*W,-(fy-0.5)*H),labels=[];
-  const mats={res:new T.MeshStandardMaterial({color:0xf3eee7,roughness:.75}),plaza:new T.MeshStandardMaterial({color:0xf28c28,roughness:.6}),plazatower:new T.MeshStandardMaterial({color:0xf7e3c8,roughness:.6})},edge=new T.LineBasicMaterial({color:0x8d8378});
+  const mats={res:new T.MeshStandardMaterial({color:0xf3eee7,roughness:.75}),mall:new T.MeshStandardMaterial({color:0xf28c28,roughness:.6}),p2:new T.MeshStandardMaterial({color:0xf7e3c8,roughness:.6})},edge=new T.LineBasicMaterial({color:0x8d8378});
   data.buildings.forEach((b,i)=>{const pts=b.p.map(([x,y])=>P(x,y));const g=new T.ExtrudeGeometry(new T.Shape(pts),{depth:b.h,bevelEnabled:false});g.rotateX(-Math.PI/2);
     const m=new T.Mesh(g,mats[b.k]||mats.res);m.castShadow=true;m.receiveShadow=true;m.name=b.label||("Building "+(i+1));model.add(m);const ed=new T.LineSegments(new T.EdgesGeometry(g,30),edge);model.add(ed);
-    if(b.label){const cx=b.p.reduce((a,q)=>a+q[0],0)/b.p.length,cy=b.p.reduce((a,q)=>a+q[1],0)/b.p.length;labels.push({t:b.label,v:new T.Vector3((cx-0.5)*W,b.h+12,(cy-0.5)*H)})}});
+    if(b.label&&b.k!=="mall"){const cx=b.p.reduce((a,q)=>a+q[0],0)/b.p.length,cy=b.p.reduce((a,q)=>a+q[1],0)/b.p.length;labels.push({t:b.label,v:new T.Vector3((cx-0.5)*W,b.h+12,(cy-0.5)*H)})}});
   // Burj Khalifa, about 1.6 km to the north-north-west (for orientation)
   const bk=new T.Group();bk.name="Burj Khalifa (direction)";[[38,26,250],[26,16,220],[16,8,200],[8,1.5,158]].reduce((y,[r0,r1,h])=>{const c=new T.Mesh(new T.CylinderGeometry(r1,r0,h,12),new T.MeshStandardMaterial({color:0xcfd6df,metalness:.3,roughness:.4}));c.position.y=y+h/2;c.castShadow=true;bk.add(c);return y+h},0);
   const ba=346*RAD;bk.position.set(Math.sin(ba)*1600,0,-Math.cos(ba)*1600);scene.add(bk);labels.push({t:"Burj Khalifa",v:new T.Vector3(bk.position.x,840,bk.position.z)});
@@ -1703,17 +1729,39 @@ async function c3dInit(el){const T=await import(C3V+"three.module.min.js"),{Orbi
   const sun=new T.DirectionalLight(0xffffff,2.4);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-900,right:900,top:900,bottom:-900,near:10,far:6000});sun.shadow.bias=-0.0004;scene.add(sun,sun.target);
   const cam=new T.PerspectiveCamera(42,1,5,30000);cam.position.set(780,620,980);
   const ctl=new OrbitControls(cam,canvas);ctl.target.set(0,40,0);ctl.enableDamping=true;ctl.maxPolarAngle=1.45;ctl.minDistance=150;ctl.maxDistance=4500;ctl.autoRotate=true;ctl.autoRotateSpeed=.5;ctl.addEventListener("start",()=>{ctl.autoRotate=false});
-  const lab=el.querySelector(".c3labels");lab.innerHTML=labels.map(l=>`<span class="${l.n?"c3n":""}">${esc(l.t)}</span>`).join("");const spans=[...lab.children],v=new T.Vector3();
-  const o={T,R,scene,model,sun,hemi,cam,ctl,run:false,
+  const CATIC={food:"chat",shops:"bag",sports:"target",parks:"tree",around:"pin"};
+  (data.places||[]).forEach(q=>labels.push({t:q.t,id:q.id,cat:q.cat,also:q.also||[],v:new T.Vector3((q.x-0.5)*W,q.id==="mall"?30:10,(q.y-0.5)*H)}));
+  const lab=el.querySelector(".c3labels");lab.innerHTML=labels.map(l=>l.id?`<button type="button" class="c3pin c3-${l.cat}" data-c3-p="${esc(l.id)}" data-cat="${[l.cat].concat(l.also||[]).join(" ")}" aria-label="${esc(l.t)}">${ic(CATIC[l.cat]||"pin")}<b>${esc(l.t)}</b></button>`:`<span class="${l.n?"c3n":""}">${esc(l.t)}</span>`).join("");const spans=[...lab.children],v=new T.Vector3();
+  const o={T,R,scene,model,sun,hemi,cam,ctl,data,labels,W,H,run:false,fly:null,
     resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()},
-    loop(){if(!o.run)return;requestAnimationFrame(o.loop);ctl.update();R.render(scene,cam);const w=stage.clientWidth,h=stage.clientHeight;
-      labels.forEach((l,i)=>{v.copy(l.v).project(cam);const s=spans[i];if(v.z>1){s.style.display="none";return}s.style.display="";s.style.transform=`translate(${((v.x+1)/2*w).toFixed(0)}px,${((1-v.y)/2*h).toFixed(0)}px) translate(-50%,-100%)`})}};
+    loop(){if(!o.run)return;requestAnimationFrame(o.loop);
+      if(o.fly){const f=o.fly,k=Math.min(1,(performance.now()-f.t0)/700),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;ctl.target.lerpVectors(f.a,f.b,e);cam.position.lerpVectors(f.ca,f.cb,e);if(k>=1)o.fly=null}
+      ctl.update();R.render(scene,cam);const w=stage.clientWidth,h=stage.clientHeight;
+      const boxes=[];labels.map((l,i)=>{v.copy(l.v).project(cam);return{i,x:(v.x+1)/2*w,y:(1-v.y)/2*h,z:v.z}}).sort((a,b)=>a.z-b.z).forEach(q=>{const s=spans[q.i];
+        if(q.z>1||s.dataset.off){s.style.display="none";return}const bw=s.offsetWidth||40,bh=s.offsetHeight||28,r=[q.x-bw/2,q.y-bh,q.x+bw/2,q.y];
+        // Nearer pins win: one that would overlap a nearer pin waits until the view changes.
+        if(boxes.some(b=>r[0]<b[2]&&r[2]>b[0]&&r[1]<b[3]&&r[3]>b[1])){s.style.visibility="hidden"}else{s.style.visibility="";boxes.push(r)}
+        s.style.display="";s.style.transform=`translate(${q.x.toFixed(0)}px,${q.y.toFixed(0)}px) translate(-50%,-100%)`})}};
   new ResizeObserver(()=>o.resize()).observe(stage);return o}
+function c3dFilter(){const el=$("#c3d");if(!el)return;el.querySelectorAll("[data-c3-f]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.c3F===C3S.cat));
+  el.querySelector(".c3labels").classList.toggle("compact",C3S.cat==="all");
+  el.querySelectorAll(".c3pin").forEach(p=>{if(C3S.cat==="all"||p.dataset.cat.split(" ").includes(C3S.cat))delete p.dataset.off;else p.dataset.off="1"});if(!el.querySelector(".c3guide").hidden)c3dGuide()}
+// A place: its card, and the camera flies to it.
+function c3dPlace(id){if(!C3)return;const el=$("#c3d"),q=(C3.data.places||[]).find(x=>x.id===id);if(!q)return;const l=C3.labels.find(x=>x.id===id),T=C3.T;
+  const cat=(C3CAT.find(c=>c[0]===q.cat)||[])[1]||"";const inf=el.querySelector(".c3info");el.querySelector(".c3guide").hidden=true;
+  inf.innerHTML=`<button class="pcx" data-c3-ix aria-label="Close">${ic("x")}</button><span class="kick">${esc(cat)}</span><h3>${esc(q.t)}</h3><p>${esc(q.d)}</p>`;inf.hidden=false;
+  const b=l.v.clone(),off=new T.Vector3(220,240,300);C3.ctl.autoRotate=false;C3.fly={t0:performance.now(),a:C3.ctl.target.clone(),b,ca:C3.cam.position.clone(),cb:b.clone().add(off)}}
+function c3dGuide(){if(!C3)return;const el=$("#c3d"),g=el.querySelector(".c3guide"),d=C3.data,cats=C3CAT.slice(1).filter(c=>C3S.cat==="all"||c[0]===C3S.cat);
+  g.innerHTML=`<button class="pcx" data-c3-gx aria-label="Close">${ic("x")}</button><h3>The Peninsula guide</h3>`+cats.map(([k,t,i])=>{const P=(d.places||[]).filter(q=>q.cat===k),U=(d.unpinned||[]).filter(q=>q.cat===k);if(!P.length&&!U.length)return"";
+      return `<h4 class="mh">${ic(i)}${esc(t)}</h4>`+P.map(q=>`<button type="button" class="c3gi" data-c3-p="${esc(q.id)}"><b>${esc(q.t)}</b><span>${esc(q.d)}</span><em>${ic("pin")}Show on the map</em></button>`).join("")+U.map(q=>`<div class="c3gi"><b>${esc(q.t)}</b><span>${esc(q.d)}</span></div>`).join("")}).join("")
+    +((C3S.cat==="all")?((d.unpinned||[]).filter(q=>q.cat==="residents").map(q=>`<h4 class="mh">${ic("home")}${esc(q.t)}</h4><div class="c3gi"><span>${esc(q.d)}</span></div>`).join("")):"")
+    +((C3S.cat==="all"||C3S.cat==="around")?`<h4 class="mh">${ic("plane")}Getting here (by car)</h4><div class="c3around">${(d.around||[]).map(([n,v])=>`<div><b>${esc(n)}</b><span>${esc(v)}</span></div>`).join("")}</div>`:"")
+    +`<p class="src">From ${esc(d.src||"Select Group's brochures")}. Shops and restaurants open as the community completes: ask your agent what's open now.</p>`}
 function c3dSun(){const el=$("#c3d");if(!el)return;const y=new Date().getUTCFullYear(),t=dxbDay(y,C3S.m,21)+C3S.h*3600e3,p=sunAt(t),mn=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   const hh=Math.floor(C3S.h),mm=Math.round((C3S.h-hh)*60);el.querySelector("#c3-time").textContent=`${mn[C3S.m]} 21 · ${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")} · ${p.alt>0?"sun "+Math.round(p.alt)+"° up, "+compass(p.az):"after dark"}`;
   if(!C3)return;const T=C3.T,a=Math.max(p.alt,-6)*RAD,z=p.az*RAD,up=p.alt>0;
   C3.sun.position.set(Math.sin(z)*Math.cos(a)*2500,Math.max(Math.sin(a),0.02)*2500,-Math.cos(z)*Math.cos(a)*2500);
-  const k=Math.min(1,Math.max(0,p.alt/25));C3.sun.intensity=up?0.7+3.1*k:0;C3.sun.color.setHSL(0.09,1,0.62+0.33*k);C3.hemi.intensity=up?0.22+0.18*k:0.12;el.querySelectorAll("[data-c3-m]").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.c3M===C3S.m));
+  const k=Math.min(1,Math.max(0,p.alt/25));C3.sun.intensity=up?0.7+3.1*k:0;C3.sun.color.setHSL(0.09,1,0.62+0.33*k);C3.hemi.intensity=up?0.22+0.18*k:0.12;{const ms=el.querySelector("[data-c3-msel]");if(ms&&+ms.value!==C3S.m)ms.value=C3S.m}
   const day=new T.Color(0xbcd7ec),dusk=new T.Color(0xf2b27c),night=new T.Color(0x0f1a2b);C3.scene.background=up?dusk.clone().lerp(day,k):night.clone().lerp(dusk,Math.max(0,(p.alt+6)/6))}
 async function c3dGlb(){if(!C3)return;try{const {GLTFExporter}=await import(C3V+"GLTFExporter.js");const glb=await new GLTFExporter().parseAsync(C3.model,{binary:true});
   const b=new Blob([glb],{type:"model/gltf-binary"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="peninsula-community.glb";document.body.appendChild(a);a.click();a.remove();toast("Model downloaded: upload it to Sketchfab to share it")}catch(x){toast("The model couldn't be exported.")}}
@@ -2689,8 +2737,11 @@ async function authSubmit(){const err=$("#gate-err"),go=$("#gate-go"),em=$("#g-e
     else if(authMode==="forgot"){need(/^\S+@\S+\.\S+$/.test(em),"Enter your email address.");await api("auth/forgot",{email:em});setAuthGate("sent-reset",em)}
     else if(authMode==="reset"){need(pw.length>=8,"Use at least 8 characters for your password.");need(pw===$("#g-pass2").value,"The two passwords don't match.");const r=await api("auth/reset",{token:resetToken,password:pw});resetToken=null;toast("Password updated");await enterServer(r.user)}
   }catch(e){err.textContent=e.message}finally{go.disabled=false}}
+const strHash=t=>{let h=2166136261;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36)+":"+t.length};
 async function loadAll(first){
   try{const [d,hs]=await Promise.all([api("data/all"),api("data/history").catch(()=>({rows:[]}))]);
+    const sig=strHash(JSON.stringify([d.offers,d.settings,(hs.rows||[]).length,(hs.rows||[])[0]||null]));
+    if(!first&&sig===loadAll.sig&&!loadAll.force){if(isTeam()){const was=strHash(JSON.stringify([mine,teamListings,leads]));await loadListings();await loadLeads();if(strHash(JSON.stringify([mine,teamListings,leads]))!==was)renderAll()}return}loadAll.sig=sig;loadAll.force=false;
     HISTORY=(hs.rows||[]).map(r=>({offer:r.offer_id,at:r.at,by:r.by_email,kind:r.kind,old:r.old_value,nw:r.new_value,title:r.title}));
     OFFERS=(d.offers||[]).map(r=>Object.assign({},r.data,{id:r.id,listedAt:r.created_at,updatedAt:r.updated_at}));store.set("orla.cache.offers",OFFERS);
     applySettings(d.settings||{});store.set("orla.cache.settings",d.settings||{});
@@ -2749,12 +2800,13 @@ async function bootServer(){OFFERS=[];applySettings({});startApp();setAuthGate("
   const wantSignup=qs.get("signup")==="1",as=qs.get("as");if(wantSignup||as||qs.get("find"))history.replaceState(null,"",location.pathname);
   if(qs.get("find")==="1")try{sessionStorage.removeItem("orla.wiz")}catch(e){}
   if(as){const r=document.querySelector(`input[name="g-role"][value="${as==="team"?"agent":as==="agent"?"broker":as}"]`);if(r)r.checked=true}
-  const home=qs.get("home"),find=qs.get("find")==="1",homes=qs.get("homes")==="1";if(home||homes)history.replaceState(null,"",location.pathname);
+  const home=qs.get("home"),find=qs.get("find")==="1",homes=qs.get("homes")==="1",guide=qs.get("guide")==="1";if(home||homes||guide)history.replaceState(null,"",location.pathname);
   await enterServer();if((wantSignup||as)&&!uid){setAuthGate("signup");return}
   // From the public website: a home opens straight on its page; "Get 3 options" opens the questions.
   if(home&&all().some(o=>o.id===home)){state.sel=home;store.set("orla.sel",home);show("offers");try{renderDetail()}catch(x){}setTimeout(()=>{const t=document.querySelector("#detail");if(t)t.scrollIntoView({block:"start"})},250)}
   else if(find&&VISITOR)setTimeout(openWizard,400);
-  else if(homes)show("offers")}
+  else if(homes)show("offers");
+  else if(guide)setTimeout(c3dOpen,300)}
 
 /* ---------------- Photos, floor plans and who is signed in ---------------- */
 const IMGMAP=CFG.imgMap||null,IMGDIR=String(CFG.img||"/img").replace(/\/+$/,"");
@@ -2846,7 +2898,7 @@ function renderShowroom(){const A=all().filter(o=>!isDone(o)),first=hello();
   const blds=[1,2,3,4,5].map(b=>({b,n:A.filter(o=>o.b===b).length,c:toItem(MEDIA.bld[b].cover)}));
   const broker=ROLE==="broker";
   $("#dash").innerHTML=`
-  <section class="shero">${covers.map((c,i)=>`<img class="sh-img${i===0?" on":""}" src="${esc(imgSrc(c.k))}" alt="" ${i?'loading="lazy"':""}>`).join("")}
+  <section class="shero">${covers.map((c,i)=>`<img class="sh-img${i===0?" on":""}" ${i?"data-src":"src"}="${esc(imgSrc(c.k))}" alt="">`).join("")}
     <div class="sh-shade"></div>
     <div class="sh-in"><span class="sh-eye">${ic("pin")}Business Bay · Dubai Canal</span>
       <h2>${first?"Welcome, "+esc(first)+".":"Welcome to the Peninsula."}<br><em>${A.length} homes</em> on the water.</h2>
@@ -2870,7 +2922,9 @@ function renderShowroom(){const A=all().filter(o=>!isDone(o)),first=hello();
     </div></section>
   ${sourcesHTML()}`;
   clearInterval(heroT);const imgs=[...document.querySelectorAll(".shero .sh-img")];let k=0;
-  if(imgs.length>1&&!matchMedia("(prefers-reduced-motion: reduce)").matches)heroT=setInterval(()=>{if(document.hidden||$("#view-dash").hidden)return;imgs[k].classList.remove("on");k=(k+1)%imgs.length;imgs[k].classList.add("on")},6000)}
+  if(imgs.length>1&&!matchMedia("(prefers-reduced-motion: reduce)").matches){const nx=()=>{const n=imgs[(k+1)%imgs.length];if(n&&n.dataset.src&&!n.getAttribute("src"))n.src=n.dataset.src};setTimeout(nx,3500);
+    // One photo at a time: the next loads while the current one shows.
+    heroT=setInterval(()=>{if(document.hidden||$("#view-dash").hidden)return;const n=imgs[(k+1)%imgs.length];if(!n.getAttribute("src")||!n.complete){nx();return}imgs[k].classList.remove("on");k=(k+1)%imgs.length;imgs[k].classList.add("on");setTimeout(nx,3000)},6000)}}
 // For clients and external agents: the team's top performer, as the agent to choose.
 const agentPhotoOf=(k,name)=>{const a=AGENTS[k]||{},m=MEDIA.agent[k];return a.photo?imgSrc(a.photo):m?imgSrc(m):initialsAvatar(name||a.name||k)};
 const waTo=(phone,text)=>"https://wa.me/"+String(phone||"").replace(/[^0-9]/g,"")+"?text="+encodeURIComponent(text);
@@ -4217,7 +4271,7 @@ async function boot(){
   if(sessionOpen()&&!store.get("orla.pin",null))unlock();else lock()}
 
 /* ---------------- Wiring ---------------- */
-function show(v){if(v==="admin"&&!isAdmin)v="dash";if((v==="train"||v==="review"||v==="visitors")&&!canTrain())v="dash";if(isCEO()&&CEO_HIDE.includes(v))v="dash";if(!isTeam()&&TEAM_VIEWS.includes(v))v="dash";if(v==="admin"&&SRV){loadUsers();loadLog()}document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.view===v));document.querySelectorAll(".view").forEach(s=>s.hidden=s.id!=="view-"+v);store.set("orla.tab",v);window.scrollTo(0,0);setPageHead(v);closeMenus();const forMe=t=>!t.hidden&&!(isTeam()?t.classList.contains("guest-only"):t.classList.contains("team-only"));
+function show(v){setTimeout(()=>{if(LAZYDIRTY[v]&&LAZY[v]){LAZYDIRTY[v]=false;try{LAZY[v]()}catch(e){}}},0);if(v==="admin"&&!isAdmin)v="dash";if((v==="train"||v==="review"||v==="visitors")&&!canTrain())v="dash";if(isCEO()&&CEO_HIDE.includes(v))v="dash";if(!isTeam()&&TEAM_VIEWS.includes(v))v="dash";if(v==="admin"&&SRV){loadUsers();loadLog()}document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.view===v));document.querySelectorAll(".view").forEach(s=>s.hidden=s.id!=="view-"+v);store.set("orla.tab",v);window.scrollTo(0,0);setPageHead(v);closeMenus();const forMe=t=>!t.hidden&&!(isTeam()?t.classList.contains("guest-only"):t.classList.contains("team-only"));
   $("#bn-more").classList.toggle("on",![...document.querySelectorAll(".bnav .tab")].some(t=>t.dataset.view===v&&forMe(t)));$("#pagehead").hidden=v==="dash";
   $("#tmore-btn").classList.toggle("on",![...document.querySelectorAll("nav.tabs > .tab")].some(t=>t.dataset.view===v&&forMe(t)));requestAnimationFrame(()=>fillCharts($("#view-"+v)));if(v==="team")renderTeam();if(v==="docs")renderDocs();if(v==="assist")aiOpen();if(v==="chat")chatOpen();if(v==="train")trainOpen();if(v==="review")reviewOpen();if(v==="visitors")visitorsOpen()}
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>show(t.dataset.view));
@@ -4239,7 +4293,10 @@ function fillPick(){const cur=pick.value;pick.innerHTML='<option value="">Custom
 pick.onchange=()=>pick.value&&loadCalc(pick.value);
 document.querySelectorAll("#view-calc input").forEach(i=>i.addEventListener("input",calc));
 try{$("#m-date").valueAsDate=new Date()}catch(e){}
-function renderAll(){renderA2hs();fillAgentFilter();renderList();renderShort();renderMine();renderClients();renderDash();renderAnalysis();renderReports();fillPick();renderAdmin()}
+// The analysis and reports pages are drawn when they're open, or when they're next opened.
+const LAZY={analysis:()=>renderAnalysis(),reports:()=>renderReports()},LAZYDIRTY={};
+function lazyRender(v){const el=document.getElementById("view-"+v);if(el&&!el.hidden){LAZYDIRTY[v]=false;LAZY[v]()}else LAZYDIRTY[v]=true}
+function renderAll(){renderA2hs();fillAgentFilter();renderList();renderShort();renderMine();renderClients();renderDash();lazyRender("analysis");lazyRender("reports");fillPick();renderAdmin()}
 boot();
 if("serviceWorker" in navigator&&location.protocol==="https:"&&!/claude|claudeusercontent/.test(location.host)){navigator.serviceWorker.register("/sw.js").catch(()=>{})}
 </script>

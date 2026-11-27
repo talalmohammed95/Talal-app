@@ -188,7 +188,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 
 <main>
 <section class="hero">
-  <div class="slides" aria-hidden="true"><img class="slide on" src="/img/p3-canal-sunset.webp" alt="" fetchpriority="high"><img class="slide" src="/img/p1-promenade-night.webp" alt="" loading="lazy"><img class="slide" src="/img/p4-canal.webp" alt="" loading="lazy"><img class="slide" src="/img/p5-sunset.webp" alt="" loading="lazy"><img class="slide" src="/img/p3-skyline-night.webp" alt="" loading="lazy"></div><div class="shade"></div>
+  <div class="slides" aria-hidden="true"><img class="slide on" src="/img/p3-canal-sunset.webp" alt="" fetchpriority="high"><img class="slide" data-src="/img/p1-promenade-night.webp" alt=""><img class="slide" data-src="/img/p4-canal.webp" alt=""><img class="slide" data-src="/img/p5-sunset.webp" alt=""><img class="slide" data-src="/img/p3-skyline-night.webp" alt=""></div><div class="shade"></div>
   <div class="wrap">
     <span class="eyebrow anim"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg>Business Bay · Dubai Canal</span>
     <h1 class="anim d1">Wohnen am Wasser, <em>sieben Minuten</em> von Downtown.</h1>
@@ -209,7 +209,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
   <h2>Wohnungen zum Kauf und zur Miete</h2>
   <p class="sub">Eine Auswahl dessen, was heute verfügbar ist. Tippen Sie auf eine Wohnung, um alles zu sehen. Zum Umsehen ist keine Anmeldung nötig.</p>
   <div class="hgrid" id="hgrid"></div>
-  <div class="cta" style="margin-top:26px"><a class="btn primary big" href="/app/?homes=1"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M15 7a4 4 0 1 1-3.5 6L4 20.5V17h3v-3h3l1.5-1.5A4 4 0 0 1 15 7zM17 9h.01"/></svg>Alle Wohnungen</a><a class="btn big" href="/app/?find=1"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z"/></svg>3 Vorschläge erhalten</a></div>
+  <div class="cta" style="margin-top:26px"><a class="btn primary big" href="/app/?homes=1"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M15 7a4 4 0 1 1-3.5 6L4 20.5V17h3v-3h3l1.5-1.5A4 4 0 0 1 15 7zM17 9h.01"/></svg>Alle Wohnungen</a><a class="btn big" href="/app/?find=1"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z"/></svg>3 Vorschläge erhalten</a><a class="btn big" href="/app/?guide=1" style="margin-left:8px">Die Community in 3D entdecken</a></div>
 </div></section>
 
 <section class="s" id="buildings"><div class="wrap">
@@ -290,7 +290,10 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
   b.addEventListener("click",function(){var open=m.hidden;m.hidden=!open;b.setAttribute("aria-expanded",String(open))});
   m.addEventListener("click",function(e){if(e.target.closest("a")){m.hidden=true;b.setAttribute("aria-expanded","false")}});
   var reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var sl=document.querySelectorAll(".slide"),k=0;if(sl.length>1&&!reduce)setInterval(function(){if(document.hidden)return;sl[k].classList.remove("on");k=(k+1)%sl.length;sl[k].classList.add("on")},6500);
+  var sl=document.querySelectorAll(".slide"),k=0;
+  // Each photo loads just before it's shown, so the first visit only downloads one.
+  function nx(){var n=sl[(k+1)%sl.length];if(n&&n.dataset.src&&!n.getAttribute("src"))n.src=n.dataset.src}
+  if(sl.length>1&&!reduce){setTimeout(nx,3500);setInterval(function(){if(document.hidden)return;var n=sl[(k+1)%sl.length];if(!n.complete||!n.getAttribute("src")){nx();return}sl[k].classList.remove("on");k=(k+1)%sl.length;sl[k].classList.add("on");setTimeout(nx,3000)},6500)}
   var M={"offer":{"p3-studio-410":"p3-studio","p3-studio-425-sale":"p3-canal-sunset","p3-studio-f6":"p3-kitchen","p3-studio-69":"p3-studio","p3-studio-33":"p3-pooldeck","p3-1bed-674":"p3-living","p3-1bed-685-sale":"p3-skyline-night","p3-1bed-685-rent":"p3-bedroom","p3-2bed-945":"p3-aerial","p3-2bed-1011":"p3-living2","p3-2bed-925-rent":"p3-living2","p2-1bed-688":"p2-1bed-living","p2-studio-80":"p1-promenade","p4-1bed-553":"p4-kitchen","p4-1bed-861":"p4-1bed-view","p4-studio-100":"p4-studio","p4-2bed-1453":"p4-living","p5-2bed-1307":"p5-living","p5-studio-120":"p5-sunset","p1-3bed-maid":"p1-waterfront"},"plan":["p3-1bed-674","p2-1bed-688"],"real":["p2-1bed-688","p4-1bed-861"],"bld":{"1":"p1-waterfront","2":"p1-promenade","3":"p3-canal-sunset","4":"p4-plaza","5":"p5-sunset"}},T=["Studio","1 Schlafzimmer","2 Schlafzimmer","3 Schlafzimmer"],N=["","One","Two","Three","Four","Five"];
   function sh(n){return n>=1e6?(n/1e6).toFixed(2).replace(/\.?0+$/,"")+"M":Math.round(n/1e3)+"k"}
   function e(x){return String(x==null?"":x).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}

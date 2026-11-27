@@ -134,15 +134,35 @@ On a home listed under their name, an agent taps **Edit this home** and gets the
 ## New on the team
 When an agent adds a unit (in My units, or an offer under their name), everyone else on the team sees it first thing the next time they open the website: a pop-up with the agent's photo, the type, building, floor, size, view and price, an **Open** button when it's shared as an offer, and **Message Giulia** (WhatsApp) to say they may have a client. It comes before the welcome screen and the pace message, and shows only units added since they last saw it. Home keeps a **New on the team this week** list. Teammates see the floor (from the unit number if none is written), never the unit number or the owner; the admin, the CEO and the agent who added it see the unit number.
 
-## The Peninsula in 3D (the community model)
+## Your guide to the Peninsula (3D)
 
-There's no model of the Peninsula on Sketchfab (searched 28 Nov 2026), so the app has its own. **The Peninsula in 3D** is a card on Home for everyone, and a button in every home's Sun & views. It opens a full-screen 3D model of the community:
-- Select Group's master plan is the ground, and every building is raised to its height. The Plaza is in orange, the Dubai Canal is around it, and Burj Khalifa stands about 1.6 km to the north-north-west for orientation.
-- The sun lights it with real shadows. Month buttons, a time slider and "Now" move the sun, using the same formulas as Sun & views.
-- Drag to turn, pinch or scroll to zoom. It turns slowly by itself until touched.
-- **Download the model (.glb)** saves it as a standard 3D file. A copy is in `app/models/peninsula-community.glb` for uploading to Sketchfab, whose link then goes in "3D model or 360° tour".
+A guide to the community, not a sales page. It's a card on Home ("Your guide to the Peninsula", with buttons for Cafés & dining, Shops & services, Sports, Parks & walks and Getting around), a button in every home's Sun & views, and the public website's "Explore the community in 3D" button (`/app/?guide=1`). It opens a full-screen 3D model of the community:
 
-Building outlines come from the master plan picture (`app/models/peninsula-community.json`: outline points as fractions of the plan, height in metres). **The heights are approximate** (The Plaza's tower 200 m, the others 40 to 170 m) and can be corrected in that file. three.js 0.170.0 is in `app/vendor/three-0.170.0` (MIT) and loads only when the model is opened.
+- **Places pinned on the model,** coloured by kind:
+  - the Community Mall (66,000 sq ft and 23 shops: supermarket, pharmacies, salons, healthcare, cafés);
+  - the canal promenade (cafés, restaurants and shops) and the waterfront walk;
+  - The Plaza (the central square with fountains) and the community park;
+  - the tennis and padel courts and the 3-on-3 basketball court;
+  - the main entrance, the drop-off and parking, the central roundabout and the canal waterfront.
+- **Filters** show one kind at a time, with names. With everything shown, pins are icons, and a pin that would overlap a nearer one waits until the view turns.
+- **Tapping a pin** flies the camera there and opens a card saying what it is.
+- **The Guide list** has every place, including those the brochures name without a location (skate park, squash, kids' play area, running and cycling tracks), what's inside the towers for residents, and drive times to the Metro, Dubai Mall, DIFC, the airport and the beaches.
+- **The sun:** a month dropdown, a time slider and "Now" move it, with real shadows. Download the model as .glb for Sketchfab.
+
+Everything comes from Select Group's brochures (Peninsula One, Two and Three) and the master plan, which is from the Peninsula Two brochure: its highlighted tower is **Peninsula Two** and the highlighted block is **the Community Mall**. Places, buildings and heights are in `app/models/peninsula-community.json`:
+- `places` hold x, y (fractions of the plan), a category, a name and a description; `unpinned` are places without a location; `around` are the drive times.
+- Heights are approximate. Peninsula Two is 140 m (36 floors); the other buildings aren't identified on the plan, so they're 40 to 170 m.
+- Shop and restaurant names aren't public yet, so the guide says what kinds there are and to ask the agent what's open.
+
+three.js 0.170.0 (`app/vendor/three-0.170.0`, MIT) loads only when the guide opens.
+
+## Speed
+
+- `all()` (every home, with the market figures) is worked out once per redraw instead of dozens of times.
+- The analysis and reports pages draw when they're opened.
+- The 30-second refresh for signed-in users redraws only when something changed.
+- The photo slideshows on Home and the public website load one photo at a time.
+- On a phone slowed down 4×, a full redraw for visitors went from about 110 ms to 50 ms. A first visit loads 573 KB on the public website (was 938 KB) and 1.2 MB in the app (was 1.6 MB).
 
 ## 3D models and 360° tours
 
