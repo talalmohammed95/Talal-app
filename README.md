@@ -153,6 +153,8 @@ After that, the website never says "on request" for the floor, view, size or flo
 - **Find a unit in the brochures** (top of Brochures & plans) shows the layout, floor, size, view and plan for any unit number.
 - The AI assistant uses it when an agent types a unit number.
 
+**Floor plans by unit** (Brochures & plans): every floor plan page the AI found in the brochures, one card per plan, with the layout, building and tower, size, the units or stacks and floors it covers, and the view. Open it full size or share it on WhatsApp. The building buttons filter them, and typing a unit number in the search shows that unit's own plan.
+
 A detail nobody has is simply left out instead of saying "on request". Clients still see a floor band and no unit numbers, and they get the floor plan through the agent.
 
 ## Every unit in full (the admin only)
