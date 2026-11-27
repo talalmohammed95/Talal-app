@@ -2812,7 +2812,7 @@ async function enterServer(u){if(entering)return;entering=true;
     if(u.status==="pending"){try{localStorage.removeItem("orla.cache.profile")}catch(x){}setAuthGate("pending",u.email);return}
     if(u.status!=="active"){try{localStorage.removeItem("orla.cache.profile")}catch(x){}setAuthGate("signin");$("#gate-err").textContent="This account doesn't have access. Contact the admin.";return}
     VISITOR=false;clearTimeout(regT);regClose();document.body.classList.remove("visitor");
-    store.set("orla.cache.profile",u);uid=u.id;profile=u;isAdmin=u.role==="admin";setRole(u.role==="admin"?"admin":u.role==="agent"?"team":u.role==="ceo"?"ceo":u.role==="broker"?"broker":"client");meInfo={name:u.name||u.email,avatarUrl:u.role==="ceo"?CEO_IMG:u.agentKey&&MEDIA.agent[u.agentKey]?agentPhotoOf(u.agentKey):initialsAvatar(u.name||u.email)};
+    store.set("orla.cache.profile",u);uid=u.id;profile=u;isAdmin=u.role==="admin";setRole(u.role==="admin"?"admin":u.role==="agent"?"team":u.role==="ceo"?"ceo":u.role==="broker"?"broker":"client");meInfo={name:u.name||u.email,avatarUrl:u.role==="ceo"?CEO_IMG:u.agentKey&&MEDIA.agent[u.agentKey]?agentPhotoOf(u.agentKey,u.name):initialsAvatar(u.name||u.email)};
     await loadAll(true);
     $("#signout").hidden=false;startApp();if(isAdmin)loadUsers();
     clearInterval(pollT);pollT=setInterval(()=>{if(!document.hidden&&uid){loadAll();if(isAdmin)loadUsers()}},30000);
@@ -2954,7 +2954,11 @@ function renderShowroom(){const A=all().filter(o=>!isDone(o)),first=hello();
     // One photo at a time: the next loads while the current one shows.
     heroT=setInterval(()=>{if(document.hidden||$("#view-dash").hidden)return;const n=imgs[(k+1)%imgs.length];if(!n.getAttribute("src")||!n.complete){nx();return}imgs[k].classList.remove("on");k=(k+1)%imgs.length;imgs[k].classList.add("on");setTimeout(nx,3000)},6000)}}
 // For clients and external agents: the team's top performer, as the agent to choose.
-const agentPhotoOf=(k,name)=>{const a=AGENTS[k]||{},m=MEDIA.agent[k];return a.photo?imgSrc(a.photo):m?imgSrc(m):initialsAvatar(name||a.name||k)};
+// An agent's photo by key; when the key is missing, by name (first name, forgiving accents and small spelling differences).
+const nrm=t=>String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z\s]/g," ").trim();
+function agentKeyByName(name){const f=nrm(name).split(/\s+/)[0];if(!f)return"";const near=(x,y)=>x===y||(x.length>=5&&y.length>=5&&x.slice(0,5)===y.slice(0,5));
+  const h=Object.keys(AGENTS).filter(k=>near(nrm(AGENTS[k].name).split(/\s+/)[0]||"",f)||k.toLowerCase()===f);return h.length===1?h[0]:""}
+const agentPhotoOf=(k,name)=>{if((!k||!(AGENTS[k]||MEDIA.agent[k]))&&name)k=agentKeyByName(name)||k;const a=AGENTS[k]||{},m=MEDIA.agent[k];return a.photo?imgSrc(a.photo):m?imgSrc(m):initialsAvatar(name||a.name||k)};
 const waTo=(phone,text)=>"https://wa.me/"+String(phone||"").replace(/[^0-9]/g,"")+"?text="+encodeURIComponent(text);
 function topAgentCard(broker){const t=topAgent();if(!t||!t.phone)return"";const f=t.name.split(" ")[0];
   const msg=broker?`Hello ${f}, I'm an agent at another agency and I have a client for the Peninsula. Can we work on it together?`:`Hello ${f}, I'm looking for a home at the Peninsula, Business Bay. Can you help me?`;
@@ -3092,7 +3096,7 @@ $("#o-up").onchange=e=>{if(e.target.files.length)phUpload(e.target.files,false);
 $("#o-up-plan").onchange=e=>{if(e.target.files.length)phUpload(e.target.files,true);e.target.value=""};
 
 /* ---------------- Owners: only the agent an offer is listed under sees the owner's contact ---------------- */
-function myKey(){if(profile&&profile.agentKey)return profile.agentKey;const a=myAgent();return a?Object.keys(AGENTS).find(k=>AGENTS[k]===a):""}
+function myKey(){if(profile&&profile.agentKey)return profile.agentKey;const a=myAgent();return a?Object.keys(AGENTS).find(k=>AGENTS[k]===a):(profile&&profile.role==="agent"?agentKeyByName(profile.name):"")}
 const telOf=p=>String(p||"").replace(/[^0-9+]/g,"");
 function ownerWa(o){const me=(meInfo&&meInfo.name)||"your agent";
   const msg=`Hello${o.owner?" "+String(o.owner).split(" ")[0]:""}, this is ${me} from Orla Properties. About your ${typeOf(o).toLowerCase()} in ${BLD[o.b]}${o.unit?" (unit "+o.unit+")":""}: I have a client interested. When would suit you for a viewing?`;

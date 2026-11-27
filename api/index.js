@@ -214,8 +214,14 @@ async function notifyAdminOfNewUser(req, u) {
 async function guessAgentKey(u) {
   const { rows: [st] } = await q("select data from settings where id = 'app'");
   const agents = (st && st.data && st.data.agents) || {};
-  const first = s => String(s || "").trim().split(/\s+/)[0].toLowerCase();
-  const key = Object.keys(agents).find(k => first(agents[k].name) && first(agents[k].name) === first(u.name));
+  // Matches the agent profile by first name, forgiving accents, case and small spelling differences (Blendjana / Blendiana),
+  // or by the email starting with the agent's key or first name (blendjana.x@…). Only an unambiguous match counts.
+  const norm = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z\s]/g, " ").trim();
+  const first = s => norm(s).split(/\s+/)[0] || "";
+  const near = (a, b) => a && b && (a === b || (a.length >= 5 && b.length >= 5 && a.slice(0, 5) === b.slice(0, 5)));
+  const mail = norm(String(u.email || "").split("@")[0]).replace(/\s+/g, "");
+  const hits = Object.keys(agents).filter(k => near(first(agents[k].name), first(u.name)) || (mail && (mail.startsWith(k.toLowerCase()) || (first(agents[k].name).length >= 4 && mail.startsWith(first(agents[k].name))))));
+  const key = hits.length === 1 ? hits[0] : null;
   if (key) { await q("update users set agent_key = $2 where id = $1", [u.id, key]); u.agent_key = key; }
 }
 
@@ -308,6 +314,8 @@ const routes = {
 
   "GET auth/me": async c => {
     if (!c.user) fail(401, "Not signed in.", "signed_out");
+    // An Orla agent whose account isn't linked to their agent profile yet (name spelled differently at sign-up): link it now.
+    if (c.user.role === "agent" && !c.user.agent_key) { try { await guessAgentKey(c.user); } catch (e) {} }
     return { user: publicUser(c.user) };
   },
 
@@ -365,6 +373,7 @@ const routes = {
       if (canResend) await sendVerification(c.req, user);
       fail(403, "Confirm your email first. We've just sent you a new confirmation link.", "unverified");
     }
+    if (user.role === "agent" && !user.agent_key) { try { await guessAgentKey(user); } catch (e) {} }
     await startSession(c.req, c.res, user.id);
     return { user: publicUser(user) };
   },
