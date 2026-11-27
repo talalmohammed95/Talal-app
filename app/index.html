@@ -1301,7 +1301,7 @@ const BLDINFO={
   1:{towers:[],floors:"36-floor tower, simplexes in the podium and on the waterfront",types:[[0,""],[1,""],[2,""],[3,""],[1,"simplex"],[2,"simplex"],[3,"simplex"]]},
   2:{towers:[],floors:"36-storey tower",types:[[0,""],[1,""],[2,""]]},
   3:{towers:[],floors:"49-floor tower",types:[[0,""],[1,""],[2,""]]},
-  4:{towers:["A","B"],floors:"Two 52-floor towers: Tower A and Tower B",types:[[0,""],[1,""],[2,""],[3,""],[4,""],[3,"loft"],[4,"loft"]]},
+  4:{towers:["A","B"],floors:"Two 52-floor towers: Tower A and Tower B",types:[[0,""],[1,""],[2,""],[3,""],[4,""],[1,"loft"],[2,"loft"],[3,"loft"],[4,"loft"]]},
   5:{towers:[],floors:"36-storey tower plus two waterfront duplex blocks",types:[[0,""],[1,""],[2,""],[3,""],[3,"semipenthouse"],[1,"duplex"],[2,"duplex"],[3,"duplex"],[4,"duplex"]]}};
 const typeOf=x=>{if(!x||x.beds==null||x.beds==="")return"";const t=TYPE[+x.beds]||"";return x.layout&&LAYOUT[x.layout]?(+x.beds===0?"Studio ":t+" ")+LAYOUT[x.layout]:t};
 const hasTowers=b=>!!(BLDINFO[+b]&&BLDINFO[+b].towers.length);
