@@ -957,6 +957,12 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
 .sunslide{display:flex;flex-direction:column;gap:4px;font-size:14px;font-weight:700}.sunslide input{width:100%;accent-color:#E8901F;min-height:32px}
 .sunfacts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}.sunfacts li{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}.sunfacts span{color:var(--muted);font-size:14px}
 .sunlinks{display:flex;gap:8px;flex-wrap:wrap}
+#motiv{position:fixed;left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:86;display:flex;justify-content:center;padding:0 12px;pointer-events:none}#motiv[hidden]{display:none}
+@media(min-width:900px){#motiv{bottom:24px}}
+.mvcard{pointer-events:auto;position:relative;width:min(460px,100%);background:#1C1A18;color:#fff;border-radius:22px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.45);animation:regup .3s ease-out}
+.mvcard .kick{color:#F59A3E;margin:0}.mvcard h2{margin:4px 40px 6px 0;font-size:22px}.mvcard p{margin:0 0 8px;color:rgba(255,255,255,.85)}.mvcard .pcx{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.12);color:#fff;border-color:transparent}
+.mvbar{height:10px;border-radius:999px;background:rgba(255,255,255,.15);overflow:hidden;margin:6px 0}.mvbar i{display:block;height:100%;background:linear-gradient(90deg,#F59A3E,#FFC53D);border-radius:999px}
+.mvnum{font-size:14px}.mvcard .btn:not(.primary){background:transparent;color:#fff;border-color:rgba(255,255,255,.3)}
 #reg{position:fixed;inset:0;z-index:87;background:rgba(15,12,10,.38);display:flex;align-items:flex-end;justify-content:center;padding:12px 12px max(12px,env(safe-area-inset-bottom,0px))}#reg[hidden]{display:none}
 @media(min-width:760px){#reg{align-items:center}}
 .regcard{position:relative;width:min(520px,100%);max-height:calc(100vh - 24px);overflow:auto;background:var(--surface);border-radius:24px;padding:22px;display:flex;flex-direction:column;gap:8px;box-shadow:0 24px 70px rgba(0,0,0,.35);animation:regup .28s ease-out}
@@ -2024,9 +2030,11 @@ $("#mine-form").addEventListener("submit",async e=>{e.preventDefault();
   if(hasTowers(g("#m-bld"))&&!g("#m-tower")){toast(BLD[g("#m-bld")]+": choose Tower A or Tower B");$("#m-tower").focus();return}
   const m={id:g("#m-id")||"l-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),unit:g("#m-unit"),b:g("#m-bld"),tower:hasTowers(g("#m-bld"))&&g("#m-tower")||undefined,layout:mTypeVal().layout||undefined,beds:String(mTypeVal().beds),deal:g("#m-deal"),floor:g("#m-floor"),view:g("#m-view"),tour:tourEmbed(g("#m-tour"))?g("#m-tour"):undefined,size:g("#m-size").replace(/[^0-9.]/g,""),price,status:g("#m-status"),furn:g("#m-furn"),owner:g("#m-owner"),phone:g("#m-phone"),agent:g("#m-agent"),date:g("#m-date"),notes:g("#m-notes"),online:onlineFromForm(),future:$("#m-future").checked||undefined,availableFrom:g("#m-avail")||undefined,remindAt:g("#m-remind")||undefined,remindNote:g("#m-rnote")||undefined,adTitle:g("#m-adtitle")||undefined,adText:g("#m-adtext")||undefined};
   {const prevL=mine.concat(teamListings).find(x=>x.id===m.id)||{},up=m.unit&&unitPlan(m.b,m.tower,m.unit);if(prevL.plan&&prevL.plan.custom)m.plan=prevL.plan;else if(up)m.plan={u:up.u,c:up.c,from:"brochure",mark:up.mark||undefined};else if(prevL.plan&&prevL.plan.from==="brochure")m.plan=null}
+  const wasOnline=(()=>{const pv=mine.concat(teamListings).find(x=>x.id===m.id);return !!(pv&&isOnline(pv,goalOf()))})(),nowOnline=!!isOnline(m,goalOf());
   if(SRV){const prev=mine.concat(teamListings).find(x=>x.id===m.id)||{};const{id,...data}=Object.assign({},prev,m);delete data._by;delete data._own;let r;try{r=await api("data/listings",{id,data},"PUT")}catch(x){toast(x.message);return}await loadListings();if(r&&r.warning){resetMineForm();renderAll();setTimeout(()=>toast(r.warning),50);return}}
   else{const i=mine.findIndex(x=>x.id===m.id);if(i>=0)mine[i]=m;else mine.push(m);persist()}
   const was=!!g("#m-id");resetMineForm();renderAll();toast(was?"Listing updated":"Listing saved");if(SRV&&m.phone)setTimeout(()=>ownerInvitePrompt(m.id),300);
+  if(nowOnline&&!wasOnline)motivate("online");else if(!was)motivate("saved");
 });
 function mTypeVal(){const v=String($("#m-type").value||"0|").split("|");return{beds:+v[0]||0,layout:v[1]||""}}
 function mFillTypes(beds,layout){const b=+$("#m-bld").value||3,info=BLDINFO[b],cur=beds!=null&&beds!==""?(+beds)+"|"+(layout||""):$("#m-type").value;
@@ -3253,12 +3261,12 @@ $("#team").addEventListener("click",e=>{if(e.target.closest("[data-goto-mine]"))
 $("#team").addEventListener("change",async e=>{const oc=e.target.closest("[data-otog]");
   if(oc){const id=oc.closest("[data-off]").dataset.off;oc.disabled=true;
     exclusive(oc,"data-otog");
-    try{const r=await api("team/online",{id,platform:oc.dataset.otog,on:oc.checked});const o=OFFERS.find(x=>x.id===id);if(o)o.online=r.online;perf=null;await renderTeam();toast(o&&isOnline(o,goalOf())?"Online everywhere: it counts towards the goal":"Saved")}
+    try{const o0=OFFERS.find(x=>x.id===id),was=!!(o0&&isOnline(o0,goalOf()));const r=await api("team/online",{id,platform:oc.dataset.otog,on:oc.checked});const o=OFFERS.find(x=>x.id===id);if(o)o.online=r.online;if(o&&!was&&isOnline(o,goalOf()))motivate("online");perf=null;await renderTeam();toast(o&&isOnline(o,goalOf())?"Online everywhere: it counts towards the goal":"Saved")}
     catch(x){toast(x.message);oc.checked=!oc.checked;oc.disabled=false}return}
   const c=e.target.closest("[data-tog]");if(!c)return;const id=c.closest("[data-lst]").dataset.lst,m=mine.find(x=>x.id===id);if(!m)return;
   const on=Object.assign({},m.online||{},{[c.dataset.tog]:c.checked});if(c.checked){if(c.dataset.tog==="off")Object.keys(on).forEach(k=>{if(k!=="off")delete on[k]});else delete on.off}
   const data=Object.assign({},m,{online:on});delete data.id;c.disabled=true;
-  try{await api("data/listings",{id,data},"PUT");await loadListings();perf=null;await renderTeam();toast(isOnline(data,goalOf())?"Online everywhere: it counts towards the goal":"Saved")}catch(x){toast(x.message);c.checked=!c.checked;c.disabled=false}});
+  try{const was=isOnline(m,goalOf());await api("data/listings",{id,data},"PUT");await loadListings();perf=null;await renderTeam();toast(isOnline(data,goalOf())?"Online everywhere: it counts towards the goal":"Saved");if(!was&&isOnline(data,goalOf()))motivate("online")}catch(x){toast(x.message);c.checked=!c.checked;c.disabled=false}});
 
 /* ---------------- Viewings and full details go through the listing agent ---------------- */
 function leadMsg(o,kind){const a=agentOf(o),f=String(a.name||"").split(" ")[0],what=bedsWord(o.beds).toLowerCase()+" in "+BLD[o.b]+" ("+dealWord(o).toLowerCase()+", AED "+(o.deal==="rent"?fmt(o.rent)+" a year":fmt(o.price))+")",ref="Ref "+o.id.toUpperCase();
@@ -3925,6 +3933,28 @@ document.addEventListener("click",async e=>{if(e.target.closest("[data-weekly]")
 
 /* ---------------- Pace to the goal: a message on the first visit of the day ---------------- */
 const PACE={behind:["Behind","bad"],close:["Close","pending"],track:["On track","ok"],done:["Goal reached","ok"]};
+/* ---------------- Motivation: after every unit added and every listing online ---------------- */
+const MOTIV={
+  saved:[["Unit in. Now get it online.","A listing nobody sees can't sell. Put it on Bayut and Property Finder today, then go find the next one."],
+    ["Another door opened.","Every listing brings calls, calls bring viewings, viewings bring deals. More listings, more deals. Simple."],
+    ["That's how it starts.","The agent with the most listings gets the most calls. Keep the momentum: the next unit is waiting."],
+    ["Good work. Don't stop here.","Owners talk to each other. One listing leads to the next. Call your next owner now."]],
+  online:[["Live. It's working for you now.","Clients can find it day and night. You're one listing closer to your next deal. Go get the next one."],
+    ["One more ticket in the draw.","Every listing online is a chance to close. The more you have, the sooner the deal comes."],
+    ["Deals come from volume.","Not luck: listings. You just added one more. Next!"],
+    ["Clients are looking right now.","And now they'll find you. Keep building: the next listing makes the next call."]]};
+function motivate(kind){if(!isTeam()||isCEO()||!MOTIV[kind])return;
+  setTimeout(async()=>{try{perf=null;await loadPerf(true)}catch(e){}
+    const g=perf&&perf.goal,me=perf&&perf.agents.find(a=>a.key===myKey()),pc=g&&me?paceOf(me.online,g):null;
+    const n=+store.get("orla.motiv."+kind,0)||0,[h,t]=MOTIV[kind][n%MOTIV[kind].length];store.set("orla.motiv."+kind,n+1);
+    const first=hello();let el=$("#motiv");
+    if(!el){document.body.insertAdjacentHTML("beforeend",'<div id="motiv" role="dialog" aria-modal="false" aria-labelledby="motiv-t"><div class="mvcard"></div></div>');el=$("#motiv");
+      el.addEventListener("click",e=>{if(e.target.closest("[data-mv-x]")){el.hidden=true}if(e.target.closest("[data-mv-next]")){el.hidden=true;show("mine");try{resetMineForm()}catch(x){}setTimeout(()=>{const f=$("#m-unit");if(f){f.scrollIntoView({block:"center"});f.focus()}},200)}})}
+    const pct=pc?Math.min(100,Math.round(pc.online/Math.max(1,pc.target)*100)):0;
+    el.querySelector(".mvcard").innerHTML=`<button class="pcx" data-mv-x aria-label="Close">${ic("x")}</button><p class="kick">${kind==="online"?"Listing online":"Unit added"}${first?" · "+esc(first):""}</p><h2 id="motiv-t">${esc(h)}</h2><p>${esc(t)}</p>
+      ${pc?`<div class="mvbar" role="img" aria-label="${pc.online} of ${pc.target} listings online"><i style="width:${pct}%"></i></div><p class="mvnum"><b>${pc.online} of ${pc.target}</b> online${pc.left?` · <b>${pc.left}</b> to go${pc.perWeek?` · ${pc.perWeek} a week keeps you on track`:""}`:" · goal reached!"}</p>`:""}
+      <div class="actions"><button class="btn primary" data-mv-next>${ic("plus")}Add the next unit</button><button class="btn" data-mv-x>Later</button></div>`;
+    el.hidden=false;clearTimeout(motivate.t);motivate.t=setTimeout(()=>{el.hidden=true},15000)},600)}
 function paceOf(online,g){const DAY=864e5,start=Date.parse((g.start||"2026-11-20")+"T00:00:00+04:00"),end=Date.parse(g.deadline+"T23:59:59+04:00"),now=Date.now();
   const frac=Math.max(0,Math.min(1,(now-start)/Math.max(DAY,end-start))),expected=Math.floor(g.target*frac),daysLeft=Math.max(0,Math.ceil((end-now)/DAY)),left=Math.max(0,g.target-online),gap=expected-online;
   const status=online>=g.target?"done":gap<=0?"track":gap<=Math.max(1,Math.floor(expected*.15))?"close":"behind";

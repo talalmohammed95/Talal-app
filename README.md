@@ -128,6 +128,15 @@ Every Sunday at 9:00 Dubai time (05:00 UTC), the daily Vercel Cron (`/api/cron/d
 
 **Tasks** are private: the admin or the CEO gives one to an agent (with a due date and notes), and only that agent, the admin and the CEO see it. They show on the agent's Home (overdue ones in red), and the agent ticks them done.
 
+## A push after every listing (agents)
+
+Every time an agent adds a unit, or a listing goes online on every platform (from My units or the Team page), a short card comes up from the bottom. It has:
+- a quick message, rotating so it doesn't repeat: "Unit in. Now get it online." or "Live. It's working for you now. You're one listing closer to your next deal.";
+- their progress bar to the goal (e.g. "1 of 15 online · 14 to go · 3 a week keeps you on track");
+- **Add the next unit**, which opens a fresh My units form.
+
+The card closes by itself after 15 seconds. The messages are in `MOTIV` in the app; the admin and the CEO don't get it.
+
 ## Agents edit their own homes
 On a home listed under their name, an agent taps **Edit this home** and gets the same editor as the admin: headline, building, type, sale or rent, status (available, reserved, under offer, sold, rented), price, rent, size, floor, view, furnishing, cheques, deposit, highlights, the unit number and owner, and photos and the floor plan. It saves for everyone straight away, price and status changes go into the home's history, and it shows in Admin › Activity. They can't move a home to another agent or change whether it counts in team performance (only the admin can), and they can't edit homes listed under someone else. Their own units in My units were already editable there. The admin also has **Edit this home** on every home.
 
