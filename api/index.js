@@ -803,6 +803,21 @@ const routes = {
   },
 
   // The team's top performer, for clients, external agents and the public website: name, phone and counts only.
+  // Registered deals (DXB Interact / DLD exports) as averages per building and type: no deal details leave the server.
+  "GET public/market": async c => {
+    const { rows } = await q(`with d as (select kind, building as b, beds, coalesce(nullif(layout, ''), '') as layout, size, price, deal_date from market_deals
+        where beds is not null and price > 0 and (deal_date is null or deal_date > current_date - interval '24 months')),
+      g as (select kind, b, beds, layout,
+        count(*) filter (where deal_date is null or deal_date > current_date - interval '12 months')::int as n12, count(*)::int as n24 from d group by 1, 2, 3, 4)
+      select g.kind, g.b, g.beds, g.layout, case when g.n12 >= 3 then 12 else 24 end as months,
+        count(d.*)::int as deals, round(avg(d.price))::int as avg, round(avg(d.price / nullif(d.size, 0)))::int as psf
+      from g join d on d.kind = g.kind and d.b = g.b and d.beds = g.beds and d.layout = g.layout
+        and (g.n12 < 3 or d.deal_date is null or d.deal_date > current_date - interval '12 months')
+      group by 1, 2, 3, 4, 5`);
+    c.cache = "public, max-age=600, s-maxage=600";
+    return { rows };
+  },
+
   "GET public/top": async c => {
     const { agents } = await teamStats();
     const top = [...agents].sort((a, b) => b.online - a.online || b.listings - a.listings)[0];

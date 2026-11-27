@@ -885,6 +885,17 @@ body.guest .tab[data-view="chat"]{display:none!important}
 .lwhen{display:inline-flex;align-items:center;gap:5px;font-weight:700;color:var(--primary)}.lwhen .ic{width:15px;height:15px}.lnote{font-style:italic}
 .laf{display:grid;gap:8px;margin:12px 0}.laf div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding-bottom:6px}.laf span{color:var(--muted)}.laf b{text-align:right}
 .pushp{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.pushp>div:nth-child(2){flex:1;min-width:200px}.pushp p{margin:2px 0 0;color:var(--muted);font-size:14px}.pushi{width:44px;height:44px;border-radius:50%;background:var(--primary-soft,rgba(190,80,20,.12));color:var(--primary);display:grid;place-items:center}.pushi .ic{width:22px;height:22px}
+.bestp-panel h2{display:flex;align-items:center;gap:8px}.bestp-panel h2 .ic{width:22px;height:22px;color:var(--primary)}
+.bestrow h3{margin:14px 0 8px;font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.bestgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.bestc{display:flex;flex-direction:column;text-align:left;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--bg);color:var(--fg);padding:0;font:inherit;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.bestc:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.12)}
+.bestimg{position:relative;aspect-ratio:16/10;background:var(--sunk);overflow:hidden;flex:0 0 auto}.bestimg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.bestn{position:absolute;top:10px;left:10px;width:30px;height:30px;border-radius:50%;background:var(--primary);color:#fff;font-weight:800;display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.bestb{display:flex;flex-direction:column;gap:3px;padding:10px 12px 12px}.bestp{font-size:18px;color:var(--primary)}.bestt{font-weight:700}.bests{font-size:13px;color:var(--muted)}
+.bestw{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}.bestw em{font-style:normal;font-size:12px;font-weight:700;border-radius:999px;padding:3px 8px;background:var(--good-soft,rgba(26,127,75,.12));color:var(--good,#1a7f4b)}
+.besta{font-size:12px;color:var(--muted);margin-top:2px}
+@media (max-width:760px){.bestgrid{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;margin:0 -4px;padding:0 4px 6px;scrollbar-width:none}.bestc{flex:0 0 78%;scroll-snap-align:start}}
 </style>
 <script src="/config.js"></script>
 <script src="/track.js" defer></script>
@@ -1729,9 +1740,9 @@ async function loadListings(){if(!SRV||!isTeam())return;
 /* ---------------- Dashboard ---------------- */
 const today=()=>new Date().toISOString().slice(0,10);
 const isDue=c=>c.follow&&c.follow<=today()&&c.status!=="Closed"&&c.status!=="Lost";
-function renderDash(){if(!isTeam()){renderShowroom();if(myProps.length)$("#dash").insertAdjacentHTML("afterbegin",propertyHTML());return}clearInterval(heroT);if(isCEO()){$("#dash").innerHTML=ceoHome();return}renderTeamDash();
+function renderDash(){if(!isTeam()){renderShowroom();{const h=$("#dash").firstElementChild;if(h)h.insertAdjacentHTML("afterend",bestHTML())}if(myProps.length)$("#dash").insertAdjacentHTML("afterbegin",propertyHTML());return}clearInterval(heroT);if(isCEO()){$("#dash").innerHTML=ceoHome();return}renderTeamDash();
   const myl=renderMyListings();if(myl){const r=$("#dash").children[0];if(r)r.insertAdjacentHTML("afterend",myl);else $("#dash").insertAdjacentHTML("afterbegin",myl)}
-  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+(isAdmin?weeklyPanel()+visitorsPanel():"")+myTasksHTML()+towerTodoHTML()+pushSlot()+leadsHTML()+remindersHTML())}
+  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+bestHTML()+(isAdmin?weeklyPanel()+visitorsPanel():"")+myTasksHTML()+towerTodoHTML()+pushSlot()+leadsHTML()+remindersHTML())}
 // The top achiever: first in the team ranking (online, then units), once they have a unit.
 let topPub=null;
 async function loadTop(){try{topPub=(await api("public/top")).top}catch(e){}}
@@ -1896,8 +1907,12 @@ function floorBand(f){const s=String(f||""),m=s.match(/(\d+)/);if(m){const n=+m[
 function viewTags(v){const s=String(v||"").toLowerCase(),t=[];if(/burj/.test(s))t.push("burj");if(/canal|water/.test(s))t.push("canal");if(/skyline/.test(s))t.push("skyline");if(/park/.test(s))t.push("park");if(/community/.test(s))t.push("community");return t}
 function furnCat(f){const s=String(f||"").toLowerCase();if(/unfurnished/.test(s))return "unfurnished";if(/furnished/.test(s))return "furnished";if(/fitted/.test(s))return "fitted";return ""}
 // Adds calculated fields to an offer, under o.x, without changing the stored offer.
+let DEALMKT=[];
+async function loadDealMkt(){if(!SRV)return;try{DEALMKT=(await api("public/market")).rows||[]}catch(e){}}
+function dealMkt(kind,o){const l=(o.layout||""),r=DEALMKT.find(m=>m.kind===kind&&+m.b===+o.b&&+m.beds===+o.beds&&(m.layout||"")===l)||(l?null:null);
+  if(!r||r.deals<3||(kind==="sale"&&!r.psf)||(kind==="rent"&&!r.avg))return null;return{b:o.b,beds:o.beds,deals:r.deals,period:"last "+r.months+" months",avg:r.avg,psf:r.psf,src:"DXB Interact (DLD)"}}
 function enrich(o){
-  const mS=MKT.sale.find(m=>m.b===o.b&&m.beds===o.beds)||null,mR=MKT.rent.find(m=>m.b===o.b&&m.beds===o.beds)||null;
+  const mS=dealMkt("sale",o)||MKT.sale.find(m=>m.b===o.b&&m.beds===o.beds)||null,mR=dealMkt("rent",o)||MKT.rent.find(m=>m.b===o.b&&m.beds===o.beds)||null;
   const hasSale=o.deal!=="rent"&&o.price>0,hasRent=o.deal!=="sale"&&o.rent>0;
   const psf=hasSale&&o.size?o.price/o.size:null,rpsf=hasRent&&o.size?o.rent/o.size:null;
   const own=(o.inv&&o.inv.rent)||(hasRent?o.rent:null);
@@ -2397,7 +2412,7 @@ async function loadAll(first){
       else if(owner&&owner!==uid){mine=[];clients=[];starred=new Set();persist()}
       else if(mine.length||clients.length||starred.size)persist();
       store.set("orla.localOwner",uid)}
-    migrateOvr();if(!isTeam()){await loadTop();await loadMyProperty()}if(isTeam()){await loadGuide();await loadUnitTypes();await loadListings();await loadPerf(true);await loadLeads();await loadTasks();if(isAdmin||isCEO()){loadWeekly();loadVisitorsBrief()}setTimeout(paceModal,700);setTimeout(leadPollStart,1500);if(location.hash==='#requests')setTimeout(()=>{show('dash');const r=$('#requests');if(r)r.scrollIntoView()},900);if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
+    migrateOvr();if(!isTeam()){await loadTop();await loadMyProperty()}await loadDealMkt();if(isTeam()){await loadGuide();await loadUnitTypes();await loadListings();await loadPerf(true);await loadLeads();await loadTasks();if(isAdmin||isCEO()){loadWeekly();loadVisitorsBrief()}setTimeout(paceModal,700);setTimeout(leadPollStart,1500);if(location.hash==='#requests')setTimeout(()=>{show('dash');const r=$('#requests');if(r)r.scrollIntoView()},900);if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
   catch(e){if(e.status===401||e.status===403){location.reload();return}
     if(first){OFFERS=store.get("orla.cache.offers",[]);applySettings(store.get("orla.cache.settings",{}))}
     if(first||!loadAll.warned){loadAll.warned=true;toast("Offline: showing what's saved on this device")}}
@@ -3756,6 +3771,33 @@ async function leadCheck(first){if(!SRV||!isTeam()||isCEO())return;const k="orla
 function leadPollStart(){if(leadPoll||!SRV||!isTeam()||isCEO())return;leadCheck(true);leadPoll=setInterval(()=>{if(document.visibilityState==="visible")leadCheck(false)},45000);
   document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")leadCheck(false)})}
 if("serviceWorker" in navigator)navigator.serviceWorker.addEventListener("message",e=>{if(e.data&&e.data.type==="open"&&/requests/.test(e.data.url||"")){show("dash");setTimeout(()=>{leadCheck(false);const r=$("#requests");if(r)r.scrollIntoView({behavior:"smooth"})},400)}});
+
+/* ---------------- Best 3 right now (home page) ---------------- */
+// Ranked on value: our price against the registered market (DXB Interact / DLD deals, else the DLD and Bayut / Property Finder figures in the app),
+// then rental yield, a recent price cut and real photos. One home per building and type where possible.
+function best3(deal){const L=all().filter(o=>!isDone(o)&&(o.avail||"Available")==="Available"&&!o.future&&(deal==="rent"?o.deal!=="sale"&&o.rent>0:o.deal!=="rent"&&o.price>0));
+  const sc=o=>{const x=o.x,ref=deal==="rent"?x.vsR:x.vs;let v=ref!=null?-ref*100:-3;if(deal==="sale"&&x.gy)v+=(x.gy*100-6)*1.5;if(x.reduced)v+=1.5;if(hasRealPhotos(o))v+=1;return v};
+  const r=L.map(o=>({o,s:sc(o)})).sort((a,b)=>b.s-a.s),out=[],seen=new Set();
+  for(const c of r){const k=c.o.b+"|"+c.o.beds+"|"+(c.o.layout||"");if(seen.has(k))continue;seen.add(k);out.push(c.o);if(out.length===3)break}
+  for(const c of r){if(out.length===3)break;if(!out.includes(c.o))out.push(c.o)}return out}
+function bestWhy(o,deal){const x=o.x,ref=deal==="rent"?x.vsR:x.vs,m=deal==="rent"?x.mR:x.mS,w=[];
+  if(ref!=null&&ref<=-0.02)w.push(`${Math.round(-ref*100)}% under the ${m&&m.src?"registered":"market"} average`);
+  if(deal==="sale"&&x.gy&&x.gy>=0.055)w.push((x.gy*100).toFixed(1)+"% rental yield");
+  if(x.reduced)w.push("Price just reduced");
+  if(known(o.view)&&w.length<2)w.push(o.view+" view");
+  if(!w.length)w.push(o.size?fmt(o.size)+" sq ft":"Ready to move in");return w.slice(0,2)}
+function bestCard(o,i,deal){const ph=photosOf(o)[0],a=agentOf(o),team=isTeam(),price=deal==="rent"?aed(o.rent)+" a year":aed(o.price);
+  const floor=team?(known(o.floor)?o.floor+(/floor/i.test(o.floor)?"":" floor"):""):(o.x&&o.x.band?{low:"Low floor",mid:"Mid floor",high:"High floor"}[o.x.band]||"":"");
+  return `<button class="bestc" data-best="${esc(o.id)}" aria-label="${esc((i+1)+". "+typeOf(o)+" in "+BLD[o.b]+", "+price)}">
+    <div class="bestimg">${ph?`<img loading="lazy" src="${esc(imgSrc(ph.k,true))}" alt="">`:""}<span class="bestn">${i+1}</span></div>
+    <div class="bestb"><b class="bestp num">${esc(price)}</b><span class="bestt">${esc(typeOf(o)+" · "+BLD[o.b]+(o.tower&&+o.b===4?" · Tower "+o.tower:""))}</span>
+      <span class="bests">${esc([team&&o.unit?"Unit "+o.unit:"",o.size?fmt(o.size)+" sq ft":"",floor].filter(Boolean).join(" · "))}</span>
+      <span class="bestw">${bestWhy(o,deal).map(t=>`<em>${esc(t)}</em>`).join("")}</span>${team?`<span class="besta">${esc(firstName(a.name))}</span>`:""}</div></button>`}
+function bestHTML(){const S=best3("sale"),R=best3("rent");if(!S.length&&!R.length)return"";
+  const row=(l,deal,t)=>l.length?`<div class="bestrow"><h3>${t}</h3><div class="bestgrid">${l.map((o,i)=>bestCard(o,i,deal)).join("")}</div></div>`:"";
+  return `<div class="panel bestp-panel"><h2>${ic("star")}The best homes right now</h2><p class="lede">${isTeam()?"The 3 best-value homes we have for sale and for rent today, ranked on price against registered deals (DXB Interact / DLD) and Bayut and Property Finder prices, then rental yield.":"Our 3 best-value homes for sale and for rent today, picked by comparing each price with recent registered deals in the Peninsula."}</p>
+    ${row(S,"sale","For sale")}${row(R,"rent","For rent")}</div>`}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-best]");if(!b)return;state.sel=b.dataset.best;store.set("orla.sel",state.sel);show("offers");try{renderDetail()}catch(x){}const d=document.getElementById("view-offers");if(d)setTimeout(()=>{const t=document.querySelector("#detail, .detail");(t||d).scrollIntoView({behavior:"smooth",block:"start"})},150)});
 
 /* ---------------- Start-up ---------------- */
 function startApp(){if(!SRV)setRole(isAdmin?"admin":"team");updateAcct();const ch=$("#userchip");

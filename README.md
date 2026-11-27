@@ -128,6 +128,9 @@ Every Sunday at 9:00 Dubai time (05:00 UTC), the daily Vercel Cron (`/api/cron/d
 
 **Tasks** are private: the admin or the CEO gives one to an agent (with a due date and notes), and only that agent, the admin and the CEO see it. They show on the agent's Home (overdue ones in red), and the agent ticks them done.
 
+## The best homes right now (home page)
+Everyone's home page (the admin, the agents and clients) opens with the 3 best-value homes for sale and the 3 for rent. Only available homes count (not sold, rented or coming soon). They're ranked on price against the registered market: the deals imported from DXB Interact / DLD (averages for the same building and type over the last 12 months, or 24 if there are fewer than 3), otherwise the DLD and Bayut / Property Finder figures in the app. Then come rental yield for sales, a recent price cut and real photos, and one home per building and type where possible. Each card says why it's there ("15% under the registered average", "7.1% rental yield"). The team also sees the agent and the unit number; clients see a floor band. It updates by itself whenever prices, homes or the imported deals change. The same registered averages now also drive the value chips across the app. Only averages leave the server, never deal details.
+
 ## Viewing bookings and notifications
 A client or external agent taps **Book a viewing** on a home, picks a day (the next 10 days) and a time (morning, afternoon or evening), checks their mobile and can add a message. Their WhatsApp opens with the message to the listing agent, and the booking is saved.
 
