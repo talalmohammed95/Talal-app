@@ -134,7 +134,7 @@ function forRole(data, user) {
   delete d.plan; d.planOnRequest = true;
   return hideFloor(d);
 }
-const PUBLIC_FIELDS = ["b", "beds", "layout", "deal", "title", "price", "rent", "size", "floor", "view", "furn", "baths", "status", "avail", "hl", "photos", "plan", "balcony", "cheques", "startingPrice", "moreCount", "agent"];
+const PUBLIC_FIELDS = ["b", "beds", "layout", "deal", "title", "price", "rent", "size", "floor", "view", "furn", "baths", "status", "avail", "hl", "photos", "plan", "balcony", "cheques", "startingPrice", "moreCount", "agent", "tour"];
 
 // Clients see one home per agent, building, bedrooms, layout and deal: the lowest price, shown as a starting price ("from AED X").
 // The others stay with the agent, so the client gets in touch for them. The team and external agents see every home.
@@ -266,6 +266,10 @@ async function teamStats(opts = {}) {
 
 // Writes the offer for a shared listing. Only these fields are copied: the unit number, the owner and the notes stay in the listing.
 const SHARE_STATUS = { Ready: "Ready", Vacant: "Ready · vacant", Tenanted: "Tenanted", "Off-plan": "Off-plan" };
+// A 3D model or 360° tour link: only the viewers the app opens inside a page (Sketchfab, Matterport, Kuula, YouTube).
+function cleanTour(u) {
+  try { const x = new URL(String(u || "").trim()); return x.protocol === "https:" && /^(www\.)?(sketchfab\.com|my\.matterport\.com|kuula\.co|youtube\.com|m\.youtube\.com|youtu\.be)$/.test(x.hostname) ? x.href.slice(0, 300) : undefined; } catch (e) { return undefined; }
+}
 async function shareListing(listingId, email) {
   const { rows: [l] } = await q("select l.data, u.agent_key from listings l join users u on u.id = l.user_id where l.id = $1", [listingId]);
   if (!l || !l.data.sharedOffer) return;
@@ -277,7 +281,7 @@ async function shareListing(listingId, email) {
     price: d.deal === "rent" ? null : price, rent: d.deal === "rent" ? price : null, size: Number(d.size) || null,
     floor: str(d.floor, 40), view: str(d.view, 80) || "On request", furn: str(d.furn, 40) || "—", baths: "—",
     status: SHARE_STATUS[d.status] || "Ready", avail: "Available", agent: str(d.agent, 40) || l.agent_key || "",
-    hl: str(d.shareNote, 500), teamOnly: d.shareTo !== "all", fromListing: listingId, tower: +d.b === 4 && ["A", "B"].includes(d.tower) ? d.tower : undefined, src: "Shared by the listing agent"
+    hl: str(d.shareNote, 500), teamOnly: d.shareTo !== "all", fromListing: listingId, tour: cleanTour(d.tour), tower: +d.b === 4 && ["A", "B"].includes(d.tower) ? d.tower : undefined, src: "Shared by the listing agent"
   };
   const { rows: [prev] } = await q("select data from offers where id = $1", [d.sharedOffer]);
   await q(`insert into offers (id, data, updated_at) values ($1, $2, now())

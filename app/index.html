@@ -903,6 +903,11 @@ body.guest .tab[data-view="chat"]{display:none!important}
 .mguide .uplan{margin-top:4px}
 body.visitor .acct{background:var(--primary);border-color:var(--primary);color:#fff;padding:4px 16px}body.visitor .acct img{display:none}body.visitor .acct span{display:inline!important;font-weight:800}
 body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-toggle{display:none}}
+.tourcard{border:1.5px solid var(--line);border-radius:16px;background:var(--bg);padding:14px;margin:12px 0;display:flex;flex-direction:column;gap:10px}
+.tourh{display:flex;flex-direction:column;gap:2px}.tourh b{display:flex;align-items:center;gap:6px;font-size:17px}.tourh b .ic{width:20px;height:20px;color:var(--primary)}.tourh span{color:var(--muted);font-size:14px}
+.tourplay{position:relative;display:block;width:100%;aspect-ratio:16/10;border:0;padding:0;border-radius:12px;overflow:hidden;cursor:pointer;background:#1C1A18}.tourplay img{width:100%;height:100%;object-fit:cover;opacity:.75}
+.tourplay span{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:8px;white-space:nowrap;color:#fff;font-weight:800;font-size:17px;background:var(--primary);padding:13px 20px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.35)}.tourplay span .ic{width:24px;height:24px}
+.tourcard iframe{width:100%;aspect-ratio:16/10;border:0;border-radius:12px;background:#1C1A18}@media(max-width:600px){.tourcard iframe,.tourplay{aspect-ratio:4/5}}
 .suncard{border:1.5px solid var(--line);border-radius:16px;background:var(--bg);padding:14px;margin:12px 0;display:flex;flex-direction:column;gap:10px}
 .sunh{display:flex;flex-direction:column;gap:2px}.sunh b{display:flex;align-items:center;gap:6px;font-size:17px}.sunh b .ic{width:20px;height:20px;color:#E8901F}.sunh span{color:var(--muted);font-size:14px}
 .sunviz{display:flex;gap:16px;align-items:center;flex-wrap:wrap}.suncomp{width:210px;max-width:100%;flex:none;margin:0 auto}
@@ -1197,6 +1202,7 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
           <div class="field"><label for="m-deal">Sale / Rent</label><select id="m-deal"><option value="sale">Sale</option><option value="rent">Rent</option></select></div>
           <div class="field"><label for="m-floor">Floor</label><input id="m-floor" placeholder="e.g. 33rd"></div>
           <div class="field"><label for="m-view">View</label><input id="m-view" placeholder="e.g. Canal & Burj"></div>
+          <div class="field wide"><label for="m-tour">3D model or 360° tour (link)</label><input id="m-tour" type="url" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="Sketchfab, Matterport, Kuula or YouTube 360 link"><small class="src">Clients open it inside the home's page.</small></div>
           <div class="field"><label for="m-size">Size (sq ft)</label><input id="m-size" inputmode="numeric"></div>
           <div class="field"><label for="m-price">Price (AED, or rent per year)</label><input id="m-price" inputmode="numeric"></div>
           <div class="field"><label for="m-status">Status</label><select id="m-status"><option>Ready</option><option>Vacant</option><option>Tenanted</option><option>Off-plan</option></select></div>
@@ -1284,6 +1290,7 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
           <div class="field"><label for="o-size">Size (sq ft)</label><input id="o-size" inputmode="numeric"></div>
           <div class="field"><label for="o-floor">Floor</label><input id="o-floor"></div>
           <div class="field"><label for="o-view">View</label><input id="o-view"></div>
+          <div class="field wide"><label for="o-tour">3D model or 360° tour (link)</label><input id="o-tour" type="url" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="Sketchfab, Matterport, Kuula or YouTube 360 link"><small class="src">Clients open it inside the home's page.</small></div>
           <div class="field"><label for="o-furn">Furnishing</label><input id="o-furn"></div>
           <div class="field"><label for="o-baths">Bathrooms</label><input id="o-baths"></div>
           <div class="field"><label for="o-status">Handover</label><input id="o-status" placeholder="e.g. Ready"></div>
@@ -1535,13 +1542,13 @@ function fillUnit(o){if(!isTeam()||!o||!o.unit)return o;const g=guideOf(o.b,o.to
   if(!known(x.floor)||/^(low|mid|high)/i.test(x.floor))x.floor=ordN(g.floor);
   if(!known(x.view)&&g.view)x.view=g.view;if(!x.size&&g.size)x.size=g.size;if(!x.balcony&&g.balcony)x.balcony=g.balcony;
   if(g.img&&(g.src||(g.doc&&g.page)))x.gplan={doc:g.doc,page:g.page,src:g.src,c:g.type||"",mark:g.mark||null};if(g.type)x.gtype=g.type;return x}
-function mineToOffer(m){return{plan:m.plan||undefined,id:m.id,b:+m.b,tower:m.tower||"",layout:m.layout||"",beds:+m.beds,deal:m.deal,title:(m.unit?"Unit "+m.unit+" · ":"")+typeOf(m),price:m.deal==="sale"?+m.price:undefined,rent:m.deal==="rent"?+m.price:undefined,
+function mineToOffer(m){return{tour:m.tour||undefined,plan:m.plan||undefined,id:m.id,b:+m.b,tower:m.tower||"",layout:m.layout||"",beds:+m.beds,deal:m.deal,title:(m.unit?"Unit "+m.unit+" · ":"")+typeOf(m),price:m.deal==="sale"?+m.price:undefined,rent:m.deal==="rent"?+m.price:undefined,
   size:m.size?+m.size:null,floor:m.floor||"",view:m.view||"",furn:m.furn,status:m.status,agent:m.agent,hl:m.notes||"",mine:true,future:!!m.future,unit:m.unit||null,owner:m.owner,ownerPhone:m.phone,date:m.date,by:m._by||null,own:m._own!==false,shared:m.sharedOffer||null,shareTo:m.shareTo,shareNote:m.shareNote,src:SRV?(m._by?"Added by "+(m._by.name||m._by.email):"Added by you"):"Added on this device"}}
 // A unit an agent has shared shows once, as its shared offer.
 const all=()=>{const live=new Set(OFFERS.map(o=>o.id));
   // A shared listing shows once, as its offer; for whoever can see the listing (its agent, the admin) the offer keeps the unit number, owner and plan.
   const sh={};mine.concat(teamListings).forEach(m=>{if(m.sharedOffer)sh[m.sharedOffer]=m});
-  const offers=OFFERS.map(o=>{const m=sh[o.id];return m?Object.assign({},o,{unit:m.unit||o.unit,owner:m.owner||o.owner,ownerPhone:m.phone||o.ownerPhone,plan:o.plan||m.plan,tower:o.tower||m.tower,listingId:m.id}):o});
+  const offers=OFFERS.map(o=>{const m=sh[o.id];return m?Object.assign({},o,{unit:m.unit||o.unit,owner:m.owner||o.owner,ownerPhone:m.phone||o.ownerPhone,plan:o.plan||m.plan,tour:o.tour||m.tour,tower:o.tower||m.tower,listingId:m.id}):o});
   return offers.concat(mine.concat(teamListings).filter(m=>!(m.sharedOffer&&live.has(m.sharedOffer))).map(mineToOffer)).map(fillUnit).map(enrich)};
 const agentOf=o=>AGENTS[o.agent]||Object.values(AGENTS)[0]||{name:"Orla Properties",phone:""};
 const dldLabel=()=>"DLD registration ("+(+(FEES.dld*100).toFixed(2))+"%)";
@@ -1623,6 +1630,22 @@ function offerText(o){
   return t;
 }
 let lastViewed="";
+/* ---------------- 3D models and 360° tours ---------------- */
+// Only these viewers are opened inside the page: Sketchfab (3D models), Matterport and Kuula (360° tours), YouTube (360° videos).
+function tourEmbed(u){let x;try{x=new URL(String(u||"").trim())}catch(e){return null}if(x.protocol!=="https:")return null;const h=x.hostname.replace(/^www\./,""),P=x.pathname;
+  if(h==="sketchfab.com"){const m=P.match(/\/(?:3d-models|models)\/(?:[^/]*-)?([0-9a-f]{32})/i);return m?{src:"https://sketchfab.com/models/"+m[1]+"/embed?autostart=1&ui_infos=0&ui_watermark_link=0&ui_hint=2",kind:"3D model",by:"Sketchfab"}:null}
+  if(h==="my.matterport.com"){const id=x.searchParams.get("m");return id&&/^[\w-]{6,40}$/.test(id)?{src:"https://my.matterport.com/show/?m="+id+"&play=1&qs=1",kind:"360° tour",by:"Matterport"}:null}
+  if(h==="kuula.co"){const m=P.match(/\/share\/(?:collection\/)?([\w-]{3,40})/);return m?{src:"https://kuula.co/share/"+(P.includes("/collection/")?"collection/":"")+m[1]+"?fs=1&vr=1&thumbs=1&info=0",kind:"360° tour",by:"Kuula"}:null}
+  if(h==="youtube.com"||h==="m.youtube.com"||h==="youtu.be"){const id=h==="youtu.be"?P.slice(1):x.searchParams.get("v")||(P.match(/\/(?:embed|shorts|live)\/([\w-]{11})/)||[])[1];return id&&/^[\w-]{11}$/.test(id)?{src:"https://www.youtube-nocookie.com/embed/"+id+"?rel=0&playsinline=1",kind:"360° video",by:"YouTube"}:null}
+  return null}
+// The viewer loads only when tapped, so the page stays quick on a phone.
+function tourCard(o){const t=tourEmbed(o.tour);if(!t)return"";
+  return `<div class="tourcard" data-tour="${esc(t.src)}"><div class="tourh"><b>${ic("globe")}${esc(t.kind==="3D model"?"Explore in 3D":"Walk through in 360°")}</b><span>${esc(t.kind)} · ${esc(t.by)}. Drag to look around${t.kind==="3D model"?", pinch to zoom":""}.</span></div>
+    <button type="button" class="tourplay" data-tour-go aria-label="Open the ${esc(t.kind)}"><img src="${esc(imgSrc(photosOf(o)[0].k))}" alt=""><span>${ic("monitor")}Open the ${esc(t.kind)}</span></button></div>`}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-tour-go]");if(!b)return;const c=b.closest("[data-tour]");
+  const f=document.createElement("iframe");f.src=c.dataset.tour;f.title="3D and 360° view";f.allow="autoplay; fullscreen; xr-spatial-tracking; gyroscope; accelerometer";f.allowFullscreen=true;f.loading="lazy";f.referrerPolicy="strict-origin-when-cross-origin";
+  f.setAttribute("sandbox","allow-scripts allow-same-origin allow-popups allow-presentation");b.replaceWith(f)});
+
 /* ---------------- Sun & views ---------------- */
 // The Peninsula, Business Bay (approximate). The sun's position comes from the standard solar formulas, for Dubai time.
 const PEN_LOC={lat:25.1857,lng:55.2776},DXB_TZ="Asia/Dubai",RAD=Math.PI/180;
@@ -1725,6 +1748,7 @@ function renderDetail(){
       ${isTeam()?towerBar(o):""}
       ${galleryHTML(o)}
       ${isTeam()?planBlock((()=>{const p=planOf(o);return p&&p.t==="f"?{u:imgSrc(p.k),c:p.c,type:p.c.replace(/^Floor plan · /,"").split(" · ")[0],mark:p.mark}:null})(),o.unit,o.id):""}
+      ${tourCard(o)}
       ${sunCard(o)}
       ${isTeam()?"":askBox(o)}
       <div class="actions">
@@ -1850,7 +1874,7 @@ $("#mine-form").addEventListener("submit",async e=>{e.preventDefault();
   if(!price&&!$("#m-future").checked){toast("Enter a price");$("#m-price").focus();return}
   if($("#m-future").checked&&!g("#m-remind")){toast("Pick a reminder date");$("#m-remind").focus();return}
   if(hasTowers(g("#m-bld"))&&!g("#m-tower")){toast(BLD[g("#m-bld")]+": choose Tower A or Tower B");$("#m-tower").focus();return}
-  const m={id:g("#m-id")||"l-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),unit:g("#m-unit"),b:g("#m-bld"),tower:hasTowers(g("#m-bld"))&&g("#m-tower")||undefined,layout:mTypeVal().layout||undefined,beds:String(mTypeVal().beds),deal:g("#m-deal"),floor:g("#m-floor"),view:g("#m-view"),size:g("#m-size").replace(/[^0-9.]/g,""),price,status:g("#m-status"),furn:g("#m-furn"),owner:g("#m-owner"),phone:g("#m-phone"),agent:g("#m-agent"),date:g("#m-date"),notes:g("#m-notes"),online:onlineFromForm(),future:$("#m-future").checked||undefined,availableFrom:g("#m-avail")||undefined,remindAt:g("#m-remind")||undefined,remindNote:g("#m-rnote")||undefined,adTitle:g("#m-adtitle")||undefined,adText:g("#m-adtext")||undefined};
+  const m={id:g("#m-id")||"l-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),unit:g("#m-unit"),b:g("#m-bld"),tower:hasTowers(g("#m-bld"))&&g("#m-tower")||undefined,layout:mTypeVal().layout||undefined,beds:String(mTypeVal().beds),deal:g("#m-deal"),floor:g("#m-floor"),view:g("#m-view"),tour:tourEmbed(g("#m-tour"))?g("#m-tour"):undefined,size:g("#m-size").replace(/[^0-9.]/g,""),price,status:g("#m-status"),furn:g("#m-furn"),owner:g("#m-owner"),phone:g("#m-phone"),agent:g("#m-agent"),date:g("#m-date"),notes:g("#m-notes"),online:onlineFromForm(),future:$("#m-future").checked||undefined,availableFrom:g("#m-avail")||undefined,remindAt:g("#m-remind")||undefined,remindNote:g("#m-rnote")||undefined,adTitle:g("#m-adtitle")||undefined,adText:g("#m-adtext")||undefined};
   {const prevL=mine.concat(teamListings).find(x=>x.id===m.id)||{},up=m.unit&&unitPlan(m.b,m.tower,m.unit);if(prevL.plan&&prevL.plan.custom)m.plan=prevL.plan;else if(up)m.plan={u:up.u,c:up.c,from:"brochure",mark:up.mark||undefined};else if(prevL.plan&&prevL.plan.from==="brochure")m.plan=null}
   if(SRV){const prev=mine.concat(teamListings).find(x=>x.id===m.id)||{};const{id,...data}=Object.assign({},prev,m);delete data._by;delete data._own;let r;try{r=await api("data/listings",{id,data},"PUT")}catch(x){toast(x.message);return}await loadListings();if(r&&r.warning){resetMineForm();renderAll();setTimeout(()=>toast(r.warning),50);return}}
   else{const i=mine.findIndex(x=>x.id===m.id);if(i>=0)mine[i]=m;else mine.push(m);persist()}
@@ -1865,7 +1889,7 @@ $("#m-bld").addEventListener("change",()=>mFillTypes());mFillTypes(0,"");
 function resetMineForm(){$("#mine-form").reset();mFillTypes(0,"");drawOnlineBoxes({});$("#m-id").value="";$("#m-save").textContent="Save listing";$("#m-cancel").hidden=true;try{$("#m-date").valueAsDate=new Date()}catch(e){}const k=myKey();if(k&&AGENTS[k])$("#m-agent").value=k}
 $("#m-cancel").onclick=resetMineForm;
 function editListing(id){const m=mine.concat(teamListings).find(x=>x.id===id);if(!m)return;show("mine");
-  const set=(k,v)=>{$(k).value=v??""};set("#m-id",m.id);set("#m-unit",m.unit);set("#m-bld",m.b);mFillTypes(m.beds,m.layout);set("#m-tower",m.tower);set("#m-deal",m.deal);set("#m-floor",m.floor);set("#m-view",m.view);set("#m-size",m.size);set("#m-price",m.price?fmt(m.price):"");
+  const set=(k,v)=>{$(k).value=v??""};set("#m-id",m.id);set("#m-unit",m.unit);set("#m-bld",m.b);mFillTypes(m.beds,m.layout);set("#m-tower",m.tower);set("#m-deal",m.deal);set("#m-floor",m.floor);set("#m-view",m.view);set("#m-tour",m.tour);set("#m-size",m.size);set("#m-price",m.price?fmt(m.price):"");
   set("#m-status",m.status);set("#m-furn",m.furn);set("#m-owner",m.owner);set("#m-phone",m.phone);if(AGENTS[m.agent])set("#m-agent",m.agent);set("#m-date",m.date);set("#m-notes",m.notes);$("#m-future").checked=!!m.future;set("#m-avail",m.availableFrom);set("#m-remind",m.remindAt);set("#m-rnote",m.remindNote);set("#m-adtitle",m.adTitle);set("#m-adtext",m.adText);drawOnlineBoxes(m.online||{});
   $("#m-save").textContent="Save changes";$("#m-cancel").hidden=false;setTimeout(()=>{$("#mine-form").scrollIntoView({behavior:"smooth",block:"start"});$("#m-owner").focus({preventScroll:true})},60)}
 // Each agent's own units live on the server. Units saved before (in the agent's private app data) move there once.
@@ -2484,7 +2508,7 @@ function editOfferAs(id){ofMode(true);show("oedit");openOfferForm(id,true);{cons
 function ofDone(){if(!ofAgent)return;const id=$("#o-id").value;ofMode(false);if(id){state.sel=id;store.set("orla.sel",id)}show("offers");try{renderDetail()}catch(e){}}
 function openOfferForm(id,agent){if(!agent)ofMode(false);const o=id?OFFERS.find(x=>x.id===id):null;$("#ad-form").reset();$("#ad-form-panel").hidden=false;$("#ad-form-title").textContent=o?"Edit offer":"Add offer";$("#o-id").value=o?o.id:"";
   const set=(k,v)=>{$(k).value=v??""};
-  if(o){set("#o-title",o.title);set("#o-b",o.b);set("#o-beds",o.beds);set("#o-deal",o.deal);set("#o-avail",o.avail||"Available");set("#o-price",o.price?fmt(o.price):"");set("#o-rent",o.rent?fmt(o.rent):"");set("#o-size",o.size||"");set("#o-floor",o.floor);set("#o-view",o.view);set("#o-furn",o.furn);set("#o-baths",o.baths);set("#o-status",o.status);set("#o-cheques",o.cheques);set("#o-deposit",o.deposit);if(AGENTS[o.agent])set("#o-agent",o.agent);set("#o-irent",o.inv&&o.inv.rent?fmt(o.inv.rent):"");set("#o-hl",o.hl);set("#o-check",(o.check||[]).join("\n"));set("#o-unit",o.unit);$("#o-teamunit").checked=!!o.teamUnit;set("#o-owner",o.owner);set("#o-ophone",o.ownerPhone)}
+  if(o){set("#o-title",o.title);set("#o-b",o.b);set("#o-beds",o.beds);set("#o-deal",o.deal);set("#o-avail",o.avail||"Available");set("#o-price",o.price?fmt(o.price):"");set("#o-rent",o.rent?fmt(o.rent):"");set("#o-size",o.size||"");set("#o-floor",o.floor);set("#o-view",o.view);set("#o-tour",o.tour);set("#o-furn",o.furn);set("#o-baths",o.baths);set("#o-status",o.status);set("#o-cheques",o.cheques);set("#o-deposit",o.deposit);if(AGENTS[o.agent])set("#o-agent",o.agent);set("#o-irent",o.inv&&o.inv.rent?fmt(o.inv.rent):"");set("#o-hl",o.hl);set("#o-check",(o.check||[]).join("\n"));set("#o-unit",o.unit);$("#o-teamunit").checked=!!o.teamUnit;set("#o-owner",o.owner);set("#o-ophone",o.ownerPhone)}
   phLoad(o);
   const d=$("#o-del");d.hidden=!o;delete d.dataset.armed;d.textContent="Delete offer";
   setTimeout(()=>{$("#ad-form-panel").scrollIntoView({behavior:"smooth",block:"start"})},30)}
@@ -2495,7 +2519,7 @@ $("#ad-form").addEventListener("submit",async e=>{e.preventDefault();const g=k=>
   if(!g("#o-title")){toast("Enter a headline");$("#o-title").focus();return}
   if(deal!=="rent"&&!n("#o-price")){toast("Enter the sale price");$("#o-price").focus();return}
   if(deal!=="sale"&&!n("#o-rent")){toast("Enter the rent");$("#o-rent").focus();return}
-  const o=Object.assign({},base,{id:id||"o-"+Date.now().toString(36),title:g("#o-title"),b:+g("#o-b"),beds:+g("#o-beds"),deal,avail:g("#o-avail"),price:deal!=="rent"?n("#o-price"):null,rent:deal!=="sale"?n("#o-rent"):null,size:n("#o-size")||null,floor:g("#o-floor")||"",view:g("#o-view")||"",furn:g("#o-furn")||"—",baths:g("#o-baths")||"—",status:g("#o-status")||"Ready",cheques:g("#o-cheques")||null,deposit:g("#o-deposit")||null,agent:g("#o-agent"),hl:g("#o-hl"),src:base.src||"Added in Admin"});
+  const o=Object.assign({},base,{id:id||"o-"+Date.now().toString(36),title:g("#o-title"),b:+g("#o-b"),beds:+g("#o-beds"),deal,avail:g("#o-avail"),price:deal!=="rent"?n("#o-price"):null,rent:deal!=="sale"?n("#o-rent"):null,size:n("#o-size")||null,floor:g("#o-floor")||"",view:g("#o-view")||"",tour:tourEmbed(g("#o-tour"))?g("#o-tour"):undefined,furn:g("#o-furn")||"—",baths:g("#o-baths")||"—",status:g("#o-status")||"Ready",cheques:g("#o-cheques")||null,deposit:g("#o-deposit")||null,agent:g("#o-agent"),hl:g("#o-hl"),src:base.src||"Added in Admin"});
   const ir=n("#o-irent");o.inv=ir?Object.assign({},base.inv||{},{rent:ir}):(base.inv&&base.inv.resale?{resale:base.inv.resale}:null);
   const ch=g("#o-check").split("\n").map(x=>x.trim()).filter(Boolean);o.check=ch.length?ch:null;
   o.unit=g("#o-unit")||null;o.teamUnit=$("#o-teamunit").checked||undefined;o.owner=g("#o-owner")||null;o.ownerPhone=g("#o-ophone")||null;if(phDraft.photos)o.photos=phDraft.photos;else delete o.photos;if(phDraft.plan)o.plan=phDraft.plan;else delete o.plan;

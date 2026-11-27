@@ -134,6 +134,18 @@ On a home listed under their name, an agent taps **Edit this home** and gets the
 ## New on the team
 When an agent adds a unit (in My units, or an offer under their name), everyone else on the team sees it first thing the next time they open the website: a pop-up with the agent's photo, the type, building, floor, size, view and price, an **Open** button when it's shared as an offer, and **Message Giulia** (WhatsApp) to say they may have a client. It comes before the welcome screen and the pace message, and shows only units added since they last saw it. Home keeps a **New on the team this week** list. Teammates see the floor (from the unit number if none is written), never the unit number or the owner; the admin, the CEO and the agent who added it see the unit number.
 
+## 3D models and 360° tours
+
+Any home can have a 3D model or 360° tour. In **My units** (and the admin's offer form) paste the link into "3D model or 360° tour (link)". Clients then see **Explore in 3D** (or **Walk through in 360°**) on the home's page. The viewer loads only when they tap it, so pages stay quick on a phone. It opens inside the page: drag to look around, pinch to zoom, full screen and VR where the viewer offers it.
+
+Links that work:
+- **Sketchfab:** `sketchfab.com/3d-models/…` or `sketchfab.com/models/…` (3D models).
+- **Matterport:** `my.matterport.com/show/?m=…` (walk-through tours).
+- **Kuula:** `kuula.co/share/…` (360° photo tours).
+- **YouTube:** 360° videos (`youtube.com/watch?v=…` or `youtu.be/…`).
+
+Anything else is ignored, and the server keeps only those sites when a listing is shared as an offer. A shared listing passes its link to the offer.
+
 ## Sun & views (every home)
 
 Every home's page has a **Sun & views** card, for everyone including visitors:
