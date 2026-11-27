@@ -131,6 +131,9 @@ Every Sunday at 9:00 Dubai time (05:00 UTC), the daily Vercel Cron (`/api/cron/d
 ## Agents edit their own homes
 On a home listed under their name, an agent taps **Edit this home** and gets the same editor as the admin: headline, building, type, sale or rent, status (available, reserved, under offer, sold, rented), price, rent, size, floor, view, furnishing, cheques, deposit, highlights, the unit number and owner, and photos and the floor plan. It saves for everyone straight away, price and status changes go into the home's history, and it shows in Admin › Activity. They can't move a home to another agent or change whether it counts in team performance (only the admin can), and they can't edit homes listed under someone else. Their own units in My units were already editable there. The admin also has **Edit this home** on every home.
 
+## New on the team
+When an agent adds a unit (in My units, or an offer under their name), everyone else on the team sees it first thing the next time they open the website: a pop-up with the agent's photo, the type, building, floor, size, view and price, an **Open** button when it's shared as an offer, and **Message Giulia** (WhatsApp) to say they may have a client. It comes before the welcome screen and the pace message, and shows only units added since they last saw it. Home keeps a **New on the team this week** list. Teammates see the floor (from the unit number if none is written), never the unit number or the owner; the admin, the CEO and the agent who added it see the unit number.
+
 ## Unit numbers (who sees them)
 - **The admin and the CEO** see every unit number and owner, everywhere.
 - **The agent a home is listed under** sees its unit number and owner.

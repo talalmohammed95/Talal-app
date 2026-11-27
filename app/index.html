@@ -874,6 +874,7 @@ body.guest .tab[data-view="chat"]{display:none!important}
 .aimsg.bot .aib p a:not(.btn),.aimsg.bot .aib li a:not(.btn){color:var(--primary);font-weight:600;word-break:break-word}
 #ai-form{flex-wrap:wrap;align-items:stretch}#ai-form textarea:focus{outline:none;border-color:var(--primary)}#ai-form .aivoice{width:100%}
 @media (max-width:620px){#ai-form textarea#ai-in{flex:1 1 100%;order:-1}#ai-form .aifiles{order:-2}#ai-form .aimic{padding:0 14px;height:44px}#ai-form #ai-lang{height:44px}#ai-form .btn.primary{flex:1;height:44px}}
+#newu{position:fixed;inset:0;z-index:89;background:rgba(15,12,10,.6);display:grid;place-items:center;padding:16px;overflow:auto}#newu[hidden]{display:none}#newu .pccard{max-width:560px;position:relative}#newu h2{margin:0;padding-right:40px}
 #book,#leadal{position:fixed;inset:0;z-index:88;background:rgba(15,12,10,.6);display:grid;place-items:center;padding:16px;overflow:auto}#book[hidden],#leadal[hidden]{display:none}
 #book .pccard,#leadal .pccard{max-width:520px;position:relative}#book .pccard h2,#leadal .pccard h2{margin:0;padding-right:40px}.pcx{position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--fg);display:grid;place-items:center;cursor:pointer}.pcx .ic{width:16px;height:16px}#leadal .lk{align-self:flex-start}
 .bkagent{display:flex;align-items:center;gap:10px;margin:10px 0 4px}.bkagent img{width:40px;height:40px;border-radius:50%;object-fit:cover}
@@ -911,6 +912,10 @@ body.guest .tab[data-view="chat"]{display:none!important}
 .umrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 14px;align-items:center;border-top:1px solid var(--line);padding:10px 0}.umi{display:flex;flex-direction:column;gap:2px}.umi span{color:var(--muted);font-size:13px}
 .umsug{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}.umf{display:flex;gap:6px;align-items:center}.umf input{width:110px;border-radius:10px;border:1.5px solid var(--line-strong);background:var(--bg);color:var(--fg);padding:8px 10px;font:inherit;font-size:16px}
 @media (max-width:620px){.umrow{grid-template-columns:minmax(0,1fr)}.umf{min-width:0}.umf input{flex:1;width:auto;min-width:0}}
+.nustrip h3{display:flex;align-items:center;gap:8px;margin:0 0 6px}.nustrip h3 .ic{width:18px;height:18px;color:var(--primary)}
+.nulist{display:flex;flex-direction:column}.nucard{display:flex;gap:12px;align-items:flex-start;border-top:1px solid var(--line);padding:12px 0}.nucard:first-child{border-top:0}
+.nucard>img{width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none}.nub{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}.nuw{font-size:13px;color:var(--muted)}.nuw b{color:var(--fg)}
+.nut{font-size:16px}.nuu{font-size:12px;font-weight:800;background:var(--primary-soft,rgba(190,80,20,.12));color:var(--primary);border-radius:999px;padding:2px 8px;margin-left:4px}.nud{font-size:14px;color:var(--muted)}.nub .actions{margin-top:4px}
 </style>
 <script src="/config.js"></script>
 <script src="/track.js" defer></script>
@@ -1770,9 +1775,9 @@ async function loadListings(){if(!SRV||!isTeam())return;
 /* ---------------- Dashboard ---------------- */
 const today=()=>new Date().toISOString().slice(0,10);
 const isDue=c=>c.follow&&c.follow<=today()&&c.status!=="Closed"&&c.status!=="Lost";
-function renderDash(){if(!isTeam()){renderShowroom();{const h=$("#dash").firstElementChild;if(h)h.insertAdjacentHTML("afterend",bestHTML())}if(myProps.length)$("#dash").insertAdjacentHTML("afterbegin",propertyHTML());return}clearInterval(heroT);if(isCEO()){$("#dash").innerHTML=ceoHome();return}renderTeamDash();
+function renderDash(){if(!isTeam()){renderShowroom();{const h=$("#dash").firstElementChild;if(h)h.insertAdjacentHTML("afterend",bestHTML())}if(myProps.length)$("#dash").insertAdjacentHTML("afterbegin",propertyHTML());return}clearInterval(heroT);if(isCEO()){$("#dash").innerHTML=ceoHome();{const f=$("#dash").firstElementChild;if(f)f.insertAdjacentHTML("afterend",newuStrip())}return}renderTeamDash();
   const myl=renderMyListings();if(myl){const r=$("#dash").children[0];if(r)r.insertAdjacentHTML("afterend",myl);else $("#dash").insertAdjacentHTML("afterbegin",myl)}
-  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+unitLookupHTML()+bestHTML()+(isAdmin?weeklyPanel()+visitorsPanel():"")+myTasksHTML()+towerTodoHTML()+pushSlot()+leadsHTML()+remindersHTML())}
+  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+newuStrip()+unitLookupHTML()+bestHTML()+(isAdmin?weeklyPanel()+visitorsPanel():"")+myTasksHTML()+towerTodoHTML()+pushSlot()+leadsHTML()+remindersHTML())}
 // The top achiever: first in the team ranking (online, then units), once they have a unit.
 let topPub=null;
 async function loadTop(){try{topPub=(await api("public/top")).top}catch(e){}}
@@ -2451,7 +2456,7 @@ async function loadAll(first){
       else if(owner&&owner!==uid){mine=[];clients=[];starred=new Set();persist()}
       else if(mine.length||clients.length||starred.size)persist();
       store.set("orla.localOwner",uid)}
-    migrateOvr();if(!isTeam()){await loadTop();await loadMyProperty()}await loadDealMkt();if(isTeam()){await loadGuide();await loadUnitTypes();await loadListings();await loadPerf(true);await loadLeads();await loadTasks();if(isAdmin||isCEO()){loadWeekly();loadVisitorsBrief()}setTimeout(paceModal,700);setTimeout(leadPollStart,1500);if(location.hash==='#requests')setTimeout(()=>{show('dash');const r=$('#requests');if(r)r.scrollIntoView()},900);if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
+    migrateOvr();if(!isTeam()){await loadTop();await loadMyProperty()}await loadDealMkt();if(isTeam()){await loadGuide();await loadUnitTypes();await loadListings();await loadPerf(true);await loadLeads();await loadTasks();if(isAdmin||isCEO()){loadWeekly();loadVisitorsBrief()}setTimeout(paceModal,700);setTimeout(leadPollStart,1500);if(location.hash==='#requests')setTimeout(()=>{show('dash');const r=$('#requests');if(r)r.scrollIntoView()},900);await loadNewUnits();setTimeout(newuModal,400);if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
   catch(e){if(e.status===401||e.status===403){location.reload();return}
     if(first){OFFERS=store.get("orla.cache.offers",[]);applySettings(store.get("orla.cache.settings",{}))}
     if(first||!loadAll.warned){loadAll.warned=true;toast("Offline: showing what's saved on this device")}}
@@ -2489,7 +2494,7 @@ async function enterServer(u){if(entering)return;entering=true;
     $("#signout").hidden=false;startApp();if(isAdmin)loadUsers();
     clearInterval(pollT);pollT=setInterval(()=>{if(!document.hidden&&uid){loadAll();if(isAdmin)loadUsers()}},30000);
     if(!enterServer.vis){enterServer.vis=true;document.addEventListener("visibilitychange",()=>{if(!document.hidden&&uid){loadAll();if(isAdmin)loadUsers()}})}
-    if(store.get("orla.pin",null)&&!sessionOpen())setGate("pin");else{unlock();let seen=null;try{seen=sessionStorage.getItem("orla.wiz")}catch(e){}if(ROLE!=="admin"&&!seen)setTimeout(openWizard,500)}
+    if(store.get("orla.pin",null)&&!sessionOpen())setGate("pin");else{unlock();let seen=null;try{seen=sessionStorage.getItem("orla.wiz")}catch(e){}if(ROLE!=="admin"&&!seen){let tries=0;const ow=()=>{const n=$("#newu");if((n&&!n.hidden)||(NEWU_PENDING&&isTeam()&&tries++<10)){setTimeout(ow,700);return}openWizard()};setTimeout(ow,500)}}
   }finally{entering=false}}
 async function bootServer(){OFFERS=[];applySettings({});startApp();setAuthGate("loading");
   try{emailOn=!!(await api("auth/config")).emailEnabled}catch(e){}
@@ -3586,7 +3591,7 @@ const pacePill=p=>`<span class="pill ${PACE[p.status][1]}">${PACE[p.status][0]}<
 function paceLine(p){return p.status==="done"?`Goal reached: ${p.online} of ${p.target} online. Outstanding!`:p.status==="track"?`On track: ${p.online} online, ${p.expected} expected by today. Keep going.`:p.status==="close"?`So close: ${p.gap} more online and you're on track.`:`Behind: ${p.online} online, ${p.expected} expected by today. ${p.perWeek} a week gets you to ${p.target}.`}
 function paceTeamText(g,ag){const by=k=>ag.filter(a=>a.p.status===k);const L=[`Peninsula · team pace, ${new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"})}`,`By today each agent should have ${ag[0]?ag[0].p.expected:0} of ${g.target} online on ${g.platforms.map(p=>p.n).join(" and ")}.`];
   for(const k of ["behind","close","track","done"]){const l=by(k);if(l.length){L.push("",`${PACE[k][0]} (${l.length}):`);l.forEach(a=>L.push(`• ${a.name}: ${a.p.online} online${k==="done"?"":`, ${a.p.expected} expected, ${a.p.perWeek}/week needed`}`))}}return L.join("\n")}
-function paceModal(){if(!perf||!isTeam())return;const wz=$("#wiz"),so=$("#so");if((wz&&!wz.hidden)||(so&&!so.hidden)){setTimeout(paceModal,1500);return}const k="orla.pace."+todayISO()+"."+(uid||"");if(store.get(k))return;const g=perf.goal,me=perf.agents.find(a=>a.key===myKey());let h="";
+function paceModal(){if(!perf||!isTeam())return;const wz=$("#wiz"),so=$("#so"),nu=$("#newu");if((wz&&!wz.hidden)||(so&&!so.hidden)||(nu&&!nu.hidden)){setTimeout(paceModal,1500);return}const k="orla.pace."+todayISO()+"."+(uid||"");if(store.get(k))return;const g=perf.goal,me=perf.agents.find(a=>a.key===myKey());let h="";
   if(isCEO()||isAdmin){const ag=perf.agents.filter(a=>a.name).map(a=>({key:a.key,name:a.name,p:paceOf(a.online,g)})).sort((x,y)=>["behind","close","track","done"].indexOf(x.p.status)-["behind","close","track","done"].indexOf(y.p.status)||x.p.online-y.p.online);
     const n=s=>ag.filter(a=>a.p.status===s).length,first=hello(),txt=paceTeamText(g,ag);
     h=`<p class="kick" style="margin:0">Good ${new Date().getHours()<12?"morning":new Date().getHours()<18?"afternoon":"evening"}${first?", "+esc(first):""}</p><h2 style="margin:2px 0 6px">${n("behind")?`${n("behind")} agent${n("behind")===1?" is":"s are"} behind today`:"The team is on track"}</h2>
@@ -3904,6 +3909,31 @@ function umissDraw(){const el=$("#umiss");if(!el||!UMISS)return;const h=UMISS.ho
 document.addEventListener("click",async e=>{const pk=e.target.closest("[data-um-pick]");if(pk){const row=pk.closest(".umrow");row.querySelector("input").value=pk.dataset.umPick;row.querySelector("input").focus();return}
   const sv=e.target.closest("[data-um-save]");if(!sv)return;const row=sv.closest(".umrow"),x=UMISS.homes[+row.dataset.um],unit=row.querySelector("input").value.trim();if(!unit){toast("Type the unit number");return}
   sv.disabled=true;try{await api("admin/unit-set",{kind:x.kind,id:x.id,unit});toast("Unit "+unit.toUpperCase()+" saved");UMISS.homes.splice(+row.dataset.um,1);umissDraw();await loadAll().catch(()=>{});if(x.kind==="listing")await loadListings();perf=null}catch(er){toast(er.message);sv.disabled=false}});
+
+/* ---------------- New on the team ---------------- */
+let NEWU=[],NEWU_PENDING=true;
+async function loadNewUnits(){if(!SRV||!isTeam())return;try{NEWU=(await api("team/new-units?days=7")).items||[]}catch(e){NEWU=[]}}
+const ago=t=>{const m=Math.max(0,Math.round((Date.now()-Date.parse(t))/6e4));return m<2?"just now":m<60?m+" min ago":m<1440?Math.round(m/60)+" h ago":Math.round(m/1440)===1?"yesterday":Math.round(m/1440)+" days ago"};
+function newuCard(x){const nm=firstName(x.by.name||"")||"A teammate",typ=typeOf(x)||"Home",pr=x.deal==="rent"?(x.rent?aed(x.rent)+" a year":""):[x.price?aed(x.price):"",x.rent?"or "+aed(x.rent)+" a year":""].filter(Boolean).join(" ");
+  const o=x.offerId&&all().find(z=>z.id===x.offerId),a=AGENTS[x.by.agentKey]||{phone:""};
+  return `<div class="nucard"><img src="${esc(agentPhotoOf(x.by.agentKey,x.by.name))}" alt=""><div class="nub"><span class="nuw"><b>${esc(x.mine?"You":nm)}</b> added ${x.future?"a coming-soon unit":"a unit"} · ${esc(ago(x.at))}</span>
+    <b class="nut">${esc(typ+" · "+(BLD[x.b]||"Peninsula")+(x.tower?" · Tower "+x.tower:""))}${x.unit?` <span class="nuu">unit ${esc(x.unit)}</span>`:""}</b>
+    <span class="nud">${esc([known(x.floor)?x.floor+(/floor/i.test(x.floor)?"":" floor"):"",x.size?fmt(x.size)+" sq ft":"",known(x.view)?x.view+" view":"",pr,x.deal==="rent"?"for rent":x.deal==="both"?"sale or rent":"for sale"].filter(Boolean).join(" · "))}</span>
+    <div class="actions">${o?`<button class="btn sm primary" data-nu-open="${esc(o.id)}">Open</button>`:""}${!x.mine&&a.phone?`<a class="btn sm" href="${esc(waTo(a.phone,`Hi ${nm}, I saw your new ${typ.toLowerCase()} in ${BLD[x.b]||"the Peninsula"} on the website. I may have a client for it.`))}" target="_blank" rel="noopener">${ic("chat")}Message ${esc(nm)}</a>`:""}</div></div></div>`}
+function newuStrip(){const l=NEWU.filter(x=>!x.mine).slice(0,6);if(!l.length)return"";
+  return `<div class="panel nustrip"><h3>${ic("spark")}New on the team this week</h3><div class="nulist">${l.map(newuCard).join("")}</div></div>`}
+function newuModal(){if(!isTeam()||!NEWU.length){NEWU_PENDING=false;return}{const wz=$("#wiz"),so=$("#so"),bk=$("#book"),la=$("#leadal");if([wz,so,bk,la].some(x=>x&&!x.hidden)){setTimeout(newuModal,1200);return}}const k="orla.newSeen."+(uid||""),seen=Date.parse(store.get(k,""))||Date.now()-3*864e5;
+  const fresh=NEWU.filter(x=>!x.mine&&Date.parse(x.at)>seen);NEWU_PENDING=false;if(!fresh.length)return;
+  let el=$("#newu");if(!el){document.body.insertAdjacentHTML("beforeend",'<div id="newu" role="dialog" aria-modal="true" aria-label="New on the team"><div class="pccard"></div></div>');el=$("#newu");
+    el.addEventListener("click",e=>{if(e.target===el||e.target.closest("[data-nu-close]")){el.hidden=true;document.body.classList.remove("lbopen")}})}
+  store.set(k,new Date().toISOString());
+  el.querySelector(".pccard").innerHTML=`<button class="pcx" data-nu-close aria-label="Close">${ic("x")}</button><span class="lk viewing">${fresh.length===1?"New unit on the team":fresh.length+" new units on the team"}</span>
+    <h2>${fresh.length===1?esc(firstName(fresh[0].by.name||"")||"A teammate")+" just added a unit":"Your team added "+fresh.length+" units"}</h2>
+    <div class="nulist">${fresh.slice(0,5).map(newuCard).join("")}</div>${fresh.length>5?`<p class="src">And ${fresh.length-5} more on Home.</p>`:""}
+    <div class="actions"><button class="btn primary" data-nu-close>Got it</button></div>`;
+  el.hidden=false;document.body.classList.add("lbopen")}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-nu-open]");if(!b)return;const el=$("#newu");if(el){el.hidden=true;document.body.classList.remove("lbopen")}
+  state.sel=b.dataset.nuOpen;store.set("orla.sel",state.sel);show("offers");try{renderDetail()}catch(x){}});
 
 /* ---------------- Start-up ---------------- */
 function startApp(){if(!SRV)setRole(isAdmin?"admin":"team");updateAcct();const ch=$("#userchip");

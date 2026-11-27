@@ -405,6 +405,31 @@ const routes = {
       by: { id: r.user_id, name: r.name, email: r.email, agentKey: r.agent_key } })) };
   },
 
+  // Units the team added in the last days, for the "new on the team" alert. Teammates see the home and the floor,
+  // never the unit number or the owner; the admin, the CEO and the agent who added it see the unit number too.
+  "GET team/new-units": async c => {
+    requireStaff(c);
+    const days = Math.min(14, Math.max(1, parseInt(new URL(c.req.url, "http://localhost").searchParams.get("days"), 10) || 7));
+    const [{ rows: L }, { rows: O }, { rows: st }] = await Promise.all([
+      q(`select l.id, l.data, l.created_at, u.id as uid, u.name, u.agent_key from listings l join users u on u.id = l.user_id
+         where l.created_at > now() - make_interval(days => $1) order by l.created_at desc limit 60`, [days]),
+      q(`select id, data, created_at from offers where created_at > now() - make_interval(days => $1) and coalesce(data->>'agent', '') <> ''
+         and coalesce(data->>'fromListing', '') = '' order by created_at desc limit 60`, [days]),
+      q("select data from settings where id = 'app'")]);
+    const agents = (st[0] && st[0].data && st[0].data.agents) || {};
+    const keyOf = {}; for (const r of L) keyOf[r.uid] = r.agent_key;
+    const shape = (d, at, by, mine, offerId) => {
+      const f = floorFromUnit(d);
+      return { at, by, mine, offerId: offerId || null, b: +d.b || null, tower: +d.b === 4 ? d.tower || "" : "", beds: d.beds === undefined || d.beds === "" ? null : +d.beds, layout: d.layout || "",
+        size: d.size ? +String(d.size).replace(/[^0-9.]/g, "") || null : null, floor: f.floor || "", view: d.view || "", deal: d.deal || "", price: d.deal === "rent" ? null : +d.price || null,
+        rent: d.deal === "rent" ? +d.price || +d.rent || null : +d.rent || null, furn: d.furn || "", future: !!d.future, unit: seesAll(c.user) || mine ? d.unit || "" : undefined };
+    };
+    const items = L.map(r => shape(r.data, r.created_at, { name: r.name || "", agentKey: r.agent_key || "" }, r.uid === c.user.id, r.data.sharedOffer))
+      .concat(O.map(r => shape(r.data, r.created_at, { name: (agents[r.data.agent] || {}).name || r.data.agent, agentKey: r.data.agent }, !!c.user.agent_key && r.data.agent === c.user.agent_key, r.id)))
+      .sort((a, z) => new Date(z.at) - new Date(a.at));
+    return { items };
+  },
+
   "PUT data/listings": async c => {
     requireTeam(c);
     const id = str(c.body.id, 64), data = c.body.data;
