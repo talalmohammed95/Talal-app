@@ -992,7 +992,7 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
 .stars .ssq,.stars .scat,.stars .sbdg{aspect-ratio:auto;min-height:0}
 @media(max-width:1100px){.stars .sgrid{grid-template-columns:repeat(3,minmax(0,1fr))}.stars .scats{grid-template-columns:repeat(3,minmax(0,1fr))}.stars .sbadges{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:600px){.stars .sgrid,.stars .scats{grid-template-columns:repeat(2,minmax(0,1fr))}.stars .sbadges{grid-template-columns:repeat(3,minmax(0,1fr))}.stars .sring{width:56%}.stars .smini{font-size:10.5px}.stars .smini b{font-size:12.5px}}
-.remp h3{display:flex;align-items:center;gap:8px}.remp .lede{margin:0 0 8px}
+.remp h3{display:flex;align-items:center;gap:8px}.remp h4.mh{margin:14px 0 6px}.remp .lede{margin:0 0 8px}
 .remadd{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px}@media(max-width:600px){.remadd{grid-template-columns:minmax(0,1fr) auto}.remadd #rem-text{grid-column:1/-1}}
 .remadd input{min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg);padding:0 12px;font:inherit;min-width:0}
 .remlist{display:flex;flex-direction:column;gap:6px;margin-top:10px}.remrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg)}
@@ -2110,9 +2110,9 @@ async function loadListings(){if(!SRV||!isTeam())return;
 /* ---------------- Dashboard ---------------- */
 const today=()=>new Date().toISOString().slice(0,10);
 const isDue=c=>c.follow&&c.follow<=today()&&c.status!=="Closed"&&c.status!=="Lost";
-function renderDash(){if(!isTeam()){renderShowroom();{const h=$("#dash").firstElementChild;if(h)h.insertAdjacentHTML("afterend",bestHTML()+c3dCard())}if(myProps.length)$("#dash").insertAdjacentHTML("afterbegin",propertyHTML());return}clearInterval(heroT);if(isCEO()){$("#dash").innerHTML=ceoHome();{const f=$("#dash").firstElementChild;if(f)f.insertAdjacentHTML("afterend",newuStrip())}return}renderTeamDash();
+function renderDash(){if(!isTeam()){renderShowroom();{const h=$("#dash").firstElementChild;if(h)h.insertAdjacentHTML("afterend",bestHTML()+c3dCard())}if(myProps.length)$("#dash").insertAdjacentHTML("afterbegin",propertyHTML());return}clearInterval(heroT);if(isCEO()){$("#dash").innerHTML=ceoHome();{const f=$("#dash").firstElementChild;if(f)f.insertAdjacentHTML("afterend",myRemindersHTML()+newuStrip())}return}renderTeamDash();
   const myl=renderMyListings();if(myl){const r=$("#dash").children[0];if(r)r.insertAdjacentHTML("afterend",myl);else $("#dash").insertAdjacentHTML("afterbegin",myl)}
-  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+newuStrip()+(isCEO()?"":myRemindersHTML())+unitLookupHTML()+bestHTML()+c3dCard()+(isAdmin?weeklyPanel()+visitorsPanel():"")+myTasksHTML()+towerTodoHTML()+pushSlot()+leadsHTML()+remindersHTML())}
+  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+myRemindersHTML()+newuStrip()+unitLookupHTML()+bestHTML()+c3dCard()+(isAdmin?weeklyPanel()+visitorsPanel():"")+myTasksHTML()+towerTodoHTML()+pushSlot()+leadsHTML())}
 // The top achiever: first in the team ranking (online, then units), once they have a unit.
 let topPub=null;
 async function loadTop(){try{topPub=(await api("public/top")).top}catch(e){}}
@@ -3969,22 +3969,29 @@ const remWhen=r=>{const d=new Date(r.at),now=new Date(Date.now()+4*3600e3),dd=ne
   const td=day(now),tmw=day(new Date(now.getTime()+864e5));return(day(dd)===td?"Today":day(dd)===tmw?"Tomorrow":dd.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",timeZone:"UTC"}))+" · "+tm};
 function myRemindersHTML(){if(!SRV||!isTeam())return"";const open=REMS.filter(r=>!r.done),due=open.filter(r=>r.due);
   const def=new Date(Date.now()+4*3600e3+864e5);def.setUTCHours(9,0,0,0);const dv=def.toISOString().slice(0,16);
-  return `<div class="panel remp" id="reminders"><h3>${ic("bell")}Reminders${due.length?` <span class="pill check">${due.length} due</span>`:""}</h3>
-    <p class="lede">Ask the AI ("remind me tomorrow at 10 to call Valeria") or add one here. It comes to your phone at that time.</p>
+  const lst=isCEO()?[]:mine.filter(m=>m.remindAt&&(isDueR(m)||(Date.parse(m.remindAt)-Date.now())<3*864e5)).sort((a,b)=>String(a.remindAt).localeCompare(String(b.remindAt)));
+  const cl=isCEO()?[]:clients.filter(isDue).sort((a,b)=>String(a.follow).localeCompare(String(b.follow)));
+  const nDue=due.length+lst.filter(isDueR).length+cl.length;
+  const clRow=c=>`<div class="remrow due"><div><b>${esc(c.name||"Client")}${c.intent?" · "+esc(c.intent):""}</b><small>${c.follow<today()?"Overdue: ":"Today: "}call back${c.notes?" · "+esc(String(c.notes).slice(0,80)):""}</small></div>
+    <div class="actions">${c.phone?`<a class="btn sm primary" href="tel:${esc(telOf(c.phone))}">${ic("phone")}Call</a><a class="btn sm" href="${esc(waTo(c.phone,"Hello"+(c.name?" "+greetOf(c.name):"")+", "))}" target="_blank" rel="noopener">${ic("chat")}WhatsApp</a>`:""}<button class="btn sm" data-goto="clients">Open</button></div></div>`;
+  return `<div class="panel remp" id="reminders"><h3>${ic("bell")}Reminders${nDue?` <span class="pill check">${nDue} due</span>`:""}</h3>
+    <p class="lede">Everything to follow up, in one place. Ask the AI ("remind me tomorrow at 10 to call Valeria") or add one here: it comes to your phone at that time.</p>
     <form class="remadd" id="rem-form"><input id="rem-text" maxlength="300" placeholder="What to remember, e.g. Send Form A to the owner of 2107" required><input id="rem-when" type="datetime-local" value="${dv}" required aria-label="When (Dubai time)"><button class="btn primary" type="submit">${ic("plus")}Add</button></form>
     ${open.length?`<div class="remlist">${open.slice(0,12).map(r=>`<div class="remrow${r.due?" due":""}"><div><b>${esc(r.text)}</b><small>${esc(remWhen(r))}${r.fromOther?" · from "+esc(firstName(r.fromOther)):""}</small></div>
-      <div class="actions"><button class="btn sm" data-rem="${r.id}" data-ra="done">${ic("check")}Done</button>${r.due?`<button class="btn sm" data-rem="${r.id}" data-ra="snooze">+1 hour</button>`:""}<button class="btn sm ghost" data-rem="${r.id}" data-ra="delete" aria-label="Delete">${ic("x")}</button></div></div>`).join("")}</div>`
-      :'<p class="src">Nothing coming up. Try asking the AI: "remind me Monday at 9 to chase my viewings".</p>'}</div>`}
+      <div class="actions"><button class="btn sm" data-rmd="${r.id}" data-ra="done">${ic("check")}Done</button>${r.due?`<button class="btn sm" data-rmd="${r.id}" data-ra="snooze">+1 hour</button>`:""}<button class="btn sm ghost" data-rmd="${r.id}" data-ra="delete" aria-label="Delete">${ic("x")}</button></div></div>`).join("")}</div>`
+      :(lst.length||cl.length?"":'<p class="src">Nothing coming up. Try asking the AI: "remind me Monday at 9 to chase my viewings".</p>')}
+    ${cl.length?`<h4 class="mh">Clients to call back · ${cl.length}</h4><div class="remlist">${cl.slice(0,8).map(clRow).join("")}</div>`:""}
+    ${lst.length?`<h4 class="mh">Listings to follow up · ${lst.length}</h4><div class="stack">${lst.slice(0,8).map(reminderRow).join("")}</div>`:""}</div>`}
 document.addEventListener("submit",async e=>{if(e.target.id!=="rem-form")return;e.preventDefault();const t=$("#rem-text").value.trim(),w=$("#rem-when").value;if(!t||!w)return;
   try{await api("team/reminders",{text:t,when:w});await loadReminders();renderDash();toast("Reminder set for "+remWhen({at:new Date(Date.parse(w+":00Z")-4*3600e3)}))}catch(x){toast(x.message)}});
-document.addEventListener("click",async e=>{const b=e.target.closest("[data-rem]");if(!b)return;b.disabled=true;
-  try{await api("team/reminders/update",{id:+b.dataset.rem,action:b.dataset.ra,minutes:60});await loadReminders();const al=$("#remal");if(al&&b.closest("#remal"))al.hidden=true;renderDash();
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-rmd]");if(!b)return;b.disabled=true;
+  try{await api("team/reminders/update",{id:+b.dataset.rmd,action:b.dataset.ra,minutes:60});await loadReminders();const al=$("#remal");if(al&&b.closest("#remal"))al.hidden=true;renderDash();
     toast(b.dataset.ra==="done"?"Done":b.dataset.ra==="snooze"?"Snoozed for an hour":"Deleted")}catch(x){toast(x.message);b.disabled=false}});
 // A due reminder pops up in the app too (checked with the request polling).
 async function remCheck(){if(!SRV||!isTeam())return;await loadReminders();const due=REMS.filter(r=>r.due&&!r.done&&!remShown.has(r.id));if(!due.length)return;
   due.forEach(r=>remShown.add(r.id));let el=$("#remal");if(!el){document.body.insertAdjacentHTML("beforeend",'<div id="remal" role="alertdialog" aria-labelledby="remal-t"><div class="mvcard"></div></div>');el=$("#remal");el.addEventListener("click",e=>{if(e.target.closest("[data-remal-x]"))el.hidden=true})}
   el.querySelector(".mvcard").innerHTML=`<button class="pcx" data-remal-x aria-label="Close">${ic("x")}</button><p class="kick">${ic("bell")} Reminder${due.length>1?"s":""}</p>${due.slice(0,3).map(r=>`<h2 id="remal-t">${esc(r.text)}</h2><p>${esc(remWhen(r))}${r.fromOther?" · from "+esc(firstName(r.fromOther)):""}</p>
-    <div class="actions"><button class="btn primary" data-rem="${r.id}" data-ra="done">${ic("check")}Done</button><button class="btn" data-rem="${r.id}" data-ra="snooze">Remind me in 1 hour</button></div>`).join("")}`;el.hidden=false;
+    <div class="actions"><button class="btn primary" data-rmd="${r.id}" data-ra="done">${ic("check")}Done</button><button class="btn" data-rmd="${r.id}" data-ra="snooze">Remind me in 1 hour</button></div>`).join("")}`;el.hidden=false;
   if(!$("#view-dash").hidden)renderDash()}
 function myTasksHTML(){const k=myKey();if(!k||isCEO())return"";const l=tasks.filter(t=>t.agent_key===k),open=l.filter(t=>!t.done);if(!l.length)return"";
   return `<div class="panel"><h2>Your tasks${open.length?` <span class="count num">${open.length}</span>`:""}</h2><p class="lede">Only you, the admin and the CEO see these.</p><div class="stack">${open.concat(l.filter(t=>t.done).slice(0,2)).map(t=>taskRow(t,false)).join("")||'<div class="empty">All done.</div>'}</div></div>`}

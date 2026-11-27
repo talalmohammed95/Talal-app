@@ -147,7 +147,7 @@ The motivation card's messages also push expertise and negotiation: knowing the 
 
 Tell the AI assistant "remind me tomorrow at 10 to call Valeria about 2107", "remind Giulia Monday at 9 to send Form A" (the admin and the CEO can set reminders for agents), "what reminders do I have this week?" or "mark the Valeria one done". It also offers a reminder when something needs a follow-up. Every time is Dubai time.
 
-- **On Home:** a Reminders panel lists what's coming up, with Done, +1 hour and delete, plus a quick add form.
+- **On Home** (agents, the admin and the CEO, near the top): one Reminders panel for everything to follow up on. It has a quick add form, your reminders (Done, +1 hour, delete), **clients to call back** (follow-up date today or past, with Call and WhatsApp) and **listings to follow up** (reminder dates from My units, due or within 3 days). The badge counts what's due.
 - **When a reminder is due:** it goes to the phone as a notification (for anyone who turned notifications on), and pops up in the app with Done and "Remind me in 1 hour".
 - **Every morning** (with the 9:00 daily run): each team member gets a notification with today's reminders, client follow-ups due and open requests.
 - **Delivery:** due reminders are sent with any request the app makes, at most once a minute, so while the team uses the app they arrive on time. To get them on time even when nobody has the app open, point a free scheduler (e.g. cron-job.org) every 5 minutes at `https://<your-site>/api/cron/reminders?key=<CRON_SECRET>`, with `CRON_SECRET` set in Vercel. Vercel's own free cron only runs once a day.
