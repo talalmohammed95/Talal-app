@@ -901,6 +901,7 @@ body.guest .tab[data-view="chat"]{display:none!important}
 .uplan-h{display:flex;flex-direction:column;gap:2px}.uplan-h b{display:flex;align-items:center;gap:6px;font-size:16px}.uplan-h b .ic{width:18px;height:18px;color:var(--primary)}.uplan-h span{color:var(--muted);font-size:14px}
 .uplan-i{display:block;background:#fff;border-radius:12px;overflow:hidden;border:1px solid var(--line)}.uplan-i img{display:block;width:100%;max-height:420px;object-fit:contain;background:#fff}
 .mguide .uplan{margin-top:4px}
+.mkhint{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--ink)}.mkhint i{width:14px;height:11px;border:2.5px solid #FFD000;background:rgba(255,214,0,.3);border-radius:2px;box-shadow:0 0 0 1px rgba(40,30,0,.4)}
 .ceohead h2{line-height:1.12}.ceohead+.th-top{margin-top:12px}
 .ulp .dfil{display:flex;gap:8px;flex-wrap:wrap}#ul-q,#ul-b,#gq,#gq-b{border-radius:12px;border:1.5px solid var(--line-strong);background:var(--bg);color:var(--fg);padding:10px 12px;font:inherit;font-size:16px}#ul-q:focus,#gq:focus{outline:none;border-color:var(--primary)}#ul-b,#gq-b{max-width:46%}
 .ulp h3{display:flex;align-items:center;gap:8px;margin:0 0 4px}.ulp h3 .ic{width:20px;height:20px;color:var(--primary)}.ulp .dfil{margin-top:8px}#ul-q{flex:1;min-width:150px;font-size:16px}
@@ -1482,14 +1483,29 @@ function guideOf(b,tower,unit){const key=String(unit||"").toUpperCase().replace(
   const best=st.map(r=>[dist(r),span(r),r]).sort((x,y)=>x[0]-y[0]||x[1]-y[1])[0];
   const r=best&&best[0]<=2?best[2]:null;return r?Object.assign({},r,{floor:u.floor}):{floor:u.floor}}
 const planUrl=g=>g.src||(API+"/team/guide/plan?doc="+encodeURIComponent(g.doc)+"&page="+g.page);
-function unitPlan(b,tower,unit){const g=guideOf(b,tower,unit);return g&&g.img&&g.type?{u:planUrl(g),c:"Floor plan · "+g.type+(g.size?" · "+fmt(g.size)+" sq ft":""),type:g.type,g}:null}
-function planBlock(p,unit,id){return p?`<div class="uplan"><div class="uplan-h"><b>${ic("file")}Floor plan${unit?" of unit "+esc(unit):""}</b><span>${esc(p.c.replace(/^Floor plan · /,""))}</span></div>
-  <a href="${esc(p.u)}" target="_blank" rel="noopener" class="uplan-i"><img src="${esc(p.u)}" alt="Floor plan${unit?" of unit "+esc(unit):""}"></a>
-  <div class="actions"><a class="btn sm" href="${esc(p.u)}" target="_blank" rel="noopener">Open full size</a><button class="btn sm" type="button" data-gplan="${esc(p.u)}" data-gname="${esc(("unit-"+(unit||"")+"-"+p.type).replace(/[^\w]+/g,"-"))}">${ic("share")}Share</button></div></div>`:""}
+function unitPlan(b,tower,unit){const g=guideOf(b,tower,unit);return g&&g.img&&g.type?{u:planUrl(g),c:"Floor plan · "+g.type+(g.size?" · "+fmt(g.size)+" sq ft":""),type:g.type,g,mark:g.mark||null}:null}
+// The unit's box on a brochure plan, when this person knows the unit number and the plan shown is the brochure's plan for it.
+function markFor(url,b,tower,unit){if(!isTeam()||!unit||!url)return null;const g=guideOf(b,tower,unit);return g&&g.mark&&g.img&&planUrl(g)===url?g.mark:null}
+const mkAttr=m=>Array.isArray(m)&&m.length===4?` data-mk="${m.map(Number).join(",")}"`:"";
+// Draws the yellow box into a copy of the plan (cached), so it looks the same everywhere: on screen, full screen and when shared.
+const MK=new Map();
+function markedUrl(url,mk){const key=url+"|"+mk;if(MK.has(key))return MK.get(key);
+  const pr=new Promise((ok,no)=>{const im=new Image();im.onload=()=>{try{const W=im.naturalWidth,H=im.naturalHeight,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");x.drawImage(im,0,0);
+      const [x0,y0,x1,y1]=mk.split(",").map(Number),L=x0*W,T=y0*H,w=(x1-x0)*W,h=(y1-y0)*H,lw=Math.max(4,Math.round(Math.min(W,H)*0.006));
+      x.fillStyle="rgba(255,214,0,0.28)";x.fillRect(L,T,w,h);x.lineJoin="round";x.strokeStyle="rgba(40,30,0,0.55)";x.lineWidth=lw+4;x.strokeRect(L,T,w,h);x.strokeStyle="#FFD000";x.lineWidth=lw;x.strokeRect(L,T,w,h);
+      c.toBlob(b=>b?ok(URL.createObjectURL(b)):no(new Error("The plan couldn't be marked.")),"image/png")}catch(e){no(e)}};im.onerror=()=>no(new Error("The plan couldn't be loaded."));im.src=url});
+  pr.catch(()=>MK.delete(key));MK.set(key,pr);return pr}
+// Every <img data-mk> on the page gets the marked copy; its "open" link too.
+function bakeMark(img){const mk=img.dataset.mk,src=img.dataset.mksrc||img.getAttribute("src");if(!mk||!src||/^blob:/.test(src)&&!img.dataset.mksrc)return;img.dataset.mksrc=src;
+  markedUrl(src,mk).then(u=>{if(img.dataset.mk!==mk||img.dataset.mksrc!==src)return;img.src=u;const box=img.closest(".uplan,.ulhit,.pcard")||img.parentNode;if(box)box.querySelectorAll("a[href]").forEach(a=>{if(a.getAttribute("href")===src)a.href=u})}).catch(()=>{})}
+new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes){if(n.nodeType!==1)continue;if(n.matches&&n.matches("img[data-mk]"))bakeMark(n);if(n.querySelectorAll)n.querySelectorAll("img[data-mk]").forEach(bakeMark)}}).observe(document.documentElement,{childList:true,subtree:true});
+function planBlock(p,unit,id){if(!p)return"";const mk=p.mark||(p.g&&p.g.mark)||null;return `<div class="uplan"><div class="uplan-h"><b>${ic("file")}Floor plan${unit?" of unit "+esc(unit):""}</b><span>${esc(p.c.replace(/^Floor plan · /,""))}</span>${mk?`<small class="mkhint"><i></i>Unit${unit?" "+esc(unit):""} marked in yellow</small>`:""}</div>
+  <a href="${esc(p.u)}" target="_blank" rel="noopener" class="uplan-i"><img src="${esc(p.u)}"${mkAttr(mk)} alt="Floor plan${unit?" of unit "+esc(unit):""}"></a>
+  <div class="actions"><a class="btn sm" href="${esc(p.u)}" target="_blank" rel="noopener">Open full size</a><button class="btn sm" type="button" data-gplan="${esc(p.u)}"${mk?` data-gmark="${mk.join(",")}"`:""} data-gname="${esc(("unit-"+(unit||"")+"-"+p.type).replace(/[^\w]+/g,"-"))}">${ic("share")}Share</button></div></div>`}
 function fillUnit(o){if(!isTeam()||!o||!o.unit)return o;const g=guideOf(o.b,o.tower,o.unit);if(!g)return o;const x=Object.assign({},o);
   if(!known(x.floor)||/^(low|mid|high)/i.test(x.floor))x.floor=ordN(g.floor);
   if(!known(x.view)&&g.view)x.view=g.view;if(!x.size&&g.size)x.size=g.size;if(!x.balcony&&g.balcony)x.balcony=g.balcony;
-  if(g.img&&(g.src||(g.doc&&g.page)))x.gplan={doc:g.doc,page:g.page,src:g.src,c:g.type||""};if(g.type)x.gtype=g.type;return x}
+  if(g.img&&(g.src||(g.doc&&g.page)))x.gplan={doc:g.doc,page:g.page,src:g.src,c:g.type||"",mark:g.mark||null};if(g.type)x.gtype=g.type;return x}
 function mineToOffer(m){return{plan:m.plan||undefined,id:m.id,b:+m.b,tower:m.tower||"",layout:m.layout||"",beds:+m.beds,deal:m.deal,title:(m.unit?"Unit "+m.unit+" · ":"")+typeOf(m),price:m.deal==="sale"?+m.price:undefined,rent:m.deal==="rent"?+m.price:undefined,
   size:m.size?+m.size:null,floor:m.floor||"",view:m.view||"",furn:m.furn,status:m.status,agent:m.agent,hl:m.notes||"",mine:true,future:!!m.future,unit:m.unit||null,owner:m.owner,ownerPhone:m.phone,date:m.date,by:m._by||null,own:m._own!==false,shared:m.sharedOffer||null,shareTo:m.shareTo,shareNote:m.shareNote,src:SRV?(m._by?"Added by "+(m._by.name||m._by.email):"Added by you"):"Added on this device"}}
 // A unit an agent has shared shows once, as its shared offer.
@@ -1621,7 +1637,7 @@ function renderDetail(){
     <div class="dbody">
       ${isTeam()?towerBar(o):""}
       ${galleryHTML(o)}
-      ${isTeam()?planBlock((()=>{const p=planOf(o);return p&&p.t==="f"?{u:imgSrc(p.k),c:p.c,type:p.c.replace(/^Floor plan · /,"").split(" · ")[0]}:null})(),o.unit,o.id):""}
+      ${isTeam()?planBlock((()=>{const p=planOf(o);return p&&p.t==="f"?{u:imgSrc(p.k),c:p.c,type:p.c.replace(/^Floor plan · /,"").split(" · ")[0],mark:p.mark}:null})(),o.unit,o.id):""}
       ${isTeam()?"":askBox(o)}
       <div class="actions">
         ${canEditOffer(o)?'<button class="btn" id="d-oedit">'+ic("pen")+'Edit this home</button>':""}
@@ -1747,7 +1763,7 @@ $("#mine-form").addEventListener("submit",async e=>{e.preventDefault();
   if($("#m-future").checked&&!g("#m-remind")){toast("Pick a reminder date");$("#m-remind").focus();return}
   if(hasTowers(g("#m-bld"))&&!g("#m-tower")){toast(BLD[g("#m-bld")]+": choose Tower A or Tower B");$("#m-tower").focus();return}
   const m={id:g("#m-id")||"l-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),unit:g("#m-unit"),b:g("#m-bld"),tower:hasTowers(g("#m-bld"))&&g("#m-tower")||undefined,layout:mTypeVal().layout||undefined,beds:String(mTypeVal().beds),deal:g("#m-deal"),floor:g("#m-floor"),view:g("#m-view"),size:g("#m-size").replace(/[^0-9.]/g,""),price,status:g("#m-status"),furn:g("#m-furn"),owner:g("#m-owner"),phone:g("#m-phone"),agent:g("#m-agent"),date:g("#m-date"),notes:g("#m-notes"),online:onlineFromForm(),future:$("#m-future").checked||undefined,availableFrom:g("#m-avail")||undefined,remindAt:g("#m-remind")||undefined,remindNote:g("#m-rnote")||undefined,adTitle:g("#m-adtitle")||undefined,adText:g("#m-adtext")||undefined};
-  {const prevL=mine.concat(teamListings).find(x=>x.id===m.id)||{},up=m.unit&&unitPlan(m.b,m.tower,m.unit);if(prevL.plan&&prevL.plan.custom)m.plan=prevL.plan;else if(up)m.plan={u:up.u,c:up.c,from:"brochure"};else if(prevL.plan&&prevL.plan.from==="brochure")m.plan=null}
+  {const prevL=mine.concat(teamListings).find(x=>x.id===m.id)||{},up=m.unit&&unitPlan(m.b,m.tower,m.unit);if(prevL.plan&&prevL.plan.custom)m.plan=prevL.plan;else if(up)m.plan={u:up.u,c:up.c,from:"brochure",mark:up.mark||undefined};else if(prevL.plan&&prevL.plan.from==="brochure")m.plan=null}
   if(SRV){const prev=mine.concat(teamListings).find(x=>x.id===m.id)||{};const{id,...data}=Object.assign({},prev,m);delete data._by;delete data._own;let r;try{r=await api("data/listings",{id,data},"PUT")}catch(x){toast(x.message);return}await loadListings();if(r&&r.warning){resetMineForm();renderAll();setTimeout(()=>toast(r.warning),50);return}}
   else{const i=mine.findIndex(x=>x.id===m.id);if(i>=0)mine[i]=m;else mine.push(m);persist()}
   const was=!!g("#m-id");resetMineForm();renderAll();toast(was?"Listing updated":"Listing saved");if(SRV&&m.phone)setTimeout(()=>ownerInvitePrompt(m.id),300);
@@ -2519,7 +2535,8 @@ function photosOf(o){
   if(Array.isArray(o.photos)&&o.photos.length)return o.photos.map(p=>({k:p.u||p.k,c:p.c||"",t:p.t||"p"}));
   const m=MEDIA.offer[o.id];if(m)return m.map(toItem);
   const b=MEDIA.bld[o.b]||MEDIA.bld[3];return(b[o.beds]||b.all).map(toItem)}
-function planOf(o){if(!isTeam())return null;if(o.plan&&typeof o.plan==="object")return(o.plan.u||o.plan.k)?{k:o.plan.u||o.plan.k,c:o.plan.c||"Floor plan",t:"f"}:null;const p=MEDIA.plan[o.id];if(p)return toItem(p);return o.gplan?{k:planUrl(o.gplan),c:"Floor plan"+(o.gplan.c?" · "+o.gplan.c:"")+" (developer brochure)",t:"f"}:null}
+function planOf(o){if(!isTeam())return null;if(o.plan&&typeof o.plan==="object"){const k=o.plan.u||o.plan.k;return k?{k,c:o.plan.c||"Floor plan",t:"f",mark:o.unit?(markFor(k,o.b,o.tower,o.unit)||o.plan.mark||null):null}:null}const p=MEDIA.plan[o.id];if(p)return toItem(p);
+  return o.gplan?{k:planUrl(o.gplan),c:"Floor plan"+(o.gplan.c?" · "+o.gplan.c:"")+" (developer brochure)",t:"f",mark:o.gplan.mark||null}:null}
 const mediaOf=o=>{const l=photosOf(o),p=planOf(o);return p?l.concat([p]):l};
 const hasRealPhotos=o=>photosOf(o).some(p=>p.t==="p");
 const KIND={r:"Developer render",p:"Photo of this home",f:"Floor plan"};
@@ -2550,13 +2567,14 @@ function setRole(r){ROLE=r;document.body.dataset.role=r;document.body.classList.
 /* ---------------- Photo gallery and full-screen viewer ---------------- */
 function galleryHTML(o,cls=""){const m=mediaOf(o);if(!m.length)return"";const f=m[0];
   return `<div class="gal ${cls}" data-gal="${esc(o.id)}" data-i="0">
-    <div class="gmain"><button class="gimg" data-gopen aria-label="Open photos full screen"><img src="${esc(imgSrc(f.k))}" alt="${esc(f.c||KIND[f.t])}" ${f.t==="f"?'class="plan"':""}></button>
+    <div class="gmain"><button class="gimg" data-gopen aria-label="Open photos full screen"><img src="${esc(imgSrc(f.k))}"${mkAttr(f.mark)} alt="${esc(f.c||KIND[f.t])}" ${f.t==="f"?'class="plan"':""}></button>
       ${m.length>1?`<button class="gnav prev" data-gstep="-1" aria-label="Previous photo">${ic("arrow")}</button><button class="gnav next" data-gstep="1" aria-label="Next photo">${ic("arrowr")}</button>`:""}
       <div class="gcap"><span class="gk">${esc(KIND[f.t])}</span><span class="gc">${esc(f.c)}</span><span class="gn num">1 / ${m.length}</span></div></div>
-    ${m.length>1||!isTeam()?`<div class="gthumbs">${!isTeam()&&cls!=="pmain"?`<a class="gth locked" ${leadAttrs(o,"details")} aria-label="Ask the agent for the floor plan">${ic("lock")}<span>Floor plan</span><small>ask ${esc(firstName(agentOf(o).name))}</small></a>`:""}${m.map((p,i)=>`<button class="gth${p.t==="f"?" isplan":""}" data-gi="${i}" aria-label="${esc((p.t==="f"?"Floor plan: ":"Photo: ")+(p.c||""))}" aria-current="${i===0}"><img loading="lazy" src="${esc(imgSrc(p.k,true))}" alt="">${p.t==="f"?"<span>Floor plan</span>":""}</button>`).join("")}</div>`:""}
+    ${m.length>1||!isTeam()?`<div class="gthumbs">${!isTeam()&&cls!=="pmain"?`<a class="gth locked" ${leadAttrs(o,"details")} aria-label="Ask the agent for the floor plan">${ic("lock")}<span>Floor plan</span><small>ask ${esc(firstName(agentOf(o).name))}</small></a>`:""}${m.map((p,i)=>`<button class="gth${p.t==="f"?" isplan":""}" data-gi="${i}" aria-label="${esc((p.t==="f"?"Floor plan: ":"Photo: ")+(p.c||""))}" aria-current="${i===0}"><img loading="lazy" src="${esc(imgSrc(p.k,true))}"${mkAttr(p.mark)} alt="">${p.t==="f"?"<span>Floor plan</span>":""}</button>`).join("")}</div>`:""}
   </div>`}
+function setMk(img,src,mk){delete img.dataset.mksrc;if(Array.isArray(mk)&&mk.length===4){img.dataset.mk=mk.join(",");img.src=src;bakeMark(img)}else{delete img.dataset.mk;img.src=src}}
 function galGo(g,i){const o=all().find(x=>x.id===g.dataset.gal);if(!o)return;const m=mediaOf(o);i=(i+m.length)%m.length;g.dataset.i=i;const p=m[i];
-  const img=g.querySelector(".gimg img");img.src=imgSrc(p.k);img.alt=p.c||KIND[p.t];img.classList.toggle("plan",p.t==="f");
+  const img=g.querySelector(".gimg img");setMk(img,imgSrc(p.k),p.mark);img.alt=p.c||KIND[p.t];img.classList.toggle("plan",p.t==="f");
   g.querySelector(".gk").textContent=KIND[p.t];g.querySelector(".gc").textContent=p.c;g.querySelector(".gn").textContent=(i+1)+" / "+m.length;
   g.querySelectorAll(".gth").forEach((t,j)=>t.setAttribute("aria-current",j===i));const th=g.querySelector(`.gth[data-gi="${i}"]`);if(th)th.scrollIntoView({block:"nearest",inline:"nearest"})}
 document.addEventListener("click",e=>{const g=e.target.closest("[data-gal]");if(!g)return;
@@ -2574,8 +2592,8 @@ function openViewer(m,title,i){lb={title,m,i:i||0};let el=$("#lightbox");
     document.addEventListener("keydown",e=>{if(!lb||$("#lightbox").hidden)return;if(e.key==="Escape")closeLightbox();if(e.key==="ArrowRight")lbGo(1);if(e.key==="ArrowLeft")lbGo(-1)})}
   el.hidden=false;document.body.classList.add("lbopen");lbDraw();el.querySelector(".lbx").focus()}
 function lbGo(d){if(!lb)return;lb.i=(lb.i+d+lb.m.length)%lb.m.length;lbDraw()}
-function lbDraw(){const el=$("#lightbox"),p=lb.m[lb.i];const img=el.querySelector("img");img.src=imgSrc(p.k);img.alt=p.c||KIND[p.t];img.classList.toggle("plan",p.t==="f");
-  el.querySelector(".lbt").textContent=lb.title+" · "+(lb.i+1)+" of "+lb.m.length;el.querySelector(".lbcap").textContent=KIND[p.t]+(p.c?" · "+p.c:"");
+function lbDraw(){const el=$("#lightbox"),p=lb.m[lb.i];const img=el.querySelector("img");setMk(img,imgSrc(p.k),p.mark);img.alt=p.c||KIND[p.t];img.classList.toggle("plan",p.t==="f");
+  el.querySelector(".lbt").textContent=lb.title+" · "+(lb.i+1)+" of "+lb.m.length;el.querySelector(".lbcap").textContent=KIND[p.t]+(p.c?" · "+String(p.c).replace(/^Floor plan( · )?/,""):"").replace(/ · $/,"");
   el.querySelectorAll(".lbn").forEach(b=>b.hidden=lb.m.length<2)}
 function closeLightbox(){const el=$("#lightbox");if(el)el.hidden=true;document.body.classList.remove("lbopen");lb=null}
 
@@ -3754,7 +3772,7 @@ function mGuide(){const box=$("#m-guide");if(!box)return;const u=$("#m-unit").va
   if(g.view&&fill("#m-view")){$("#m-view").value=g.view;$("#m-view").dataset.auto="1"}
   if(g.size&&fill("#m-size")){$("#m-size").value=g.size;$("#m-size").dataset.auto="1"}
   if(g.beds!=null&&!$("#m-id").value){const lay={"simplex":"simplex","duplex":"duplex","duplex loft":"loft","semi-penthouse":"semipenthouse"}[g.layout]||"";try{mFillTypes(g.beds,lay)}catch(e){}}
-  box.hidden=false;box.innerHTML=(g.img?planBlock({u:planUrl(g),c:g.type+(g.size?" · "+fmt(g.size)+" sq ft":""),type:g.type},sp.d):"")+`<div class="gbox"><div><b>${ic("check")}From the brochure</b><span>${esc([BLD[b]+(g.tower?" · Tower "+g.tower:""),g.type,ordN(sp.floor)+" floor",g.size?fmt(g.size)+" sq ft":"",g.view?g.view+" view":""].filter(Boolean).join(" · "))}</span><small class="src">Filled in for you${g.img?", and the floor plan is saved with the listing":""}. Change anything that's different in this unit.</small></div></div>`}
+  box.hidden=false;box.innerHTML=(g.img?planBlock({u:planUrl(g),c:g.type+(g.size?" · "+fmt(g.size)+" sq ft":""),type:g.type,mark:g.mark},sp.d):"")+`<div class="gbox"><div><b>${ic("check")}From the brochure</b><span>${esc([BLD[b]+(g.tower?" · Tower "+g.tower:""),g.type,ordN(sp.floor)+" floor",g.size?fmt(g.size)+" sq ft":"",g.view?g.view+" view":""].filter(Boolean).join(" · "))}</span><small class="src">Filled in for you${g.img?", and the floor plan is saved with the listing":""}. Change anything that's different in this unit.</small></div></div>`}
 ["#m-unit","#m-bld","#m-tower"].forEach(k=>{const e=$(k);if(e)e.addEventListener(k==="#m-unit"?"input":"change",mGuide)});
 ["#m-floor","#m-view","#m-size"].forEach(k=>{const e=$(k);if(e)e.addEventListener("input",()=>{delete e.dataset.auto})});
 
@@ -3790,17 +3808,19 @@ function guidePlans(){const m=new Map();for(const r of GUIDE){if(!r.img||!(r.src
   return[...m.values()].sort((a,b)=>a.b-b.b||(a.tower||"").localeCompare(b.tower||"")||(a.beds??9)-(b.beds??9)||[...a.sizes][0]-[...b.sizes][0])}
 function planCard(g){const t=[...g.types].join(" / ")||"Floor plan",sz=[...g.sizes].sort((a,b)=>a-b),st=[...g.stacks].sort(),un=[...g.units].sort();
   const where=[un.length?"Unit"+(un.length>1?"s ":" ")+un.slice(0,6).join(", ")+(un.length>6?"…":""):"",st.length?"Units ending "+st.join(", "):"",g.from!=null?(g.to!=null&&g.to!==g.from?"floors "+g.from+"–"+g.to:ordN(g.from)+" floor"):""].filter(Boolean).join(" · ");
-  return `<div class="dcard pcard"><a class="dthumb floorplan" href="${esc(planUrl(g))}" target="_blank" rel="noopener" aria-label="Open the floor plan"><img loading="lazy" src="${esc(planUrl(g))}" alt=""></a>
+  return `<div class="dcard pcard"><a class="dthumb floorplan" href="${esc(planUrl(g))}" target="_blank" rel="noopener" aria-label="Open the floor plan"><img loading="lazy" src="${esc(planUrl(g))}"${mkAttr(g.mark)} alt=""></a>
     <div class="dbody"><b>${esc(t)}</b><span>${esc(BLD[g.b]+(g.tower?" · Tower "+g.tower:""))}${sz.length?" · "+esc(sz.length>1?fmt(sz[0])+"–"+fmt(sz[sz.length-1]):fmt(sz[0]))+" sq ft":""}</span>${where?`<span>${esc(where)}</span>`:""}${g.views.size?`<span>${esc([...g.views].slice(0,2).join(" / "))} view</span>`:""}
-    <div class="actions"><a class="btn sm primary" href="${esc(planUrl(g))}" target="_blank" rel="noopener">Open</a><button class="btn sm" data-gplan="${esc(planUrl(g))}" data-gname="${esc((BLD[g.b]+" "+t).replace(/[^\w ]+/g,"").trim().replace(/\s+/g,"-"))}">${ic("share")}Share</button></div></div></div>`}
+    <div class="actions"><a class="btn sm primary" href="${esc(planUrl(g))}" target="_blank" rel="noopener"${g.mark?` data-mkopen="${g.mark.join(",")}"`:""}>Open</a><button class="btn sm" data-gplan="${esc(planUrl(g))}"${g.mark?` data-gmark="${g.mark.join(",")}"`:""} data-gname="${esc((BLD[g.b]+" "+t).replace(/[^\w ]+/g,"").trim().replace(/\s+/g,"-"))}">${ic("share")}Share</button></div></div></div>`}
 function plansHTML(){if(!GUIDE.some(r=>r.img))return"";const q=String(docF.q||"").trim(),u=unitSplit(q);let l=guidePlans().filter(g=>docF.b===""||String(g.b)===docF.b);
   if(q){if(u&&/^[\s\d-]+$/.test(q)||/^[a-z]\d{2,3}$/i.test(q)){l=[1,2,3,4,5].filter(b=>docF.b===""||String(b)===docF.b).map(b=>{const x=guideOf(b,"",q);if(!x||!x.img)return null;
-      return{doc:x.doc,page:x.page,src:x.src,b,tower:x.tower||"",beds:x.beds,types:new Set(x.type?[x.type]:[]),stacks:new Set(),units:new Set([u?u.d:q.trim().toUpperCase()]),sizes:new Set(x.size?[+x.size]:[]),views:new Set(x.view?[x.view]:[]),from:x.floor,to:x.floor}}).filter(Boolean)}
+      return{mark:x.mark||null,doc:x.doc,page:x.page,src:x.src,b,tower:x.tower||"",beds:x.beds,types:new Set(x.type?[x.type]:[]),stacks:new Set(),units:new Set([u?u.d:q.trim().toUpperCase()]),sizes:new Set(x.size?[+x.size]:[]),views:new Set(x.view?[x.view]:[]),from:x.floor,to:x.floor}}).filter(Boolean)}
     else{const w=q.toLowerCase();l=l.filter(g=>[BLD[g.b],g.tower?"tower "+g.tower:"",...g.types,...g.views,g.beds===0?"studio":g.beds+" bed"].join(" ").toLowerCase().includes(w))}}
   if(!l.length)return q?`<div class="dsect"><h4 class="mh">Floor plans by unit</h4><p class="src">No floor plan matches "${esc(q)}".</p></div>`:"";
   return `<div class="dsect"><h4 class="mh">Floor plans by unit · ${l.length}</h4><p class="src" style="margin:-2px 0 8px">From the developer's brochures. Type a unit number in the search to get its plan.</p><div class="dgrid">${l.map(planCard).join("")}</div></div>`}
+document.addEventListener("click",e=>{const a=e.target.closest("a[data-mkopen]");if(!a)return;const u=a.getAttribute("href");if(/^blob:/.test(u))return;e.preventDefault();const w=window.open("about:blank","_blank");
+  markedUrl(u,a.dataset.mkopen).then(x=>{a.href=x;if(w)w.location=x;else location.href=x}).catch(()=>{if(w)w.location=u})});
 document.addEventListener("click",async e=>{const b=e.target.closest("[data-gplan]");if(!b)return;b.disabled=true;
-  try{const r=await fetch(b.dataset.gplan,{credentials:"same-origin"});if(!r.ok)throw new Error("The plan couldn't be loaded.");const bl=await r.blob();await shareFile(bl,b.dataset.gname+"-floor-plan."+(bl.type==="image/png"?"png":bl.type==="image/jpeg"?"jpg":"webp"),"Floor plan")}catch(x){toast(x.message)}b.disabled=false});
+  try{const r=await fetch(b.dataset.gmark?await markedUrl(b.dataset.gplan,b.dataset.gmark):b.dataset.gplan,{credentials:"same-origin"});if(!r.ok)throw new Error("The plan couldn't be loaded.");const bl=await r.blob();await shareFile(bl,b.dataset.gname+"-floor-plan."+(bl.type==="image/png"?"png":bl.type==="image/jpeg"?"jpg":"webp"),"Floor plan")}catch(x){toast(x.message)}b.disabled=false});
 function guidePanel(){if(!SRV)return"";const n=GUIDE.length,pdfs=(docs||[]).filter(d=>d.mime==="application/pdf"&&!d.url&&d.ready!==false),unread=pdfs.filter(d=>!d.read_at),boss=isAdmin||isCEO();
   return `<div class="panel guidep"><h3>${ic("search")}Find a unit in the brochures</h3><p class="lede">Type a unit number: you get the layout, floor, size, view and floor plan from the developer's brochures.</p>
     <div class="dfil"><input id="gq" inputmode="numeric" placeholder="Unit number, e.g. 1203"><select id="gq-b"><option value="">All buildings</option>${[1,2,3,4,5].map(b=>`<option value="${b}">${BLD[b]}</option>`).join("")}</select></div><div id="gq-out"></div>
@@ -3886,8 +3906,8 @@ async function ulRun(){const q=UL.q.trim(),out=$("#ul-out");if(!out)return;const
   const bs=UL.b?[+UL.b]:[1,2,3,4,5],hits=bs.map(b=>{const g=guideOf(b,"",q);return g&&g.type?Object.assign({b},g):null}).filter(Boolean);
   const draw=cts=>{const own=(cts||[]);UL.cts=own;const inCt=b=>own.some(c=>+c.building===b)?0:1;
     const plans=[...hits].sort((x,y)=>inCt(x.b)-inCt(y.b)).map(g=>`<div class="ulhit"><div class="ulhit-h"><b>${esc(BLD[g.b]+(g.tower?" · Tower "+g.tower:""))} · unit ${esc(q.toUpperCase())}</b><span>${esc([g.type,known(String(g.floor))&&g.floor!=null?ordN(g.floor)+" floor":"",g.size?fmt(g.size)+" sq ft":"",g.view?g.view+" view":""].filter(Boolean).join(" · "))}</span></div>
-      ${g.img?`<a class="ulplan" href="${esc(planUrl(g))}" target="_blank" rel="noopener"><img loading="lazy" src="${esc(planUrl(g))}" alt="Floor plan"></a>`:""}
-      <div class="actions"><button class="btn sm primary" data-ul-add="${g.b}">${ic("plus")}List this unit</button>${g.img?`<button class="btn sm" data-gplan="${esc(planUrl(g))}" data-gname="${esc(("unit-"+q+"-"+BLD[g.b]).replace(/[^\w]+/g,"-"))}">${ic("share")}Share plan</button>`:""}</div></div>`).join("");
+      ${g.img?`<a class="ulplan" href="${esc(planUrl(g))}" target="_blank" rel="noopener"><img loading="lazy" src="${esc(planUrl(g))}"${mkAttr(g.mark)} alt="Floor plan${g.mark?" with the unit marked":""}"></a>${g.mark?`<small class="mkhint"><i></i>Unit ${esc(q.toUpperCase())} marked in yellow</small>`:""}`:""}
+      <div class="actions"><button class="btn sm primary" data-ul-add="${g.b}">${ic("plus")}List this unit</button>${g.img?`<button class="btn sm" data-gplan="${esc(planUrl(g))}"${g.mark?` data-gmark="${g.mark.join(",")}"`:""} data-gname="${esc(("unit-"+q+"-"+BLD[g.b]).replace(/[^\w]+/g,"-"))}">${ic("share")}Share plan</button>`:""}</div></div>`).join("");
     const people=own.length?`<h4 class="mh">In the Peninsula contacts</h4>${own.slice(0,6).map((c,i)=>c.taken?`<div class="ulct taken">${ic("lock")}<span>${esc((c.building?BLD[c.building]+" · ":"")+(c.unit||""))}: client taken by <b>${esc(c.by||"another agent")}</b></span></div>`
       :`<div class="ulct"><div><b>${esc(c.name||"Name not saved")}</b><span>${esc([c.building?BLD[c.building]:"",c.unit?"unit "+c.unit:"",c.type||"",c.role||""].filter(Boolean).join(" · "))}</span></div><div class="actions">${(c.phones||[])[0]?`<a class="btn sm" href="tel:${esc(telOf(c.phones[0]))}">${ic("phone")}Call</a><a class="btn sm" href="${esc(waTo(c.phones[0],"Hello"+(c.name?" "+greetOf(c.name):"")+", this is "+firstName((meInfo&&meInfo.name)||"")+" from Orla Properties about your home in "+(c.building?BLD[c.building]:"the Peninsula")+"."))}" target="_blank" rel="noopener">${ic("chat")}WhatsApp</a>`:""}${c.building?`<button class="btn sm" data-ul-add="${c.building}" data-ul-ct="${i}">List with this owner</button>`:""}</div></div>`).join("")}`:"";
     UL.html=(hits.length?plans:`<p class="src">${esc(q)} isn't in the brochures${UL.b?" for "+BLD[UL.b]:""}. ${unitSplit(q)?"It's on the "+ordN(unitSplit(q).floor)+" floor.":""}</p>`)+people;if(seq===ulSeq&&$("#ul-out"))$("#ul-out").innerHTML=UL.html};

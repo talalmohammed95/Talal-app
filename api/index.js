@@ -123,6 +123,8 @@ function forRole(data, user) {
     const d = { ...data };
     if (d.unit || OWNER.some(k => d[k])) d.ownerHidden = true;
     for (const k of ["unit", ...OWNER]) delete d[k];
+    // The yellow box on the floor plan shows which unit it is, so it goes with the unit number.
+    if (d.plan && typeof d.plan === "object" && d.plan.mark) { d.plan = { ...d.plan }; delete d.plan.mark; }
     if (typeof d.title === "string") d.title = d.title.replace(/\bunit\s*[#no.]*\s*\d+[a-z]?\b\s*[·,-]?\s*/gi, "").trim();
     return d;
   }
