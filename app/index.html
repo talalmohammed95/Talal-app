@@ -931,6 +931,9 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
 .c3info .pcx,.c3guide .pcx{position:absolute;top:10px;right:10px}.c3info h3,.c3guide h3{margin:2px 40px 6px 0}.c3info p{margin:0;color:var(--muted)}.c3info .kick{margin:0}
 .c3guide{top:58px;overflow:auto}.c3guide h4{display:flex;align-items:center;gap:6px;margin:12px 0 6px}.c3guide h4 .ic{width:18px;height:18px;color:var(--primary)}
 .c3gi{display:flex;flex-direction:column;gap:2px;text-align:left;width:100%;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:12px;padding:10px 12px;margin-bottom:6px;font:inherit}.c3gi span{color:var(--muted);font-size:14px}.c3gi em{font-style:normal;color:var(--primary);font-weight:700;font-size:13px;display:flex;align-items:center;gap:4px}.c3gi em .ic{width:14px;height:14px}button.c3gi{cursor:pointer}
+.c3v{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 12px;margin-bottom:6px}.c3v>div{display:flex;flex-direction:column;gap:2px;min-width:0}.c3v span{color:var(--muted);font-size:14px}.c3v small{color:var(--muted);font-size:13px}
+.c3st{font-style:normal;font-weight:800;font-size:12px;padding:4px 8px;border-radius:999px;white-space:nowrap}.c3st.open{background:var(--good-soft,#E3F3E6);color:var(--good,#1E7A3A)}.c3st.soon{background:var(--accent-soft);color:var(--accent-ink)}
+.c3info{max-height:calc(100% - 70px);overflow:auto}.c3info h4{margin:12px 0 6px}
 .c3around{display:grid;grid-template-columns:1fr 1fr;gap:6px}.c3around div{border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column}.c3around span{color:var(--muted);font-size:13px}
 .c3ctl{padding:10px 14px max(12px,env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);background:var(--surface)}.c3m{grid-template-columns:repeat(12,minmax(44px,1fr));overflow-x:auto}.c3btns{display:flex;gap:8px;flex-wrap:wrap}.c3ctl .src{margin:0}
 .suncard{border:1.5px solid var(--line);border-radius:16px;background:var(--bg);padding:14px;margin:12px 0;display:flex;flex-direction:column;gap:10px}
@@ -1749,14 +1752,17 @@ function c3dFilter(){const el=$("#c3d");if(!el)return;el.querySelectorAll("[data
 // A place: its card, and the camera flies to it.
 function c3dPlace(id){if(!C3)return;const el=$("#c3d"),q=(C3.data.places||[]).find(x=>x.id===id);if(!q)return;const l=C3.labels.find(x=>x.id===id),T=C3.T;
   const cat=(C3CAT.find(c=>c[0]===q.cat)||[])[1]||"";const inf=el.querySelector(".c3info");el.querySelector(".c3guide").hidden=true;
-  inf.innerHTML=`<button class="pcx" data-c3-ix aria-label="Close">${ic("x")}</button><span class="kick">${esc(cat)}</span><h3>${esc(q.t)}</h3><p>${esc(q.d)}</p>`;inf.hidden=false;
+  const vs=(C3.data.venues||[]).filter(v=>v.place===id);
+  inf.innerHTML=`<button class="pcx" data-c3-ix aria-label="Close">${ic("x")}</button><span class="kick">${esc(cat)}</span><h3>${esc(q.t)}</h3><p>${esc(q.d)}</p>${vs.length?`<h4 class="mh">Brands here</h4>${vs.map(c3dVenue).join("")}`:""}`;inf.hidden=false;
   const b=l.v.clone(),off=new T.Vector3(220,240,300);C3.ctl.autoRotate=false;C3.fly={t0:performance.now(),a:C3.ctl.target.clone(),b,ca:C3.cam.position.clone(),cb:b.clone().add(off)}}
+const c3dVenue=v=>`<div class="c3v"><div><b>${esc(v.n)}</b><span>${esc(v.kind)} · ${esc(v.where)}</span>${v.note?`<small>${esc(v.note)}</small>`:""}</div><em class="c3st ${v.st==="open"?"open":"soon"}">${v.st==="open"?"Open":"Announced"}</em></div>`;
 function c3dGuide(){if(!C3)return;const el=$("#c3d"),g=el.querySelector(".c3guide"),d=C3.data,cats=C3CAT.slice(1).filter(c=>C3S.cat==="all"||c[0]===C3S.cat);
   g.innerHTML=`<button class="pcx" data-c3-gx aria-label="Close">${ic("x")}</button><h3>The Peninsula guide</h3>`+cats.map(([k,t,i])=>{const P=(d.places||[]).filter(q=>q.cat===k),U=(d.unpinned||[]).filter(q=>q.cat===k);if(!P.length&&!U.length)return"";
-      return `<h4 class="mh">${ic(i)}${esc(t)}</h4>`+P.map(q=>`<button type="button" class="c3gi" data-c3-p="${esc(q.id)}"><b>${esc(q.t)}</b><span>${esc(q.d)}</span><em>${ic("pin")}Show on the map</em></button>`).join("")+U.map(q=>`<div class="c3gi"><b>${esc(q.t)}</b><span>${esc(q.d)}</span></div>`).join("")}).join("")
+      const V=(d.venues||[]).filter(v=>v.cat===k);
+      return `<h4 class="mh">${ic(i)}${esc(t)}</h4>`+(V.length?`<div class="c3vs">${V.map(c3dVenue).join("")}</div>`:"")+P.map(q=>`<button type="button" class="c3gi" data-c3-p="${esc(q.id)}"><b>${esc(q.t)}</b><span>${esc(q.d)}</span><em>${ic("pin")}Show on the map</em></button>`).join("")+U.map(q=>`<div class="c3gi"><b>${esc(q.t)}</b><span>${esc(q.d)}</span></div>`).join("")}).join("")
     +((C3S.cat==="all")?((d.unpinned||[]).filter(q=>q.cat==="residents").map(q=>`<h4 class="mh">${ic("home")}${esc(q.t)}</h4><div class="c3gi"><span>${esc(q.d)}</span></div>`).join("")):"")
     +((C3S.cat==="all"||C3S.cat==="around")?`<h4 class="mh">${ic("plane")}Getting here (by car)</h4><div class="c3around">${(d.around||[]).map(([n,v])=>`<div><b>${esc(n)}</b><span>${esc(v)}</span></div>`).join("")}</div>`:"")
-    +`<p class="src">From ${esc(d.src||"Select Group's brochures")}. Shops and restaurants open as the community completes: ask your agent what's open now.</p>`}
+    +`<p class="src">From ${esc(d.src||"Select Group's brochures")}. Names checked in November 2026: "Open" was reported open, "Announced" was named by Select Group as coming. More open as the community completes; ask your agent what's open now.</p>`}
 function c3dSun(){const el=$("#c3d");if(!el)return;const y=new Date().getUTCFullYear(),t=dxbDay(y,C3S.m,21)+C3S.h*3600e3,p=sunAt(t),mn=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   const hh=Math.floor(C3S.h),mm=Math.round((C3S.h-hh)*60);el.querySelector("#c3-time").textContent=`${mn[C3S.m]} 21 · ${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")} · ${p.alt>0?"sun "+Math.round(p.alt)+"° up, "+compass(p.az):"after dark"}`;
   if(!C3)return;const T=C3.T,a=Math.max(p.alt,-6)*RAD,z=p.az*RAD,up=p.alt>0;

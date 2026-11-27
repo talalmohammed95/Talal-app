@@ -152,7 +152,11 @@ A guide to the community, not a sales page. It's a card on Home ("Your guide to 
 Everything comes from Select Group's brochures (Peninsula One, Two and Three) and the master plan, which is from the Peninsula Two brochure: its highlighted tower is **Peninsula Two** and the highlighted block is **the Community Mall**. Places, buildings and heights are in `app/models/peninsula-community.json`:
 - `places` hold x, y (fractions of the plan), a category, a name and a description; `unpinned` are places without a location; `around` are the drive times.
 - Heights are approximate. Peninsula Two is 140 m (36 floors); the other buildings aren't identified on the plan, so they're 40 to 170 m.
-- Shop and restaurant names aren't public yet, so the guide says what kinds there are and to ask the agent what's open.
+- **Named places** (`venues` in the same file, checked 28 Nov 2026) are on the place's card and at the top of each category in the Guide, marked **Open** or **Announced**:
+  - **Black Sheep Coffee**, open at Peninsula Three, ground floor (Retail 1). Source: Caterer Middle East and Deliveroo.
+  - **Half Cup** (café), **Freedom Pizza**, **Spinneys** (supermarket) and **Yas Healthcare** (clinic), named by Select Group as confirmed Community Mall tenants. Source: Arabian Business and CBN Middle East.
+
+  Names seen only on one listing and contradicted elsewhere (Drinkit, Katrina Coffee & Cakes, Mordi) are left out. Add new places to `venues` with `st: "open"` once they're open.
 
 three.js 0.170.0 (`app/vendor/three-0.170.0`, MIT) loads only when the guide opens.
 
