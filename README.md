@@ -143,6 +143,16 @@ No listing should be more than 7% above the market, and never more than 10%. The
 
 The motivation card's messages also push expertise and negotiation: knowing the deals, the price per sq ft and the building, and pricing it right.
 
+## Peninsula Stars (the team competition board)
+
+At the top of the Team page, for the admin, the CEO and every agent:
+- **Star of the week:** the agent with the most points this week. Points are 1 per unit added, 2 per listing online on every platform, and 1 per viewing booked through the website. Weeks run Monday to Sunday, Dubai time.
+- **Leaderboard squares:** one square per agent, ranked by listings online. Each shows a ring that fills towards the goal, gold, silver and bronze for the top three, a 🔥 streak (days in a row with a new unit), and units, viewings (last 5 weeks) and deals (homes marked Sold or Rented).
+- **This week's winners:** most units added, most listings online, most viewings, best priced (share of listings within 7% of market) and longest streak.
+- **Achievements:** First listing, Five online, Ten online, Goal hit, Price pro (every listing within 7%), On fire (5-day streak), Closer (a home sold or rented) and Show-runner (8+ viewings). Faces show who has each one; grey means nobody yet.
+
+The numbers come from `GET team/performance`, which adds `addedDates`, `viewingDates` and `deals` per agent. The samples it was picked from are in the Claude artifact "Peninsula Stars Board".
+
 ## A push after every listing (agents)
 
 Every time an agent adds a unit, or a listing goes online on every platform (from My units or the Team page), a short card comes up from the bottom. It has:

@@ -242,7 +242,7 @@ async function teamStats(opts = {}) {
   // The team's offers count too, under the agent each is listed under. A shared listing is counted once, as the listing.
   const rows = lrows.map(r => ({ ...r, kind: "listing" })).concat(orows.filter(r => r.data.teamUnit && !r.data.fromListing).map(r => ({ id: r.id, kind: "offer", data: r.data, created_at: r.created_at, agent_key: "", name: "" })));
   const agents = (st && st.data && st.data.agents) || SETTINGS.agents, by = {};
-  const blank = k => ({ key: k, name: agents[k] ? agents[k].name : k, phone: agents[k] ? agents[k].phone || "" : "", listings: 0, online: 0, partly: 0, offMarket: 0, forSale: 0, forRent: 0, platforms: {}, onlineDates: [], lastAdded: null, units: [] });
+  const blank = k => ({ key: k, name: agents[k] ? agents[k].name : k, phone: agents[k] ? agents[k].phone || "" : "", listings: 0, online: 0, partly: 0, offMarket: 0, forSale: 0, forRent: 0, platforms: {}, onlineDates: [], addedDates: [], viewingDates: [], deals: 0, lastAdded: null, units: [] });
   for (const k of Object.keys(agents)) by[k] = blank(k);
   for (const r of rows) {
     if (r.data.future) continue; // future listings count once they're on the market
@@ -263,10 +263,15 @@ async function teamStats(opts = {}) {
       ...(opts.full ? { id: r.id, kind: r.kind, unit: str(d.unit, 20), owner: str(d.owner, 100), ownerPhone: str(d.phone ?? d.ownerPhone, 40), furn: str(d.furn, 40),
         condition: str(d.status, 40), listedAt: d.date || r.created_at, future: !!d.future, notes: str(d.notes ?? d.ownerNote, 200), title: str(d.title, 100), baths: d.baths ?? null, shared: !!d.sharedOffer } : {}) });
     for (const p of goal.platforms) if (on[p.k]) a.platforms[p.k] = (a.platforms[p.k] || 0) + 1;
+    a.addedDates.push(r.created_at);
     if (!a.lastAdded || r.created_at > a.lastAdded) a.lastAdded = r.created_at;
     if (r.data.deal !== "rent") a.forSale++;
     if (r.data.deal === "rent" || r.data.deal === "both") a.forRent++;
   }
+  // For the team board: homes marked sold or rented (deals), and viewings booked through the website in the last 5 weeks.
+  for (const r of orows) if (["Sold", "Rented"].includes(r.data.avail) && by[r.data.agent]) by[r.data.agent].deals++;
+  const { rows: vrows } = await q("select agent_key, at from leads where kind = 'viewing' and at > now() - interval '35 days'");
+  for (const v of vrows) if (by[v.agent_key]) by[v.agent_key].viewingDates.push(v.at);
   return { goal, agents: Object.values(by) };
 }
 

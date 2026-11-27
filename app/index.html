@@ -960,6 +960,38 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
 #m-pchk .pchk{display:flex;align-items:flex-start;gap:6px;margin-top:6px;font-size:13.5px;font-weight:600;line-height:1.35;padding:8px 10px;border-radius:10px}#m-pchk .ic{width:16px;height:16px;flex:none;margin-top:1px}
 .pchk.ok{background:var(--good-soft,#E3F3E6);color:var(--good,#1E7A3A)}.pchk.warn{background:#FFF3DC;color:#8A5A00}.pchk.over{background:#FDE5E2;color:#A3261B}
 .pill.highprice{background:#FFF3DC;color:#8A5A00}.pill.overprice{background:#FDE5E2;color:#A3261B}
+.stars{display:flex;flex-direction:column;gap:12px}.stars .sthead h2{margin:2px 0 4px}.stars .lede{margin:0}.stars h3.mh{margin:6px 0 0}
+.stop{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}@media(min-width:1400px){.stop{grid-template-columns:minmax(0,1fr) minmax(0,2.6fr)}}
+
+.ssq{aspect-ratio:1/1;min-height:178px;max-width:100%;position:relative;border-radius:20px;background:var(--surface);border:1px solid var(--line);padding:12px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;transition:transform .2s ease}
+.ssq:hover{transform:translateY(-3px)}.ssq.me{border-color:var(--primary)}
+.srk{position:absolute;top:10px;left:10px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:800 14px var(--display,inherit);color:#fff;background:var(--muted)}
+.ssq.r1 .srk{background:#E8B53A;color:#3A2A00}.ssq.r2 .srk{background:#A9B0B8;color:#1C1A18}.ssq.r3 .srk{background:#C07A45}.ssq.r1{border:2px solid #E8B53A;box-shadow:0 10px 26px rgba(232,181,58,.22)}
+.sfl{position:absolute;top:10px;right:10px;font:700 12px inherit;background:var(--accent-soft);color:var(--accent-ink);padding:3px 7px;border-radius:999px}
+.sring{position:relative;width:46%;max-width:96px;aspect-ratio:1/1;margin:2px auto 0}.sring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}.sring img{position:absolute;inset:11%;width:78%;height:78%;border-radius:50%;object-fit:cover}
+.stars .ssq h4{margin:0;text-align:center;font-size:15px;text-transform:none;letter-spacing:0;color:var(--fg);font-weight:700}.sbig{text-align:center;font:800 22px/1 var(--display,inherit)}.sbig small{font-size:11.5px;font-weight:600;color:var(--muted)}
+.smini{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);border-top:1px dashed var(--line);padding-top:6px}.smini b{display:block;color:var(--fg);font-size:13px}
+.sstar{aspect-ratio:1/1;max-width:100%;border-radius:22px;background:#1C1A18;color:#fff;padding:18px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;max-height:380px}
+@media(min-width:601px) and (max-width:1399px){.stars .sstar{aspect-ratio:auto;max-height:none;flex-direction:row;flex-wrap:wrap;align-items:center;gap:16px}.sstar .kick{width:100%}.sav{width:110px}.sstar>div:last-child{flex:1;min-width:0}}@media(max-width:600px){.stars .sstar{aspect-ratio:auto;min-height:0;flex-direction:row;flex-wrap:wrap;align-items:center;gap:12px}.sstar .kick{width:100%}.sav{width:96px}.sstar h3{font-size:20px}.sstar>div:last-child{flex:1;min-width:0}}
+.sglow{position:absolute;inset:-30%;background:radial-gradient(circle at 70% 20%,rgba(245,162,58,.55),transparent 55%)}.sstar>*{position:relative}.sstar .kick{color:#F5A23A;margin:0}
+.sav{width:42%;max-width:150px;aspect-ratio:1/1;border-radius:22px;overflow:hidden;border:3px solid #F5A23A}.sav img{width:100%;height:100%;object-fit:cover}.sstar h3{margin:0;font-size:24px}.sstar p{margin:0;opacity:.85;font-size:14px}
+
+.scat{aspect-ratio:1/1;min-height:150px;max-width:100%;border-radius:18px;background:var(--surface);border:1px solid var(--line);padding:12px;display:flex;flex-direction:column;justify-content:space-between}
+.slab{font-family:inherit;font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}.sval{font:800 28px/1 var(--display,inherit)}.sval small{font-size:11.5px;font-weight:600;color:var(--muted)}
+.swin{display:flex;align-items:center;gap:8px}.swin img{width:40px;height:40px;border-radius:12px;object-fit:cover}.swin b{display:block;font-size:14px}.swin small{color:var(--muted);font-size:12px}
+.scat.hot{background:var(--primary);border-color:var(--primary);color:#fff}.scat.hot .slab,.scat.hot .sval small,.scat.hot .swin small{color:rgba(255,255,255,.85)}
+
+.sbdg{aspect-ratio:1/1;min-height:118px;max-width:100%;border-radius:16px;background:var(--surface);border:1px solid var(--line);padding:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;text-align:center}
+.sico{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--accent-soft);color:var(--primary)}.sico svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sbdg b{font-size:13px}.sbdg small{color:var(--muted);font-size:11px;line-height:1.3}.swho{display:flex;justify-content:center}.swho img{width:22px;height:22px;border-radius:50%;border:2px solid var(--surface);margin-left:-6px;object-fit:cover}.swho img:first-child{margin-left:0}
+.sbdg.locked{opacity:.5}.sbdg.locked .sico{background:var(--sunk,rgba(0,0,0,.06));color:var(--muted)}
+@media(prefers-reduced-motion:reduce){.ssq{transition:none}}
+/* Board grids: columns fill the width (agents in one row, 5 winners, 8 badges); fewer columns on smaller screens. */
+.stars .sgrid,.stars .scats,.stars .sbadges{display:grid;gap:10px;align-content:start}
+.stars .sgrid{grid-template-columns:repeat(var(--n,5),minmax(0,1fr))}.stars .scats{grid-template-columns:repeat(5,minmax(0,1fr))}.stars .sbadges{grid-template-columns:repeat(8,minmax(0,1fr))}
+.stars .ssq,.stars .scat,.stars .sbdg{aspect-ratio:auto;min-height:0}
+@media(max-width:1100px){.stars .sgrid{grid-template-columns:repeat(3,minmax(0,1fr))}.stars .scats{grid-template-columns:repeat(3,minmax(0,1fr))}.stars .sbadges{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:600px){.stars .sgrid,.stars .scats{grid-template-columns:repeat(2,minmax(0,1fr))}.stars .sbadges{grid-template-columns:repeat(3,minmax(0,1fr))}.stars .sring{width:56%}.stars .smini{font-size:10.5px}.stars .smini b{font-size:12.5px}}
 #motiv{position:fixed;left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:86;display:flex;justify-content:center;padding:0 12px;pointer-events:none}#motiv[hidden]{display:none}
 @media(min-width:900px){#motiv{bottom:24px}}
 .mvcard{pointer-events:auto;position:relative;width:min(460px,100%);background:#1C1A18;color:#fff;border-radius:22px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.45);animation:regup .3s ease-out}
@@ -3240,6 +3272,40 @@ function unitsByAgent(a,g,photo){if(perf&&perf.full)return unitsByAgentFull(a,g,
     ${units.length?units.map(u=>`<tr><td>${esc(BLDLONG[u.b]||"–")}</td><td>${esc(typ(u.beds))}</td><td class="c num">${u.size?fmt(u.size)+" sq ft":"–"}</td><td>${esc(known(u.floor)?u.floor:"–")}</td><td>${esc(known(u.view)?u.view:"–")}</td><td>${u.deal==="both"?"Sale or rent":u.deal==="rent"?"Rent":"Sale"}</td><td class="r num pr">${esc(price(u))}</td>
       <td><span class="ust ${u.status}">${esc(STATUS_LABEL[u.status])}</span>${u.status==="partly"?`<small class="src"> ${esc(u.on.map(k=>(g.platforms.find(p=>p.k===k)||{}).n).filter(Boolean).join(", "))}</small>`:""}</td></tr>`).join("")
       :`<tr><td colspan="8" class="c" style="color:var(--muted);font-style:italic">${a.key==="love"||!a.lastAdded?"New to the team – first listings coming soon":"No units yet"}</td></tr>`}</table></div></div>`}
+/* ---------------- Peninsula Stars: the team competition board ---------------- */
+// Weeks run Monday to Sunday, Dubai time. Points this week: 1 per unit added, 2 per listing online, 1 per viewing booked.
+const dxbDayStr=t=>new Date(Date.parse(t)+4*3600e3).toISOString().slice(0,10);
+function weekStart(){const d=new Date(Date.now()+4*3600e3),dow=(d.getUTCDay()+6)%7;return Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()-dow)-4*3600e3}
+function streakOf(dates){const S=new Set((dates||[]).map(dxbDayStr));let d=new Date(Date.now()+4*3600e3),n=0;const key=x=>x.toISOString().slice(0,10);
+  if(!S.has(key(d)))d=new Date(d.getTime()-864e5);while(S.has(key(d))){n++;d=new Date(d.getTime()-864e5)}return n}
+function starsStats(a,g){const ws=weekStart(),inWk=l=>(l||[]).filter(t=>Date.parse(t)>=ws).length;
+  const chk=(a.units||[]).filter(u=>u.status!=="off").map(u=>priceCheck({id:"_s",b:u.b,beds:u.beds,layout:u.layout||"",deal:u.deal==="rent"?"rent":"sale",price:u.deal==="rent"?null:u.price,rent:u.deal==="rent"?u.rent:null,size:u.size})).filter(Boolean);
+  const ok=chk.filter(c=>c.ref<=PRICE_WARN).length,wk={add:inWk(a.addedDates),on:inWk(a.onlineDates),vw:inWk(a.viewingDates)};
+  return{...a,wk,pts:wk.add+wk.on*2+wk.vw,streak:streakOf(a.addedDates),priced:chk.length?Math.round(ok/chk.length*100):null,pricedN:chk.length,vwAll:(a.viewingDates||[]).length,deals:a.deals||0,target:g.target}}
+const STAR_IC={first:'<path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/>',five:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',ten:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>',
+  goal:'<path d="M7 4h10v5a5 5 0 0 1-10 0zM5 5H3v2a4 4 0 0 0 4 4M19 5h2v2a4 4 0 0 1-4 4M12 14v4M8 21h8"/>',price:'<path d="M3 12l9-9h8v8l-9 9zM15 8h.01"/>',streak:'<path d="M12 3c1 3 4 5 4 9a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 0-8z"/>',
+  deal:'<path d="M3 12l4-4 5 3 5-3 4 4-9 7z"/>',view:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'};
+function starsBoard(){if(!perf||!perf.agents)return"";const g=perf.goal,mk=myKey(),ph=k=>agentPhotoOf(k),
+  A=perf.agents.filter(a=>a.name).map(a=>starsStats(a,g)),rank=[...A].sort((a,b)=>b.online-a.online||b.listings-a.listings||a.name.localeCompare(b.name));
+  if(!A.length)return"";const wsd=new Date(weekStart()+4*3600e3).toLocaleDateString("en-GB",{day:"numeric",month:"short",timeZone:"UTC"});
+  const star=[...A].sort((a,b)=>b.pts-a.pts||b.online-a.online)[0],hasStar=star&&star.pts>0;
+  const sq=(a,i)=>{const r=44,c=2*Math.PI*r,pc=Math.min(1,a.online/Math.max(1,g.target));
+    return `<article class="ssq r${i+1}${a.key===mk?" me":""}"><span class="srk">${i+1}</span>${a.streak>=2?`<span class="sfl" title="${a.streak} days in a row with a new unit">🔥 ${a.streak}</span>`:""}
+      <div class="sring"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="${r}" fill="none" stroke="var(--line)" stroke-width="8"/><circle cx="50" cy="50" r="${r}" fill="none" stroke="${i===0&&a.online?"#E8B53A":"var(--primary)"}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${(c*pc).toFixed(1)} ${c.toFixed(1)}"/></svg><img src="${esc(ph(a.key))}" alt=""></div>
+      <h4>${esc(firstName(a.name))}${a.key===mk?" (you)":""}</h4><div class="sbig num">${a.online}<small> / ${g.target} online</small></div>
+      <div class="smini num"><span><b>${a.listings}</b>units</span><span><b>${a.vwAll}</b>viewings</span><span><b>${a.deals}</b>deals</span></div></article>`};
+  const cats=[["Most units added",a=>a.wk.add,"this week"],["Most listings online",a=>a.wk.on,"this week"],["Most viewings",a=>a.wk.vw,"this week"],["Best priced",a=>a.pricedN?a.priced:-1,"% within 7%"],["Longest streak",a=>a.streak,"days in a row"]];
+  const catHTML=cats.map(([l,f,u],i)=>{const w=[...A].sort((a,b)=>f(b)-f(a))[0],v=w?f(w):0;
+    return `<div class="scat${i===0?" hot":""}"><span class="slab">${l}</span>${w&&v>0?`<div class="sval num">${v}<small> ${u}</small></div><div class="swin"><img src="${esc(ph(w.key))}" alt=""><div><b>${esc(firstName(w.name))}</b><small>${w.key===mk?"That's you!":"Leading"}</small></div></div>`:`<div class="sval">—</div><div class="swin"><small>No one yet: be the first</small></div>`}</div>`}).join("");
+  const B=[["first","First listing","A listing online",a=>a.online>=1],["five","Five online","5 listings live",a=>a.online>=5],["ten","Ten online","10 listings live",a=>a.online>=10],["goal","Goal hit",g.target+" of "+g.target+" online",a=>a.online>=g.target],
+    ["price","Price pro","Every listing within 7% of market",a=>a.pricedN>0&&a.priced===100],["streak","On fire","5 days in a row with a new unit",a=>a.streak>=5],["deal","Closer","A home sold or rented",a=>a.deals>=1],["view","Show-runner","8+ viewings booked",a=>a.vwAll>=8]];
+  const badges=B.map(([ic,t,d,f])=>{const w=A.filter(f);return `<div class="sbdg${w.length?"":" locked"}"><span class="sico"><svg viewBox="0 0 24 24" aria-hidden="true">${STAR_IC[ic]}</svg></span><b>${t}</b><small>${esc(d)}</small><span class="swho">${w.length?w.slice(0,6).map(a=>`<img src="${esc(ph(a.key))}" alt="${esc(a.name)}" title="${esc(a.name)}">`).join(""):"<small>Nobody yet</small>"}</span></div>`}).join("");
+  return `<section class="stars panel"><div class="sthead"><div><p class="kick">Peninsula Stars · week of ${esc(wsd)}</p><h2>Who's leading the team</h2><p class="lede">Ranked by listings online. This week's points: 1 per unit added, 2 per listing online, 1 per viewing. Resets every Monday.</p></div></div>
+    <div class="stop">${hasStar?`<article class="sstar"><div class="sglow"></div><p class="kick">Star of the week</p><div class="sav"><img src="${esc(ph(star.key))}" alt=""></div><div><h3>${esc(firstName(star.name))}${star.key===mk?" (you!)":""}</h3><p class="num">${star.pts} points · ${star.wk.add} added, ${star.wk.on} online, ${star.wk.vw} viewing${star.wk.vw===1?"":"s"} this week${star.streak>=2?` · ${star.streak}-day streak`:""}</p></div></article>`
+      :`<article class="sstar"><div class="sglow"></div><p class="kick">Star of the week</p><div><h3>Up for grabs</h3><p>Add a unit or put a listing online this week and the star is yours.</p></div></article>`}
+      <div class="sgrid" style="--n:${Math.min(5,Math.max(3,rank.length))}">${rank.map(sq).join("")}</div></div>
+    <h3 class="mh">This week's winners</h3><div class="scats">${catHTML}</div>
+    <h3 class="mh">Achievements</h3><div class="sbadges">${badges}</div></section>`}
 async function renderTeam(){const el=$("#team");if(!SRV){el.innerHTML='<div class="empty">Team performance uses the online version of the app, where everyone signs in.</div>';return}
   if(!perf)el.innerHTML='<div class="empty">Loading…</div>';await loadPerf();if(!perf){el.innerHTML='<div class="empty">Team performance couldn\'t be loaded. Check your connection.</div>';return}
   const g=perf.goal,now=Date.now(),ag=[...perf.agents].sort((a,b)=>b.online-a.online||b.listings-a.listings||a.name.localeCompare(b.name)),tot=ag.reduce((s,a)=>s+a.online,0),goalT=g.target*ag.length;
@@ -3259,7 +3325,7 @@ async function renderTeam(){const el=$("#team");if(!SRV){el.innerHTML='<div clas
   const offRow=o=>`<div class="ochk" data-off="${esc(o.id)}"><div><b>${isAdmin&&AGENTS[o.agent]?esc(AGENTS[o.agent].name.split(" ")[0])+" · ":""}${o.unit?"Unit "+esc(o.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(typeOf(o))} · ${esc(o.title)}</b><span class="s">${esc(o.deal==="rent"?aed(o.rent)+" / yr":aed(o.price))}${isOnline(o,g)?" · counts towards the goal":""}</span></div>${plats(o.online,"data-otog")}</div>`;
   const own=mine.filter(m=>m);
   if(isAdmin)setTimeout(umissLoad,0);
-  el.innerHTML=(isAdmin?'<div id="umiss"></div>':"")+`<div class="gband"><div><p class="kick">Goal until ${esc(dl)}</p><h2>${g.target} listings each, live on ${esc(plist)}</h2><p>A listing counts once it's online on every platform. ${tp.daysLeft} days left.</p>
+  el.innerHTML=(isAdmin?'<div id="umiss"></div>':"")+starsBoard()+`<div class="gband"><div><p class="kick">Goal until ${esc(dl)}</p><h2>${g.target} listings each, live on ${esc(plist)}</h2><p>A listing counts once it's online on every platform. ${tp.daysLeft} days left.</p>
       <div class="gbar" aria-label="Team progress"><i style="width:${Math.min(100,tot/goalT*100)}%"></i><em style="left:${tf*100}%" title="Where we should be today"></em></div><p style="margin-top:8px;font-size:13px">${tot} of ${goalT} for the team · the white line is where we should be today (${tp.expected})</p></div>
     <div class="gstats"><div><b class="num">${tot}</b><span>online on every platform</span></div><div><b class="num">${Math.max(0,goalT-tot)}</b><span>still to go</span></div><div><b class="num">${wk}</b><span>went live this week</span></div></div></div>
   <div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Ranking</h2><p class="lede">From ${esc(new Date(g.start).toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"short"}))} to today. Units for sale or rent count in both columns.</p></div>
