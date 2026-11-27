@@ -5,3 +5,5 @@ read-excel-file 9.3.20 - MIT License - Copyright (c) 2018 gitlab.com/catamphetam
 Used by the admin to import the Peninsula contacts from Excel.
 pdf.js 3.11.174 - Apache License 2.0 - Copyright Mozilla Foundation - https://github.com/mozilla/pdf.js
 Used to show floor plan pages from the brochures (opened with isEvalSupported off).
+
+three.js 0.170.0 (three.module.min.js, OrbitControls.js, GLTFExporter.js) — MIT License, Copyright © 2010-2024 three.js authors. https://github.com/mrdoob/three.js

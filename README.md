@@ -134,6 +134,16 @@ On a home listed under their name, an agent taps **Edit this home** and gets the
 ## New on the team
 When an agent adds a unit (in My units, or an offer under their name), everyone else on the team sees it first thing the next time they open the website: a pop-up with the agent's photo, the type, building, floor, size, view and price, an **Open** button when it's shared as an offer, and **Message Giulia** (WhatsApp) to say they may have a client. It comes before the welcome screen and the pace message, and shows only units added since they last saw it. Home keeps a **New on the team this week** list. Teammates see the floor (from the unit number if none is written), never the unit number or the owner; the admin, the CEO and the agent who added it see the unit number.
 
+## The Peninsula in 3D (the community model)
+
+There's no model of the Peninsula on Sketchfab (searched 28 Nov 2026), so the app has its own. **The Peninsula in 3D** is a card on Home for everyone, and a button in every home's Sun & views. It opens a full-screen 3D model of the community:
+- Select Group's master plan is the ground, and every building is raised to its height. The Plaza is in orange, the Dubai Canal is around it, and Burj Khalifa stands about 1.6 km to the north-north-west for orientation.
+- The sun lights it with real shadows. Month buttons, a time slider and "Now" move the sun, using the same formulas as Sun & views.
+- Drag to turn, pinch or scroll to zoom. It turns slowly by itself until touched.
+- **Download the model (.glb)** saves it as a standard 3D file. A copy is in `app/models/peninsula-community.glb` for uploading to Sketchfab, whose link then goes in "3D model or 360° tour".
+
+Building outlines come from the master plan picture (`app/models/peninsula-community.json`: outline points as fractions of the plan, height in metres). **The heights are approximate** (The Plaza's tower 200 m, the others 40 to 170 m) and can be corrected in that file. three.js 0.170.0 is in `app/vendor/three-0.170.0` (MIT) and loads only when the model is opened.
+
 ## 3D models and 360° tours
 
 Any home can have a 3D model or 360° tour. In **My units** (and the admin's offer form) paste the link into "3D model or 360° tour (link)". Clients then see **Explore in 3D** (or **Walk through in 360°**) on the home's page. The viewer loads only when they tap it, so pages stay quick on a phone. It opens inside the page: drag to look around, pinch to zoom, full screen and VR where the viewer offers it.

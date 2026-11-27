@@ -908,6 +908,16 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
 .tourplay{position:relative;display:block;width:100%;aspect-ratio:16/10;border:0;padding:0;border-radius:12px;overflow:hidden;cursor:pointer;background:#1C1A18}.tourplay img{width:100%;height:100%;object-fit:cover;opacity:.75}
 .tourplay span{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:8px;white-space:nowrap;color:#fff;font-weight:800;font-size:17px;background:var(--primary);padding:13px 20px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.35)}.tourplay span .ic{width:24px;height:24px}
 .tourcard iframe{width:100%;aspect-ratio:16/10;border:0;border-radius:12px;background:#1C1A18}@media(max-width:600px){.tourcard iframe,.tourplay{aspect-ratio:4/5}}
+.c3card{display:grid;grid-template-columns:minmax(0,220px) 1fr;gap:16px;align-items:center}@media(max-width:600px){.c3card{grid-template-columns:1fr}}
+.c3card h3{display:flex;align-items:center;gap:8px;margin:0 0 4px}.c3card h3 .ic{color:var(--primary)}.c3thumb{position:relative;border:0;padding:0;border-radius:14px;overflow:hidden;cursor:pointer;aspect-ratio:4/3;background:#1C1A18}.c3thumb img{width:100%;height:100%;object-fit:cover;opacity:.85}
+.c3thumb span{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:6px;background:var(--primary);color:#fff;font-weight:800;padding:10px 16px;border-radius:999px;white-space:nowrap}
+#c3d{position:fixed;inset:0;z-index:90;background:var(--bg);display:flex;flex-direction:column}#c3d[hidden]{display:none}
+.c3bar{display:flex;align-items:center;gap:10px;padding:10px 14px;padding-top:max(10px,env(safe-area-inset-top,0px));border-bottom:1px solid var(--line)}.c3bar b{font-size:17px}.c3hint{color:var(--muted);font-size:13px;flex:1}.c3bar .pcx{position:static}
+.c3stage{position:relative;flex:1;min-height:0;background:#0f1a2b}.c3stage canvas{display:block;width:100%;height:100%;touch-action:none}
+.c3load{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-weight:700;padding:20px;text-align:center}.c3load[hidden]{display:none}
+.c3labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}.c3labels span{position:absolute;left:0;top:0;background:rgba(20,18,16,.78);color:#fff;font:700 12.5px var(--body,inherit);padding:4px 8px;border-radius:999px;white-space:nowrap}
+.c3labels span.c3n{background:var(--primary);width:26px;height:26px;padding:0;display:grid;place-items:center;border-radius:50%}
+.c3ctl{padding:10px 14px max(12px,env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);background:var(--surface)}.c3m{grid-template-columns:repeat(12,minmax(44px,1fr));overflow-x:auto}.c3btns{display:flex;gap:8px;flex-wrap:wrap}.c3ctl .src{margin:0}
 .suncard{border:1.5px solid var(--line);border-radius:16px;background:var(--bg);padding:14px;margin:12px 0;display:flex;flex-direction:column;gap:10px}
 .sunh{display:flex;flex-direction:column;gap:2px}.sunh b{display:flex;align-items:center;gap:6px;font-size:17px}.sunh b .ic{width:20px;height:20px;color:#E8901F}.sunh span{color:var(--muted);font-size:14px}
 .sunviz{display:flex;gap:16px;align-items:center;flex-wrap:wrap}.suncomp{width:210px;max-width:100%;flex:none;margin:0 auto}
@@ -1646,6 +1656,68 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-tour-go]")
   const f=document.createElement("iframe");f.src=c.dataset.tour;f.title="3D and 360° view";f.allow="autoplay; fullscreen; xr-spatial-tracking; gyroscope; accelerometer";f.allowFullscreen=true;f.loading="lazy";f.referrerPolicy="strict-origin-when-cross-origin";
   f.setAttribute("sandbox","allow-scripts allow-same-origin allow-popups allow-presentation");b.replaceWith(f)});
 
+/* ---------------- The Peninsula in 3D ---------------- */
+// The community from the developer's master plan: the plan as the ground, every building raised to its height, and the sun
+// (the same formulas as Sun & views) casting real shadows. Heights are approximate. three.js loads only when it's opened.
+const C3V="/vendor/three-0.170.0/";let C3=null;const C3S={m:new Date(Date.now()+4*3600e3).getUTCMonth(),h:16,mi:0};
+function c3dCard(){return `<div class="panel c3card"><button type="button" class="c3thumb" data-c3d aria-label="Explore the Peninsula in 3D"><img loading="lazy" src="${esc(imgSrc("/img/plans/peninsula-master-plan.webp",true))}" alt=""><span>${ic("building")}Explore in 3D</span></button>
+  <div><h3>${ic("globe")}The Peninsula in 3D</h3><p class="lede">Spin around the whole community on the Dubai Canal, then move the sun through the day and the year to see the light and the shadows.</p><button type="button" class="btn primary" data-c3d>${ic("building")}Open the 3D model</button></div></div>`}
+document.addEventListener("click",e=>{if(e.target.closest("[data-c3d]")){e.preventDefault();c3dOpen()}});
+async function c3dOpen(){let el=$("#c3d");
+  if(!el){const mn=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    document.body.insertAdjacentHTML("beforeend",`<div id="c3d" role="dialog" aria-modal="true" aria-labelledby="c3d-t"><div class="c3bar"><b id="c3d-t">The Peninsula in 3D</b><span class="c3hint">Drag to turn · pinch or scroll to zoom</span><button class="pcx" data-c3-x aria-label="Close">${ic("x")}</button></div>
+      <div class="c3stage"><canvas></canvas><div class="c3labels"></div><div class="c3load">Loading the 3D model…</div></div>
+      <div class="c3ctl"><div class="sunmonths c3m" role="group" aria-label="Month">${mn.map((m,i)=>`<button type="button" data-c3-m="${i}" aria-pressed="${i===C3S.m}">${m}</button>`).join("")}</div>
+        <label class="sunslide"><span id="c3-time"></span><input type="range" min="5" max="20" step="0.25" value="${C3S.h}" data-c3-h aria-label="Time of day"></label>
+        <div class="c3btns"><button type="button" class="btn sm" data-c3-now>${ic("sun")}Now</button><button type="button" class="btn sm" data-c3-glb>${ic("download")}Download the model (.glb)</button></div>
+        <p class="src">Built from Select Group's master plan of the Peninsula. Building heights are approximate; the sun is worked out for Business Bay.</p></div></div>`);
+    el=$("#c3d");
+    el.addEventListener("click",e=>{const t=e.target;if(t.closest("[data-c3-x]")){c3dClose();return}
+      const m=t.closest("[data-c3-m]");if(m){C3S.m=+m.dataset.c3M;el.querySelectorAll("[data-c3-m]").forEach(b=>b.setAttribute("aria-pressed",b===m));c3dSun()}
+      if(t.closest("[data-c3-now]")){const d=new Date(Date.now()+4*3600e3);C3S.m=d.getUTCMonth();C3S.h=d.getUTCHours()+d.getUTCMinutes()/60;el.querySelectorAll("[data-c3-m]").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.c3M===C3S.m));el.querySelector("[data-c3-h]").value=Math.min(20,Math.max(5,C3S.h));c3dSun()}
+      if(t.closest("[data-c3-glb]"))c3dGlb()});
+    el.querySelector("[data-c3-h]").addEventListener("input",e=>{C3S.h=+e.target.value;c3dSun()});
+    document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#c3d")&&!$("#c3d").hidden)c3dClose()})}
+  el.hidden=false;document.body.classList.add("lbopen");el.querySelector(".c3load").hidden=!!C3;
+  try{if(!C3)C3=await c3dInit(el);el.querySelector(".c3load").hidden=true;C3.run=true;C3.resize();c3dSun();C3.loop()}
+  catch(x){el.querySelector(".c3load").textContent="The 3D model couldn't load on this device. "+(x&&x.message||"")}}
+function c3dClose(){const el=$("#c3d");if(el)el.hidden=true;document.body.classList.remove("lbopen");if(C3)C3.run=false}
+async function c3dInit(el){const T=await import(C3V+"three.module.min.js"),{OrbitControls}=await import(C3V+"OrbitControls.js");
+  const data=await (await fetch("/models/peninsula-community.json")).json(),S=data.mPerPx,W=data.w*S,H=data.h*S;
+  const canvas=el.querySelector("canvas"),stage=el.querySelector(".c3stage");
+  const R=new T.WebGLRenderer({canvas,antialias:true});R.setPixelRatio(Math.min(2,window.devicePixelRatio||1));R.shadowMap.enabled=true;R.shadowMap.type=T.PCFSoftShadowMap;R.outputColorSpace=T.SRGBColorSpace;
+  const scene=new T.Scene(),model=new T.Group();model.name="The Peninsula, Business Bay";scene.add(model);
+  const tex=await new T.TextureLoader().loadAsync(data.img);tex.colorSpace=T.SRGBColorSpace;tex.anisotropy=Math.min(8,R.capabilities.getMaxAnisotropy());
+  const ground=new T.Mesh(new T.PlaneGeometry(W,H),new T.MeshStandardMaterial({map:tex,roughness:1}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;ground.name="Master plan";model.add(ground);
+  const sea=new T.Mesh(new T.PlaneGeometry(9000,9000),new T.MeshStandardMaterial({color:0x2c5d63,roughness:.9}));sea.rotation.x=-Math.PI/2;sea.position.y=-0.6;sea.receiveShadow=true;scene.add(sea);
+  const P=(fx,fy)=>new T.Vector2((fx-0.5)*W,-(fy-0.5)*H),labels=[];
+  const mats={res:new T.MeshStandardMaterial({color:0xf3eee7,roughness:.75}),plaza:new T.MeshStandardMaterial({color:0xf28c28,roughness:.6}),plazatower:new T.MeshStandardMaterial({color:0xf7e3c8,roughness:.6})},edge=new T.LineBasicMaterial({color:0x8d8378});
+  data.buildings.forEach((b,i)=>{const pts=b.p.map(([x,y])=>P(x,y));const g=new T.ExtrudeGeometry(new T.Shape(pts),{depth:b.h,bevelEnabled:false});g.rotateX(-Math.PI/2);
+    const m=new T.Mesh(g,mats[b.k]||mats.res);m.castShadow=true;m.receiveShadow=true;m.name=b.label||("Building "+(i+1));model.add(m);const ed=new T.LineSegments(new T.EdgesGeometry(g,30),edge);model.add(ed);
+    if(b.label){const cx=b.p.reduce((a,q)=>a+q[0],0)/b.p.length,cy=b.p.reduce((a,q)=>a+q[1],0)/b.p.length;labels.push({t:b.label,v:new T.Vector3((cx-0.5)*W,b.h+12,(cy-0.5)*H)})}});
+  // Burj Khalifa, about 1.6 km to the north-north-west (for orientation)
+  const bk=new T.Group();bk.name="Burj Khalifa (direction)";[[38,26,250],[26,16,220],[16,8,200],[8,1.5,158]].reduce((y,[r0,r1,h])=>{const c=new T.Mesh(new T.CylinderGeometry(r1,r0,h,12),new T.MeshStandardMaterial({color:0xcfd6df,metalness:.3,roughness:.4}));c.position.y=y+h/2;c.castShadow=true;bk.add(c);return y+h},0);
+  const ba=346*RAD;bk.position.set(Math.sin(ba)*1600,0,-Math.cos(ba)*1600);scene.add(bk);labels.push({t:"Burj Khalifa",v:new T.Vector3(bk.position.x,840,bk.position.z)});
+  labels.push({t:"Dubai Canal",v:new T.Vector3((0.25-0.5)*W,4,(0.9-0.5)*H)},{t:"N",v:new T.Vector3(-W/2+40,4,-H/2-60),n:1});
+  const hemi=new T.HemisphereLight(0xdfeaf5,0x6b5a45,.6);scene.add(hemi);
+  const sun=new T.DirectionalLight(0xffffff,2.4);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-900,right:900,top:900,bottom:-900,near:10,far:6000});sun.shadow.bias=-0.0004;scene.add(sun,sun.target);
+  const cam=new T.PerspectiveCamera(42,1,5,30000);cam.position.set(780,620,980);
+  const ctl=new OrbitControls(cam,canvas);ctl.target.set(0,40,0);ctl.enableDamping=true;ctl.maxPolarAngle=1.45;ctl.minDistance=150;ctl.maxDistance=4500;ctl.autoRotate=true;ctl.autoRotateSpeed=.5;ctl.addEventListener("start",()=>{ctl.autoRotate=false});
+  const lab=el.querySelector(".c3labels");lab.innerHTML=labels.map(l=>`<span class="${l.n?"c3n":""}">${esc(l.t)}</span>`).join("");const spans=[...lab.children],v=new T.Vector3();
+  const o={T,R,scene,model,sun,hemi,cam,ctl,run:false,
+    resize(){const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()},
+    loop(){if(!o.run)return;requestAnimationFrame(o.loop);ctl.update();R.render(scene,cam);const w=stage.clientWidth,h=stage.clientHeight;
+      labels.forEach((l,i)=>{v.copy(l.v).project(cam);const s=spans[i];if(v.z>1){s.style.display="none";return}s.style.display="";s.style.transform=`translate(${((v.x+1)/2*w).toFixed(0)}px,${((1-v.y)/2*h).toFixed(0)}px) translate(-50%,-100%)`})}};
+  new ResizeObserver(()=>o.resize()).observe(stage);return o}
+function c3dSun(){const el=$("#c3d");if(!el)return;const y=new Date().getUTCFullYear(),t=dxbDay(y,C3S.m,21)+C3S.h*3600e3,p=sunAt(t),mn=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const hh=Math.floor(C3S.h),mm=Math.round((C3S.h-hh)*60);el.querySelector("#c3-time").textContent=`${mn[C3S.m]} 21 · ${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")} · ${p.alt>0?"sun "+Math.round(p.alt)+"° up, "+compass(p.az):"after dark"}`;
+  if(!C3)return;const T=C3.T,a=Math.max(p.alt,-6)*RAD,z=p.az*RAD,up=p.alt>0;
+  C3.sun.position.set(Math.sin(z)*Math.cos(a)*2500,Math.max(Math.sin(a),0.02)*2500,-Math.cos(z)*Math.cos(a)*2500);
+  const k=Math.min(1,Math.max(0,p.alt/25));C3.sun.intensity=up?0.7+3.1*k:0;C3.sun.color.setHSL(0.09,1,0.62+0.33*k);C3.hemi.intensity=up?0.22+0.18*k:0.12;el.querySelectorAll("[data-c3-m]").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.c3M===C3S.m));
+  const day=new T.Color(0xbcd7ec),dusk=new T.Color(0xf2b27c),night=new T.Color(0x0f1a2b);C3.scene.background=up?dusk.clone().lerp(day,k):night.clone().lerp(dusk,Math.max(0,(p.alt+6)/6))}
+async function c3dGlb(){if(!C3)return;try{const {GLTFExporter}=await import(C3V+"GLTFExporter.js");const glb=await new GLTFExporter().parseAsync(C3.model,{binary:true});
+  const b=new Blob([glb],{type:"model/gltf-binary"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="peninsula-community.glb";document.body.appendChild(a);a.click();a.remove();toast("Model downloaded: upload it to Sketchfab to share it")}catch(x){toast("The model couldn't be exported.")}}
+
 /* ---------------- Sun & views ---------------- */
 // The Peninsula, Business Bay (approximate). The sun's position comes from the standard solar formulas, for Dubai time.
 const PEN_LOC={lat:25.1857,lng:55.2776},DXB_TZ="Asia/Dubai",RAD=Math.PI/180;
@@ -1667,7 +1739,7 @@ function sunHours(t0,b){let n=0;for(let m=0;m<1440;m+=10){const p=sunAt(t0+m*6e4
 const SUN={};
 function sunCard(o){const f=facingOf(o.view),now=new Date(),dx=new Date(now.getTime()+4*3600e3),st=SUN[o.id]||(SUN[o.id]={m:dx.getUTCMonth(),h:sunAt(now.getTime()).alt>3?dx.getUTCHours():16});
   return `<div class="suncard" data-sun="${esc(o.id)}"><div class="sunh"><b>${ic("sun")}Sun & views</b><span>${f.length?esc(f.map(x=>x.t).join(" · ")):"Sunrise, sunset and the sun's path at the Peninsula"}</span></div><div class="sunbody">${sunInner(o,st,f)}</div>
-    <div class="sunlinks"><a class="btn sm" target="_blank" rel="noopener" href="https://app.shadowmap.org/?lat=${PEN_LOC.lat}&lng=${PEN_LOC.lng}&zoom=17&time=${sunWhen(st)}">${ic("globe")}Sun and shadows in 3D</a><a class="btn sm" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((BLD[o.b]||"The Peninsula")+" Business Bay Dubai")}">${ic("pin")}Map and 360° street view</a></div>
+    <div class="sunlinks"><a class="btn sm" target="_blank" rel="noopener" href="https://app.shadowmap.org/?lat=${PEN_LOC.lat}&lng=${PEN_LOC.lng}&zoom=17&time=${sunWhen(st)}">${ic("globe")}Sun and shadows in 3D</a><button type="button" class="btn sm" data-c3d>${ic("building")}The community in 3D</button><a class="btn sm" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((BLD[o.b]||"The Peninsula")+" Business Bay Dubai")}">${ic("pin")}Map and 360° street view</a></div>
     <p class="src">Worked out from the sun's position over Business Bay${f.length?" and the view in the brochure":""}. Directions are approximate, and neighbouring towers can shade lower floors: the 3D view shows the shadows.</p></div>`}
 function sunWhen(st){const y=new Date().getUTCFullYear();return dxbDay(y,st.m,21)+st.h*3600e3}
 function sunInner(o,st,f){const y=new Date().getUTCFullYear(),t0=dxbDay(y,st.m,21),day=sunDay(t0),at=sunAt(t0+st.h*3600e3),mn=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -1907,9 +1979,9 @@ async function loadListings(){if(!SRV||!isTeam())return;
 /* ---------------- Dashboard ---------------- */
 const today=()=>new Date().toISOString().slice(0,10);
 const isDue=c=>c.follow&&c.follow<=today()&&c.status!=="Closed"&&c.status!=="Lost";
-function renderDash(){if(!isTeam()){renderShowroom();{const h=$("#dash").firstElementChild;if(h)h.insertAdjacentHTML("afterend",bestHTML())}if(myProps.length)$("#dash").insertAdjacentHTML("afterbegin",propertyHTML());return}clearInterval(heroT);if(isCEO()){$("#dash").innerHTML=ceoHome();{const f=$("#dash").firstElementChild;if(f)f.insertAdjacentHTML("afterend",newuStrip())}return}renderTeamDash();
+function renderDash(){if(!isTeam()){renderShowroom();{const h=$("#dash").firstElementChild;if(h)h.insertAdjacentHTML("afterend",bestHTML()+c3dCard())}if(myProps.length)$("#dash").insertAdjacentHTML("afterbegin",propertyHTML());return}clearInterval(heroT);if(isCEO()){$("#dash").innerHTML=ceoHome();{const f=$("#dash").firstElementChild;if(f)f.insertAdjacentHTML("afterend",newuStrip())}return}renderTeamDash();
   const myl=renderMyListings();if(myl){const r=$("#dash").children[0];if(r)r.insertAdjacentHTML("afterend",myl);else $("#dash").insertAdjacentHTML("afterbegin",myl)}
-  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+newuStrip()+unitLookupHTML()+bestHTML()+(isAdmin?weeklyPanel()+visitorsPanel():"")+myTasksHTML()+towerTodoHTML()+pushSlot()+leadsHTML()+remindersHTML())}
+  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+newuStrip()+unitLookupHTML()+bestHTML()+c3dCard()+(isAdmin?weeklyPanel()+visitorsPanel():"")+myTasksHTML()+towerTodoHTML()+pushSlot()+leadsHTML()+remindersHTML())}
 // The top achiever: first in the team ranking (online, then units), once they have a unit.
 let topPub=null;
 async function loadTop(){try{topPub=(await api("public/top")).top}catch(e){}}
