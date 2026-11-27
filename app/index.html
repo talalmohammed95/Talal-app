@@ -1457,8 +1457,10 @@ async function loadUnitTypes(){if(!SRV||!isTeam())return;let t=[];try{t=(await a
 async function loadGuide(){if(!SRV||!isTeam())return;try{GUIDE=(await api("team/guide")).rows||[]}catch(e){}}
 function unitSplit(u){const d=String(u||"").replace(/\D/g,"");if(d.length<3||d.length>5)return null;return{d,floor:+d.slice(0,-2),stack:d.slice(-2)}}
 // The brochure row for a unit: its own number first, then its stack on that floor, then its stack anywhere. Floor always comes from the number.
-function guideOf(b,tower,unit){const u=unitSplit(unit);if(!u)return null;
+function guideOf(b,tower,unit){const key=String(unit||"").toUpperCase().replace(/[^A-Z0-9]/g,""),u=unitSplit(unit);
   const inB=GUIDE.filter(r=>+r.b===+b&&(+b!==4||!tower||!r.tower||r.tower===tower));
+  const named=/[A-Z]/.test(key)&&inB.find(r=>r.unit&&r.unit.toUpperCase()===key);if(named)return Object.assign({},named,{floor:named.from??0});
+  if(!u)return null;
   const ex=inB.find(r=>r.unit===u.d);if(ex)return Object.assign({},ex,{floor:u.floor});
   const st=inB.filter(r=>!r.unit&&r.stack===u.stack),span=r=>(r.to??99)-(r.from??0),dist=r=>r.from==null&&r.to==null?1:u.floor<(r.from??-1)?r.from-u.floor:u.floor>(r.to??999)?u.floor-r.to:0;
   const best=st.map(r=>[dist(r),span(r),r]).sort((x,y)=>x[0]-y[0]||x[1]-y[1])[0];
@@ -3002,7 +3004,7 @@ const fsize=n=>n>=1e6?(n/1e6).toFixed(1)+" MB":Math.max(1,Math.round(n/1e3))+" K
 // The developer's brochures Talal sent (27 Nov 2026), built into the app.
 const BROCHURES=[["peninsula-one-brochure","Peninsula One brochure (the community)",1,"brochure",3.4],["peninsula-one-tower-brochure","Peninsula One, The Tower: brochure with all floor plans",1,"brochure",8.9],
   ["peninsula-one-floor-plan-1-bed-ta-unit-01","Peninsula One floor plan: 1 bedroom TA, unit 01 (floors 7, 12, 17, 22, 27, 32)",1,"floorplan",0.2],["peninsula-two-brochure","Peninsula Two brochure with all floor plans",2,"brochure",6.8],
-  ["peninsula-two-broker-presentation","Peninsula Two broker presentation (prices, payment plan, specifications)",2,"brochure",10.7],["peninsula-three-brochure","Peninsula Three brochure with every floor plate (floors 3 to 49)",3,"brochure",19.2],["peninsula-four-the-plaza-brochure-ru","Peninsula Four, The Plaza: brochure in Russian, with every floor plate",4,"brochure",24.4]];
+  ["peninsula-two-broker-presentation","Peninsula Two broker presentation (prices, payment plan, specifications)",2,"brochure",10.7],["peninsula-three-brochure","Peninsula Three brochure with every floor plate (floors 3 to 49)",3,"brochure",19.2],["peninsula-five-floor-plans","Peninsula Five floor plans: tower floors 1 to 36 and the Block 2 duplexes",5,"floorplan",1.4],["peninsula-four-the-plaza-brochure-ru","Peninsula Four, The Plaza: brochure in Russian, with every floor plate",4,"brochure",24.4]];
 function builtinDocs(){const out=BROCHURES.map(([f,t,b,k,mb])=>({id:"bro-"+f,builtin:true,pdf:"/docs/"+f+".pdf",title:t,building:b,kind:k,size:mb*1e6,img:"/img/plans/cover-"+f+".webp"}));
   out.push({id:"b-master-plan",builtin:true,title:"The Peninsula master plan (Peninsula Two tower and retail)",building:0,kind:"floorplan",img:"/img/plans/peninsula-master-plan.webp"});
   Object.entries(MEDIA.plan).forEach(([id,p])=>{const o=OFFERS.find(x=>x.id===id);out.push({id:"b-"+p[0],builtin:true,title:p[1].replace(/^Floor plan · /,"Floor plan: "),building:o?o.b:+id[1]||null,kind:"floorplan",beds:o?o.beds:null,img:p[0]})});
@@ -3716,7 +3718,8 @@ $("#ai-vstop").addEventListener("click",()=>aiVoiceStop(true));
 $("#ai-vcancel").addEventListener("click",()=>aiVoiceStop(false));
 
 /* ---------------- Unit guide: the brochures, by unit number ---------------- */
-function mGuide(){const box=$("#m-guide");if(!box)return;const u=$("#m-unit").value.trim(),sp=unitSplit(u);if(!sp){box.hidden=true;return}
+function mGuide(){const box=$("#m-guide");if(!box)return;const u=$("#m-unit").value.trim();let sp=unitSplit(u);
+  if(!sp&&/^[a-z]\d{2,3}$/i.test(u)){const gx=guideOf(+$("#m-bld").value,"",u);if(gx)sp={d:u.toUpperCase(),floor:gx.floor,stack:""}}if(!sp){box.hidden=true;return}
   const b=+$("#m-bld").value,g=guideOf(b,$("#m-tower").value,u);
   if(!known($("#m-floor").value)||$("#m-floor").dataset.auto)$("#m-floor").value=ordN(sp.floor),$("#m-floor").dataset.auto="1";
   if(!g||!g.type){box.hidden=false;box.innerHTML=`<span class="src">Floor ${esc(ordN(sp.floor))} from the unit number.${GUIDE.length?" This unit isn't in the brochures read so far.":""}</span>`;return}
@@ -3764,8 +3767,8 @@ function planCard(g){const t=[...g.types].join(" / ")||"Floor plan",sz=[...g.siz
     <div class="dbody"><b>${esc(t)}</b><span>${esc(BLD[g.b]+(g.tower?" · Tower "+g.tower:""))}${sz.length?" · "+esc(sz.length>1?fmt(sz[0])+"–"+fmt(sz[sz.length-1]):fmt(sz[0]))+" sq ft":""}</span>${where?`<span>${esc(where)}</span>`:""}${g.views.size?`<span>${esc([...g.views].slice(0,2).join(" / "))} view</span>`:""}
     <div class="actions"><a class="btn sm primary" href="${esc(planUrl(g))}" target="_blank" rel="noopener">Open</a><button class="btn sm" data-gplan="${esc(planUrl(g))}" data-gname="${esc((BLD[g.b]+" "+t).replace(/[^\w ]+/g,"").trim().replace(/\s+/g,"-"))}">${ic("share")}Share</button></div></div></div>`}
 function plansHTML(){if(!GUIDE.some(r=>r.img))return"";const q=String(docF.q||"").trim(),u=unitSplit(q);let l=guidePlans().filter(g=>docF.b===""||String(g.b)===docF.b);
-  if(q){if(u&&/^[\s\d-]+$/.test(q)){l=[1,2,3,4,5].filter(b=>docF.b===""||String(b)===docF.b).map(b=>{const x=guideOf(b,"",q);if(!x||!x.img)return null;
-      return{doc:x.doc,page:x.page,src:x.src,b,tower:x.tower||"",beds:x.beds,types:new Set(x.type?[x.type]:[]),stacks:new Set(),units:new Set([u.d]),sizes:new Set(x.size?[+x.size]:[]),views:new Set(x.view?[x.view]:[]),from:u.floor,to:u.floor}}).filter(Boolean)}
+  if(q){if(u&&/^[\s\d-]+$/.test(q)||/^[a-z]\d{2,3}$/i.test(q)){l=[1,2,3,4,5].filter(b=>docF.b===""||String(b)===docF.b).map(b=>{const x=guideOf(b,"",q);if(!x||!x.img)return null;
+      return{doc:x.doc,page:x.page,src:x.src,b,tower:x.tower||"",beds:x.beds,types:new Set(x.type?[x.type]:[]),stacks:new Set(),units:new Set([u?u.d:q.trim().toUpperCase()]),sizes:new Set(x.size?[+x.size]:[]),views:new Set(x.view?[x.view]:[]),from:x.floor,to:x.floor}}).filter(Boolean)}
     else{const w=q.toLowerCase();l=l.filter(g=>[BLD[g.b],g.tower?"tower "+g.tower:"",...g.types,...g.views,g.beds===0?"studio":g.beds+" bed"].join(" ").toLowerCase().includes(w))}}
   if(!l.length)return q?`<div class="dsect"><h4 class="mh">Floor plans by unit</h4><p class="src">No floor plan matches "${esc(q)}".</p></div>`:"";
   return `<div class="dsect"><h4 class="mh">Floor plans by unit · ${l.length}</h4><p class="src" style="margin:-2px 0 8px">From the developer's brochures. Type a unit number in the search to get its plan.</p><div class="dgrid">${l.map(planCard).join("")}</div></div>`}
@@ -3774,7 +3777,7 @@ document.addEventListener("click",async e=>{const b=e.target.closest("[data-gpla
 function guidePanel(){if(!SRV)return"";const n=GUIDE.length,pdfs=(docs||[]).filter(d=>d.mime==="application/pdf"&&!d.url&&d.ready!==false),unread=pdfs.filter(d=>!d.read_at),boss=isAdmin||isCEO();
   return `<div class="panel guidep"><h3>${ic("search")}Find a unit in the brochures</h3><p class="lede">Type a unit number: you get the layout, floor, size, view and floor plan from the developer's brochures.</p>
     <div class="dfil"><input id="gq" inputmode="numeric" placeholder="Unit number, e.g. 1203"><select id="gq-b"><option value="">All buildings</option>${[1,2,3,4,5].map(b=>`<option value="${b}">${BLD[b]}</option>`).join("")}</select></div><div id="gq-out"></div>
-    ${boss?`<div class="gread"><p class="src">${n?`The Peninsula One, Two, Three and Four brochures are built in${GUIDE.some(r=>!r.src)?`, plus ${new Set(GUIDE.filter(r=>!r.src).map(r=>r.doc)).size} brochure${new Set(GUIDE.filter(r=>!r.src).map(r=>r.doc)).size===1?"":"s"} read here`:""}.`:"The brochures haven't been read yet."} ${unread.length?`${unread.length} PDF${unread.length===1?"":"s"} not read yet.`:pdfs.length?"Every PDF has been read.":"Add the brochures below first."}</p>
+    ${boss?`<div class="gread"><p class="src">${n?`The brochures and floor plans for Peninsula One to Five are built in${GUIDE.some(r=>!r.src)?`, plus ${new Set(GUIDE.filter(r=>!r.src).map(r=>r.doc)).size} brochure${new Set(GUIDE.filter(r=>!r.src).map(r=>r.doc)).size===1?"":"s"} read here`:""}.`:"The brochures haven't been read yet."} ${unread.length?`${unread.length} PDF${unread.length===1?"":"s"} not read yet.`:pdfs.length?"Every PDF has been read.":"Add the brochures below first."}</p>
       <div class="actions">${unread.length?`<button class="btn primary" id="guide-read">Read the brochures (${unread.length})</button>`:""}${pdfs.length&&!unread.length?`<button class="btn" id="guide-reread">Read them all again</button>`:""}</div><p class="src" id="guide-prog" aria-live="polite"></p></div>`:""}</div>`}
 
 /* ---------------- Notifications for the team ---------------- */
