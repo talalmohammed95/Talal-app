@@ -1029,6 +1029,24 @@ const routes = {
     return { ok: true };
   },
 
+  // An agent edits a home listed under their own name. They can't move it to another agent, change whether it
+  // counts in team performance, or change its Bayut / Property Finder ticks here (those have their own switch).
+  "PUT team/offers": async c => {
+    requireTeam(c);
+    const id = str(c.body.id, 64), data = c.body.data;
+    if (!data || typeof data !== "object" || Array.isArray(data) || JSON.stringify(data).length > 64000) fail(400, "Invalid offer.");
+    const { rows: [prev] } = await q("select data from offers where id = $1", [id]);
+    if (!prev) fail(404, "Home not found.");
+    if (c.user.role !== "admin" && (!prev.data.agent || prev.data.agent !== c.user.agent_key)) fail(403, "You can edit only the homes listed under your name. Ask Talal to change this one.");
+    const keep = ["agent", "teamUnit", "online", "onlineAt", "fromListing", "src", "market"];
+    const next = { ...data };
+    for (const k of keep) { if (prev.data[k] === undefined) delete next[k]; else next[k] = prev.data[k]; }
+    await q("update offers set data = $2, updated_at = now(), updated_by = $3 where id = $1", [id, next, c.user.id]);
+    await recordHistory(id, prev.data, next, c.user.email);
+    await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `Edited their home: ${str(next.title, 120)}`]);
+    return { ok: true };
+  },
+
   "POST admin/offers/delete": async c => {
     requireAdmin(c);
     const id = str(c.body.id, 64);
@@ -1118,7 +1136,8 @@ const routes = {
 
   // Photos and floor plans: the admin uploads them already resized in the browser.
   "POST admin/media": async c => {
-    requireAdmin(c);
+    requireTeam(c);
+    await limit("media:" + c.user.id, 200, 3600);
     const mime = String(c.body.mime || "");
     if (!["image/webp", "image/jpeg", "image/png"].includes(mime)) fail(400, "Use a JPEG, PNG or WebP image.");
     const buf = Buffer.from(String(c.body.data || ""), "base64");

@@ -1599,7 +1599,7 @@ function renderDetail(){
         ${ROLE==="client"?"":`<button class="btn" id="d-copy">${ic("copy")}Copy offer text</button>
         <a class="btn" href="${wa}" target="_blank" rel="noopener">${ic("chat")}Share on WhatsApp</a>`}
         ${o.deal!=="rent"?'<button class="btn" id="d-calc">'+ic("calc")+'Open in calculator</button>':""}
-        ${o.mine&&SRV?'<button class="btn" id="d-edit">'+ic("file")+'Edit listing</button>':""}${o.mine?'<button class="btn" id="d-del">Delete listing</button>':""}
+        ${o.mine&&SRV?'<button class="btn" id="d-edit">'+ic("file")+'Edit listing</button>':""}${canEditOffer(o)?'<button class="btn primary" id="d-oedit">'+ic("file")+'Edit this home</button>':""}${o.mine?'<button class="btn" id="d-del">Delete listing</button>':""}
       </div>
       ${ownerCard(o)}${o.mine&&SRV?shareBox(o):""}
       <div class="metrics">${M}</div>
@@ -1631,7 +1631,7 @@ function renderDetail(){
   const ef=$("#e-full");if(ef)ef.onclick=()=>{show("admin");openOfferForm(o.id)};
   const dc=$("#d-calc");if(dc)dc.onclick=()=>{loadCalc(o.id);show("calc")};
   const dso=$("#d-so");if(dso)dso.onclick=()=>openSalesOffer([o.id]);
-  const de=$("#d-edit");if(de)de.onclick=()=>editListing(o.id);
+  const de=$("#d-edit");if(de)de.onclick=()=>editListing(o.id);const doe=$("#d-oedit");if(doe)doe.onclick=()=>editOfferAs(o.id);
   const dd=$("#d-del");if(dd)dd.onclick=async()=>{if(dd.dataset.armed){if(SRV){try{await api("data/listings/delete",{id:o.id});await loadListings()}catch(x){toast(x.message);return}}else{mine=mine.filter(m=>m.id!==o.id);persist()}starred.delete(o.id);saveStar();renderAll();toast("Listing deleted")}else{dd.dataset.armed=1;dd.textContent="Tap again to delete"}};
 }
 function toggleStar(id){starred.has(id)?starred.delete(id):starred.add(id);saveStar();renderList();renderShort()}
@@ -2249,7 +2249,7 @@ function persist(){store.set("orla.mine",mine);store.set("orla.clients",clients)
 async function logAct(text){if(SRV){if(uid&&isAdmin){try{await api("admin/activity",{text:String(text).slice(0,300)})}catch(e){}loadLog()}return}if(!CLOUD||!db)return;try{await db.collection("log").add({at:new Date().toISOString(),by:uid,text:String(text).slice(0,300)})}catch(e){}}
 function cleanOffer(o){const c=JSON.parse(JSON.stringify(o));delete c.id;delete c.mine;delete c.x;if(SRV){delete c.listedAt;delete c.updatedAt}return c}
 async function saveOffer(o,label){
-  if(SRV){try{await api("admin/offers",{id:o.id,data:cleanOffer(o)},"PUT")}catch(e){toast(e.message);return false}logAct(label);await loadAll();return true}
+  if(SRV){try{await api(ofAgent&&!isAdmin?"team/offers":"admin/offers",{id:o.id,data:cleanOffer(o)},"PUT")}catch(e){toast(e.message);return false}logAct(label);await loadAll();return true}
   const prevO=OFFERS.find(x=>x.id===o.id);if(!prevO&&!o.listedAt)o.listedAt=new Date().toISOString();const hist=diffHistory(o.id,prevO,o,whoAmI());
   if(CLOUD){try{await db.collection("offers").doc(o.id).set(cleanOffer(o));logAct(label)}catch(e){toast(e&&e.code==="quota_exceeded"?"Storage is full. Delete old offers first.":"Couldn't save. Only admins can change offers.");return false}}
   else{const c=Object.assign(cleanOffer(o),{id:o.id}),i=OFFERS.findIndex(x=>x.id===o.id);if(i>=0)OFFERS[i]=c;else OFFERS.push(c);store.set("orla.offers",OFFERS)}
@@ -2329,14 +2329,23 @@ $("#ad-table").addEventListener("click",e=>{const b=e.target.closest("[data-edit
 $("#ad-csv").onclick=()=>{const q=v=>{v=String(v??"");return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
   const t=[["Building","Type","Headline","Offer","Status","Price (AED)","Rent (AED / yr)","Size (sq ft)","Floor","View","Furnishing","Agent"].join(",")].concat(OFFERS.map(o=>[BLD[o.b],typeOf(o),o.title,o.deal,o.avail||"Available",o.deal!=="rent"?o.price:"",o.deal!=="sale"?o.rent:"",o.size||"",o.floor,o.view,o.furn,agentOf(o).name].map(q).join(","))).join("\n");
   const box=$("#ad-csv-text");box.hidden=false;box.value=t;copy(t,box)};
-function openOfferForm(id){const o=id?OFFERS.find(x=>x.id===id):null;$("#ad-form").reset();$("#ad-form-panel").hidden=false;$("#ad-form-title").textContent=o?"Edit offer":"Add offer";$("#o-id").value=o?o.id:"";
+// The offer editor lives in Admin; for an agent (or the admin from a home's page) it opens on its own page.
+let ofAgent=false;const ofHome={p:null,n:null};
+const canEditOffer=o=>SRV&&!o.mine&&!isCEO()&&isTeam()&&OFFERS.some(x=>x.id===o.id)&&(isAdmin||(!!o.agent&&o.agent===myKey()));
+function ofMode(agent){const pn=$("#ad-form-panel");if(!ofHome.p){ofHome.p=pn.parentNode;ofHome.n=pn.nextSibling}
+  if(agent){let v=$("#view-oedit");if(!v){$("#view-admin").insertAdjacentHTML("afterend",'<section class="view" id="view-oedit" hidden><div class="stack" id="oedit"></div></section>');v=$("#view-oedit")}$("#oedit").appendChild(pn)}
+  else if(pn.parentNode!==ofHome.p)ofHome.p.insertBefore(pn,ofHome.n);
+  ofAgent=agent;["#o-agent","#o-teamunit","#o-check"].forEach(k=>{const f=$(k)&&$(k).closest(".field");if(f)f.hidden=agent&&!isAdmin})}
+function editOfferAs(id){ofMode(true);show("oedit");openOfferForm(id,true);$("#ad-form-title").textContent="Edit your home";if(!isAdmin)$("#o-del").hidden=true;window.scrollTo(0,0)}
+function ofDone(){if(!ofAgent)return;const id=$("#o-id").value;ofMode(false);if(id){state.sel=id;store.set("orla.sel",id)}show("offers");try{renderDetail()}catch(e){}}
+function openOfferForm(id,agent){if(!agent)ofMode(false);const o=id?OFFERS.find(x=>x.id===id):null;$("#ad-form").reset();$("#ad-form-panel").hidden=false;$("#ad-form-title").textContent=o?"Edit offer":"Add offer";$("#o-id").value=o?o.id:"";
   const set=(k,v)=>{$(k).value=v??""};
   if(o){set("#o-title",o.title);set("#o-b",o.b);set("#o-beds",o.beds);set("#o-deal",o.deal);set("#o-avail",o.avail||"Available");set("#o-price",o.price?fmt(o.price):"");set("#o-rent",o.rent?fmt(o.rent):"");set("#o-size",o.size||"");set("#o-floor",o.floor);set("#o-view",o.view);set("#o-furn",o.furn);set("#o-baths",o.baths);set("#o-status",o.status);set("#o-cheques",o.cheques);set("#o-deposit",o.deposit);if(AGENTS[o.agent])set("#o-agent",o.agent);set("#o-irent",o.inv&&o.inv.rent?fmt(o.inv.rent):"");set("#o-hl",o.hl);set("#o-check",(o.check||[]).join("\n"));set("#o-unit",o.unit);$("#o-teamunit").checked=!!o.teamUnit;set("#o-owner",o.owner);set("#o-ophone",o.ownerPhone)}
   phLoad(o);
   const d=$("#o-del");d.hidden=!o;delete d.dataset.armed;d.textContent="Delete offer";
   setTimeout(()=>{$("#ad-form-panel").scrollIntoView({behavior:"smooth",block:"start"})},30)}
 $("#ad-add").onclick=()=>openOfferForm(null);
-$("#o-cancel").onclick=()=>{$("#ad-form-panel").hidden=true};
+$("#o-cancel").onclick=()=>{$("#ad-form-panel").hidden=true;ofDone()};
 $("#ad-form").addEventListener("submit",async e=>{e.preventDefault();const g=k=>$(k).value.trim(),n=k=>parseFloat(g(k).replace(/[^0-9.]/g,""))||0;
   const id=g("#o-id"),base=id?(OFFERS.find(x=>x.id===id)||{}):{},deal=g("#o-deal");
   if(!g("#o-title")){toast("Enter a headline");$("#o-title").focus();return}
@@ -2346,7 +2355,7 @@ $("#ad-form").addEventListener("submit",async e=>{e.preventDefault();const g=k=>
   const ir=n("#o-irent");o.inv=ir?Object.assign({},base.inv||{},{rent:ir}):(base.inv&&base.inv.resale?{resale:base.inv.resale}:null);
   const ch=g("#o-check").split("\n").map(x=>x.trim()).filter(Boolean);o.check=ch.length?ch:null;
   o.unit=g("#o-unit")||null;o.teamUnit=$("#o-teamunit").checked||undefined;o.owner=g("#o-owner")||null;o.ownerPhone=g("#o-ophone")||null;if(phDraft.photos)o.photos=phDraft.photos;else delete o.photos;if(phDraft.plan)o.plan=phDraft.plan;else delete o.plan;
-  if(await saveOffer(o,(id?"Edited ":"Added ")+BLD[o.b]+" · "+o.title)){$("#ad-form-panel").hidden=true;toast(id?"Offer saved":"Offer added")}});
+  if(await saveOffer(o,(id?"Edited ":"Added ")+BLD[o.b]+" · "+o.title)){$("#ad-form-panel").hidden=true;toast(id?"Saved for everyone":"Offer added");ofDone()}});
 $("#o-del").onclick=async()=>{const d=$("#o-del"),id=$("#o-id").value,o=OFFERS.find(x=>x.id===id);if(!o)return;if(!d.dataset.armed){d.dataset.armed=1;d.textContent="Tap again to delete";return}if(await removeOffer(id,"Deleted "+BLD[o.b]+" · "+o.title)){$("#ad-form-panel").hidden=true;toast("Offer deleted")}};
 async function renderLog(){if(!(CLOUD||SRV)||!isAdmin)return;const ids=[...new Set(logRows.map(r=>r.by).filter(Boolean))];let ps={};try{ps=ids.length&&uapi?await uapi.profiles(ids):{}}catch(e){}
   $("#ad-log").innerHTML=logRows.length?'<tr><th>When</th><th>Who</th><th>Change</th></tr>'+logRows.map(r=>`<tr><td>${esc(new Date(r.at).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}))}</td><td>${esc(r.who||(ps[r.by]&&ps[r.by].name)||"Someone")}</td><td style="white-space:normal;min-width:260px">${esc(r.text)}</td></tr>`).join(""):'<tr><td>No changes yet.</td></tr>'}
@@ -2496,7 +2505,7 @@ const TEAM_VIEWS=["visitors","review","train","chat","assist","analysis","report
 function setRole(r){ROLE=r;document.body.dataset.role=r;document.body.classList.toggle("guest",!isTeam());
   document.querySelectorAll('.tab[data-view="offers"] > span:not(.count)').forEach(s=>s.textContent=isTeam()?"Offers":"Homes");
   const fb=$("#find-btn span");if(fb)fb.textContent=isTeam()?"New request":"Find my home";
-  PAGES.offers=isTeam()?["building","Offers","Browse, filter, compare and present every unit"]:["building","Homes","Every available home, with photos, floor plans and full costs"];
+  PAGES.oedit=["file","Edit your home","Change the price, rent, status, photos and details. Everyone sees the change straight away."];PAGES.offers=isTeam()?["building","Offers","Browse, filter, compare and present every unit"]:["building","Homes","Every available home, with photos, floor plans and full costs"];
   PAGES.dash=isTeam()?["home","Dashboard",""]:["home","Welcome",""]}
 
 /* ---------------- Photo gallery and full-screen viewer ---------------- */
