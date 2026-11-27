@@ -153,6 +153,8 @@ After that, the website never says "on request" for the floor, view, size or flo
 - **Find a unit in the brochures** (top of Brochures & plans) shows the layout, floor, size, view and plan for any unit number.
 - The AI assistant uses it when an agent types a unit number.
 
+**Built in: Select Group's brochures for Peninsula One, Two and Four** (sent by Talal, 27 Nov 2026). They're in Brochures & plans as PDFs to open, download or share (in `app/docs`, public files but not linked anywhere outside the team pages), with the Peninsula master plan. Every floor plan in them is a picture in `app/img/plans` and every unit type is in `lib/brochure-units.js` (by stack and floors: layout, total size with balcony, view, floor plan). Peninsula One and Two have a plan per unit type with sizes; Peninsula Four has a plan per floor plate (both towers) with views but no sizes. So an agent who types a Peninsula One, Two or Four unit number gets the layout, size, view and floor plan straight away, without reading anything. Peninsula Three and Five fill in once their brochures are added and read. To regenerate after a new brochure: the scripts are in the session notes (`genplans.py`).
+
 **Floor plans by unit** (Brochures & plans): every floor plan page the AI found in the brochures, one card per plan, with the layout, building and tower, size, the units or stacks and floors it covers, and the view. Open it full size or share it on WhatsApp. The building buttons filter them, and typing a unit number in the search shows that unit's own plan.
 
 A detail nobody has is simply left out instead of saying "on request". Clients still see a floor band and no unit numbers, and they get the floor plan through the agent.

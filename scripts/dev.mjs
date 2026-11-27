@@ -8,7 +8,7 @@ import { extname, join, normalize } from "node:path";
 if (!process.env.SMTP_HOST && !process.env.MAIL_LOG_FILE) process.env.MAIL_LOG_FILE = "dev-mail.log";
 const { default: api } = await import("../api/index.js");
 const port = Number(process.env.PORT || 3000);
-const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".json": "application/json", ".webmanifest": "application/manifest+json", ".png": "image/png", ".svg": "image/svg+xml", ".webp": "image/webp", ".jpg": "image/jpeg" };
+const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".json": "application/json", ".webmanifest": "application/manifest+json", ".png": "image/png", ".svg": "image/svg+xml", ".webp": "image/webp", ".jpg": "image/jpeg", ".pdf": "application/pdf" };
 
 http.createServer(async (req, res) => {
   if (req.url.startsWith("/api/")) return api(req, res);
