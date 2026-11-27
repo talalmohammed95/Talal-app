@@ -903,6 +903,21 @@ body.guest .tab[data-view="chat"]{display:none!important}
 .mguide .uplan{margin-top:4px}
 body.visitor .acct{background:var(--primary);border-color:var(--primary);color:#fff;padding:4px 16px}body.visitor .acct img{display:none}body.visitor .acct span{display:inline!important;font-weight:800}
 body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-toggle{display:none}}
+.suncard{border:1.5px solid var(--line);border-radius:16px;background:var(--bg);padding:14px;margin:12px 0;display:flex;flex-direction:column;gap:10px}
+.sunh{display:flex;flex-direction:column;gap:2px}.sunh b{display:flex;align-items:center;gap:6px;font-size:17px}.sunh b .ic{width:20px;height:20px;color:#E8901F}.sunh span{color:var(--muted);font-size:14px}
+.sunviz{display:flex;gap:16px;align-items:center;flex-wrap:wrap}.suncomp{width:210px;max-width:100%;flex:none;margin:0 auto}
+.sunring{fill:var(--surface);stroke:var(--line);stroke-width:1.5}.sunring2{fill:none;stroke:var(--line);stroke-dasharray:3 4}.sunwin{fill:rgba(37,125,224,.16);stroke:rgba(37,125,224,.55);stroke-width:1}
+.sunpath{fill:none;stroke:#E8901F;stroke-width:3;stroke-linecap:round}.sundot{fill:#FFC53D;stroke:#E8901F;stroke-width:2}.sunrise{fill:#FFC53D}.sunset{fill:#E0592A}
+.sundir{font:800 12px var(--display,inherit);fill:var(--muted)}.sunlbl{font:700 10px var(--body,inherit);fill:var(--muted)}.sunpoi path{stroke:var(--fg);stroke-width:2}.sunpoi text{font:700 10px var(--body,inherit);fill:var(--fg)}
+.suncw{flex:none;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:4px}.sunkey{margin:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center;font-size:12.5px;color:var(--muted);font-weight:600}
+.suncw{max-width:100%}.sunkey{gap:4px 14px}.sunkey span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}.sunkey i{display:inline-block;width:14px;height:10px;border-radius:3px}.sunkey .k1{background:#E8901F;height:4px}.sunkey .k2{background:rgba(37,125,224,.25);border:1px solid rgba(37,125,224,.6)}
+.sunctl{flex:1;min-width:230px;display:flex;flex-direction:column;gap:10px}.sunstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.sunstats div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column}
+.sunstats span{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}.sunstats b{font-size:18px}
+.sunmonths{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}.sunmonths button{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:9px;padding:7px 0;font:700 13px inherit;cursor:pointer;min-height:36px}
+.sunmonths button[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:#fff}
+.sunslide{display:flex;flex-direction:column;gap:4px;font-size:14px;font-weight:700}.sunslide input{width:100%;accent-color:#E8901F;min-height:32px}
+.sunfacts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}.sunfacts li{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}.sunfacts span{color:var(--muted);font-size:14px}
+.sunlinks{display:flex;gap:8px;flex-wrap:wrap}
 #reg{position:fixed;inset:0;z-index:87;background:rgba(15,12,10,.38);display:flex;align-items:flex-end;justify-content:center;padding:12px 12px max(12px,env(safe-area-inset-bottom,0px))}#reg[hidden]{display:none}
 @media(min-width:760px){#reg{align-items:center}}
 .regcard{position:relative;width:min(520px,100%);max-height:calc(100vh - 24px);overflow:auto;background:var(--surface);border-radius:24px;padding:22px;display:flex;flex-direction:column;gap:8px;box-shadow:0 24px 70px rgba(0,0,0,.35);animation:regup .28s ease-out}
@@ -1608,6 +1623,61 @@ function offerText(o){
   return t;
 }
 let lastViewed="";
+/* ---------------- Sun & views ---------------- */
+// The Peninsula, Business Bay (approximate). The sun's position comes from the standard solar formulas, for Dubai time.
+const PEN_LOC={lat:25.1857,lng:55.2776},DXB_TZ="Asia/Dubai",RAD=Math.PI/180;
+function sunAt(date,lat=PEN_LOC.lat,lng=PEN_LOC.lng){const d=date/864e5-0.5+2440588-2451545,e=RAD*23.4397,M=RAD*(357.5291+0.98560028*d);
+  const L=M+RAD*(1.9148*Math.sin(M)+0.02*Math.sin(2*M)+0.0003*Math.sin(3*M))+RAD*102.9372+Math.PI;
+  const dec=Math.asin(Math.sin(e)*Math.sin(L)),ra=Math.atan2(Math.sin(L)*Math.cos(e),Math.cos(L)),phi=RAD*lat,H=RAD*(280.16+360.9856235*d)-RAD*-lng-ra;
+  const az=Math.atan2(Math.sin(H),Math.cos(H)*Math.sin(phi)-Math.tan(dec)*Math.cos(phi)),alt=Math.asin(Math.sin(phi)*Math.sin(dec)+Math.cos(phi)*Math.cos(dec)*Math.cos(H));
+  return{az:(az/RAD+180+360)%360,alt:alt/RAD}}
+// Dubai is UTC+4 all year.
+const dxbDay=(y,m,d)=>Date.UTC(y,m,d)-4*3600e3;
+const dxbTime=t=>new Date(t).toLocaleTimeString("en-GB",{timeZone:DXB_TZ,hour:"2-digit",minute:"2-digit"});
+function sunDay(t0){const pts=[];let rise=null,set=null,prev=null;for(let m=0;m<=1440;m+=4){const t=t0+m*6e4,p=sunAt(t);if(prev){if(prev.alt<-0.833&&p.alt>=-0.833)rise={t,az:p.az};if(prev.alt>=-0.833&&p.alt<-0.833)set={t,az:p.az}}pts.push(Object.assign({t},p));prev=p}return{pts,rise,set}}
+// Which way the windows face, from the view (the Peninsula's plans: Burj Khalifa to the north, the canal to the south, the skyline to the west).
+function facingOf(view){const v=String(view||"").toLowerCase(),f=[];
+  if(/burj/.test(v))f.push({b:350,t:"Burj Khalifa side (north)"});if(/canal|water/.test(v))f.push({b:175,t:"Canal side (south)"});
+  if(/skyline|city/.test(v)&&!/burj/.test(v))f.push({b:290,t:"Skyline side (west)"});if(/park/.test(v))f.push({b:120,t:"Park side (east)"});return f}
+const angDiff=(a,b)=>Math.abs(((a-b+540)%360)-180);
+function sunHours(t0,b){let n=0;for(let m=0;m<1440;m+=10){const p=sunAt(t0+m*6e4);if(p.alt>4&&angDiff(p.az,b)<75)n+=10}return n/60}
+const SUN={};
+function sunCard(o){const f=facingOf(o.view),now=new Date(),dx=new Date(now.getTime()+4*3600e3),st=SUN[o.id]||(SUN[o.id]={m:dx.getUTCMonth(),h:sunAt(now.getTime()).alt>3?dx.getUTCHours():16});
+  return `<div class="suncard" data-sun="${esc(o.id)}"><div class="sunh"><b>${ic("sun")}Sun & views</b><span>${f.length?esc(f.map(x=>x.t).join(" · ")):"Sunrise, sunset and the sun's path at the Peninsula"}</span></div><div class="sunbody">${sunInner(o,st,f)}</div>
+    <div class="sunlinks"><a class="btn sm" target="_blank" rel="noopener" href="https://app.shadowmap.org/?lat=${PEN_LOC.lat}&lng=${PEN_LOC.lng}&zoom=17&time=${sunWhen(st)}">${ic("globe")}Sun and shadows in 3D</a><a class="btn sm" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((BLD[o.b]||"The Peninsula")+" Business Bay Dubai")}">${ic("pin")}Map and 360° street view</a></div>
+    <p class="src">Worked out from the sun's position over Business Bay${f.length?" and the view in the brochure":""}. Directions are approximate, and neighbouring towers can shade lower floors: the 3D view shows the shadows.</p></div>`}
+function sunWhen(st){const y=new Date().getUTCFullYear();return dxbDay(y,st.m,21)+st.h*3600e3}
+function sunInner(o,st,f){const y=new Date().getUTCFullYear(),t0=dxbDay(y,st.m,21),day=sunDay(t0),at=sunAt(t0+st.h*3600e3),mn=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const R=88,C=100,xy=(az,alt)=>{const r=R*(1-Math.max(0,alt)/90);return[C+r*Math.sin(az*RAD),C-r*Math.cos(az*RAD)]};
+  const path=day.pts.filter(p=>p.alt>0).map((p,i)=>(i?"L":"M")+xy(p.az,p.alt).map(v=>v.toFixed(1)).join(" ")).join("");
+  const wedge=b=>{const a0=(b-60)*RAD,a1=(b+60)*RAD;return `<path class="sunwin" d="M${C} ${C}L${(C+R*Math.sin(a0)).toFixed(1)} ${(C-R*Math.cos(a0)).toFixed(1)}A${R} ${R} 0 0 1 ${(C+R*Math.sin(a1)).toFixed(1)} ${(C-R*Math.cos(a1)).toFixed(1)}Z"/>`};
+  const mark=(az,cls,t)=>{const[x,y2]=xy(az,0);return `<circle class="${cls}" cx="${x.toFixed(1)}" cy="${y2.toFixed(1)}" r="5"/><text class="sunlbl" x="${(C+(R+10)*Math.sin(az*RAD)).toFixed(1)}" y="${(C-(R+10)*Math.cos(az*RAD)+4).toFixed(1)}" text-anchor="middle">${t}</text>`};
+  const [sx,sy]=xy(at.az,at.alt),up=at.alt>0;
+  const svg=`<svg class="suncomp" viewBox="-14 -14 228 228" role="img" aria-label="Sun path on ${mn[st.m]} 21 over the Peninsula${f.length?", with the direction the windows face":""}">
+    <circle cx="${C}" cy="${C}" r="${R}" class="sunring"/><circle cx="${C}" cy="${C}" r="${R/2}" class="sunring2"/>${f.map(x=>wedge(x.b)).join("")}
+    <text class="sundir" x="${C}" y="${C-R-4}" text-anchor="middle">N</text><text class="sundir" x="${C+R+8}" y="${C+4}" text-anchor="middle">E</text><text class="sundir" x="${C}" y="${C+R+13}" text-anchor="middle">S</text><text class="sundir" x="${C-R-8}" y="${C+4}" text-anchor="middle">W</text>
+    <path d="${path}" class="sunpath"/>${day.rise?mark(day.rise.az,"sunrise",""):""}${day.set?mark(day.set.az,"sunset",""):""}
+    <g class="sunpoi"><path d="M${xy(346,0)[0]-0} ${xy(346,0)[1]+4}l0 -16" /><text x="${(xy(346,0)[0]+4).toFixed(1)}" y="${(xy(346,0)[1]+14).toFixed(1)}">Burj</text></g>
+    ${up?`<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="9" class="sundot"/>`:""}</svg>`;
+  const hrs=b=>{const s=sunHours(dxbDay(y,5,21),b),w=sunHours(dxbDay(y,11,21),b);return[s,w]};
+  const fh=v=>v<0.25?"almost none":v<1?"under an hour":"about "+Math.round(v)+" h";
+  const sees=(az,b)=>angDiff(az,b)<70;
+  const facts=f.map(x=>{const[s2,w]=hrs(x.b),sum=sunDay(dxbDay(y,5,21)),win=sunDay(dxbDay(y,11,21));
+    const rs=[sum.rise&&sees(sum.rise.az,x.b)||win.rise&&sees(win.rise.az,x.b)?"sunrise":"",sum.set&&sees(sum.set.az,x.b)||win.set&&sees(win.set.az,x.b)?"sunset":""].filter(Boolean);
+    return `<li><b>${esc(x.t)}</b><span>Direct sun: ${fh(s2)} a day in summer, ${fh(w)} in winter.${rs.length?" You see the "+rs.join(" and the ")+" from here"+(rs.length===1&&s2<1?" in part of the year":"")+".":" Soft, indirect light: cooler in summer."}</span></li>`}).join("");
+  const dl=day.rise&&day.set?Math.round((day.set.t-day.rise.t)/6e4):0;
+  return `<div class="sunviz"><div class="suncw">${svg}<p class="sunkey"><span><i class="k1"></i>Sun's path on the 21st</span>${f.length?'<span><i class="k2"></i>Where the windows face</span>':""}</p></div><div class="sunctl"><div class="sunstats"><div><span>Sunrise</span><b>${day.rise?dxbTime(day.rise.t):"—"}</b></div><div><span>Sunset</span><b>${day.set?dxbTime(day.set.t):"—"}</b></div><div><span>Daylight</span><b>${Math.floor(dl/60)}h ${dl%60}m</b></div></div>
+      <div class="sunmonths" role="group" aria-label="Month">${mn.map((m,i)=>`<button type="button" data-sun-m="${i}" aria-pressed="${i===st.m}">${m}</button>`).join("")}</div>
+      <label class="sunslide"><span>${String(st.h).padStart(2,"0")}:00 · ${up?"sun "+Math.round(at.alt)+"° up, "+compass(at.az):"after dark"}</span><input type="range" min="5" max="20" step="1" value="${st.h}" data-sun-h aria-label="Time of day"></label></div></div>
+    ${facts?`<ul class="sunfacts">${facts}</ul>`:""}`}
+const compass=a=>["north","north-east","east","south-east","south","south-west","west","north-west"][Math.round(a/45)%8];
+function sunRedraw(card,hourOnly){const id=card.dataset.sun,o=all().find(x=>x.id===id);if(!o)return;const st=SUN[id],html=sunInner(o,st,facingOf(o.view));
+  // While the time slider is dragged, only the drawing and its label change, so the slider keeps working.
+  if(hourOnly){const t=document.createElement("div");t.innerHTML=html;card.querySelector(".suncomp").replaceWith(t.querySelector(".suncomp"));card.querySelector(".sunslide span").textContent=t.querySelector(".sunslide span").textContent}
+  else card.querySelector(".sunbody").innerHTML=html;
+  const a=card.querySelector('.sunlinks a');if(a)a.href=a.href.replace(/time=\d+/,"time="+sunWhen(st))}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-sun-m]");if(!b)return;const c=b.closest("[data-sun]");SUN[c.dataset.sun].m=+b.dataset.sunM;sunRedraw(c)});
+document.addEventListener("input",e=>{const r=e.target.closest("[data-sun-h]");if(!r)return;const c=r.closest("[data-sun]");SUN[c.dataset.sun].h=+r.value;sunRedraw(c,true)});
 function renderDetail(){
   const o=all().find(x=>x.id===state.sel),el=$("#detail");if(o&&o.id!==lastViewed&&window.orlaTrack&&!$("#view-offers").hidden){lastViewed=o.id;orlaTrack({offer:o.id});regNudge("view")}
   if(!o){el.innerHTML='<div class="empty">Pick an offer to see its details.</div>';return}
@@ -1655,6 +1725,7 @@ function renderDetail(){
       ${isTeam()?towerBar(o):""}
       ${galleryHTML(o)}
       ${isTeam()?planBlock((()=>{const p=planOf(o);return p&&p.t==="f"?{u:imgSrc(p.k),c:p.c,type:p.c.replace(/^Floor plan · /,"").split(" · ")[0],mark:p.mark}:null})(),o.unit,o.id):""}
+      ${sunCard(o)}
       ${isTeam()?"":askBox(o)}
       <div class="actions">
         ${canEditOffer(o)?'<button class="btn" id="d-oedit">'+ic("pen")+'Edit this home</button>':""}
@@ -2449,7 +2520,7 @@ async function enterVisitor(){VISITOR=true;uid=null;profile=null;isAdmin=false;m
   try{const [o,st]=await Promise.all([api("public/offers"),api("public/settings").catch(()=>({}))]);OFFERS=(o.offers||[]).map(r=>Object.assign({},r));store.set("orla.cache.pub",OFFERS);applySettings((st&&st.settings)||{})}
   catch(e){OFFERS=store.get("orla.cache.pub",[]);applySettings({})}
   await loadTop();try{await loadDealMkt()}catch(e){}
-  $("#signout").hidden=true;startApp();unlock();regArm(45000)}
+  $("#signout").hidden=true;startApp();unlock();regArm(90000)}
 const ssGet=k=>{try{return sessionStorage.getItem(k)}catch(e){return null}},ssSet=(k,v)=>{try{sessionStorage.setItem(k,v)}catch(e){}};
 function regBusy(){return["#book","#wiz","#lightbox","#newu","#present"].some(k=>{const e=$(k);return e&&!e.hidden&&getComputedStyle(e).display!=="none"})||!$("#gate").hidden}
 function regArm(ms){clearTimeout(regT);if(!VISITOR)return;regT=setTimeout(()=>regAuto("time"),ms)}
@@ -2457,7 +2528,7 @@ function regArm(ms){clearTimeout(regT);if(!VISITOR)return;regT=setTimeout(()=>re
 function regAuto(why){if(!VISITOR)return;const n=+(ssGet("orla.reg.n")||0),last=+(ssGet("orla.reg.at")||0);
   if(n>=2||Date.now()-last<180000){if(n<2)regArm(180000-(Date.now()-last)+500);return}
   if(regBusy()){regArm(15000);return}ssSet("orla.reg.n",String(n+1));ssSet("orla.reg.at",String(Date.now()));regOpen(why)}
-function regNudge(why){if(!VISITOR)return;if(why==="view"){regViews++;if(regViews===3)setTimeout(()=>regAuto("view"),1500)}else setTimeout(()=>regAuto(why),600)}
+function regNudge(why){if(!VISITOR)return;if(why==="view"){regViews++;if(regViews===4)setTimeout(()=>regAuto("view"),1500)}else setTimeout(()=>regAuto(why),600)}
 function regOpen(why){let el=$("#reg");
   if(!el){document.body.insertAdjacentHTML("beforeend",'<div id="reg" role="dialog" aria-modal="true" aria-labelledby="reg-t" hidden><div class="regcard"></div></div>');el=$("#reg");
     el.addEventListener("click",e=>{const t=e.target;if(t===el||t.closest("[data-reg-x]")){regClose();regArm(180000);return}
@@ -2582,11 +2653,12 @@ async function bootServer(){OFFERS=[];applySettings({});startApp();setAuthGate("
   const wantSignup=qs.get("signup")==="1",as=qs.get("as");if(wantSignup||as||qs.get("find"))history.replaceState(null,"",location.pathname);
   if(qs.get("find")==="1")try{sessionStorage.removeItem("orla.wiz")}catch(e){}
   if(as){const r=document.querySelector(`input[name="g-role"][value="${as==="team"?"agent":as==="agent"?"broker":as}"]`);if(r)r.checked=true}
-  const home=qs.get("home"),find=qs.get("find")==="1";if(home)history.replaceState(null,"",location.pathname);
+  const home=qs.get("home"),find=qs.get("find")==="1",homes=qs.get("homes")==="1";if(home||homes)history.replaceState(null,"",location.pathname);
   await enterServer();if((wantSignup||as)&&!uid){setAuthGate("signup");return}
   // From the public website: a home opens straight on its page; "Get 3 options" opens the questions.
   if(home&&all().some(o=>o.id===home)){state.sel=home;store.set("orla.sel",home);show("offers");try{renderDetail()}catch(x){}setTimeout(()=>{const t=document.querySelector("#detail");if(t)t.scrollIntoView({block:"start"})},250)}
-  else if(find&&VISITOR)setTimeout(openWizard,400)}
+  else if(find&&VISITOR)setTimeout(openWizard,400);
+  else if(homes)show("offers")}
 
 /* ---------------- Photos, floor plans and who is signed in ---------------- */
 const IMGMAP=CFG.imgMap||null,IMGDIR=String(CFG.img||"/img").replace(/\/+$/,"");

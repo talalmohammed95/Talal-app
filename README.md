@@ -134,11 +134,24 @@ On a home listed under their name, an agent taps **Edit this home** and gets the
 ## New on the team
 When an agent adds a unit (in My units, or an offer under their name), everyone else on the team sees it first thing the next time they open the website: a pop-up with the agent's photo, the type, building, floor, size, view and price, an **Open** button when it's shared as an offer, and **Message Giulia** (WhatsApp) to say they may have a client. It comes before the welcome screen and the pace message, and shows only units added since they last saw it. Home keeps a **New on the team this week** list. Teammates see the floor (from the unit number if none is written), never the unit number or the owner; the admin, the CEO and the agent who added it see the unit number.
 
+## Sun & views (every home)
+
+Every home's page has a **Sun & views** card, for everyone including visitors:
+- **The compass:** the sun's path over the Peninsula on the 21st of the chosen month, sunrise and sunset points, the Burj Khalifa direction, and a blue wedge for where the windows face.
+- **Today's figures:** sunrise, sunset and hours of daylight, in Dubai time.
+- **Month buttons and a time slider** to move the sun through the year and the day.
+- **For each side the home faces:** roughly how many hours of direct sun its windows get in summer and in winter, and whether you see the sunrise or the sunset.
+- **Two links:** "Sun and shadows in 3D" opens Shadowmap at the Peninsula for that month and time. "Map and 360° street view" opens Google Maps.
+
+The sun is worked out in the app from the standard solar formulas (21 June: 05:30 to 19:13; 21 December: 07:00 to 17:35). The window directions come from the view in the brochure: on the Peninsula's plans, Burj Khalifa is to the north, the canal to the south and the skyline to the west. They're approximate, and the card says so. The Peninsula's map position is `PEN_LOC` in the app (25.1857, 55.2776, approximate). Check it against Google Maps and correct it if the 3D view opens off the buildings.
+
+**Public website language:** one dropdown (globe, EN ▾) on every screen size, instead of the row of language codes. The sliding "this site in your language" hint is off. "Browse homes" at the top opens the homes list in the app directly.
+
 ## Open entry: look first, register later
 
 Anyone who opens the website goes straight in and can browse the homes: Home, Homes, Find my home (the 4 questions) and the shortlist on their device. There's no sign-in wall. They see what the public website shows: starting prices, floor bands, no unit numbers or owners.
 
-- **The registration box** comes later, as a friendly box from the bottom of the screen. It shows after 45 seconds of browsing, or when the visitor opens a third home, or after their first star on a home. The visitor picks: buying or renting (client), an agent at another agency, or on the Orla team. "I already have an account" signs in, and "Not now, keep browsing" closes the box. It shows at most twice a visit, at least 3 minutes apart, and never over another window. The **Sign up** button at the top opens it at any time.
+- **The registration box** comes later, as a friendly box from the bottom of the screen. It shows after 90 seconds of browsing, or when the visitor opens a fourth home, or after their first star on a home. The visitor picks: buying or renting (client), an agent at another agency, or on the Orla team. "I already have an account" signs in, and "Not now, keep browsing" closes the box. It shows at most twice a visit, at least 3 minutes apart, and never over another window. The **Sign up** button at the top opens it at any time.
 - **Signing up is short**: name, mobile, email and one password. Clients are in straight away (after confirming their email when email is on). External agents and Orla agents still wait for the admin's approval. The sign-up page has "Just look at the homes" to go back.
 - **Visitors can still reach the agent**: WhatsApp buttons work. Booking a viewing asks for a name and mobile, and the request reaches the agent and the admin like any other (marked as a visitor in Requests).
 - **From the public website**: tapping a home opens it straight on its page in the app, and "Get 3 options" opens the questions.
