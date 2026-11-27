@@ -189,7 +189,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
     <span class="eyebrow anim"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5"/></svg>Business Bay · Dubai Canal</span>
     <h1 class="anim d1">Waterfront living, <em>seven minutes</em> from Downtown.</h1>
     <p class="lead anim d2">The Peninsula is a five-building waterfront community by Select Group on the Dubai Canal, with resort pools, a canal promenade and Burj Khalifa on your skyline.</p>
-    <div class="cta anim d3"><a class="btn primary big" href="#homes"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16M15 9h3a2 2 0 0 1 2 2v10M3 21h18M8 7h3M8 11h3M8 15h3"/></svg>View available homes</a><a class="btn big glass" href="/app/?signup=1&as=client&find=1"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z"/></svg>Find my home in 4 questions</a></div>
+    <div class="cta anim d3"><a class="btn primary big" href="#homes"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16M15 9h3a2 2 0 0 1 2 2v10M3 21h18M8 7h3M8 11h3M8 15h3"/></svg>View available homes</a><a class="btn big glass" href="/app/?find=1"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z"/></svg>Find my home in 4 questions</a></div>
   </div>
 </section>
 
@@ -203,9 +203,9 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
 <section class="s alt" id="homes" hidden><div class="wrap">
   <p class="kicker">Available now</p>
   <h2>Homes for sale and rent</h2>
-  <p class="sub">A selection of what's available today. Register to see every home with floor plans, full costs and market data.</p>
+  <p class="sub">A selection of what's available today. Tap any home to see it in full. No sign-up needed to look around.</p>
   <div class="hgrid" id="hgrid"></div>
-  <div class="cta" style="margin-top:26px"><a class="btn primary big" href="/app/?signup=1&as=client"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M15 7a4 4 0 1 1-3.5 6L4 20.5V17h3v-3h3l1.5-1.5A4 4 0 0 1 15 7zM17 9h.01"/></svg>See all homes</a><a class="btn big" href="/app/?signup=1&as=client&find=1"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z"/></svg>Get 3 options picked for you</a></div>
+  <div class="cta" style="margin-top:26px"><a class="btn primary big" href="/app/?find=1"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M15 7a4 4 0 1 1-3.5 6L4 20.5V17h3v-3h3l1.5-1.5A4 4 0 0 1 15 7zM17 9h.01"/></svg>See all homes</a><a class="btn big" href="/app/?find=1"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z"/></svg>Get 3 options picked for you</a></div>
 </div></section>
 
 <section class="s" id="buildings"><div class="wrap">
@@ -298,7 +298,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
   fetch("/api/public/offers").then(function(r){return r.ok?r.json():null}).then(function(d){if(!d||!d.offers||!d.offers.length)return;
     var l=d.offers.slice().sort(function(a,b){return (M.real.indexOf(b.id)>=0)-(M.real.indexOf(a.id)>=0)||(M.plan.indexOf(b.id)>=0)-(M.plan.indexOf(a.id)>=0)}).slice(0,6);
     document.getElementById("hgrid").innerHTML=l.map(function(o){var k=(o.photos&&o.photos[0]&&(o.photos[0].u||o.photos[0].k))||M.offer[o.id]||M.bld[o.b];var src=/^\/api\//.test(k)?k:"/img/"+k+"-s.webp";
-      return '<a class="hcard" href="/app/?signup=1&as=client"><div class="hph"><img loading="lazy" src="'+e(src)+'" alt=""><span class="d'+(o.deal==="rent"?" rent":"")+'">'+(o.deal==="rent"?"For rent":o.deal==="both"?"Sale or rent":"For sale")+'</span>'+(M.real.indexOf(o.id)>=0?'<span class="r">Real photos</span>':"")+(M.plan.indexOf(o.id)>=0||o.plan?'<span class="f">Floor plan</span>':"")+'</div><div class="hb"><b>'+(o.startingPrice?"From ":"")+'AED '+(o.deal==="rent"?sh(o.rent)+" / yr":sh(o.price))+'</b><h3>'+T[o.beds]+' · Peninsula '+N[o.b]+'</h3><p>'+(o.size?Number(o.size).toLocaleString("en-US")+" sq ft":"")+(o.view&&o.view!=="On request"?" · "+e(o.view):"")+(o.moreCount?" · +"+o.moreCount+" more on request":"")+'</p></div></a>'}).join("");
+      return '<a class="hcard" href="/app/?home='+encodeURIComponent(o.id)+'"><div class="hph"><img loading="lazy" src="'+e(src)+'" alt=""><span class="d'+(o.deal==="rent"?" rent":"")+'">'+(o.deal==="rent"?"For rent":o.deal==="both"?"Sale or rent":"For sale")+'</span>'+(M.real.indexOf(o.id)>=0?'<span class="r">Real photos</span>':"")+(M.plan.indexOf(o.id)>=0||o.plan?'<span class="f">Floor plan</span>':"")+'</div><div class="hb"><b>'+(o.startingPrice?"From ":"")+'AED '+(o.deal==="rent"?sh(o.rent)+" / yr":sh(o.price))+'</b><h3>'+T[o.beds]+' · Peninsula '+N[o.b]+'</h3><p>'+(o.size?Number(o.size).toLocaleString("en-US")+" sq ft":"")+(o.view&&o.view!=="On request"?" · "+e(o.view):"")+(o.moreCount?" · +"+o.moreCount+" more on request":"")+'</p></div></a>'}).join("");
     document.getElementById("homes").hidden=false}).catch(function(){});
   if(!("IntersectionObserver" in window)||reduce){document.querySelectorAll(".reveal").forEach(function(el){el.classList.add("in")});return}
   var io=new IntersectionObserver(function(es){es.forEach(function(e){if(!e.isIntersecting)return;e.target.classList.add("in");io.unobserve(e.target);

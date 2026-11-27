@@ -134,7 +134,7 @@ function forRole(data, user) {
   delete d.plan; d.planOnRequest = true;
   return hideFloor(d);
 }
-const PUBLIC_FIELDS = ["b", "beds", "layout", "deal", "title", "price", "rent", "size", "floor", "view", "furn", "baths", "status", "avail", "hl", "photos", "plan", "balcony", "cheques", "startingPrice", "moreCount"];
+const PUBLIC_FIELDS = ["b", "beds", "layout", "deal", "title", "price", "rent", "size", "floor", "view", "furn", "baths", "status", "avail", "hl", "photos", "plan", "balcony", "cheques", "startingPrice", "moreCount", "agent"];
 
 // Clients see one home per agent, building, bedrooms, layout and deal: the lowest price, shown as a starting price ("from AED X").
 // The others stay with the agent, so the client gets in touch for them. The team and external agents see every home.
@@ -321,7 +321,7 @@ const routes = {
       ({ rows: [user] } = await q(
         `insert into users (email, name, pass_hash, role, status, email_verified, company, phone)
          values ($1, $2, $3, $4, $5, $6, $7, $8) returning *`,
-        [email, name, await hashPassword(password), isAdmin ? "admin" : role, isAdmin ? "active" : "pending", !emailOn, company, phone]));
+        [email, name, await hashPassword(password), isAdmin ? "admin" : role, isAdmin || role === "client" ? "active" : "pending", !emailOn, company, phone]));
     } catch (e) {
       if (e.code === "23505" && /only_one_admin/.test(e.constraint || "")) fail(409, "The admin account already exists.", "admin_exists");
       if (e.code === "23505") fail(409, "An account with this email already exists. Sign in instead.", "exists");
@@ -949,7 +949,7 @@ const routes = {
     requireStaff(c);
     const admin = seesAll(c.user);
     const { rows } = await q(
-      `select l.id, l.at, l.offer_id, l.agent_key, l.kind, l.title, l.done, l.day, l.slot, l.note, u.name, u.email, coalesce(nullif(l.phone, ''), u.phone) as phone, u.role, u.company
+      `select l.id, l.at, l.offer_id, l.agent_key, l.kind, l.title, l.done, l.day, l.slot, l.note, coalesce(u.name, l.name) as name, u.email, coalesce(nullif(l.phone, ''), u.phone) as phone, coalesce(u.role, 'visitor') as role, u.company
        from leads l left join users u on u.id = l.user_id
        ${admin ? "" : "where l.agent_key = $1"} order by l.done, l.at desc limit 200`, admin ? [] : [c.user.agent_key || "-"]);
     return { leads: rows };
@@ -1236,6 +1236,32 @@ const routes = {
     const { rows } = await q("select id, data from offers order by id");
     c.cache = "public, max-age=60, s-maxage=60";
     return { offers: startingPrices(rows.filter(r => !["Sold", "Rented"].includes(r.data.avail) && !r.data.teamOnly)).map(r => ({ id: r.id, ...forPublic(r.data) })) };
+  },
+
+  // The agents' names and phones and the purchase fees, for visitors browsing without an account.
+  "GET public/settings": async c => {
+    const { rows: [s] } = await q("select data from settings where id = 'app'");
+    const d = s?.data || {}, agents = {};
+    for (const [k, a] of Object.entries(d.agents || {})) agents[k] = { name: str(a.name, 80), phone: str(a.phone, 30), ...(a.photo ? { photo: str(a.photo, 300) } : {}) };
+    c.cache = "public, max-age=300, s-maxage=300";
+    return { settings: { agents, fees: d.fees || {} } };
+  },
+
+  // A visitor without an account books a viewing or asks about a home: name and mobile go to the agent and the admin.
+  "POST public/lead": async c => {
+    await limit("publead:" + c.ip, 8, 3600);
+    const id = str(c.body.offerId, 64), name = str(c.body.name, 100), phone = str(c.body.phone, 30).replace(/[^\d+ ]/g, "");
+    if (!name) fail(400, "Enter your name.", "no_name");
+    if (phone.replace(/\D/g, "").length < 7) fail(400, "Add your mobile number so the agent can confirm.", "no_phone");
+    const { rows: [o] } = await q("select data from offers where id = $1", [id]);
+    if (!o || o.data.teamOnly) fail(404, "Home not found.");
+    const kind = c.body.kind === "viewing" ? "viewing" : "details";
+    const day = /^\d{4}-\d{2}-\d{2}$/.test(String(c.body.day || "")) ? c.body.day : "", slot = str(c.body.slot, 40), note = str(c.body.note, 500);
+    const dayTxt = day ? new Date(day + "T12:00:00Z").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }) : "";
+    const { rows: [lead] } = await q("insert into leads (user_id, offer_id, agent_key, kind, title, day, slot, note, phone, name) values (null, $1, $2, $3, $4, $5, $6, $7, $8, $9) returning id, kind",
+      [id, str(o.data.agent, 40), kind, str(o.data.title, 200), dayTxt || null, slot || null, note || null, phone, name]);
+    try { await notifyLead({ lead: { ...lead, day: dayTxt, slot, note }, person: { name, phone, email: "", role: "client" }, offer: o.data, appUrl: appUrl(c.req) }); } catch (e) { console.error("notify", e); }
+    return { ok: true };
   },
 
   // Photos and floor plans: the admin uploads them already resized in the browser.

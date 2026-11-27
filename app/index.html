@@ -901,6 +901,17 @@ body.guest .tab[data-view="chat"]{display:none!important}
 .uplan-h{display:flex;flex-direction:column;gap:2px}.uplan-h b{display:flex;align-items:center;gap:6px;font-size:16px}.uplan-h b .ic{width:18px;height:18px;color:var(--primary)}.uplan-h span{color:var(--muted);font-size:14px}
 .uplan-i{display:block;background:#fff;border-radius:12px;overflow:hidden;border:1px solid var(--line)}.uplan-i img{display:block;width:100%;max-height:420px;object-fit:contain;background:#fff}
 .mguide .uplan{margin-top:4px}
+body.visitor .acct{background:var(--primary);border-color:var(--primary);color:#fff;padding:4px 16px}body.visitor .acct img{display:none}body.visitor .acct span{display:inline!important;font-weight:800}
+body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-toggle{display:none}}
+#reg{position:fixed;inset:0;z-index:87;background:rgba(15,12,10,.38);display:flex;align-items:flex-end;justify-content:center;padding:12px 12px max(12px,env(safe-area-inset-bottom,0px))}#reg[hidden]{display:none}
+@media(min-width:760px){#reg{align-items:center}}
+.regcard{position:relative;width:min(520px,100%);max-height:calc(100vh - 24px);overflow:auto;background:var(--surface);border-radius:24px;padding:22px;display:flex;flex-direction:column;gap:8px;box-shadow:0 24px 70px rgba(0,0,0,.35);animation:regup .28s ease-out}
+@keyframes regup{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}@media(prefers-reduced-motion:reduce){.regcard{animation:none}}
+.regcard h2{margin:0;padding-right:40px}.regcard .kick{margin:0}.regcard .lede{margin:0 0 4px}
+.regpick{display:flex;flex-direction:column;gap:8px}.regpick button{display:flex;align-items:center;gap:12px;text-align:left;width:100%;padding:14px;border-radius:16px;border:1.5px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer;font:inherit;min-height:64px}
+.regpick button:hover,.regpick button:focus-visible{border-color:var(--primary)}.regpick button>.ic:first-child{width:26px;height:26px;color:var(--primary);flex:none}.regpick button>.ic:last-child{width:18px;height:18px;color:var(--muted);flex:none;margin-left:auto}
+.regpick span{display:flex;flex-direction:column;gap:2px;min-width:0}.regpick b{font-size:16px}.regpick small{color:var(--muted);font-size:14px}
+.regfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px}.regfoot>button:first-child{background:none;border:0;color:var(--primary);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer;padding:8px 0}
 .card .p i.from,.hp i.from{display:block;font:700 11px var(--body,inherit);font-style:normal;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}.hp i.from{display:inline;font-size:12px}
 .pill.more{background:var(--accent-soft);color:var(--accent-ink);font-weight:700}
 .askbox.more{background:var(--bg);border-style:dashed;margin-bottom:10px}
@@ -1598,7 +1609,7 @@ function offerText(o){
 }
 let lastViewed="";
 function renderDetail(){
-  const o=all().find(x=>x.id===state.sel),el=$("#detail");if(o&&o.id!==lastViewed&&window.orlaTrack&&!$("#view-offers").hidden){lastViewed=o.id;orlaTrack({offer:o.id})}
+  const o=all().find(x=>x.id===state.sel),el=$("#detail");if(o&&o.id!==lastViewed&&window.orlaTrack&&!$("#view-offers").hidden){lastViewed=o.id;orlaTrack({offer:o.id});regNudge("view")}
   if(!o){el.innerHTML='<div class="empty">Pick an offer to see its details.</div>';return}
   store.set("orla.sel",o.id);
   const p=priceLine(o),a=agentOf(o),x=o.x,dep=parseFloat(o.deposit||"5")/100;
@@ -1688,7 +1699,7 @@ function renderDetail(){
   const de=$("#d-edit");if(de)de.onclick=()=>editListing(o.listingId||o.id);const doe=$("#d-oedit");if(doe)doe.onclick=()=>editOfferAs(o.id);
   const dd=$("#d-del");if(dd)dd.onclick=async()=>{if(dd.dataset.armed){if(SRV){try{await api("data/listings/delete",{id:o.id});await loadListings()}catch(x){toast(x.message);return}}else{mine=mine.filter(m=>m.id!==o.id);persist()}starred.delete(o.id);saveStar();renderAll();toast("Listing deleted")}else{dd.dataset.armed=1;dd.textContent="Tap again to delete"}};
 }
-function toggleStar(id){starred.has(id)?starred.delete(id):starred.add(id);saveStar();renderList();renderShort()}
+function toggleStar(id){const add=!starred.has(id);add?starred.add(id):starred.delete(id);saveStar();renderList();renderShort();if(add)regNudge("star")}
 function saveStar(){persist();$("#cnt-short").textContent=starred.size}
 
 /* ---------------- Shortlist ---------------- */
@@ -2263,13 +2274,14 @@ const PAGES={dash:["home","Dashboard",""],offers:["building","Offers","Browse, f
 function setPageHead(v){const p=PAGES[v]||PAGES.dash,h=new Date().getHours(),first=hello();
   const sub=v==="dash"?(first?`Good ${h<12?"morning":h<18?"afternoon":"evening"}, ${first}. Here's your portfolio today.`:"Your portfolio at a glance"):p[2];
   $("#pagehead").innerHTML=`<div class="phi">${ic(p[0])}</div><div><h1>${esc(p[1])}</h1><p>${esc(sub)}</p></div>`}
-function updateAcct(){const n=(meInfo&&meInfo.name)||(CLOUD?"Account":"Admin");const top=isTeam()&&topAgent()&&topAgent().key===myKey();$("#acct-name").textContent=firstName(n,profile&&profile.role)+(top?" ★":"");$("#acct-btn").classList.toggle("top",!!top);
+function updateAcct(){if(VISITOR){$("#acct-name").textContent="Sign up";$("#acct-btn").classList.remove("top");$("#acct-img").src=initialsAvatar("+");$("#menu-site").hidden=CLOUD;$("#gate-back").hidden=CLOUD;return}
+  const n=(meInfo&&meInfo.name)||(CLOUD?"Account":"Admin");const top=isTeam()&&topAgent()&&topAgent().key===myKey();$("#acct-name").textContent=firstName(n,profile&&profile.role)+(top?" ★":"");$("#acct-btn").classList.toggle("top",!!top);
   $("#acct-img").src=myPhoto()||(meInfo&&meInfo.avatarUrl)||initialsAvatar(n);$("#menu-site").hidden=CLOUD;$("#gate-back").hidden=CLOUD}
 function closeMenus(){$("#tmore-pop").hidden=true;$("#tmore-btn").setAttribute("aria-expanded","false");$("#acct-menu").hidden=true;$("#acct-btn").setAttribute("aria-expanded","false");$("#more-sheet").hidden=true}
 $("#tmore-btn").onclick=e=>{e.stopPropagation();const p=$("#tmore-pop"),open=p.hidden;closeMenus();p.hidden=!open;$("#tmore-btn").setAttribute("aria-expanded",String(open))};
 $("#tmore-pop").addEventListener("click",e=>{e.stopPropagation();if(e.target.closest(".tab"))setTimeout(closeMenus,0)});
 document.addEventListener("click",e=>{if(!$("#tmore-pop").hidden&&!e.target.closest(".tabmore"))closeMenus()});
-$("#acct-btn").onclick=e=>{e.stopPropagation();const m=$("#acct-menu"),open=m.hidden;closeMenus();m.hidden=!open;$("#acct-btn").setAttribute("aria-expanded",String(open))};
+$("#acct-btn").onclick=e=>{e.stopPropagation();if(VISITOR){regOpen("menu");return}const m=$("#acct-menu"),open=m.hidden;closeMenus();m.hidden=!open;$("#acct-btn").setAttribute("aria-expanded",String(open))};
 $("#acct-menu").addEventListener("click",e=>{if(e.target.closest(".mitem"))setTimeout(closeMenus,0);e.stopPropagation()});
 document.addEventListener("click",e=>{if(!$("#acct-menu").hidden&&!e.target.closest("#acct-menu"))closeMenus()});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeMenus()});
@@ -2430,6 +2442,42 @@ async function api(path,body,method){let r;
   if(!r.ok){const x=new Error(j.error||"Something went wrong. Try again.");x.status=r.status;x.code=j.code;throw x}
   return j}
 const here=()=>location.origin+location.pathname;
+// Visitors: anyone can open the website and look at the homes straight away, without an account.
+// After a while (or after a few homes, or a star) a friendly box offers a free account: client, external agent or Orla team.
+let VISITOR=false,regT=null,regViews=0;
+async function enterVisitor(){VISITOR=true;uid=null;profile=null;isAdmin=false;meInfo=null;setRole("client");document.body.classList.add("visitor");
+  try{const [o,st]=await Promise.all([api("public/offers"),api("public/settings").catch(()=>({}))]);OFFERS=(o.offers||[]).map(r=>Object.assign({},r));store.set("orla.cache.pub",OFFERS);applySettings((st&&st.settings)||{})}
+  catch(e){OFFERS=store.get("orla.cache.pub",[]);applySettings({})}
+  await loadTop();try{await loadDealMkt()}catch(e){}
+  $("#signout").hidden=true;startApp();unlock();regArm(45000)}
+const ssGet=k=>{try{return sessionStorage.getItem(k)}catch(e){return null}},ssSet=(k,v)=>{try{sessionStorage.setItem(k,v)}catch(e){}};
+function regBusy(){return["#book","#wiz","#lightbox","#newu","#present"].some(k=>{const e=$(k);return e&&!e.hidden&&getComputedStyle(e).display!=="none"})||!$("#gate").hidden}
+function regArm(ms){clearTimeout(regT);if(!VISITOR)return;regT=setTimeout(()=>regAuto("time"),ms)}
+// Shown by itself at most twice a visit, at least 3 minutes apart, and never over another window.
+function regAuto(why){if(!VISITOR)return;const n=+(ssGet("orla.reg.n")||0),last=+(ssGet("orla.reg.at")||0);
+  if(n>=2||Date.now()-last<180000){if(n<2)regArm(180000-(Date.now()-last)+500);return}
+  if(regBusy()){regArm(15000);return}ssSet("orla.reg.n",String(n+1));ssSet("orla.reg.at",String(Date.now()));regOpen(why)}
+function regNudge(why){if(!VISITOR)return;if(why==="view"){regViews++;if(regViews===3)setTimeout(()=>regAuto("view"),1500)}else setTimeout(()=>regAuto(why),600)}
+function regOpen(why){let el=$("#reg");
+  if(!el){document.body.insertAdjacentHTML("beforeend",'<div id="reg" role="dialog" aria-modal="true" aria-labelledby="reg-t" hidden><div class="regcard"></div></div>');el=$("#reg");
+    el.addEventListener("click",e=>{const t=e.target;if(t===el||t.closest("[data-reg-x]")){regClose();regArm(180000);return}
+      const b=t.closest("[data-reg]");if(!b)return;const r=b.dataset.reg;regClose();
+      if(r==="signin"){setAuthGate("signin");return}const radio=document.querySelector(`input[name="g-role"][value="${r}"]`);if(radio){radio.checked=true}setAuthGate("signup");try{$("#g-company-wrap").hidden=roleVal()!=="broker"}catch(x){}});
+    document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#reg")&&!$("#reg").hidden){regClose();regArm(180000)}})}
+  const T={time:["Welcome to the Peninsula","Like what you see? A free account lets you book viewings, keep your shortlist on any device and hear about new homes first."],
+    view:["Want the full details?","Create a free account to book viewings in a tap and get the floor plans and exact floors from our agents."],
+    star:["Keep your shortlist","Create a free account and your saved homes are waiting on your phone and computer."],
+    menu:["Join the Peninsula","Free, and it takes 30 seconds. Tell us who you are."]}[why]||["Join the Peninsula",""];
+  el.querySelector(".regcard").innerHTML=`<button class="pcx" data-reg-x aria-label="Close">${ic("x")}</button>
+    <p class="kick">Free · 30 seconds</p><h2 id="reg-t">${esc(T[0])}</h2><p class="lede">${esc(T[1])}</p>
+    <div class="regpick">
+      <button type="button" data-reg="client">${ic("home")}<span><b>I'm looking to buy or rent</b><small>Viewings, floor plans and new homes first</small></span>${ic("arrowr")}</button>
+      <button type="button" data-reg="broker">${ic("users")}<span><b>I'm an agent at another agency</b><small>See every home and share it with your clients</small></span>${ic("arrowr")}</button>
+      <button type="button" data-reg="agent">${ic("star")}<span><b>I'm on the Orla Properties team</b><small>Your listings, owners and tools</small></span>${ic("arrowr")}</button>
+    </div>
+    <div class="regfoot"><button type="button" data-reg="signin">I already have an account</button><button type="button" class="btn" data-reg-x>Not now, keep browsing</button></div>`;
+  el.hidden=false;setTimeout(()=>{const f=el.querySelector('[data-reg="client"]');if(f)f.focus()},60)}
+function regClose(){const el=$("#reg");if(el)el.hidden=true}
 const roleVal=()=>(document.querySelector('input[name="g-role"]:checked')||{}).value||"client";
 function authFields(show){["g-role","g-name","g-company","g-phone","g-email","g-pass","g-pass2"].forEach(k=>{$("#"+k+"-wrap").hidden=!show.includes(k)});if(show.includes("g-role"))$("#g-company-wrap").hidden=roleVal()!=="broker"}
 document.querySelectorAll('input[name="g-role"]').forEach(r=>r.addEventListener("change",()=>{$("#g-company-wrap").hidden=roleVal()!=="broker"}));
@@ -2439,7 +2487,7 @@ function setAuthGate(mode,email){closePresent();$("#gate").hidden=false;authMode
   {const si=mode==="signin",f=$("#g-email");f.type=si?"text":"email";f.setAttribute("inputmode",si?"text":"email");f.setAttribute("autocomplete",si?"username":"email");$("#g-email-l").textContent=si?"Email or mobile number":"Email"}
   const T={loading:["Sign in","Connecting…"],offline:["Can't connect","The server can't be reached. Check your internet connection and open the app again."],
     signin:["Sign in","Use your email, or the mobile number your agent invited you with, and your password."],
-    signup:["Create your account",emailOn?"Tell us who you are and register with your email. We'll send you a link to confirm it, then Orla Properties approves your account.":"Tell us who you are and register with your email. Orla Properties approves your account before you can open the app."],
+    signup:["Create your free account",emailOn?"Tell us who you are. We'll send a link to confirm your email. Clients are in straight away; agents are approved by Orla Properties.":"Tell us who you are. Clients are in straight away; agents are approved by Orla Properties."],
     forgot:["Reset your password","Enter your email and we'll send you a link to set a new password."],
     "forgot-nomail":["Reset your password","Ask the admin for a password reset link. They can make one for you in Admin › Users."],
     reset:["Set a new password","Choose a new password of at least 8 characters."],
@@ -2447,7 +2495,7 @@ function setAuthGate(mode,email){closePresent();$("#gate").hidden=false;authMode
     "sent-reset":["Check your email","If an account exists for "+(email||"that email")+", we've sent a link to set a new password. It works for 1 hour."],
     pending:["Waiting for approval","Your account "+(email?"("+email+") ":"")+"is registered. The admin needs to approve it before you can open the app. Check back later."]}[mode];
   $("#gate-title").textContent=T[0];$("#gate-msg").textContent=T[1];$("#gate-msg").hidden=false;
-  const f={signin:["g-email","g-pass"],signup:["g-role","g-name","g-company","g-phone","g-email","g-pass","g-pass2"],forgot:["g-email"],reset:["g-pass","g-pass2"]}[mode]||[];
+  const f={signin:["g-email","g-pass"],signup:["g-role","g-name","g-company","g-phone","g-email","g-pass"],forgot:["g-email"],reset:["g-pass","g-pass2"]}[mode]||[];
   authFields(f);$("#gate-pin-wrap").hidden=true;$("#gate-pin2-wrap").hidden=true;$("#gate-who").hidden=true;
   $("#gate-form").hidden=!f.length;$("#gate-go").hidden=false;
   $("#gate-go").textContent={signin:"Sign in",signup:"Create account",forgot:"Send reset link",reset:"Save new password"}[mode]||"";
@@ -2455,18 +2503,20 @@ function setAuthGate(mode,email){closePresent();$("#gate").hidden=false;authMode
   $("#g-pass").setAttribute("autocomplete",mode==="signin"?"current-password":"new-password");
   $("#gate-err").textContent="";$("#g-pass").value="";$("#g-pass2").value="";if(email)$("#g-email").value=email;
   const back=[["signin","Back to sign in"]];
-  const L={signin:[["signup","Create an account"],[emailOn?"forgot":"forgot-nomail","Forgot password?"]],signup:[["signin","I already have an account"]],forgot:back,"forgot-nomail":back,sent:back,"sent-reset":back,pending:[["recheck","Check again"],["signout","Sign out"]]}[mode]||[];
+  const browse=SRV&&!uid?[["browse","Just look at the homes"]]:[];
+  const L={signin:[["signup","Create an account"],[emailOn?"forgot":"forgot-nomail","Forgot password?"],...browse],signup:[["signin","I already have an account"],...browse],forgot:back,"forgot-nomail":back,sent:[...back,...browse],"sent-reset":back,pending:[["recheck","Check again"],["browse","Look at the homes meanwhile"],["signout","Sign out"]]}[mode]||[];
   $("#g-links").innerHTML=L.map(([m,t])=>`<button type="button" data-auth="${m}">${t}</button>`).join("");
   if(f[0])setTimeout(()=>{try{$("#"+f[0]).focus()}catch(e){}},60)}
 $("#g-links").addEventListener("click",async e=>{const b=e.target.closest("[data-auth]");if(!b)return;const m=b.dataset.auth;
   if(m==="signout"){try{await api("auth/logout",{})}catch(x){}setAuthGate("signin");return}
   if(m==="recheck"){b.disabled=true;await enterServer();b.disabled=false;return}
+  if(m==="browse"){if(VISITOR&&OFFERS.length)unlock();else{uid=null;await enterVisitor()}return}
   setAuthGate(m,$("#g-email").value.trim())});
 async function authSubmit(){const err=$("#gate-err"),go=$("#gate-go"),em=$("#g-email").value.trim().toLowerCase(),pw=$("#g-pass").value;err.textContent="";
   const need=(c,m)=>{if(!c)throw new Error(m)};go.disabled=true;
   try{
     if(authMode==="signin"){need(/^\S+@\S+\.\S+$/.test(em)||em.replace(/[^0-9]/g,"").length>=7,"Enter your email or mobile number.");need(pw,"Enter your password.");const r=await api("auth/login",{email:em,password:pw});await enterServer(r.user)}
-    else if(authMode==="signup"){const nm=$("#g-name").value.trim();need(nm,"Enter your full name.");need(/^\S+@\S+\.\S+$/.test(em),"Enter a valid email address.");need(pw.length>=8,"Use at least 8 characters for your password.");need(pw===$("#g-pass2").value,"The two passwords don't match.");
+    else if(authMode==="signup"){const nm=$("#g-name").value.trim();need(nm,"Enter your full name.");need(/^\S+@\S+\.\S+$/.test(em),"Enter a valid email address.");need(pw.length>=8,"Use at least 8 characters for your password.");
       const role=roleVal(),co=$("#g-company").value.trim();need(role!=="broker"||co,"Enter the name of your agency.");
       const r=await api("auth/register",{name:nm,email:em,password:pw,role,company:co,phone:$("#g-phone").value.trim()});if(r.needsVerification)setAuthGate("sent",em);else await enterServer(r.user)}
     else if(authMode==="forgot"){need(/^\S+@\S+\.\S+$/.test(em),"Enter your email address.");await api("auth/forgot",{email:em});setAuthGate("sent-reset",em)}
@@ -2512,9 +2562,10 @@ $("#signout").onclick=async()=>{try{await api("auth/logout",{})}catch(e){}["orla
 async function enterServer(u){if(entering)return;entering=true;
   try{
     if(!u){try{u=(await api("auth/me")).user}
-      catch(e){if(e.status===401){setAuthGate("signin");return}const c=store.get("orla.cache.profile",null);if(e.offline&&c)u=c;else{setAuthGate(e.offline?"offline":"signin");if(!e.offline)$("#gate-err").textContent=e.message;return}}}
+      catch(e){if(e.status===401){await enterVisitor();return}const c=store.get("orla.cache.profile",null);if(e.offline&&c)u=c;else{setAuthGate(e.offline?"offline":"signin");if(!e.offline)$("#gate-err").textContent=e.message;return}}}
     if(u.status==="pending"){try{localStorage.removeItem("orla.cache.profile")}catch(x){}setAuthGate("pending",u.email);return}
     if(u.status!=="active"){try{localStorage.removeItem("orla.cache.profile")}catch(x){}setAuthGate("signin");$("#gate-err").textContent="This account doesn't have access. Contact the admin.";return}
+    VISITOR=false;clearTimeout(regT);regClose();document.body.classList.remove("visitor");
     store.set("orla.cache.profile",u);uid=u.id;profile=u;isAdmin=u.role==="admin";setRole(u.role==="admin"?"admin":u.role==="agent"?"team":u.role==="ceo"?"ceo":u.role==="broker"?"broker":"client");meInfo={name:u.name||u.email,avatarUrl:u.role==="ceo"?CEO_IMG:u.agentKey&&MEDIA.agent[u.agentKey]?agentPhotoOf(u.agentKey):initialsAvatar(u.name||u.email)};
     await loadAll(true);
     $("#signout").hidden=false;startApp();if(isAdmin)loadUsers();
@@ -2531,7 +2582,11 @@ async function bootServer(){OFFERS=[];applySettings({});startApp();setAuthGate("
   const wantSignup=qs.get("signup")==="1",as=qs.get("as");if(wantSignup||as||qs.get("find"))history.replaceState(null,"",location.pathname);
   if(qs.get("find")==="1")try{sessionStorage.removeItem("orla.wiz")}catch(e){}
   if(as){const r=document.querySelector(`input[name="g-role"][value="${as==="team"?"agent":as==="agent"?"broker":as}"]`);if(r)r.checked=true}
-  await enterServer();if((wantSignup||as)&&!uid)setAuthGate("signup")}
+  const home=qs.get("home"),find=qs.get("find")==="1";if(home)history.replaceState(null,"",location.pathname);
+  await enterServer();if((wantSignup||as)&&!uid){setAuthGate("signup");return}
+  // From the public website: a home opens straight on its page; "Get 3 options" opens the questions.
+  if(home&&all().some(o=>o.id===home)){state.sel=home;store.set("orla.sel",home);show("offers");try{renderDetail()}catch(x){}setTimeout(()=>{const t=document.querySelector("#detail");if(t)t.scrollIntoView({block:"start"})},250)}
+  else if(find&&VISITOR)setTimeout(openWizard,400)}
 
 /* ---------------- Photos, floor plans and who is signed in ---------------- */
 const IMGMAP=CFG.imgMap||null,IMGDIR=String(CFG.img||"/img").replace(/\/+$/,"");
@@ -2980,21 +3035,24 @@ function bookOpen(id){const o=all().find(x=>x.id===id);if(!o)return;const a=agen
     <div class="bkagent"><img src="${esc(agentPhotoOf(o.agent,a.name))}" alt=""><span>With <b>${esc(a.name)}</b>, Orla Properties</span></div>
     <h4 class="mh">Which day?</h4><div class="bkrow">${days.map((d,i)=>`<button type="button" class="bkchip" data-bk-day="${d.v}" aria-pressed="${i===1}"><b>${d.t}</b><span>${d.n}</span></button>`).join("")}</div>
     <h4 class="mh">What time suits you?</h4><div class="bkrow slots">${BOOK_SLOTS.map(([k,t])=>`<button type="button" class="bkchip" data-bk-slot="${k}" aria-pressed="false"><b>${k}</b><span>${t}</span></button>`).join("")}</div>
-    <div class="fgrid" style="margin-top:12px"><div class="field wide"><label for="bk-phone">Your mobile (WhatsApp)</label><input id="bk-phone" inputmode="tel" autocomplete="tel" value="${esc(ph)}" placeholder="+971 50 123 4567"></div>
+    <div class="fgrid" style="margin-top:12px">${uid?"":`<div class="field wide"><label for="bk-name">Your name</label><input id="bk-name" autocomplete="name" placeholder="First and last name"></div>`}<div class="field wide"><label for="bk-phone">Your mobile (WhatsApp)</label><input id="bk-phone" inputmode="tel" autocomplete="tel" value="${esc(ph)}" placeholder="+971 50 123 4567"></div>
     <div class="field wide"><label for="bk-note">Anything we should know? (optional)</label><textarea id="bk-note" rows="2" maxlength="500" placeholder="e.g. I'm moving in March, I'd like to see the view at sunset"></textarea></div></div>
     <p class="src" id="bk-err" role="alert"></p>
     <div class="actions"><button class="btn primary big" type="button" data-bk-send>${ic("calendar")}Send my request</button><button class="btn" type="button" data-bk-close>Cancel</button></div>`;
   el.hidden=false;document.body.classList.add("lbopen")}
 function bookSend(){const o=all().find(x=>x.id===book.id),el=$("#book");if(!o||book.sent)return;const ph=$("#bk-phone").value.trim(),note=$("#bk-note").value.trim(),err=$("#bk-err");
   if(!book.slot){err.textContent="Choose a time of day.";return}if(ph.replace(/\D/g,"").length<7){err.textContent="Add your mobile number so the agent can confirm.";$("#bk-phone").focus();return}
+  const nm=$("#bk-name")?$("#bk-name").value.trim():"";if(!uid&&!nm){err.textContent="Add your name so the agent knows who's coming.";$("#bk-name").focus();return}
   book.sent=true;const d=bookDays().find(x=>x.v===book.day),when=(d?d.t+" "+d.n:book.day)+", "+book.slot.toLowerCase(),a=agentOf(o);
-  try{fetch(API+"/data/lead",{method:"POST",keepalive:true,credentials:"same-origin",headers:{"Content-Type":"application/json","X-Orla":"1"},body:JSON.stringify({offerId:o.id,kind:"viewing",day:book.day,slot:book.slot,phone:ph,note})})}catch(x){}
+  if(!uid)try{fetch(API+"/public/lead",{method:"POST",keepalive:true,credentials:"same-origin",headers:{"Content-Type":"application/json","X-Orla":"1"},body:JSON.stringify({offerId:o.id,kind:"viewing",day:book.day,slot:book.slot,phone:ph,note,name:nm})})}catch(x){}
+  else try{fetch(API+"/data/lead",{method:"POST",keepalive:true,credentials:"same-origin",headers:{"Content-Type":"application/json","X-Orla":"1"},body:JSON.stringify({offerId:o.id,kind:"viewing",day:book.day,slot:book.slot,phone:ph,note})})}catch(x){}
   if(profile&&!profile.phone)profile.phone=ph;
   if(a.phone)window.open(waTo(a.phone,leadMsg(o,"viewing")+"\n\nPreferred time: "+when+(note?"\n"+note:"")),"_blank","noopener");
   el.querySelector(".pccard").innerHTML=`<button class="pcx" data-bk-close aria-label="Close">${ic("x")}</button><div class="bkdone">${ic("check")}</div><h2>Request sent</h2>
     <p class="lede">${esc(firstName(a.name))} has your request for <b>${esc(when)}</b> and will confirm the time with you on WhatsApp${a.phone?". Send the WhatsApp message that just opened, so it reaches them straight away":""}.</p>
     <div class="actions"><button class="btn primary" type="button" data-bk-close>Done</button></div>`}
 document.addEventListener("click",e=>{const a=e.target.closest("[data-lead]");if(!a||!SRV||isTeam())return;
+  if(!uid){setTimeout(()=>toast("Opening WhatsApp with "+String(agentOf(all().find(o=>o.id===a.dataset.offer)||{}).name||"the agent").split(" ")[0]),300);return}
   try{fetch(API+"/data/lead",{method:"POST",keepalive:true,credentials:"same-origin",headers:{"Content-Type":"application/json","X-Orla":"1"},body:JSON.stringify({offerId:a.dataset.offer,kind:a.dataset.lead})})}catch(x){}
   setTimeout(()=>toast(a.dataset.lead==="more"?"Request sent to "+String(agentOf(all().find(o=>o.id===a.dataset.offer)||{}).name||"the agent").split(" ")[0]+". Send the WhatsApp message and you'll get the full list.":a.dataset.lead==="viewing"?"Request sent to "+String(agentOf(all().find(o=>o.id===a.dataset.offer)||{}).name||"the agent").split(" ")[0]+". Send the WhatsApp message to confirm.":"Request sent. The agent will share the full details."),300)},true);
 
@@ -3969,7 +4027,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-nu-open]")
 
 /* ---------------- Start-up ---------------- */
 function startApp(){if(!SRV)setRole(isAdmin?"admin":"team");updateAcct();const ch=$("#userchip");
-  if(meInfo){ch.innerHTML=`<img alt="" src="${esc(myPhoto()||meInfo.avatarUrl)}"><span></span>`;ch.querySelector("span").textContent=(meInfo.name||"You")+" · "+ROLE_LABEL[ROLE]}else ch.textContent="Admin · this device";
+  if(meInfo){ch.innerHTML=`<img alt="" src="${esc(myPhoto()||meInfo.avatarUrl)}"><span></span>`;ch.querySelector("span").textContent=(meInfo.name||"You")+" · "+ROLE_LABEL[ROLE]}else ch.textContent=VISITOR?"Browsing as a guest":"Admin · this device";
   syncFilters();renderAll();renderMarket();const first=OFFERS.find(o=>o.deal!=="rent"&&o.price);if(first&&!pick.value)loadCalc(first.id);else calc();show(store.get("orla.tab","dash"))}
 async function boot(){
   if(SRV){bootServer();return}
