@@ -901,6 +901,9 @@ body.guest .tab[data-view="chat"]{display:none!important}
 .uplan-h{display:flex;flex-direction:column;gap:2px}.uplan-h b{display:flex;align-items:center;gap:6px;font-size:16px}.uplan-h b .ic{width:18px;height:18px;color:var(--primary)}.uplan-h span{color:var(--muted);font-size:14px}
 .uplan-i{display:block;background:#fff;border-radius:12px;overflow:hidden;border:1px solid var(--line)}.uplan-i img{display:block;width:100%;max-height:420px;object-fit:contain;background:#fff}
 .mguide .uplan{margin-top:4px}
+.card .p i.from,.hp i.from{display:block;font:700 11px var(--body,inherit);font-style:normal;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}.hp i.from{display:inline;font-size:12px}
+.pill.more{background:var(--accent-soft);color:var(--accent-ink);font-weight:700}
+.askbox.more{background:var(--bg);border-style:dashed;margin-bottom:10px}
 .mkhint{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--ink)}.mkhint i{width:14px;height:11px;border:2.5px solid #FFD000;background:rgba(255,214,0,.3);border-radius:2px;box-shadow:0 0 0 1px rgba(40,30,0,.4)}
 .ceohead h2{line-height:1.12}.ceohead+.th-top{margin-top:12px}
 .ulp .dfil{display:flex;gap:8px;flex-wrap:wrap}#ul-q,#ul-b,#gq,#gq-b{border-radius:12px;border:1.5px solid var(--line-strong);background:var(--bg);color:var(--fg);padding:10px 12px;font:inherit;font-size:16px}#ul-q:focus,#gq:focus{outline:none;border-color:var(--primary)}#ul-b,#gq-b{max-width:46%}
@@ -1517,10 +1520,13 @@ const all=()=>{const live=new Set(OFFERS.map(o=>o.id));
 const agentOf=o=>AGENTS[o.agent]||Object.values(AGENTS)[0]||{name:"Orla Properties",phone:""};
 const dldLabel=()=>"DLD registration ("+(+(FEES.dld*100).toFixed(2))+"%)";
 const keyPrice=o=>o.deal==="rent"?o.rent:o.price;
+// A client sees one home per agent and type at its lowest price ("From AED X"); the agent shares the others.
+const fromW=o=>o&&o.startingPrice&&!isTeam()?"From ":"";
+const moreTxt=o=>{const n=+o.moreCount||0;return n?`${n} more ${o.beds===0?"studio"+(n>1?"s":""):(o.layout?typeOf(o).toLowerCase():o.beds+" bedroom"+(n>1?" homes":" home"))}`:""};
 function priceLine(o){
-  if(o.deal==="rent")return{big:aed(o.rent),sub:"per year"};
-  if(o.deal==="both")return{big:aed(o.price),sub:"or rent "+aed(o.rent)+" / yr"};
-  return{big:aed(o.price),sub:o.size?"AED "+fmt(o.price/o.size)+" / sq ft":"for sale"};
+  if(o.deal==="rent")return{big:fromW(o)+aed(o.rent),sub:"per year"};
+  if(o.deal==="both")return{big:fromW(o)+aed(o.price),sub:"or rent "+aed(o.rent)+" / yr"};
+  return{big:fromW(o)+aed(o.price),sub:o.size?"AED "+fmt(o.price/o.size)+" / sq ft":"for sale"};
 }
 function pills(o){
   let h="";
@@ -1541,8 +1547,8 @@ function cardHTML(o,cur){
     <div class="tower ph" aria-hidden="true"><img loading="lazy" src="${esc(imgSrc(photosOf(o)[0].k,true))}" alt=""><b>P${o.b}${isTeam()&&o.tower&&hasTowers(o.b)?esc(o.tower):""}</b></div>
     <div style="min-width:0"><h3>${starred.has(o.id)?'<span class="star" aria-label="Shortlisted">★</span> ':""}${esc(o.title)}</h3>
       <div class="meta">${esc(bldT(o))} ${o.size?" · "+fmt(o.size)+" sq ft":""}${known(o.floor)?" · "+esc(o.floor):""}${o.x&&o.x.psf?" · AED "+fmt(o.x.psf)+"/sq ft":""}</div>
-      <div class="pills">${pills(o)}${needsTower(o)?'<span class="pill pending">Tower A or B?</span>':""}</div></div>
-    <div class="p num">${esc(o.deal==="rent"?short(o.rent):short(o.price))}<small>${o.deal==="rent"?"AED / yr":"AED"}</small></div>
+      <div class="pills">${pills(o)}${fromW(o)&&o.moreCount?`<span class="pill more">+${esc(moreTxt(o))}, ask ${esc(firstName(agentOf(o).name)||"the agent")}</span>`:""}${needsTower(o)?'<span class="pill pending">Tower A or B?</span>':""}</div></div>
+    <div class="p num">${fromW(o)?'<i class="from">From</i>':""}${esc(o.deal==="rent"?short(o.rent):short(o.price))}<small>${o.deal==="rent"?"AED / yr":"AED"}</small></div>
   </button>`;
 }
 
@@ -2604,7 +2610,7 @@ const isAvail=o=>!o.avail||o.avail==="Available";
 function homeCard(o,label){const c=photosOf(o)[0],p=o.deal==="rent"?short(o.rent)+" / yr":short(o.price);
   return `<button class="hcard" data-id="${esc(o.id)}">
     <div class="hph"><img loading="lazy" src="${esc(imgSrc(c.k,true))}" alt="${esc(c.c)}"><span class="hbadge ${o.deal==="rent"?"rent":""}">${dealWord(o)}</span>${hasRealPhotos(o)?'<span class="hreal">Real photos</span>':""}${planOf(o)?'<span class="hplan">Floor plan</span>':""}${label?`<span class="hlabel">${esc(label)}</span>`:""}</div>
-    <div class="hb"><div class="hp num">AED ${esc(p)}</div><h3>${esc(o.layout?typeOf(o):bedsWord(o.beds))} · ${esc(BLD[o.b])}</h3><p>${esc([o.size?fmt(o.size)+" sq ft":"",known(o.view)?o.view:""].filter(Boolean).join(" · "))}</p></div>
+    <div class="hb"><div class="hp num">${fromW(o)?'<i class="from">From</i> ':""}AED ${esc(p)}</div><h3>${esc(o.layout?typeOf(o):bedsWord(o.beds))} · ${esc(BLD[o.b])}</h3><p>${esc([o.size?fmt(o.size)+" sq ft":"",known(o.view)?o.view:""].filter(Boolean).join(" · "))}</p></div>
   </button>`}
 
 /* ---------------- Welcome page for clients and external agents ---------------- */
@@ -2948,10 +2954,12 @@ $("#team").addEventListener("change",async e=>{const oc=e.target.closest("[data-
 /* ---------------- Viewings and full details go through the listing agent ---------------- */
 function leadMsg(o,kind){const a=agentOf(o),f=String(a.name||"").split(" ")[0],what=bedsWord(o.beds).toLowerCase()+" in "+BLD[o.b]+" ("+dealWord(o).toLowerCase()+", AED "+(o.deal==="rent"?fmt(o.rent)+" a year":fmt(o.price))+")",ref="Ref "+o.id.toUpperCase();
   if(ROLE==="broker")return kind==="viewing"?`Hello ${f}, I'm ${(meInfo&&meInfo.name)||"an agent"}${profile&&profile.company?" from "+profile.company:""}. I have a client for the ${what}. Can we book a viewing? ${ref}`:`Hello ${f}, I'm ${(meInfo&&meInfo.name)||"an agent"}${profile&&profile.company?" from "+profile.company:""}. Could you send me the floor plan, exact floor and availability of the ${what}? ${ref}`;
+  if(kind==="more"){const many=o.beds===0?"studios":o.layout?typeOf(o).toLowerCase()+"s":o.beds+" bedroom homes";return `Hello ${f}, I saw your ${many} ${o.deal==="rent"?"for rent":"for sale"} in ${BLD[o.b]} starting from AED ${fmt(o.deal==="rent"?o.rent:o.price)}${o.deal==="rent"?" a year":""}. Could you send me all ${(+o.moreCount||0)+1} options with their floors, views and prices? ${ref}`}
   return kind==="viewing"?`Hello ${f}, I'd like to book a viewing of the ${what}. When is a good time? ${ref}`:`Hello ${f}, could you send me the floor plan, exact floor and full details of the ${what}? ${ref}`}
 const leadAttrs=(o,kind)=>`href="${esc(waTo(agentOf(o).phone,leadMsg(o,kind)))}" target="_blank" rel="noopener" data-lead="${kind}" data-offer="${esc(o.id)}"`;
-function askBox(o){const f=String(agentOf(o).name||"the agent").split(" ")[0];
-  return `<div class="askbox"><div><b>Interested in this home?</b><span>Book a viewing with ${esc(f)}, or ask for the floor plan, exact floor and availability.</span></div>
+function askBox(o){const f=String(agentOf(o).name||"the agent").split(" ")[0],n=+o.moreCount||0;
+  return (n?`<div class="askbox more"><div><b>${esc(f)} has ${esc(moreTxt(o))} ${o.deal==="rent"?"for rent":"for sale"} in ${esc(BLD[o.b])}</b><span>This one is the starting price. The others are on different floors, with other views and prices. Ask ${esc(f)} for the full list.</span></div>
+    <div class="actions"><a class="btn primary" ${leadAttrs(o,"more")}>${ic("chat")}See all ${esc(String(n+1))} with ${esc(f)}</a></div></div>`:"")+`<div class="askbox"><div><b>Interested in this home?</b><span>Book a viewing with ${esc(f)}, or ask for the floor plan, exact floor and availability.</span></div>
     <div class="actions"><a class="btn primary" ${leadAttrs(o,"viewing")}>${ic("calendar")}Book a viewing</a><a class="btn" ${leadAttrs(o,"details")}>${ic("file")}Ask for full details</a></div></div>`}
 // Record the request, then let the link open WhatsApp.
 document.addEventListener("click",e=>{const a=e.target.closest('[data-lead="viewing"]');if(!a||!SRV||isTeam())return;e.preventDefault();e.stopImmediatePropagation();bookOpen(a.dataset.offer)},true);
@@ -2988,7 +2996,7 @@ function bookSend(){const o=all().find(x=>x.id===book.id),el=$("#book");if(!o||b
     <div class="actions"><button class="btn primary" type="button" data-bk-close>Done</button></div>`}
 document.addEventListener("click",e=>{const a=e.target.closest("[data-lead]");if(!a||!SRV||isTeam())return;
   try{fetch(API+"/data/lead",{method:"POST",keepalive:true,credentials:"same-origin",headers:{"Content-Type":"application/json","X-Orla":"1"},body:JSON.stringify({offerId:a.dataset.offer,kind:a.dataset.lead})})}catch(x){}
-  setTimeout(()=>toast(a.dataset.lead==="viewing"?"Request sent to "+String(agentOf(all().find(o=>o.id===a.dataset.offer)||{}).name||"the agent").split(" ")[0]+". Send the WhatsApp message to confirm.":"Request sent. The agent will share the full details."),300)},true);
+  setTimeout(()=>toast(a.dataset.lead==="more"?"Request sent to "+String(agentOf(all().find(o=>o.id===a.dataset.offer)||{}).name||"the agent").split(" ")[0]+". Send the WhatsApp message and you'll get the full list.":a.dataset.lead==="viewing"?"Request sent to "+String(agentOf(all().find(o=>o.id===a.dataset.offer)||{}).name||"the agent").split(" ")[0]+". Send the WhatsApp message to confirm.":"Request sent. The agent will share the full details."),300)},true);
 
 /* ---------------- Requests for the listing agent ---------------- */
 let leads=[];
@@ -3883,7 +3891,7 @@ function bestWhy(o,deal){const x=o.x,ref=deal==="rent"?x.vsR:x.vs,m=deal==="rent
   if(x.reduced)w.push("Price just reduced");
   if(known(o.view)&&w.length<2)w.push(o.view+" view");
   if(!w.length)w.push(o.size?fmt(o.size)+" sq ft":"Ready to move in");return w.slice(0,2)}
-function bestCard(o,i,deal){const ph=photosOf(o)[0],a=agentOf(o),team=isTeam(),price=deal==="rent"?aed(o.rent)+" a year":aed(o.price);
+function bestCard(o,i,deal){const ph=photosOf(o)[0],a=agentOf(o),team=isTeam(),price=fromW(o)+(deal==="rent"?aed(o.rent)+" a year":aed(o.price));
   const floor=team?(known(o.floor)?o.floor+(/floor/i.test(o.floor)?"":" floor"):""):(o.x&&o.x.band?{low:"Low floor",mid:"Mid floor",high:"High floor"}[o.x.band]||"":"");
   return `<button class="bestc" data-best="${esc(o.id)}" aria-label="${esc((i+1)+". "+typeOf(o)+" in "+BLD[o.b]+", "+price)}">
     <div class="bestimg">${ph?`<img loading="lazy" src="${esc(imgSrc(ph.k,true))}" alt="">`:""}<span class="bestn">${i+1}</span></div>

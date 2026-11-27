@@ -134,6 +134,10 @@ On a home listed under their name, an agent taps **Edit this home** and gets the
 ## New on the team
 When an agent adds a unit (in My units, or an offer under their name), everyone else on the team sees it first thing the next time they open the website: a pop-up with the agent's photo, the type, building, floor, size, view and price, an **Open** button when it's shared as an offer, and **Message Giulia** (WhatsApp) to say they may have a client. It comes before the welcome screen and the pace message, and shows only units added since they last saw it. Home keeps a **New on the team this week** list. Teammates see the floor (from the unit number if none is written), never the unit number or the owner; the admin, the CEO and the agent who added it see the unit number.
 
+## Starting prices for clients
+
+When an agent has several homes of the same kind, a client sees only the cheapest one. "Same kind" means the same building, bedrooms, layout and sale or rent: for example Giulia's 1 bedrooms for sale in Peninsula Three. That home shows as a starting price ("From AED 1.19M"), with "+2 more studios, ask Giulia" on its card. Its page has a box: "Giulia has 2 more studios for sale in Peninsula Three … Ask Giulia for the full list", with a "See all 3 with Giulia" button. The button opens WhatsApp with a ready message and records the request. The agent and the admin get it as a details request, with a note saying which homes the client wants. The other homes aren't sent to the client's phone at all. This applies to signed-in clients and to the public website (all four languages). The team (the admin, the CEO and every agent) and external agents still see every home, with its own price, floor and unit as before. Sold and rented homes aren't grouped.
+
 ## Unit numbers (who sees them)
 - **The admin and the CEO** see every unit number and owner, everywhere.
 - **The agent a home is listed under** sees its unit number and owner.

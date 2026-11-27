@@ -134,7 +134,27 @@ function forRole(data, user) {
   delete d.plan; d.planOnRequest = true;
   return hideFloor(d);
 }
-const PUBLIC_FIELDS = ["b", "beds", "layout", "deal", "title", "price", "rent", "size", "floor", "view", "furn", "baths", "status", "avail", "hl", "photos", "plan", "balcony", "cheques"];
+const PUBLIC_FIELDS = ["b", "beds", "layout", "deal", "title", "price", "rent", "size", "floor", "view", "furn", "baths", "status", "avail", "hl", "photos", "plan", "balcony", "cheques", "startingPrice", "moreCount"];
+
+// Clients see one home per agent, building, bedrooms, layout and deal: the lowest price, shown as a starting price ("from AED X").
+// The others stay with the agent, so the client gets in touch for them. The team and external agents see every home.
+const askPrice = d => d.deal === "rent" ? +d.rent : +d.price;
+function startingPrices(rows) {
+  const groups = new Map(), out = [];
+  for (const r of rows) {
+    const d = r.data || {};
+    if (["Sold", "Rented"].includes(d.avail) || !(askPrice(d) > 0)) { out.push(r); continue; }
+    const k = [d.agent || "", d.b, d.beds, d.layout || "", d.deal].join("|");
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(r);
+  }
+  for (const g of groups.values()) {
+    g.sort((a, b) => askPrice(a.data) - askPrice(b.data) || String(a.id).localeCompare(String(b.id)));
+    const [first, ...rest] = g;
+    out.push(rest.length ? { ...first, data: { ...first.data, startingPrice: true, moreCount: rest.length } } : first);
+  }
+  return out.sort((a, b) => String(a.id).localeCompare(String(b.id)));
+}
 const forPublic = data => hideFloor(Object.fromEntries(PUBLIC_FIELDS.filter(k => data[k] !== undefined && k !== "plan").map(k => [k, data[k]])));
 
 async function currentUser(req) {
@@ -382,7 +402,8 @@ const routes = {
       q("select data from settings where id = 'app'"),
       q("select data from user_state where user_id = $1", [c.user.id])
     ]);
-    const rows = isStaff(c.user) ? offers.rows : offers.rows.filter(r => !r.data.teamOnly);
+    let rows = isStaff(c.user) ? offers.rows : offers.rows.filter(r => !r.data.teamOnly);
+    if (c.user.role === "client") rows = startingPrices(rows);
     return { offers: rows.map(r => ({ ...r, data: forRole(r.data, c.user) })), settings: settings.rows[0]?.data || {}, state: state.rows[0]?.data || null };
   },
 
@@ -883,16 +904,22 @@ const routes = {
   // A client or external agent asks to view a home or for its full details; the listing agent sees it.
   "POST data/lead": async c => {
     requireActive(c);
-    const kind = c.body.kind === "details" ? "details" : "viewing", id = str(c.body.offerId, 64);
+    const more = c.body.kind === "more", kind = c.body.kind === "details" || more ? "details" : "viewing", id = str(c.body.offerId, 64);
     await limit("lead:" + c.user.id, 40, 3600);
     const { rows: [o] } = await q("select data from offers where id = $1", [id]);
     if (!o) fail(404, "Home not found.");
-    const day = /^\d{4}-\d{2}-\d{2}$/.test(String(c.body.day || "")) ? c.body.day : "", slot = str(c.body.slot, 40), note = str(c.body.note, 500);
+    const day = /^\d{4}-\d{2}-\d{2}$/.test(String(c.body.day || "")) ? c.body.day : "", slot = str(c.body.slot, 40);
+    let note = str(c.body.note, 500);
+    // "The other homes like this": the agent sees what the client is after.
+    if (more && !note) {
+      const d = o.data, what = (+d.beds === 0 ? "studios" : d.beds + " bedroom homes") + " for " + (d.deal === "rent" ? "rent" : "sale") + " in Peninsula " + (["", "One", "Two", "Three", "Four", "Five"][+d.b] || d.b);
+      note = `Asked for the other ${what}, with prices and floors (saw the starting price of AED ${askPrice(d).toLocaleString("en-US")}).`;
+    }
     const phone = str(c.body.phone, 30).replace(/[^\d+ ]/g, "");
     if (phone && !c.user.phone) await q("update users set phone = $2 where id = $1 and phone = ''", [c.user.id, phone]);
     const dayTxt = day ? new Date(day + "T12:00:00Z").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }) : "";
     // A booking with a time always counts; a plain tap on the same home within the hour doesn't repeat.
-    const { rows: [recent] } = day || note ? { rows: [] } : await q("select id from leads where user_id = $1 and offer_id = $2 and kind = $3 and at > now() - interval '1 hour'", [c.user.id, id, kind]);
+    const { rows: [recent] } = day || c.body.note ? { rows: [] } : await q("select id from leads where user_id = $1 and offer_id = $2 and kind = $3 and at > now() - interval '1 hour'", [c.user.id, id, kind]);
     if (recent) return { ok: true };
     const { rows: [lead] } = await q("insert into leads (user_id, offer_id, agent_key, kind, title, day, slot, note, phone) values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id, kind",
       [c.user.id, id, str(o.data.agent, 40), kind, str(o.data.title, 200), dayTxt || null, slot || null, note || null, phone || null]);
@@ -1208,7 +1235,7 @@ const routes = {
   "GET public/offers": async c => {
     const { rows } = await q("select id, data from offers order by id");
     c.cache = "public, max-age=60, s-maxage=60";
-    return { offers: rows.filter(r => !["Sold", "Rented"].includes(r.data.avail) && !r.data.teamOnly).map(r => ({ id: r.id, ...forPublic(r.data) })) };
+    return { offers: startingPrices(rows.filter(r => !["Sold", "Rented"].includes(r.data.avail) && !r.data.teamOnly)).map(r => ({ id: r.id, ...forPublic(r.data) })) };
   },
 
   // Photos and floor plans: the admin uploads them already resized in the browser.
