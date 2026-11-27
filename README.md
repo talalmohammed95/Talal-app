@@ -160,6 +160,19 @@ Everything comes from Select Group's brochures (Peninsula One, Two and Three) an
 
 three.js 0.170.0 (`app/vendor/three-0.170.0`, MIT) loads only when the guide opens.
 
+## Google Maps in the guide
+
+The guide has two views at the top: **3D guide** and **Google Maps**. The Google Maps view shows Google's live map around the Peninsula, with buttons for The Peninsula, cafés, restaurants, supermarkets, pharmacies, clinics, gyms, salons and parks. Visitors see Google's own names, reviews, opening hours and photos without leaving the website, and "Open in Google Maps" takes them to the app.
+
+Every named place and the Community Mall also have **Google Maps** and **Directions** links. "Google Maps around us" on the Home card opens the map straight on cafés.
+
+It works without any setup: Google's plain map shows the search. For a richer map that pins every result, add a free **Maps Embed API** key:
+1. In Google Cloud, create a project and enable "Maps Embed API". It's free with no usage limit, but Google may ask for a billing account.
+2. Create an API key. Restrict it to "Maps Embed API" and to the website's address (HTTP referrers, e.g. `https://your-domain/*`).
+3. Add it in Vercel as `GOOGLE_MAPS_EMBED_KEY` and redeploy.
+
+The key is meant to be public (it's in the map's address), which is why it's restricted to the website.
+
 ## Speed
 
 - `all()` (every home, with the market figures) is worked out once per redraw instead of dozens of times.

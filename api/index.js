@@ -1248,7 +1248,9 @@ const routes = {
     const d = s?.data || {}, agents = {};
     for (const [k, a] of Object.entries(d.agents || {})) agents[k] = { name: str(a.name, 80), phone: str(a.phone, 30), ...(a.photo ? { photo: str(a.photo, 300) } : {}) };
     c.cache = "public, max-age=300, s-maxage=300";
-    return { settings: { agents, fees: d.fees || {} } };
+    // GOOGLE_MAPS_EMBED_KEY (optional): a browser key for Google's Maps Embed API, which is free and shows many search results on the map.
+    // It is public by design (it sits in the map's address); restrict it to this website in Google Cloud.
+    return { settings: { agents, fees: d.fees || {} }, mapsKey: str(process.env.GOOGLE_MAPS_EMBED_KEY, 80) };
   },
 
   // A visitor without an account books a viewing or asks about a home: name and mobile go to the agent and the admin.

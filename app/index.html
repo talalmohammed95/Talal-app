@@ -934,6 +934,12 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
 .c3v{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 12px;margin-bottom:6px}.c3v>div{display:flex;flex-direction:column;gap:2px;min-width:0}.c3v span{color:var(--muted);font-size:14px}.c3v small{color:var(--muted);font-size:13px}
 .c3st{font-style:normal;font-weight:800;font-size:12px;padding:4px 8px;border-radius:999px;white-space:nowrap}.c3st.open{background:var(--good-soft,#E3F3E6);color:var(--good,#1E7A3A)}.c3st.soon{background:var(--accent-soft);color:var(--accent-ink)}
 .c3info{max-height:calc(100% - 70px);overflow:auto}.c3info h4{margin:12px 0 6px}
+.c3views{display:flex;gap:4px;background:var(--sunk,rgba(0,0,0,.06));border-radius:12px;padding:3px}.c3views button{display:inline-flex;align-items:center;gap:5px;border:0;background:none;color:var(--muted);font:700 13.5px inherit;padding:7px 10px;border-radius:9px;cursor:pointer;min-height:36px}.c3views button .ic{width:16px;height:16px}.c3views button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.c3map{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:column}.c3map[hidden]{display:none}.c3map .gmf{position:static;background:var(--surface);border-bottom:1px solid var(--line)}.c3map .gmf .chip{background:var(--bg);box-shadow:none;border:1px solid var(--line)}
+.c3map .gmf .chip[aria-pressed="true"]{background:var(--primary);color:#fff;border-color:var(--primary)}#c3d.mapmode .c3ctl{display:none}.c3cats .chip{display:inline-flex;align-items:center;gap:6px}
+.c3map iframe{flex:1;width:100%;border:0;min-height:0}.c3map .gmopen{position:absolute;right:12px;bottom:12px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.c3gl{display:flex;gap:12px;flex-wrap:wrap;margin-top:4px}.c3gl a{display:inline-flex;align-items:center;gap:4px;font-weight:700;font-size:13.5px;color:var(--primary);text-decoration:none}.c3gl a .ic{width:15px;height:15px}
+@media(max-width:600px){.c3bar{flex-wrap:wrap}.c3bar b{display:none}.c3views{flex:1}.c3views button{flex:1;justify-content:center}}
 .c3around{display:grid;grid-template-columns:1fr 1fr;gap:6px}.c3around div{border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column}.c3around span{color:var(--muted);font-size:13px}
 .c3ctl{padding:10px 14px max(12px,env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);background:var(--surface)}.c3m{grid-template-columns:repeat(12,minmax(44px,1fr));overflow-x:auto}.c3btns{display:flex;gap:8px;flex-wrap:wrap}.c3ctl .src{margin:0}
 .suncard{border:1.5px solid var(--line);border-radius:16px;background:var(--bg);padding:14px;margin:12px 0;display:flex;flex-direction:column;gap:10px}
@@ -1684,13 +1690,15 @@ const C3CAT=[["all","Everything","globe"],["food","Cafés & dining","chat"],["sh
 function c3dCard(){return `<div class="panel c3card"><button type="button" class="c3thumb" data-c3d aria-label="Explore the Peninsula in 3D"><img loading="lazy" src="${esc(imgSrc("/img/plans/peninsula-master-plan.webp",true))}" alt=""><span>${ic("building")}Explore in 3D</span></button>
   <div><h3>${ic("globe")}Your guide to the Peninsula</h3><p class="lede">Explore the whole community in 3D: where the shops, cafés, courts, parks and the canal promenade are, and how the sun moves through the day.</p>
     <div class="c3cats">${C3CAT.slice(1).map(([k,t,i])=>`<button type="button" class="chip" data-c3d data-c3-cat="${k}">${ic(i)}${esc(t)}</button>`).join("")}</div>
-    <button type="button" class="btn primary" data-c3d>${ic("building")}Open the 3D guide</button></div></div>`}
-document.addEventListener("click",e=>{const b=e.target.closest("[data-c3d]");if(b){e.preventDefault();C3S.cat=b.dataset.c3Cat||"all";c3dOpen()}});
+    <div class="actions"><button type="button" class="btn primary" data-c3d>${ic("building")}Open the 3D guide</button><button type="button" class="btn" data-c3d data-c3-gmap>${ic("pin")}Google Maps around us</button></div></div></div>`}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-c3d]");if(b){e.preventDefault();C3S.cat=b.dataset.c3Cat||"all";c3dOpen().then(()=>{if(b.hasAttribute("data-c3-gmap"))c3dMap("cafe");else c3dModel()})}});
 async function c3dOpen(){let el=$("#c3d");
   if(!el){const mn=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    document.body.insertAdjacentHTML("beforeend",`<div id="c3d" role="dialog" aria-modal="true" aria-labelledby="c3d-t"><div class="c3bar"><b id="c3d-t">The Peninsula in 3D</b><span class="c3hint">Drag to turn · pinch or scroll to zoom</span><button class="pcx" data-c3-x aria-label="Close">${ic("x")}</button></div>
+    document.body.insertAdjacentHTML("beforeend",`<div id="c3d" role="dialog" aria-modal="true" aria-labelledby="c3d-t"><div class="c3bar"><b id="c3d-t">The Peninsula</b><div class="c3views" role="group" aria-label="View"><button type="button" data-c3-view="3d" aria-pressed="true">${ic("building")}3D guide</button><button type="button" data-c3-view="map" aria-pressed="false">${ic("pin")}Google Maps</button></div><span class="c3hint">Drag to turn · pinch to zoom</span><button class="pcx" data-c3-x aria-label="Close">${ic("x")}</button></div>
       <div class="c3stage"><canvas></canvas><div class="c3labels"></div><div class="c3filter" role="group" aria-label="Show">${C3CAT.map(([k,t,i])=>`<button type="button" class="chip" data-c3-f="${k}">${ic(i)}${esc(t)}</button>`).join("")}<button type="button" class="chip c3guidebtn" data-c3-guide>${ic("list")}Guide</button></div>
-        <div class="c3info" hidden></div><div class="c3guide" hidden></div><div class="c3load">Loading the 3D model…</div></div>
+        <div class="c3info" hidden></div><div class="c3guide" hidden></div><div class="c3load">Loading the 3D model…</div>
+        <div class="c3map" hidden><div class="c3filter gmf"><button type="button" class="chip" data-gm="">${ic("home")}The Peninsula</button>${GMQ.map(([k,t,i])=>`<button type="button" class="chip" data-gm="${k}">${ic(i)}${esc(t)}</button>`).join("")}</div>
+          <iframe title="Google Maps around the Peninsula" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe><a class="btn sm gmopen" target="_blank" rel="noopener">${ic("globe")}Open in Google Maps</a></div></div>
       <div class="c3ctl"><div class="c3row">${ic("sun")}<select data-c3-msel aria-label="Month">${mn.map((m,i)=>`<option value="${i}"${i===C3S.m?" selected":""}>${m}</option>`).join("")}</select><input type="range" min="5" max="20" step="0.25" value="${C3S.h}" data-c3-h aria-label="Time of day"><button type="button" class="btn sm" data-c3-now>Now</button></div>
         <div class="c3row2"><span id="c3-time"></span><button type="button" class="c3dl" data-c3-glb>${ic("download")}.glb</button></div>
         <p class="src">From Select Group's master plan and brochures. Heights are approximate.</p></div></div>`);
@@ -1700,6 +1708,8 @@ async function c3dOpen(){let el=$("#c3d");
       if(t.closest("[data-c3-now]")){const d=new Date(Date.now()+4*3600e3);C3S.m=d.getUTCMonth();C3S.h=d.getUTCHours()+d.getUTCMinutes()/60;el.querySelector("[data-c3-msel]").value=C3S.m;el.querySelector("[data-c3-h]").value=Math.min(20,Math.max(5,C3S.h));c3dSun()}
       if(t.closest("[data-c3-glb]"))c3dGlb();
       const f=t.closest("[data-c3-f]");if(f){C3S.cat=f.dataset.c3F;c3dFilter()}
+      const vw=t.closest("[data-c3-view]");if(vw){if(vw.dataset.c3View==="map")c3dMap(C3S.gm||"");else c3dModel()}
+      const gm=t.closest("[data-gm]");if(gm){C3S.gm=gm.dataset.gm;c3dMap(C3S.gm)}
       const pin=t.closest("[data-c3-p]");if(pin)c3dPlace(pin.dataset.c3P);
       if(t.closest("[data-c3-guide]")){const g=el.querySelector(".c3guide");g.hidden=!g.hidden;el.querySelector(".c3info").hidden=true;if(!g.hidden)c3dGuide()}
       if(t.closest("[data-c3-ix]")){el.querySelector(".c3info").hidden=true}
@@ -1753,9 +1763,21 @@ function c3dFilter(){const el=$("#c3d");if(!el)return;el.querySelectorAll("[data
 function c3dPlace(id){if(!C3)return;const el=$("#c3d"),q=(C3.data.places||[]).find(x=>x.id===id);if(!q)return;const l=C3.labels.find(x=>x.id===id),T=C3.T;
   const cat=(C3CAT.find(c=>c[0]===q.cat)||[])[1]||"";const inf=el.querySelector(".c3info");el.querySelector(".c3guide").hidden=true;
   const vs=(C3.data.venues||[]).filter(v=>v.place===id);
-  inf.innerHTML=`<button class="pcx" data-c3-ix aria-label="Close">${ic("x")}</button><span class="kick">${esc(cat)}</span><h3>${esc(q.t)}</h3><p>${esc(q.d)}</p>${vs.length?`<h4 class="mh">Brands here</h4>${vs.map(c3dVenue).join("")}`:""}`;inf.hidden=false;
+  const gq=(q.gq||q.t+", The Peninsula, Business Bay, Dubai");
+  inf.innerHTML=`<button class="pcx" data-c3-ix aria-label="Close">${ic("x")}</button><span class="kick">${esc(cat)}</span><h3>${esc(q.t)}</h3><p>${esc(q.d)}</p><span class="c3gl"><a href="${esc(gmSearch(gq))}" target="_blank" rel="noopener">${ic("pin")}Google Maps</a><a href="${esc(gmDir(gq))}" target="_blank" rel="noopener">${ic("arrowr")}Directions</a></span>${vs.length?`<h4 class="mh">Brands here</h4>${vs.map(c3dVenue).join("")}`:""}`;inf.hidden=false;
   const b=l.v.clone(),off=new T.Vector3(220,240,300);C3.ctl.autoRotate=false;C3.fly={t0:performance.now(),a:C3.ctl.target.clone(),b,ca:C3.cam.position.clone(),cb:b.clone().add(off)}}
-const c3dVenue=v=>`<div class="c3v"><div><b>${esc(v.n)}</b><span>${esc(v.kind)} · ${esc(v.where)}</span>${v.note?`<small>${esc(v.note)}</small>`:""}</div><em class="c3st ${v.st==="open"?"open":"soon"}">${v.st==="open"?"Open":"Announced"}</em></div>`;
+// Google Maps: searches around the Peninsula. With GOOGLE_MAPS_EMBED_KEY the map shows every result; without it, Google's plain map.
+const GMQ=[["cafe","Cafés","chat"],["restaurant","Restaurants","chat"],["supermarket","Supermarkets","bag"],["pharmacy","Pharmacies","plus"],["clinic","Clinics","plus"],["gym","Gyms","target"],["salon","Salons","star"],["park","Parks","tree"]];
+let GMKEY=null;const PEN_Q="The Peninsula, Business Bay, Dubai";
+const gmSearch=q=>"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(q);
+const gmDir=q=>"https://www.google.com/maps/dir/?api=1&destination="+encodeURIComponent(q);
+function gmEmbed(q){return GMKEY?`https://www.google.com/maps/embed/v1/search?key=${encodeURIComponent(GMKEY)}&q=${encodeURIComponent(q)}&zoom=16`:`https://maps.google.com/maps?q=${encodeURIComponent(q)}&z=16&output=embed`}
+async function c3dMap(term){const el=$("#c3d"),m=el.querySelector(".c3map");el.querySelectorAll("[data-c3-view]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.c3View==="map"));m.hidden=false;el.classList.add("mapmode");
+  if(GMKEY===null){try{GMKEY=(await api("public/settings")).mapsKey||""}catch(e){GMKEY=""}}
+  const q=term?`${term} near ${PEN_Q}`:PEN_Q;m.querySelectorAll("[data-gm]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.gm===(term||"")));
+  const f=m.querySelector("iframe");if(f.dataset.q!==q){f.dataset.q=q;f.src=gmEmbed(q)}m.querySelector(".gmopen").href=gmSearch(q)}
+function c3dModel(){const el=$("#c3d");el.querySelector(".c3map").hidden=true;el.classList.remove("mapmode");el.querySelectorAll("[data-c3-view]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.c3View==="3d"))}
+const c3dVenue=v=>`<div class="c3v"><div><b>${esc(v.n)}</b><span>${esc(v.kind)} · ${esc(v.where)}</span>${v.note?`<small>${esc(v.note)}</small>`:""}<span class="c3gl"><a href="${esc(gmSearch(v.n+", "+v.where+", Business Bay, Dubai"))}" target="_blank" rel="noopener">${ic("pin")}Google Maps</a><a href="${esc(gmDir(v.n+", "+v.where+", Business Bay, Dubai"))}" target="_blank" rel="noopener">${ic("arrowr")}Directions</a></span></div><em class="c3st ${v.st==="open"?"open":"soon"}">${v.st==="open"?"Open":"Announced"}</em></div>`;
 function c3dGuide(){if(!C3)return;const el=$("#c3d"),g=el.querySelector(".c3guide"),d=C3.data,cats=C3CAT.slice(1).filter(c=>C3S.cat==="all"||c[0]===C3S.cat);
   g.innerHTML=`<button class="pcx" data-c3-gx aria-label="Close">${ic("x")}</button><h3>The Peninsula guide</h3>`+cats.map(([k,t,i])=>{const P=(d.places||[]).filter(q=>q.cat===k),U=(d.unpinned||[]).filter(q=>q.cat===k);if(!P.length&&!U.length)return"";
       const V=(d.venues||[]).filter(v=>v.cat===k);
