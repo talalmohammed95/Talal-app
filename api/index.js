@@ -103,8 +103,19 @@ function hideFloor(d) {
   for (const k of ["title", "hl"]) if (typeof d[k] === "string") { d[k] = d[k].replace(FLOOR_RE, (_, n) => band(+n).toLowerCase()); d[k] = d[k].charAt(0).toUpperCase() + d[k].slice(1); }
   return d;
 }
+// A home with a unit number but no floor written gets its floor from the number (1203 is the 12th floor),
+// so teammates see the floor and outsiders the band, even though the number itself is hidden from them.
+const ORD = n => n + (["th", "st", "nd", "rd"][(n % 100 - 20) % 10] || ["th", "st", "nd", "rd"][n % 100] || "th");
+function floorFromUnit(d) {
+  const digits = String(d.unit || "").replace(/\D/g, "");
+  if (digits.length < 3 || digits.length > 5) return d;
+  if (d.floor && !/request|^\s*[—–-]?\s*$/i.test(String(d.floor))) return d;
+  const n = +digits.slice(0, -2);
+  return n > 0 && n < 100 ? { ...d, floor: ORD(n) } : d;
+}
 function forRole(data, user) {
   if (seesAll(user)) return data;
+  data = floorFromUnit(data);
   if (isStaff(user)) {
     // An agent sees the owner's contact only on offers listed under their own name.
     // Unit numbers and owners' details are for the agent the offer is listed under (and the admin) only.
@@ -948,6 +959,45 @@ const routes = {
     requireTeam(c);
     const { rowCount } = await q("delete from docs where id = $1 and (by_user = $2 or $3)", [String(c.body.id || ""), c.user.id, c.user.role === "admin"]);
     if (!rowCount) fail(404, "Document not found, or it was added by someone else.");
+    return { ok: true };
+  },
+
+  // The admin: every home (offer or listing) with no unit number yet, with likely units from the Peninsula contacts
+  // (same building and bedrooms, size within about 2%, the same floor when the home's floor is known).
+  "GET admin/units-missing": async c => {
+    requireAdmin(c);
+    const [{ rows: O }, { rows: L }, { rows: C }, { rows: st }] = await Promise.all([
+      q("select id, data from offers where coalesce(data->>'unit', '') = '' and coalesce(data->>'avail', 'Available') not in ('Sold', 'Rented')"),
+      q("select l.id, l.data, u.name, u.agent_key from listings l join users u on u.id = l.user_id where coalesce(l.data->>'unit', '') = ''"),
+      q("select name, unit, building, data from contacts where unit <> '' and building between 1 and 5"),
+      q("select data from settings where id = 'app'")]);
+    const agents = (st[0] && st[0].data && st[0].data.agents) || {};
+    const num = v => { const n = parseFloat(String(v ?? "").replace(/[^0-9.]/g, "")); return Number.isFinite(n) && n > 0 ? n : null; };
+    const floorOf = f => { const m = String(f || "").match(/\d{1,2}/); return m && !/low|mid|high|podium/i.test(f) ? +m[0] : null; };
+    const suggest = d => {
+      const b = +d.b, beds = d.beds === undefined || d.beds === "" ? null : +d.beds, size = num(d.size), fl = floorOf(d.floor);
+      return C.filter(x => +x.building === b).map(x => {
+        const xb = x.data && x.data.beds != null ? +x.data.beds : null, xs = num(x.data && x.data.size), digits = String(x.unit).replace(/\D/g, "");
+        const xf = digits.length >= 3 ? +digits.slice(0, -2) : null;
+        if (beds != null && xb != null && xb !== beds) return null;
+        if (size && xs && Math.abs(xs - size) / size > 0.02) return null;
+        if (fl != null && xf != null && xf !== fl) return null;
+        const score = (size && xs ? 2 : 0) + (fl != null && xf === fl ? 2 : 0) + (beds != null && xb === beds ? 1 : 0);
+        return score ? { unit: x.unit, name: x.name, size: xs, type: (x.data && x.data.type) || "", score } : null;
+      }).filter(Boolean).sort((a, z) => z.score - a.score).slice(0, 4);
+    };
+    const pick = d => ({ b: d.b, beds: d.beds, layout: d.layout, size: d.size, floor: d.floor, view: d.view, deal: d.deal, price: d.price, rent: d.rent, title: d.title, tower: d.tower });
+    const homes = O.map(r => ({ kind: "offer", id: r.id, agent: (agents[r.data.agent] || {}).name || r.data.agent || "", ...pick(r.data), suggestions: suggest(r.data) }))
+      .concat(L.map(r => ({ kind: "listing", id: r.id, agent: r.name || r.agent_key || "", ...pick(r.data), suggestions: suggest(r.data) })));
+    return { homes, contacts: C.length };
+  },
+  "POST admin/unit-set": async c => {
+    requireAdmin(c);
+    const kind = c.body.kind === "listing" ? "listings" : "offers", id = str(c.body.id, 64), unit = str(c.body.unit, 20).toUpperCase().replace(/[^A-Z0-9-]/g, "");
+    if (!unit) fail(400, "Type the unit number.");
+    const { rows: [r] } = await q(`update ${kind} set data = jsonb_set(data, '{unit}', to_jsonb($2::text)) where id = $1 returning data->>'title' as title`, [id, unit]);
+    if (!r) fail(404, "Home not found.");
+    await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `Set unit ${unit} on ${str(r.title, 100)}`]);
     return { ok: true };
   },
 

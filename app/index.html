@@ -906,6 +906,11 @@ body.guest .tab[data-view="chat"]{display:none!important}
 .ulhit{border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;margin-top:10px;background:var(--bg);display:flex;flex-direction:column;gap:8px}.ulhit-h{display:flex;flex-direction:column;gap:2px}.ulhit-h span{color:var(--muted);font-size:14px}
 .ulplan{display:block;background:#fff;border-radius:10px;overflow:hidden;border:1px solid var(--line)}.ulplan img{display:block;width:100%;max-height:300px;object-fit:contain}
 .ulct{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--line);padding:8px 0}.ulct>div:first-child{display:flex;flex-direction:column}.ulct span{color:var(--muted);font-size:13px}.ulct.taken{justify-content:flex-start;color:var(--muted)}.ulct.taken .ic{width:16px;height:16px}
+.umiss summary{list-style:none;cursor:pointer}.umiss summary::-webkit-details-marker{display:none}.umiss h3{display:flex;align-items:center;gap:8px;margin:0}.umiss h3 .ic{width:18px;height:18px;color:var(--primary)}
+.umiss.ok b{display:flex;align-items:center;gap:6px;color:var(--good,#1a7f4b)}.umiss.ok .ic{width:16px;height:16px}
+.umrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 14px;align-items:center;border-top:1px solid var(--line);padding:10px 0}.umi{display:flex;flex-direction:column;gap:2px}.umi span{color:var(--muted);font-size:13px}
+.umsug{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}.umf{display:flex;gap:6px;align-items:center}.umf input{width:110px;border-radius:10px;border:1.5px solid var(--line-strong);background:var(--bg);color:var(--fg);padding:8px 10px;font:inherit;font-size:16px}
+@media (max-width:620px){.umrow{grid-template-columns:minmax(0,1fr)}.umf{min-width:0}.umf input{flex:1;width:auto;min-width:0}}
 </style>
 <script src="/config.js"></script>
 <script src="/track.js" defer></script>
@@ -2877,7 +2882,8 @@ async function renderTeam(){const el=$("#team");if(!SRV){el.innerHTML='<div clas
   const plats=(on,attr)=>`<div class="plats">${platBoxes(on,attr)}</div>`;
   const offRow=o=>`<div class="ochk" data-off="${esc(o.id)}"><div><b>${isAdmin&&AGENTS[o.agent]?esc(AGENTS[o.agent].name.split(" ")[0])+" · ":""}${o.unit?"Unit "+esc(o.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(typeOf(o))} · ${esc(o.title)}</b><span class="s">${esc(o.deal==="rent"?aed(o.rent)+" / yr":aed(o.price))}${isOnline(o,g)?" · counts towards the goal":""}</span></div>${plats(o.online,"data-otog")}</div>`;
   const own=mine.filter(m=>m);
-  el.innerHTML=`<div class="gband"><div><p class="kick">Goal until ${esc(dl)}</p><h2>${g.target} listings each, live on ${esc(plist)}</h2><p>A listing counts once it's online on every platform. ${tp.daysLeft} days left.</p>
+  if(isAdmin)setTimeout(umissLoad,0);
+  el.innerHTML=(isAdmin?'<div id="umiss"></div>':"")+`<div class="gband"><div><p class="kick">Goal until ${esc(dl)}</p><h2>${g.target} listings each, live on ${esc(plist)}</h2><p>A listing counts once it's online on every platform. ${tp.daysLeft} days left.</p>
       <div class="gbar" aria-label="Team progress"><i style="width:${Math.min(100,tot/goalT*100)}%"></i><em style="left:${tf*100}%" title="Where we should be today"></em></div><p style="margin-top:8px;font-size:13px">${tot} of ${goalT} for the team · the white line is where we should be today (${tp.expected})</p></div>
     <div class="gstats"><div><b class="num">${tot}</b><span>online on every platform</span></div><div><b class="num">${Math.max(0,goalT-tot)}</b><span>still to go</span></div><div><b class="num">${wk}</b><span>went live this week</span></div></div></div>
   <div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start"><div><h2>Ranking</h2><p class="lede">From ${esc(new Date(g.start).toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"short"}))} to today. Units for sale or rent count in both columns.</p></div>
@@ -3884,6 +3890,20 @@ $("#dash").addEventListener("click",e=>{const b=e.target.closest("[data-ul-add]"
   show("mine");resetMineForm();$("#m-bld").value=b.dataset.ulAdd;try{mFillTypes()}catch(x){}$("#m-unit").value=UL.q.trim().toUpperCase();
   if(ct){if(ct.name)$("#m-owner").value=ct.name;if((ct.phones||[])[0])$("#m-phone").value=ct.phones[0]}
   try{mGuide()}catch(x){}setTimeout(()=>{$("#mine-form").scrollIntoView({behavior:"smooth",block:"start"})},80);toast("Filled in from the brochure"+(ct?" and the contacts":"")+". Add the price and save.")});
+
+/* ---------------- Unit numbers to fill (the admin) ---------------- */
+let UMISS=null;
+async function umissLoad(force){const el=$("#umiss");if(!el||!isAdmin||!SRV)return;if(!UMISS||force){try{UMISS=await api("admin/units-missing")}catch(e){el.innerHTML="";return}}umissDraw()}
+function umissDraw(){const el=$("#umiss");if(!el||!UMISS)return;const h=UMISS.homes||[];
+  if(!h.length){el.innerHTML=`<div class="panel umiss ok"><b>${ic("check")}Every home has its unit number.</b></div>`;return}
+  el.innerHTML=`<details class="panel umiss" open><summary><h3>${ic("lock")}Unit numbers to fill · ${h.length}</h3></summary>
+    <p class="lede">These homes have no unit number yet. Type it, or tap a likely unit from the Peninsula contacts (same building, bedrooms, size and floor). Only you and the agent the home is listed under will see it: the other Peninsula Stars see the floor, external agents and clients a low, mid or high floor.${UMISS.contacts?"":" Import the contacts in Admin to get suggestions."}</p>
+    ${h.map((x,i)=>`<div class="umrow" data-um="${i}"><div class="umi"><b>${esc((BLD[x.b]||"Peninsula")+(x.tower&&+x.b===4?" · Tower "+x.tower:"")+" · "+(typeOf(x)||"Home"))}</b><span>${esc([x.title,x.size?fmt(x.size)+" sq ft":"",known(x.floor)?x.floor+(/floor/i.test(x.floor)?"":" floor"):"",known(x.view)?x.view:"",x.agent?"listed by "+x.agent:"",x.kind==="listing"?"My units":"offer"].filter(Boolean).join(" · "))}</span></div>
+      ${(x.suggestions||[]).length?`<div class="umsug">${x.suggestions.map(c=>`<button type="button" class="chip" data-um-pick="${esc(c.unit)}">${esc(c.unit)} · ${esc(c.name||"owner")}${c.size?" · "+fmt(c.size)+" sq ft":""}</button>`).join("")}</div>`:""}
+      <div class="umf"><input aria-label="Unit number" placeholder="Unit no." inputmode="text"><button type="button" class="btn sm primary" data-um-save>Save</button></div></div>`).join("")}</details>`}
+document.addEventListener("click",async e=>{const pk=e.target.closest("[data-um-pick]");if(pk){const row=pk.closest(".umrow");row.querySelector("input").value=pk.dataset.umPick;row.querySelector("input").focus();return}
+  const sv=e.target.closest("[data-um-save]");if(!sv)return;const row=sv.closest(".umrow"),x=UMISS.homes[+row.dataset.um],unit=row.querySelector("input").value.trim();if(!unit){toast("Type the unit number");return}
+  sv.disabled=true;try{await api("admin/unit-set",{kind:x.kind,id:x.id,unit});toast("Unit "+unit.toUpperCase()+" saved");UMISS.homes.splice(+row.dataset.um,1);umissDraw();await loadAll().catch(()=>{});if(x.kind==="listing")await loadListings();perf=null}catch(er){toast(er.message);sv.disabled=false}});
 
 /* ---------------- Start-up ---------------- */
 function startApp(){if(!SRV)setRole(isAdmin?"admin":"team");updateAcct();const ch=$("#userchip");

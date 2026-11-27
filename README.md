@@ -131,6 +131,14 @@ Every Sunday at 9:00 Dubai time (05:00 UTC), the daily Vercel Cron (`/api/cron/d
 ## Agents edit their own homes
 On a home listed under their name, an agent taps **Edit this home** and gets the same editor as the admin: headline, building, type, sale or rent, status (available, reserved, under offer, sold, rented), price, rent, size, floor, view, furnishing, cheques, deposit, highlights, the unit number and owner, and photos and the floor plan. It saves for everyone straight away, price and status changes go into the home's history, and it shows in Admin › Activity. They can't move a home to another agent or change whether it counts in team performance (only the admin can), and they can't edit homes listed under someone else. Their own units in My units were already editable there. The admin also has **Edit this home** on every home.
 
+## Unit numbers (who sees them)
+- **The admin and the CEO** see every unit number and owner, everywhere.
+- **The agent a home is listed under** sees its unit number and owner.
+- **The other Peninsula Stars** see the exact floor (worked out from the unit number when no floor is written: 1203 is the 12th floor), never the unit number or owner.
+- **External agents and clients** see a low, mid or high floor only.
+
+**Unit numbers to fill** (the admin's Team page): every home and listing that has no unit number yet, with likely units from the Peninsula contacts (same building and bedrooms, size within about 2%, same floor when known). Tap a suggestion or type the number, then Save. It shows in Admin › Activity.
+
 ## Unit lookup (team home)
 At the top of the team's Home: type any unit number (or a duplex number like G07), and pick a building if you know it. It shows, for each building where that number exists, the floor plan, layout, floor, size and view from the developer's brochures, and the owner if they're in the Peninsula contacts (with Call and WhatsApp; a client another agent already listed shows as taken, as everywhere else). **List this unit** or **List with this owner** opens My units already filled in. Every contacts lookup is logged as before.
 
