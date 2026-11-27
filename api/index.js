@@ -13,6 +13,7 @@ import { importDeals, dealStats } from "../lib/deals.js";
 import { readBrochure, guideRows } from "../lib/guide.js";
 import { vapidKeys, subscribe, unsubscribe, notifyLead, pushTo } from "../lib/notify.js";
 import { runWeekly, buildWeekly, weeklyText, runDaily, greet } from "../lib/weekly.js";
+import { addReminder, listReminders, setDone, snooze, removeReminder, deliverDue, morningBriefing } from "../lib/reminders.js";
 
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
 const COOKIE = "orla_session";
@@ -783,9 +784,32 @@ const routes = {
   "GET cron/daily": async c => {
     const secret = process.env.CRON_SECRET, auth = c.req.headers.authorization || "";
     if (secret ? auth !== "Bearer " + secret : !/vercel-cron/i.test(c.req.headers["user-agent"] || "")) fail(401, "Not allowed.");
-    const out = { daily: await runDaily(teamStats, appUrl(c.req)) };
+    const out = { daily: await runDaily(teamStats, appUrl(c.req)), reminders: await deliverDue({ force: true }), briefing: await morningBriefing().catch(e => { console.error("briefing", e); return 0; }) };
     if (new Date(Date.now() + 4 * 3600e3).getUTCDay() === 0) out.weekly = await runWeekly(teamStats, appUrl(c.req));
     return out;
+  },
+  // Every 5 minutes or so (an outside scheduler, optional): sends due reminders even when nobody has the app open.
+  "GET cron/reminders": async c => {
+    const secret = process.env.CRON_SECRET, auth = c.req.headers.authorization || "", key = new URL(c.req.url, "http://localhost").searchParams.get("key") || "";
+    if (secret ? auth !== "Bearer " + secret && key !== secret : !/vercel-cron/i.test(c.req.headers["user-agent"] || "")) fail(401, "Not allowed.");
+    return { sent: await deliverDue({ force: true }) };
+  },
+  "GET team/reminders": async c => {
+    requireStaff(c);
+    const all = new URL(c.req.url, "http://localhost").searchParams.get("all") === "1";
+    return { reminders: await listReminders(c.user, { all, days: 60 }) };
+  },
+  "POST team/reminders": async c => {
+    requireStaff(c);
+    await limit("rem:" + c.user.id, 120, 3600);
+    try { return { reminder: await addReminder(c.user, { when: c.body.when, text: c.body.text, who: c.body.who }) }; } catch (e) { fail(e.status || 400, e.message); }
+  },
+  "POST team/reminders/update": async c => {
+    requireStaff(c);
+    const id = parseInt(c.body.id, 10) || 0, a = c.body.action;
+    const ok = a === "delete" ? await removeReminder(c.user, id) : a === "snooze" ? await snooze(c.user, id, c.body.minutes) : await setDone(c.user, id, a !== "reopen");
+    if (!ok) fail(404, "Reminder not found.");
+    return { ok: true };
   },
   "GET team/weekly": async c => {
     requireStaff(c);
@@ -1354,6 +1378,8 @@ export default async function handler(req, res) {
       if (!body || typeof body !== "object") body = {};
     }
     const user = await currentUser(req);
+    // Due reminders go out with whatever request comes in (at most once a minute per server), so they're sent on time while the team uses the app.
+    deliverDue().catch(e => console.error("reminders", e));
     const c = { req, res, body, user, ip: clientIp(req) };
     const out = await fn(c);
     if (out !== RAW) send(res, 200, out || { ok: true }, c.cache);

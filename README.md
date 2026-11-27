@@ -143,6 +143,17 @@ No listing should be more than 7% above the market, and never more than 10%. The
 
 The motivation card's messages also push expertise and negotiation: knowing the deals, the price per sq ft and the building, and pricing it right.
 
+## Reminders (the AI reminds you)
+
+Tell the AI assistant "remind me tomorrow at 10 to call Valeria about 2107", "remind Giulia Monday at 9 to send Form A" (the admin and the CEO can set reminders for agents), "what reminders do I have this week?" or "mark the Valeria one done". It also offers a reminder when something needs a follow-up. Every time is Dubai time.
+
+- **On Home:** a Reminders panel lists what's coming up, with Done, +1 hour and delete, plus a quick add form.
+- **When a reminder is due:** it goes to the phone as a notification (for anyone who turned notifications on), and pops up in the app with Done and "Remind me in 1 hour".
+- **Every morning** (with the 9:00 daily run): each team member gets a notification with today's reminders, client follow-ups due and open requests.
+- **Delivery:** due reminders are sent with any request the app makes, at most once a minute, so while the team uses the app they arrive on time. To get them on time even when nobody has the app open, point a free scheduler (e.g. cron-job.org) every 5 minutes at `https://<your-site>/api/cron/reminders?key=<CRON_SECRET>`, with `CRON_SECRET` set in Vercel. Vercel's own free cron only runs once a day.
+
+The reminders are in the `reminders` table (`lib/reminders.js`). The AI uses the `reminder_set`, `reminders_list` and `reminder_update` tools.
+
 ## Peninsula Stars (the team competition board)
 
 At the top of the Team page, for the admin, the CEO and every agent:

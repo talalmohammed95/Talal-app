@@ -992,6 +992,12 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
 .stars .ssq,.stars .scat,.stars .sbdg{aspect-ratio:auto;min-height:0}
 @media(max-width:1100px){.stars .sgrid{grid-template-columns:repeat(3,minmax(0,1fr))}.stars .scats{grid-template-columns:repeat(3,minmax(0,1fr))}.stars .sbadges{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:600px){.stars .sgrid,.stars .scats{grid-template-columns:repeat(2,minmax(0,1fr))}.stars .sbadges{grid-template-columns:repeat(3,minmax(0,1fr))}.stars .sring{width:56%}.stars .smini{font-size:10.5px}.stars .smini b{font-size:12.5px}}
+.remp h3{display:flex;align-items:center;gap:8px}.remp .lede{margin:0 0 8px}
+.remadd{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px}@media(max-width:600px){.remadd{grid-template-columns:minmax(0,1fr) auto}.remadd #rem-text{grid-column:1/-1}}
+.remadd input{min-height:44px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg);padding:0 12px;font:inherit;min-width:0}
+.remlist{display:flex;flex-direction:column;gap:6px;margin-top:10px}.remrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg)}
+.remrow>div:first-child{display:flex;flex-direction:column;min-width:0;flex:1 1 220px}.remrow>div:first-child b{color:var(--fg);font-weight:700;word-break:break-word}.remrow .actions{flex:0 0 auto}.remrow small{color:var(--muted)}.remrow.due{border-color:var(--primary);background:var(--accent-soft)}.remrow .actions{margin:0}
+#remal{position:fixed;left:0;right:0;top:calc(12px + env(safe-area-inset-top,0px));z-index:91;display:flex;justify-content:center;padding:0 12px}#remal[hidden]{display:none}#remal h2{font-size:20px}#remal .kick{display:flex;align-items:center;gap:6px}#remal .kick .ic{width:16px;height:16px}
 #motiv{position:fixed;left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:86;display:flex;justify-content:center;padding:0 12px;pointer-events:none}#motiv[hidden]{display:none}
 @media(min-width:900px){#motiv{bottom:24px}}
 .mvcard{pointer-events:auto;position:relative;width:min(460px,100%);background:#1C1A18;color:#fff;border-radius:22px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.45);animation:regup .3s ease-out}
@@ -2106,7 +2112,7 @@ const today=()=>new Date().toISOString().slice(0,10);
 const isDue=c=>c.follow&&c.follow<=today()&&c.status!=="Closed"&&c.status!=="Lost";
 function renderDash(){if(!isTeam()){renderShowroom();{const h=$("#dash").firstElementChild;if(h)h.insertAdjacentHTML("afterend",bestHTML()+c3dCard())}if(myProps.length)$("#dash").insertAdjacentHTML("afterbegin",propertyHTML());return}clearInterval(heroT);if(isCEO()){$("#dash").innerHTML=ceoHome();{const f=$("#dash").firstElementChild;if(f)f.insertAdjacentHTML("afterend",newuStrip())}return}renderTeamDash();
   const myl=renderMyListings();if(myl){const r=$("#dash").children[0];if(r)r.insertAdjacentHTML("afterend",myl);else $("#dash").insertAdjacentHTML("afterbegin",myl)}
-  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+newuStrip()+unitLookupHTML()+bestHTML()+c3dCard()+(isAdmin?weeklyPanel()+visitorsPanel():"")+myTasksHTML()+towerTodoHTML()+pushSlot()+leadsHTML()+remindersHTML())}
+  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+newuStrip()+(isCEO()?"":myRemindersHTML())+unitLookupHTML()+bestHTML()+c3dCard()+(isAdmin?weeklyPanel()+visitorsPanel():"")+myTasksHTML()+towerTodoHTML()+pushSlot()+leadsHTML()+remindersHTML())}
 // The top achiever: first in the team ranking (online, then units), once they have a unit.
 let topPub=null;
 async function loadTop(){try{topPub=(await api("public/top")).top}catch(e){}}
@@ -2844,7 +2850,7 @@ async function loadAll(first){
       else if(owner&&owner!==uid){mine=[];clients=[];starred=new Set();persist()}
       else if(mine.length||clients.length||starred.size)persist();
       store.set("orla.localOwner",uid)}
-    migrateOvr();if(!isTeam()){await loadTop();await loadMyProperty()}await loadDealMkt();if(isTeam()){await loadGuide();await loadUnitTypes();await loadListings();await loadPerf(true);await loadLeads();await loadTasks();if(isAdmin||isCEO()){loadWeekly();loadVisitorsBrief()}setTimeout(paceModal,700);setTimeout(leadPollStart,1500);if(location.hash==='#requests')setTimeout(()=>{show('dash');const r=$('#requests');if(r)r.scrollIntoView()},900);await loadNewUnits();setTimeout(newuModal,400);if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
+    migrateOvr();if(!isTeam()){await loadTop();await loadMyProperty()}await loadDealMkt();if(isTeam()){await loadGuide();await loadUnitTypes();await loadListings();await loadPerf(true);await loadLeads();await loadTasks();await loadReminders();if(isAdmin||isCEO()){loadWeekly();loadVisitorsBrief()}setTimeout(paceModal,700);setTimeout(leadPollStart,1500);if(isCEO()){setTimeout(remCheck,2500);setInterval(()=>{if(document.visibilityState==="visible")remCheck()},45000)}if(location.hash==='#reminders')setTimeout(()=>{show('dash');const r=$('#reminders');if(r)r.scrollIntoView()},900);if(location.hash==='#requests')setTimeout(()=>{show('dash');const r=$('#requests');if(r)r.scrollIntoView()},900);await loadNewUnits();setTimeout(newuModal,400);if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
   catch(e){if(e.status===401||e.status===403){location.reload();return}
     if(first){OFFERS=store.get("orla.cache.offers",[]);applySettings(store.get("orla.cache.settings",{}))}
     if(first||!loadAll.warned){loadAll.warned=true;toast("Offline: showing what's saved on this device")}}
@@ -3956,6 +3962,30 @@ async function loadTasks(){if(!SRV||!isTeam())return;try{tasks=(await api("team/
 const dueTxt=d=>{if(!d)return"";const t=todayISO();return d<t?"Overdue · "+dShort(d):d===t?"Due today":"Due "+dShort(d)};
 function taskRow(t,manage){return `<div class="tkrow${t.done?" done":""}${!t.done&&t.due&&t.due<todayISO()?" late":""}"><div><b>${esc(t.title)}</b>${t.notes?`<span>${esc(t.notes)}</span>`:""}<small>${esc([t.due?dueTxt(t.due):"",t.by_name?"from "+firstName(t.by_name):"",t.done&&t.done_at?"done "+dShort(String(t.done_at).slice(0,10)):""].filter(Boolean).join(" · "))}</small></div>
   <div class="actions"><button class="btn sm${t.done?"":" primary"}" data-task-done="${t.id}" data-v="${t.done?0:1}">${t.done?"Reopen":"Done"}</button>${manage?`<button class="btn sm" data-task-edit="${t.id}">Edit</button><button class="btn sm" data-task-del="${t.id}">Delete</button>`:""}</div></div>`}
+/* ---------------- Reminders (set here or by asking the AI) ---------------- */
+let REMS=[],remShown=new Set();
+async function loadReminders(){if(!SRV||!isTeam())return;try{REMS=(await api("team/reminders")).reminders||[]}catch(e){}}
+const remWhen=r=>{const d=new Date(r.at),now=new Date(Date.now()+4*3600e3),dd=new Date(d.getTime()+4*3600e3),day=x=>x.toISOString().slice(0,10),tm=dd.toISOString().slice(11,16);
+  const td=day(now),tmw=day(new Date(now.getTime()+864e5));return(day(dd)===td?"Today":day(dd)===tmw?"Tomorrow":dd.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",timeZone:"UTC"}))+" · "+tm};
+function myRemindersHTML(){if(!SRV||!isTeam())return"";const open=REMS.filter(r=>!r.done),due=open.filter(r=>r.due);
+  const def=new Date(Date.now()+4*3600e3+864e5);def.setUTCHours(9,0,0,0);const dv=def.toISOString().slice(0,16);
+  return `<div class="panel remp" id="reminders"><h3>${ic("bell")}Reminders${due.length?` <span class="pill check">${due.length} due</span>`:""}</h3>
+    <p class="lede">Ask the AI ("remind me tomorrow at 10 to call Valeria") or add one here. It comes to your phone at that time.</p>
+    <form class="remadd" id="rem-form"><input id="rem-text" maxlength="300" placeholder="What to remember, e.g. Send Form A to the owner of 2107" required><input id="rem-when" type="datetime-local" value="${dv}" required aria-label="When (Dubai time)"><button class="btn primary" type="submit">${ic("plus")}Add</button></form>
+    ${open.length?`<div class="remlist">${open.slice(0,12).map(r=>`<div class="remrow${r.due?" due":""}"><div><b>${esc(r.text)}</b><small>${esc(remWhen(r))}${r.fromOther?" · from "+esc(firstName(r.fromOther)):""}</small></div>
+      <div class="actions"><button class="btn sm" data-rem="${r.id}" data-ra="done">${ic("check")}Done</button>${r.due?`<button class="btn sm" data-rem="${r.id}" data-ra="snooze">+1 hour</button>`:""}<button class="btn sm ghost" data-rem="${r.id}" data-ra="delete" aria-label="Delete">${ic("x")}</button></div></div>`).join("")}</div>`
+      :'<p class="src">Nothing coming up. Try asking the AI: "remind me Monday at 9 to chase my viewings".</p>'}</div>`}
+document.addEventListener("submit",async e=>{if(e.target.id!=="rem-form")return;e.preventDefault();const t=$("#rem-text").value.trim(),w=$("#rem-when").value;if(!t||!w)return;
+  try{await api("team/reminders",{text:t,when:w});await loadReminders();renderDash();toast("Reminder set for "+remWhen({at:new Date(Date.parse(w+":00Z")-4*3600e3)}))}catch(x){toast(x.message)}});
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-rem]");if(!b)return;b.disabled=true;
+  try{await api("team/reminders/update",{id:+b.dataset.rem,action:b.dataset.ra,minutes:60});await loadReminders();const al=$("#remal");if(al&&b.closest("#remal"))al.hidden=true;renderDash();
+    toast(b.dataset.ra==="done"?"Done":b.dataset.ra==="snooze"?"Snoozed for an hour":"Deleted")}catch(x){toast(x.message);b.disabled=false}});
+// A due reminder pops up in the app too (checked with the request polling).
+async function remCheck(){if(!SRV||!isTeam())return;await loadReminders();const due=REMS.filter(r=>r.due&&!r.done&&!remShown.has(r.id));if(!due.length)return;
+  due.forEach(r=>remShown.add(r.id));let el=$("#remal");if(!el){document.body.insertAdjacentHTML("beforeend",'<div id="remal" role="alertdialog" aria-labelledby="remal-t"><div class="mvcard"></div></div>');el=$("#remal");el.addEventListener("click",e=>{if(e.target.closest("[data-remal-x]"))el.hidden=true})}
+  el.querySelector(".mvcard").innerHTML=`<button class="pcx" data-remal-x aria-label="Close">${ic("x")}</button><p class="kick">${ic("bell")} Reminder${due.length>1?"s":""}</p>${due.slice(0,3).map(r=>`<h2 id="remal-t">${esc(r.text)}</h2><p>${esc(remWhen(r))}${r.fromOther?" · from "+esc(firstName(r.fromOther)):""}</p>
+    <div class="actions"><button class="btn primary" data-rem="${r.id}" data-ra="done">${ic("check")}Done</button><button class="btn" data-rem="${r.id}" data-ra="snooze">Remind me in 1 hour</button></div>`).join("")}`;el.hidden=false;
+  if(!$("#view-dash").hidden)renderDash()}
 function myTasksHTML(){const k=myKey();if(!k||isCEO())return"";const l=tasks.filter(t=>t.agent_key===k),open=l.filter(t=>!t.done);if(!l.length)return"";
   return `<div class="panel"><h2>Your tasks${open.length?` <span class="count num">${open.length}</span>`:""}</h2><p class="lede">Only you, the admin and the CEO see these.</p><div class="stack">${open.concat(l.filter(t=>t.done).slice(0,2)).map(t=>taskRow(t,false)).join("")||'<div class="empty">All done.</div>'}</div></div>`}
 document.addEventListener("click",async e=>{const d=e.target.closest("[data-task-done]"),x=e.target.closest("[data-task-del]"),ed=e.target.closest("[data-task-edit]"),rv=e.target.closest("[data-review]");
@@ -4310,7 +4340,7 @@ async function leadCheck(first){if(!SRV||!isTeam()||isCEO())return;const k="orla
   const max=leads.reduce((m,l)=>Math.max(m,+l.id),0);if(!leadSeen){leadSeen=max;store.set(k,max);return}
   const fresh=leads.filter(l=>+l.id>leadSeen&&!l.done).sort((a,b)=>b.id-a.id);if(max>leadSeen){leadSeen=max;store.set(k,max)}
   if(fresh.length)leadAlert(fresh)}
-function leadPollStart(){if(leadPoll||!SRV||!isTeam()||isCEO())return;leadCheck(true);leadPoll=setInterval(()=>{if(document.visibilityState==="visible")leadCheck(false)},45000);
+function leadPollStart(){if(leadPoll||!SRV||!isTeam()||isCEO())return;leadCheck(true);setTimeout(remCheck,2500);leadPoll=setInterval(()=>{if(document.visibilityState==="visible"){leadCheck(false);remCheck()}},45000);
   document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")leadCheck(false)})}
 if("serviceWorker" in navigator)navigator.serviceWorker.addEventListener("message",e=>{if(e.data&&e.data.type==="open"&&/requests/.test(e.data.url||"")){show("dash");setTimeout(()=>{leadCheck(false);const r=$("#requests");if(r)r.scrollIntoView({behavior:"smooth"})},400)}});
 
