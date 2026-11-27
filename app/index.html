@@ -957,6 +957,9 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
 .sunslide{display:flex;flex-direction:column;gap:4px;font-size:14px;font-weight:700}.sunslide input{width:100%;accent-color:#E8901F;min-height:32px}
 .sunfacts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}.sunfacts li{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--line)}.sunfacts span{color:var(--muted);font-size:14px}
 .sunlinks{display:flex;gap:8px;flex-wrap:wrap}
+#m-pchk .pchk{display:flex;align-items:flex-start;gap:6px;margin-top:6px;font-size:13.5px;font-weight:600;line-height:1.35;padding:8px 10px;border-radius:10px}#m-pchk .ic{width:16px;height:16px;flex:none;margin-top:1px}
+.pchk.ok{background:var(--good-soft,#E3F3E6);color:var(--good,#1E7A3A)}.pchk.warn{background:#FFF3DC;color:#8A5A00}.pchk.over{background:#FDE5E2;color:#A3261B}
+.pill.highprice{background:#FFF3DC;color:#8A5A00}.pill.overprice{background:#FDE5E2;color:#A3261B}
 #motiv{position:fixed;left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:86;display:flex;justify-content:center;padding:0 12px;pointer-events:none}#motiv[hidden]{display:none}
 @media(min-width:900px){#motiv{bottom:24px}}
 .mvcard{pointer-events:auto;position:relative;width:min(460px,100%);background:#1C1A18;color:#fff;border-radius:22px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.45);animation:regup .3s ease-out}
@@ -1244,7 +1247,7 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
           <div class="field"><label for="m-view">View</label><input id="m-view" placeholder="e.g. Canal & Burj"></div>
           <div class="field wide"><label for="m-tour">3D model or 360° tour (link)</label><input id="m-tour" type="url" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="Sketchfab, Matterport, Kuula or YouTube 360 link"><small class="src">Clients open it inside the home's page.</small></div>
           <div class="field"><label for="m-size">Size (sq ft)</label><input id="m-size" inputmode="numeric"></div>
-          <div class="field"><label for="m-price">Price (AED, or rent per year)</label><input id="m-price" inputmode="numeric"></div>
+          <div class="field"><label for="m-price">Price (AED, or rent per year)</label><input id="m-price" inputmode="numeric"><div id="m-pchk" aria-live="polite"></div></div>
           <div class="field"><label for="m-status">Status</label><select id="m-status"><option>Ready</option><option>Vacant</option><option>Tenanted</option><option>Off-plan</option></select></div>
           <div class="field"><label for="m-furn">Furnishing</label><select id="m-furn"><option>Unfurnished</option><option>Fully fitted</option><option>Fully furnished</option></select></div>
           <div class="field"><label for="m-owner">Owner's name</label><input id="m-owner" autocomplete="off"></div>
@@ -1614,6 +1617,7 @@ function pills(o){
   if(o.x&&o.x.reduced)h+='<span class="pill reduced">Price reduced</span>';
   if(o.x&&o.x.value==='below')h+='<span class="pill below">Below market</span>';
   if(o.check)h+='<span class="pill check">Check price</span>';
+  if(isTeam()&&o.x&&o.x.ref!=null&&o.x.ref>PRICE_WARN&&!isDone(o))h+=`<span class="pill ${o.x.ref>PRICE_MAX?"overprice":"highprice"}">${o.x.ref>PRICE_MAX?"Over 10% limit":"7%+ above market"}</span>`;
   return h;
 }
 function cardHTML(o,cur){
@@ -2022,6 +2026,10 @@ function renderMine(){
   const q=v=>{v=String(v??"");return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
   $("#csv-text").value=mine.length?[head.join(",")].concat(mine.map(m=>[m.unit,typeOf(m),m.floor,m.view,m.size,m.deal==="sale"?"Sale":"Rent",m.price,m.size&&m.price?Math.round(m.price/m.size):"",m.status,m.furn,m.owner,m.phone,m.date,m.notes].map(q).join(","))).join("\n"):"";
 }
+function mPriceLive(){const el=$("#m-pchk");if(!el)return;const num=v=>parseFloat(String(v||"").replace(/[^0-9.]/g,""))||0,t=(()=>{try{return mTypeVal()}catch(e){return{beds:0}}})(),deal=$("#m-deal").value,pr=num($("#m-price").value);
+  if(!pr){el.innerHTML="";return}const o={id:"_chk",b:+$("#m-bld").value,beds:+t.beds,layout:t.layout||"",deal,price:deal==="rent"?null:pr,rent:deal==="rent"?pr:null,size:num($("#m-size").value)||null};
+  el.innerHTML=priceHint(priceCheck(o))}
+["#m-price","#m-size","#m-bld","#m-type","#m-deal"].forEach(k=>{const e=$(k);if(e)e.addEventListener(k==="#m-price"||k==="#m-size"?"input":"change",mPriceLive)});
 $("#mine-form").addEventListener("submit",async e=>{e.preventDefault();
   const g=id=>$(id).value.trim();
   const price=parseFloat(g("#m-price").replace(/[^0-9.]/g,""));
@@ -2030,6 +2038,7 @@ $("#mine-form").addEventListener("submit",async e=>{e.preventDefault();
   if(hasTowers(g("#m-bld"))&&!g("#m-tower")){toast(BLD[g("#m-bld")]+": choose Tower A or Tower B");$("#m-tower").focus();return}
   const m={id:g("#m-id")||"l-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),unit:g("#m-unit"),b:g("#m-bld"),tower:hasTowers(g("#m-bld"))&&g("#m-tower")||undefined,layout:mTypeVal().layout||undefined,beds:String(mTypeVal().beds),deal:g("#m-deal"),floor:g("#m-floor"),view:g("#m-view"),tour:tourEmbed(g("#m-tour"))?g("#m-tour"):undefined,size:g("#m-size").replace(/[^0-9.]/g,""),price,status:g("#m-status"),furn:g("#m-furn"),owner:g("#m-owner"),phone:g("#m-phone"),agent:g("#m-agent"),date:g("#m-date"),notes:g("#m-notes"),online:onlineFromForm(),future:$("#m-future").checked||undefined,availableFrom:g("#m-avail")||undefined,remindAt:g("#m-remind")||undefined,remindNote:g("#m-rnote")||undefined,adTitle:g("#m-adtitle")||undefined,adText:g("#m-adtext")||undefined};
   {const prevL=mine.concat(teamListings).find(x=>x.id===m.id)||{},up=m.unit&&unitPlan(m.b,m.tower,m.unit);if(prevL.plan&&prevL.plan.custom)m.plan=prevL.plan;else if(up)m.plan={u:up.u,c:up.c,from:"brochure",mark:up.mark||undefined};else if(prevL.plan&&prevL.plan.from==="brochure")m.plan=null}
+  if(!$("#m-future").checked&&!priceGate(mineToOffer(m),"mine"))return;
   const wasOnline=(()=>{const pv=mine.concat(teamListings).find(x=>x.id===m.id);return !!(pv&&isOnline(pv,goalOf()))})(),nowOnline=!!isOnline(m,goalOf());
   if(SRV){const prev=mine.concat(teamListings).find(x=>x.id===m.id)||{};const{id,...data}=Object.assign({},prev,m);delete data._by;delete data._own;let r;try{r=await api("data/listings",{id,data},"PUT")}catch(x){toast(x.message);return}await loadListings();if(r&&r.warning){resetMineForm();renderAll();setTimeout(()=>toast(r.warning),50);return}}
   else{const i=mine.findIndex(x=>x.id===m.id);if(i>=0)mine[i]=m;else mine.push(m);persist()}
@@ -2234,6 +2243,22 @@ let DEALMKT=[];
 async function loadDealMkt(){if(!SRV)return;try{DEALMKT=(await api("public/market")).rows||[]}catch(e){}}
 function dealMkt(kind,o){const l=(o.layout||""),r=DEALMKT.find(m=>m.kind===kind&&+m.b===+o.b&&+m.beds===+o.beds&&(m.layout||"")===l)||(l?null:null);
   if(!r||r.deals<3||(kind==="sale"&&!r.psf)||(kind==="rent"&&!r.avg))return null;return{b:o.b,beds:o.beds,deals:r.deals,period:"last "+r.months+" months",avg:r.avg,psf:r.psf,src:"DXB Interact (DLD)"}}
+/* ---------------- Price discipline: no listing more than 7% above the market (10% at the very most) ---------------- */
+const PRICE_WARN=0.07,PRICE_MAX=0.10;
+// The market for a listing: DXB Interact registered deals (per sq ft for sales, average rent), by building, bedrooms and layout.
+function priceCheck(o){const x=enrich(o).x;if(x.ref==null)return null;const rent=o.deal==="rent";
+  const mk=rent?(x.mR&&x.mR.avg):(x.mS&&x.mS.psf&&o.size?x.mS.psf*o.size:null);
+  return{ref:x.ref,market:mk||null,warnAt:mk?Math.round(mk*(1+PRICE_WARN)/1000)*1000:null,max:mk?Math.floor(mk*(1+PRICE_MAX)/1000)*1000:null,rent}}
+const pctUp=r=>Math.round(r*100)+"%";
+function priceHint(c){if(!c)return"";const lvl=c.ref>PRICE_MAX?"over":c.ref>PRICE_WARN?"warn":"ok";
+  const mk=c.market?`Market ${aed(c.market)}${c.rent?" a year":""}`:"Market";
+  return `<span class="pchk ${lvl}">${lvl==="ok"?ic("check"):ic("shield")}<span>${esc(mk)} · yours ${c.ref>=0?"+":""}${pctUp(c.ref)}${lvl==="ok"?" · good price":lvl==="warn"?` · above our 7% target: negotiate it down to ${c.warnAt?aed(c.warnAt):"7%"} or less`:` · over the 10% limit: the most we list at is ${c.max?aed(c.max):"10% above market"}`}</span></span>`}
+const PGATE={};
+// Saving: up to 7% goes through; 7 to 10% needs a second tap; over 10% is refused (the admin can confirm with a second tap).
+function priceGate(o,form){const c=priceCheck(o);if(!c||c.ref<=PRICE_WARN)return true;const k=(o.deal==="rent"?o.rent:o.price)+"";
+  if(c.ref>PRICE_MAX&&!isAdmin){toast(`${pctUp(c.ref)} above market. The limit is 10%: list at ${c.max?aed(c.max):"a lower price"} or less, and show the owner the market figures.`);return false}
+  if(PGATE[form]===k){delete PGATE[form];return true}PGATE[form]=k;
+  toast(c.ref>PRICE_MAX?`${pctUp(c.ref)} above market, over the 10% limit. Tap Save again to list it anyway.`:`${pctUp(c.ref)} above market, over our 7% target. Negotiate with the owner; tap Save again only if they insist.`);return false}
 function enrich(o){
   const mS=dealMkt("sale",o)||MKT.sale.find(m=>m.b===o.b&&m.beds===o.beds)||null,mR=dealMkt("rent",o)||MKT.rent.find(m=>m.b===o.b&&m.beds===o.beds)||null;
   const hasSale=o.deal!=="rent"&&o.price>0,hasRent=o.deal!=="sale"&&o.rent>0;
@@ -2678,6 +2703,7 @@ $("#ad-form").addEventListener("submit",async e=>{e.preventDefault();const g=k=>
   const o=Object.assign({},base,{id:id||"o-"+Date.now().toString(36),title:g("#o-title"),b:+g("#o-b"),beds:+g("#o-beds"),deal,avail:g("#o-avail"),price:deal!=="rent"?n("#o-price"):null,rent:deal!=="sale"?n("#o-rent"):null,size:n("#o-size")||null,floor:g("#o-floor")||"",view:g("#o-view")||"",tour:tourEmbed(g("#o-tour"))?g("#o-tour"):undefined,furn:g("#o-furn")||"—",baths:g("#o-baths")||"—",status:g("#o-status")||"Ready",cheques:g("#o-cheques")||null,deposit:g("#o-deposit")||null,agent:g("#o-agent"),hl:g("#o-hl"),src:base.src||"Added in Admin"});
   const ir=n("#o-irent");o.inv=ir?Object.assign({},base.inv||{},{rent:ir}):(base.inv&&base.inv.resale?{resale:base.inv.resale}:null);
   const ch=g("#o-check").split("\n").map(x=>x.trim()).filter(Boolean);o.check=ch.length?ch:null;
+  if(!priceGate(o,"offer"))return;
   o.unit=g("#o-unit")||null;o.teamUnit=$("#o-teamunit").checked||undefined;o.owner=g("#o-owner")||null;o.ownerPhone=g("#o-ophone")||null;if(phDraft.photos)o.photos=phDraft.photos;else delete o.photos;if(phDraft.plan)o.plan=phDraft.plan;else delete o.plan;
   if(await saveOffer(o,(id?"Edited ":"Added ")+BLD[o.b]+" · "+o.title)){$("#ad-form-panel").hidden=true;toast(id?"Saved for everyone":"Offer added");ofDone()}});
 $("#o-del").onclick=async()=>{const d=$("#o-del"),id=$("#o-id").value,o=OFFERS.find(x=>x.id===id);if(!o)return;if(!d.dataset.armed){d.dataset.armed=1;d.textContent="Tap again to delete";return}if(await removeOffer(id,"Deleted "+BLD[o.b]+" · "+o.title)){$("#ad-form-panel").hidden=true;toast("Offer deleted")}};
@@ -3938,11 +3964,14 @@ const MOTIV={
   saved:[["Unit in. Now get it online.","A listing nobody sees can't sell. Put it on Bayut and Property Finder today, then go find the next one."],
     ["Another door opened.","Every listing brings calls, calls bring viewings, viewings bring deals. More listings, more deals. Simple."],
     ["That's how it starts.","The agent with the most listings gets the most calls. Keep the momentum: the next unit is waiting."],
-    ["Good work. Don't stop here.","Owners talk to each other. One listing leads to the next. Call your next owner now."]],
+    ["Good work. Don't stop here.","Owners talk to each other. One listing leads to the next. Call your next owner now."],
+    ["Price it right, win the deal.","Show the owner the real numbers: DXB Interact deals, the building, the view. Experts get listings at the right price, and right prices sell."],
+    ["Be the expert in the room.","Know every floor plan, view and recent deal in the building. Clients trust the agent who knows more than they do."]],
   online:[["Live. It's working for you now.","Clients can find it day and night. You're one listing closer to your next deal. Go get the next one."],
     ["One more ticket in the draw.","Every listing online is a chance to close. The more you have, the sooner the deal comes."],
     ["Deals come from volume.","Not luck: listings. You just added one more. Next!"],
-    ["Clients are looking right now.","And now they'll find you. Keep building: the next listing makes the next call."]]};
+    ["Clients are looking right now.","And now they'll find you. Keep building: the next listing makes the next call."],
+    ["Now negotiate like an expert.","When the calls come, know your numbers: the last deals, the price per sq ft, why this unit is worth it. That's what closes."]]};
 function motivate(kind){if(!isTeam()||isCEO()||!MOTIV[kind])return;
   setTimeout(async()=>{try{perf=null;await loadPerf(true)}catch(e){}
     const g=perf&&perf.goal,me=perf&&perf.agents.find(a=>a.key===myKey()),pc=g&&me?paceOf(me.online,g):null;

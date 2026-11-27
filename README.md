@@ -128,6 +128,21 @@ Every Sunday at 9:00 Dubai time (05:00 UTC), the daily Vercel Cron (`/api/cron/d
 
 **Tasks** are private: the admin or the CEO gives one to an agent (with a due date and notes), and only that agent, the admin and the CEO see it. They show on the agent's Home (overdue ones in red), and the agent ticks them done.
 
+## Price discipline (7% target, 10% limit)
+
+No listing should be more than 7% above the market, and never more than 10%. The market is the DXB Interact registered deals for that building, bedrooms and layout: price per sq ft × size for a sale, the average rent for a rental.
+
+- **While typing the price in My units**, a line under the price shows the market and how far above it the price is:
+  - green up to 7%: "good price";
+  - amber from 7% to 10%: "negotiate it down to AED … or less";
+  - red over 10%: "the most we list at is AED …".
+- **Saving:** up to 7% saves as normal. From 7% to 10%, the agent has to tap Save twice (only if the owner insists). Over 10%, agents can't save. The admin can, with a second tap.
+- The same check runs on the admin's offer form. Team views mark listings with **"7%+ above market"** or **"Over 10% limit"**.
+- Homes without market data, and "coming soon" listings without a price, aren't checked.
+- The limits are `PRICE_WARN` and `PRICE_MAX` in the app.
+
+The motivation card's messages also push expertise and negotiation: knowing the deals, the price per sq ft and the building, and pricing it right.
+
 ## A push after every listing (agents)
 
 Every time an agent adds a unit, or a listing goes online on every platform (from My units or the Team page), a short card comes up from the bottom. It has:
