@@ -1493,7 +1493,11 @@ function fillUnit(o){if(!isTeam()||!o||!o.unit)return o;const g=guideOf(o.b,o.to
 function mineToOffer(m){return{plan:m.plan||undefined,id:m.id,b:+m.b,tower:m.tower||"",layout:m.layout||"",beds:+m.beds,deal:m.deal,title:(m.unit?"Unit "+m.unit+" · ":"")+typeOf(m),price:m.deal==="sale"?+m.price:undefined,rent:m.deal==="rent"?+m.price:undefined,
   size:m.size?+m.size:null,floor:m.floor||"",view:m.view||"",furn:m.furn,status:m.status,agent:m.agent,hl:m.notes||"",mine:true,future:!!m.future,unit:m.unit||null,owner:m.owner,ownerPhone:m.phone,date:m.date,by:m._by||null,own:m._own!==false,shared:m.sharedOffer||null,shareTo:m.shareTo,shareNote:m.shareNote,src:SRV?(m._by?"Added by "+(m._by.name||m._by.email):"Added by you"):"Added on this device"}}
 // A unit an agent has shared shows once, as its shared offer.
-const all=()=>{const live=new Set(OFFERS.map(o=>o.id));return OFFERS.concat(mine.concat(teamListings).filter(m=>!(m.sharedOffer&&live.has(m.sharedOffer))).map(mineToOffer)).map(fillUnit).map(enrich)};
+const all=()=>{const live=new Set(OFFERS.map(o=>o.id));
+  // A shared listing shows once, as its offer; for whoever can see the listing (its agent, the admin) the offer keeps the unit number, owner and plan.
+  const sh={};mine.concat(teamListings).forEach(m=>{if(m.sharedOffer)sh[m.sharedOffer]=m});
+  const offers=OFFERS.map(o=>{const m=sh[o.id];return m?Object.assign({},o,{unit:m.unit||o.unit,owner:m.owner||o.owner,ownerPhone:m.phone||o.ownerPhone,plan:o.plan||m.plan,tower:o.tower||m.tower,listingId:m.id}):o});
+  return offers.concat(mine.concat(teamListings).filter(m=>!(m.sharedOffer&&live.has(m.sharedOffer))).map(mineToOffer)).map(fillUnit).map(enrich)};
 const agentOf=o=>AGENTS[o.agent]||Object.values(AGENTS)[0]||{name:"Orla Properties",phone:""};
 const dldLabel=()=>"DLD registration ("+(+(FEES.dld*100).toFixed(2))+"%)";
 const keyPrice=o=>o.deal==="rent"?o.rent:o.price;
@@ -1627,7 +1631,7 @@ function renderDetail(){
         ${ROLE==="client"?"":`<button class="btn" id="d-copy">${ic("copy")}Copy offer text</button>
         <a class="btn" href="${wa}" target="_blank" rel="noopener">${ic("chat")}Share on WhatsApp</a>`}
         ${o.deal!=="rent"?'<button class="btn" id="d-calc">'+ic("calc")+'Open in calculator</button>':""}
-        ${o.mine&&SRV?'<button class="btn" id="d-edit">'+ic("file")+'Edit listing</button>':""}${o.mine?'<button class="btn" id="d-del">Delete listing</button>':""}
+        ${(o.mine||o.listingId)&&SRV?'<button class="btn" id="d-edit">'+ic("file")+'Edit listing</button>':""}${o.mine?'<button class="btn" id="d-del">Delete listing</button>':""}
       </div>
       ${ownerCard(o)}${o.mine&&SRV?shareBox(o):""}
       <div class="metrics">${M}</div>
@@ -1659,7 +1663,7 @@ function renderDetail(){
   const ef=$("#e-full");if(ef)ef.onclick=()=>{show("admin");openOfferForm(o.id)};
   const dc=$("#d-calc");if(dc)dc.onclick=()=>{loadCalc(o.id);show("calc")};
   const dso=$("#d-so");if(dso)dso.onclick=()=>openSalesOffer([o.id]);
-  const de=$("#d-edit");if(de)de.onclick=()=>editListing(o.id);const doe=$("#d-oedit");if(doe)doe.onclick=()=>editOfferAs(o.id);
+  const de=$("#d-edit");if(de)de.onclick=()=>editListing(o.listingId||o.id);const doe=$("#d-oedit");if(doe)doe.onclick=()=>editOfferAs(o.id);
   const dd=$("#d-del");if(dd)dd.onclick=async()=>{if(dd.dataset.armed){if(SRV){try{await api("data/listings/delete",{id:o.id});await loadListings()}catch(x){toast(x.message);return}}else{mine=mine.filter(m=>m.id!==o.id);persist()}starred.delete(o.id);saveStar();renderAll();toast("Listing deleted")}else{dd.dataset.armed=1;dd.textContent="Tap again to delete"}};
 }
 function toggleStar(id){starred.has(id)?starred.delete(id):starred.add(id);saveStar();renderList();renderShort()}
@@ -2366,7 +2370,7 @@ $("#ad-csv").onclick=()=>{const q=v=>{v=String(v??"");return /[",\n]/.test(v)?'"
   const box=$("#ad-csv-text");box.hidden=false;box.value=t;copy(t,box)};
 // The offer editor lives in Admin; for an agent (or the admin from a home's page) it opens on its own page.
 let ofAgent=false;const ofHome={p:null,n:null};
-const canEditOffer=o=>SRV&&!o.mine&&!isCEO()&&isTeam()&&OFFERS.some(x=>x.id===o.id)&&(isAdmin||(!!o.agent&&o.agent===myKey()));
+const canEditOffer=o=>SRV&&!o.mine&&!o.listingId&&!isCEO()&&isTeam()&&OFFERS.some(x=>x.id===o.id)&&(isAdmin||(!!o.agent&&o.agent===myKey()));
 function ofMode(agent){const pn=$("#ad-form-panel");if(!ofHome.p){ofHome.p=pn.parentNode;ofHome.n=pn.nextSibling}
   if(agent){let v=$("#view-oedit");if(!v){$("#view-admin").insertAdjacentHTML("afterend",'<section class="view" id="view-oedit" hidden><div class="stack" id="oedit"></div></section>');v=$("#view-oedit")}$("#oedit").appendChild(pn)}
   else if(pn.parentNode!==ofHome.p)ofHome.p.insertBefore(pn,ofHome.n);
