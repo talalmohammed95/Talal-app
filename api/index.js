@@ -9,7 +9,7 @@ import { SETTINGS } from "../lib/seed.js";
 import Anthropic from "@anthropic-ai/sdk";
 import { assist, assistOffline, aiEnabled } from "../lib/assistant.js";
 import { importContacts, contactStats, searchContacts, claimWarning, phoneKey } from "../lib/contacts.js";
-import { importDeals, dealStats } from "../lib/deals.js";
+import { importDeals, dealStats, marketReport } from "../lib/deals.js";
 import { readBrochure, guideRows } from "../lib/guide.js";
 import { vapidKeys, subscribe, unsubscribe, notifyLead, pushTo } from "../lib/notify.js";
 import { runWeekly, buildWeekly, weeklyText, runDaily, greet } from "../lib/weekly.js";
@@ -1230,6 +1230,25 @@ const routes = {
   },
   // The admin's private report: owners filled from the contacts database, units to check, and what's still missing.
   "GET admin/owner-report": async c => { requireStaff(c); if (!seesAll(c.user)) fail(403, "Only the admin sees this report."); return await ownerReport(); },
+  // The market report behind a price approval (or any home): the last 3 DXB Interact deals like it and the
+  // lowest / average / highest asking prices in the same building. For the admin, the CEO and the home's own agent.
+  "POST team/market-report": async c => {
+    requireStaff(c);
+    const id = str(c.body.id, 64);
+    const [{ rows: [l] }, { rows: [o] }] = await Promise.all([
+      q("select user_id, data from listings where id = $1", [id]), q("select data from offers where id = $1", [id])]);
+    if (!l && !o) fail(404, "Home not found.");
+    if (!seesAll(c.user) && !(l ? l.user_id === c.user.id : o.data.agent && o.data.agent === c.user.agent_key)) fail(403, "Only your own homes.");
+    const home = l ? l.data : o.data;
+    const [{ rows: OA }, { rows: LA }] = await Promise.all([
+      q("select id, data from offers where coalesce(data->>'avail','Available') not in ('Sold','Rented') and coalesce(data->>'pricePending','') = ''"),
+      q("select id, data from listings where coalesce(data->>'sharedOffer','') = '' and coalesce(data->>'status','') not in ('Sold','Rented')")]);
+    const skip = new Set([id, home.sharedOffer, home.fromListing].filter(Boolean));
+    const listed = OA.map(r => ({ id: r.id, ...r.data })).concat(LA.map(r => ({ id: r.id, ...r.data }))).filter(x => !skip.has(x.id));
+    const rep = await marketReport(home, listed);
+    const { rows: [ag] } = await q("select name from users where agent_key = $1 limit 1", [str(home.agent, 40) || "-"]);
+    return { ...rep, agent: (ag && ag.name) || (l ? null : home.agent) || "", review: home.priceReview || null };
+  },
   "POST admin/unit-set": async c => {
     requireStaff(c);
     const kind = c.body.kind === "listing" ? "listings" : "offers", id = str(c.body.id, 64), unit = str(c.body.unit, 20).toUpperCase().replace(/[^A-Z0-9-]/g, "");

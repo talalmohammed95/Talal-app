@@ -4041,7 +4041,7 @@ $("#iv-form").addEventListener("submit",async e=>{e.preventDefault();const g=k=>
 document.addEventListener("click",e=>{const b=e.target.closest("[data-cmp-offer]");if(!b)return;const o=all().find(x=>x.id===b.dataset.cmpOffer);if(!o)return;
   show("assist");aiSend(o.mine?`Compare my listing ${o.id}${o.unit?" (unit "+o.unit+")":""} with recent Peninsula deals`:`Compare offer ${o.id} (${BLD[o.b]}, ${typeOf(o)}) with recent Peninsula deals`)});
 let dlStatsLoaded=false,dlImport=null;
-const DL_FIELDS=[["date","Date",/date|registered|time/i],["kind","Sale or rent",/^(type|transaction|procedure|deal|kind)$|transaction type|sale.?\/.?rent|procedure/i],["building","Building / project",/building|project|tower|location|community|sub.?area/i],["type","Rooms / unit type",/room|bed|unit type|property type|layout|^type$/i],["size","Size",/size|area|sq|bua/i],["price","Price or rent (AED)",/price|amount|value|rent|aed/i],["floor","Floor",/floor|level/i],["unit","Unit",/unit no|unit number|^unit$/i]];
+const DL_FIELDS=[["date","Date",/date|registered|time/i],["kind","Sale or rent",/^(type|transaction|procedure|deal|kind)$|transaction type|sale.?\/.?rent|procedure/i],["building","Building / project",/building|project|tower|location|community|sub.?area/i],["type","Rooms / unit type",/room|bed|unit type|property type|layout|^type$/i],["size","Size",/size|area|sq|bua/i],["price","Price or rent (AED)",/price|amount|value|rent|aed/i],["floor","Floor",/floor|level/i],["unit","Unit",/unit no|unit number|^unit$/i],["furn","Furnished",/furnish/i]];
 async function loadDlStats(){dlStatsLoaded=true;try{dlShow(await api("admin/deals"))}catch(e){}}
 function dlShow(r){$("#dl-stats").innerHTML=r.count?`<b>${fmt(r.count)}</b> Peninsula deals: ${fmt(r.sales)} sales, ${fmt(r.rents)} rents${r.first?`, ${esc(new Date(r.first).toLocaleDateString("en-GB",{month:"short",year:"numeric"}))} to ${esc(new Date(r.last).toLocaleDateString("en-GB",{month:"short",year:"numeric"}))}`:""}. Last import ${esc(new Date(r.importedAt).toLocaleDateString("en-GB",{day:"numeric",month:"short"}))}.`:"No deals yet.";$("#dl-clear").hidden=!r.count}
 function dlGuess(h){const used=new Set(),map={};for(const[k,,re]of DL_FIELDS){const i=h.findIndex((x,ix)=>!used.has(ix)&&re.test(String(x).trim()));if(i>=0){map[k]=i;used.add(i)}}return map}
@@ -4154,10 +4154,50 @@ function reviewBox(o){const r=o.priceReview,id=o.listingId||o.id,boss=isAdmin||i
   return `<div class="prbox ${st}"><div class="prh"><span class="pill ${PR_PILL[st][0]}">${PR_PILL[st][1]}</span><b>${r.pct!=null?r.pct+"% above the market":""}${r.market?" · market "+aed(r.market):""}</b></div>
     <p><b>${esc(catName(r.cat))}</b> · ${esc(r.reason||"")}</p><small class="src">Asked by ${esc(firstName(r.by||""))}${r.at?" on "+esc(dShort(String(r.at).slice(0,10))):""}${r.decidedBy?" · "+(st==="approved"?"approved":"answered")+" by "+esc(firstName(r.decidedBy)):""}</small>
     ${r.note?`<p class="prnote">${ic("chat")}${esc(r.note)}</p>`:""}
-    ${boss&&st==="pending"?prActions(id):""}${!boss&&st==="rejected"?`<div class="actions"><button class="btn primary" data-qa="edit" data-id="${esc(id)}">${ic("pen")}Change the price</button></div>`:""}</div>`}
-const prActions=id=>`<div class="pract"><input data-prnote="${esc(id)}" maxlength="500" placeholder="Note to the agent (optional)"><div class="actions"><button class="btn primary" data-prd="approve" data-id="${esc(id)}">${ic("check")}Approve</button><button class="btn" data-prd="reject" data-id="${esc(id)}">${ic("x")}Not approved</button></div></div>`;
+    ${boss&&st==="pending"?prActions(id):""}${!boss?`<div class="actions">${mrBtn(id)}</div>`:""}${!boss&&st==="rejected"?`<div class="actions"><button class="btn primary" data-qa="edit" data-id="${esc(id)}">${ic("pen")}Change the price</button></div>`:""}</div>`}
+const mrBtn=id=>`<button type="button" class="btn sm" data-mr="${esc(id)}">${ic("download")}Market report (PDF)</button>`;
+const prActions=id=>`<div class="pract">${mrBtn(id)}<input data-prnote="${esc(id)}" maxlength="500" placeholder="Note to the agent (optional)"><div class="actions"><button class="btn primary" data-prd="approve" data-id="${esc(id)}">${ic("check")}Approve</button><button class="btn" data-prd="reject" data-id="${esc(id)}">${ic("x")}Not approved</button></div></div>`;
 document.addEventListener("click",async e=>{const b=e.target.closest("[data-prd]");if(!b)return;const id=b.dataset.id,n=document.querySelector(`[data-prnote="${CSS.escape(id)}"]`);b.disabled=true;
   try{await api("team/price-review",{id,decision:b.dataset.prd,note:n?n.value.trim():""});await loadListings();await loadAll();renderAll();try{renderDetail()}catch(x){}toast(b.dataset.prd==="approve"?"Approved: it can go online now":"Sent back to the agent");if(b.closest(".revtop"))setTimeout(()=>{show("dash");const a=$("#approvals");if(a)a.scrollIntoView()},600)}catch(x){toast(x.message);b.disabled=false}});
+// The market report: last 3 DXB Interact deals like the unit, the lowest / average / highest listed in the building,
+// and talking points, so the agent can show the owner (or the client) where the market really is.
+document.addEventListener("click",e=>{const b=e.target.closest("[data-mr]");if(!b)return;e.preventDefault();b.disabled=true;mrPdf(b.dataset.mr).catch(x=>toast(x.message)).finally(()=>{b.disabled=false})});
+async function mrPdf(id){toast("Preparing the market report…");const R=await api("team/market-report",{id});const h=R.home,rent=h.deal==="rent",per=rent?" a year":"";
+  await soLibs();const {jsPDF}=window.jspdf,pdf=new jsPDF({unit:"pt",format:"a4"}),W=595,M=44;let y=62;const nl=n=>{if(y+n>790){pdf.addPage();y=60}};
+  const T=(t,x,sz,b,c,w)=>{pdf.setFont("helvetica",b?"bold":"normal");pdf.setFontSize(sz);pdf.setTextColor(...(Array.isArray(c)?c:[c==null?25:c]));const l=pdf.splitTextToSize(String(t),w||W-x-M);nl(l.length*(sz+4));pdf.text(l,x,y);y+=l.length*(sz+4)};
+  const A=v=>v?"AED "+fmt(Math.round(v)):"—",typ=typeOf({beds:h.beds,layout:h.layout})||"Home",bld=(BLD[h.b]||"Peninsula")+(h.tower&&+h.b===4?" Tower "+h.tower:"");
+  const dd=d=>d?new Date(d+"T12:00:00Z").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):"—";
+  pdf.setFillColor(20,40,48);pdf.rect(0,0,W,8,"F");
+  T("Market report",M,22,1);T(`${bld} · ${typ}${h.size?" · "+fmt(h.size)+" sq ft":""}${known(h.floor)?" · "+h.floor+(/floor/i.test(h.floor)?"":" floor"):""}${known(h.view)?" · "+h.view+" view":""}`,M,11,0,90);
+  T(`Prepared by Orla Properties${R.agent?" for "+R.agent:""} · ${new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}`,M,9,0,130);y+=12;
+  // the verdict
+  const over=R.vsMarket;pdf.setFillColor(over>7?253:236,over>7?236:246,over>7?232:240);nl(70);pdf.roundedRect(M,y,W-2*M,62,8,8,"F");y+=22;
+  T(`Asking ${A(h.price)}${per}${h.psf&&!rent?" · AED "+fmt(h.psf)+" / sq ft":""}`,M+14,13,1);
+  T(R.marketPrice?`Market value about ${A(R.marketPrice)}${per} (recent registered deals)${over!=null?` · ${over>0?over+"% above":Math.abs(over)+"% below"} the market`:""}`:"Not enough registered deals to set a market value: import the latest DXB Interact deals.",M+14,10,0,[over>7?170:40,over>7?50:110,over>7?30:60]);y+=18;
+  // 1. last 3 deals
+  T("Last 3 registered deals (DXB Interact)",M,13,1);
+  T(R.deals.count?`${typ}s in ${bld}${R.deals.band?`, size within ${Math.round(R.deals.band*100)}% of ${fmt(h.size)} sq ft`:""}. Average of the latest deals: ${!rent&&R.deals.avgPsf?"AED "+fmt(R.deals.avgPsf)+" / sq ft · ":""}${A(R.deals.avgPrice)}${per}.`:"No registered deals of this type imported yet.",M,9.5,0,110);y+=4;
+  const cols=[["Date",M],["Size",M+90],[rent?"Rent":"Price",M+160],["AED / sq ft",M+265],["Floor",M+345],["Furnished",M+400]];
+  if(R.deals.last3.length){nl(20);cols.forEach(([t,x])=>T.call(null,t,x,9,1,110,80)||(y-=13));y+=13;pdf.setDrawColor(220);pdf.line(M,y-9,W-M,y-9);
+    R.deals.last3.forEach(d=>{nl(16);[[dd(d.date)],[d.size?fmt(d.size)+" sq ft":"—"],[A(d.price)],[d.psf&&!rent?fmt(d.psf):"—"],[d.floor||"—"],[d.furn||"Not stated"]].forEach(([v],i)=>{T(v,cols[i][1],9.5,0,40,90);y-=13.5});y+=16})}
+  y+=10;
+  // 2. listed now
+  T("Listed now in the same building, same type",M,13,1);const Ls=R.listed;
+  if(!Ls.count)T("No other unit of this type listed in our database right now.",M,9.5,0,110);
+  else{T(`${Ls.count} unit${Ls.count>1?"s":""} listed${Ls.averagePsf&&!rent?" · average AED "+fmt(Ls.averagePsf)+" / sq ft":""}`,M,9.5,0,110);y+=4;
+    [["Lowest",Ls.lowest],["Average",Ls.average?{price:Ls.average}:null],["Highest",Ls.highest]].forEach(([k,o])=>{if(!o)return;nl(30);pdf.setDrawColor(225);pdf.roundedRect(M,y-12,W-2*M,o.size?30:20,5,5);T(`${k}: ${A(o.price)}${per}`,M+10,11,1,25,200);y-=15;
+      if(o.size)T([fmt(o.size)+" sq ft",o.psf&&!rent?"AED "+fmt(o.psf)+" / sq ft":"",known(o.floor)?o.floor+(/floor/i.test(o.floor)?"":" floor"):"",known(o.view)?o.view:"",o.furn&&o.furn!=="—"?o.furn:""].filter(Boolean).join(" · "),M+215,9,0,100,W-2*M-225);else y+=13;y+=12})}
+  y+=10;
+  // 3. talking points
+  T("How to talk about the price",M,13,1);y+=2;
+  const tp=[R.deals.last3.length?`The last ${R.deals.last3.length} registered ${rent?"rents":"sales"} of similar ${typ.toLowerCase()}s in ${bld} were ${R.deals.last3.map(d=>A(d.price)).join(", ")}${!rent&&R.deals.avgPsf?` (about AED ${fmt(R.deals.avgPsf)} per sq ft)`:""}. These are DLD-registered deals, not asking prices.`:"",
+    Ls.count?`Right now ${Ls.count>1?"similar units ask from "+A(Ls.lowest&&Ls.lowest.price)+" to "+A((Ls.highest||Ls.lowest).price):"one similar unit asks "+A(Ls.lowest.price)}${per}. Buyers compare: the best-priced home gets the viewings.`:"",
+    R.marketPrice&&over!=null?(over>7?`At ${A(h.price)} this home is ${over}% above the market. Priced up to ${A(R.within7)} (within 7%) it stays competitive and sells faster; above that it waits while the others sell.`:`At ${A(h.price)} the price is in line with the market: a strong position for a quick ${rent?"rent":"sale"}.`):"",
+    "Every buyer can check DXB Interact. A price backed by real deals builds trust; a price far above them loses it.",
+    "Your edge: you know every recent deal, the price per sq ft and what is listed today. Lead the conversation with the numbers."].filter(Boolean);
+  tp.forEach((t,i)=>{T(`${i+1}.`,M,10,1,25,20);y-=14;T(t,M+16,10,0,45)});
+  pdf.setFontSize(8);pdf.setTextColor(140);pdf.text(pdf.splitTextToSize("Sources: DXB Interact (DLD registered deals) imported by Orla Properties; listed prices from the Orla offers database. Figures are a guide for the negotiation, not a valuation.",W-2*M),M,812);
+  await shareFile(pdf.output("blob"),`Market-report-${bld.replace(/\s+/g,"-")}-${typ.replace(/\s+/g,"-")}.pdf`,"Market report")}
 // The admin's and the CEO's list of prices waiting for a decision (on Home).
 function approvalsHTML(){if(!(isAdmin||isCEO()))return"";const P=mine.concat(teamListings).filter(m=>m.priceReview&&m.priceReview.status==="pending").sort((a,b)=>String(a.priceReview.at).localeCompare(String(b.priceReview.at)));
   // Built-in offers the admin moved to approvals (not from an agent's My units).
