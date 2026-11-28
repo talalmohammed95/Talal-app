@@ -4176,7 +4176,7 @@ async function mrPdf(id){toast("Preparing the market report…");const R=await a
   T(R.marketPrice?`Market value about ${A(R.marketPrice)}${per} (recent registered deals)${over!=null?` · ${over>0?over+"% above":Math.abs(over)+"% below"} the market`:""}`:"Not enough registered deals to set a market value: import the latest DXB Interact deals.",M+14,10,0,[over>7?170:40,over>7?50:110,over>7?30:60]);y+=18;
   // 1. last 3 deals
   T("Last 3 registered deals (DXB Interact)",M,13,1);
-  T(R.deals.count?`${typ}s in ${bld}${R.deals.band?`, size within ${Math.round(R.deals.band*100)}% of ${fmt(h.size)} sq ft`:""}. Average of the latest deals: ${!rent&&R.deals.avgPsf?"AED "+fmt(R.deals.avgPsf)+" / sq ft · ":""}${A(R.deals.avgPrice)}${per}.`:"No registered deals of this type imported yet.",M,9.5,0,110);y+=4;
+  T(R.deals.count?`${typ} homes in ${bld}${R.deals.band?`, size within ${Math.round(R.deals.band*100)}% of ${fmt(h.size)} sq ft`:""}. Average of the latest deals: ${!rent&&R.deals.avgPsf?"AED "+fmt(R.deals.avgPsf)+" / sq ft · ":""}${A(R.deals.avgPrice)}${per}.`:"No registered deals of this type imported yet.",M,9.5,0,110);y+=4;
   const cols=[["Date",M],["Size",M+90],[rent?"Rent":"Price",M+160],["AED / sq ft",M+265],["Floor",M+345],["Furnished",M+400]];
   if(R.deals.last3.length){nl(20);cols.forEach(([t,x])=>T.call(null,t,x,9,1,110,80)||(y-=13));y+=13;pdf.setDrawColor(220);pdf.line(M,y-9,W-M,y-9);
     R.deals.last3.forEach(d=>{nl(16);[[dd(d.date)],[d.size?fmt(d.size)+" sq ft":"—"],[A(d.price)],[d.psf&&!rent?fmt(d.psf):"—"],[d.floor||"—"],[d.furn||"Not stated"]].forEach(([v],i)=>{T(v,cols[i][1],9.5,0,40,90);y-=13.5});y+=16})}
@@ -4185,12 +4185,12 @@ async function mrPdf(id){toast("Preparing the market report…");const R=await a
   T("Listed now in the same building, same type",M,13,1);const Ls=R.listed;
   if(!Ls.count)T("No other unit of this type listed in our database right now.",M,9.5,0,110);
   else{T(`${Ls.count} unit${Ls.count>1?"s":""} listed${Ls.averagePsf&&!rent?" · average AED "+fmt(Ls.averagePsf)+" / sq ft":""}`,M,9.5,0,110);y+=4;
-    [["Lowest",Ls.lowest],["Average",Ls.average?{price:Ls.average}:null],["Highest",Ls.highest]].forEach(([k,o])=>{if(!o)return;nl(30);pdf.setDrawColor(225);pdf.roundedRect(M,y-12,W-2*M,o.size?30:20,5,5);T(`${k}: ${A(o.price)}${per}`,M+10,11,1,25,200);y-=15;
+    [[Ls.count>1?"Lowest":"Listed",Ls.lowest],["Average",Ls.count>2&&Ls.average?{price:Ls.average}:null],["Highest",Ls.highest]].forEach(([k,o])=>{if(!o)return;nl(30);pdf.setDrawColor(225);pdf.roundedRect(M,y-12,W-2*M,o.size?30:20,5,5);T(`${k}: ${A(o.price)}${per}`,M+10,11,1,25,200);y-=15;
       if(o.size)T([fmt(o.size)+" sq ft",o.psf&&!rent?"AED "+fmt(o.psf)+" / sq ft":"",known(o.floor)?o.floor+(/floor/i.test(o.floor)?"":" floor"):"",known(o.view)?o.view:"",o.furn&&o.furn!=="—"?o.furn:""].filter(Boolean).join(" · "),M+215,9,0,100,W-2*M-225);else y+=13;y+=12})}
   y+=10;
   // 3. talking points
   T("How to talk about the price",M,13,1);y+=2;
-  const tp=[R.deals.last3.length?`The last ${R.deals.last3.length} registered ${rent?"rents":"sales"} of similar ${typ.toLowerCase()}s in ${bld} were ${R.deals.last3.map(d=>A(d.price)).join(", ")}${!rent&&R.deals.avgPsf?` (about AED ${fmt(R.deals.avgPsf)} per sq ft)`:""}. These are DLD-registered deals, not asking prices.`:"",
+  const tp=[R.deals.last3.length?`The last ${R.deals.last3.length} registered ${rent?"rents":"sales"} of similar ${typ.toLowerCase()} homes in ${bld} were ${R.deals.last3.map(d=>A(d.price)).join(", ")}${!rent&&R.deals.avgPsf?` (about AED ${fmt(R.deals.avgPsf)} per sq ft)`:""}. These are DLD-registered deals, not asking prices.`:"",
     Ls.count?`Right now ${Ls.count>1?"similar units ask from "+A(Ls.lowest&&Ls.lowest.price)+" to "+A((Ls.highest||Ls.lowest).price):"one similar unit asks "+A(Ls.lowest.price)}${per}. Buyers compare: the best-priced home gets the viewings.`:"",
     R.marketPrice&&over!=null?(over>7?`At ${A(h.price)} this home is ${over}% above the market. Priced up to ${A(R.within7)} (within 7%) it stays competitive and sells faster; above that it waits while the others sell.`:`At ${A(h.price)} the price is in line with the market: a strong position for a quick ${rent?"rent":"sale"}.`):"",
     "Every buyer can check DXB Interact. A price backed by real deals builds trust; a price far above them loses it.",
