@@ -290,6 +290,18 @@ When an agent has several homes of the same kind, a client sees only the cheapes
 
 **Unit numbers to fill** (the admin's Team page): every home and listing that has no unit number yet, with likely units from the Peninsula contacts (same building and bedrooms, size within about 2%, same floor when known). Tap a suggestion or type the number, then Save. It shows in Admin › Activity.
 
+## Home cards
+
+Every home in Offers, My units and the shortlists is one card:
+- a square photo with the building (P3, P4A) and "Real photos" when they are;
+- a coloured **For sale / For rent / Sale or rent** label, and the unit number for those allowed to see it;
+- the full name of the type ("1 Bedroom Apartment", "Studio Apartment", "2 Bedroom Duplex Loft");
+- the building and floor (a low, mid or high floor band for clients and external agents);
+- up to three facts with icons (size, view, furnishing, bathrooms);
+- the full price ("AED 1,209,000", rent "/ year", "or AED 75,000 / yr" for sale or rent, or the price per sq ft);
+- for the team, who listed it ("Your listing" / "Listed by Giulia");
+- at most three labels that matter (price approval, above market, sold or rented, coming soon, price reduced, below market).
+
 ## Each agent's buildings first
 
 Each agent's stock shows their buildings first: Talal **Peninsula Three**; Giulia **Peninsula One and Two**; Blendjana **Peninsula Four**; Liubov **Peninsula Five and the duplexes** (duplexes and lofts in any building). Derya has none set.
