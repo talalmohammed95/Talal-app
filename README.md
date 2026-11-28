@@ -135,6 +135,7 @@ We list homes up to 7% above the market. Above that, the admin approves first. T
 - **While typing the price** (My units), a line shows the market and how far above it the price is. Green means it goes online straight away; amber or red means it needs Talal's approval, with the highest price that doesn't.
 - **Saving above 7%** opens "Price approval". It shows the market, the agent's price and the highest price that needs no approval. The agent picks why the home is worth more (fully renovated, upgraded finishes, premium furniture, exceptional view or floor, bigger or rare layout, owner's firm price, other) and explains it: what was done, when, the cost. A warning shows over 10%. "Change the price" goes back to the price instead.
 - **While waiting:** the listing shows "Waiting for price approval". It stays in the agent's units, isn't published on the website (a shared offer is kept team-only) and can't be ticked online on the platforms.
+- **Reviewing from inside:** each request on Home shows the home's photos (tap for full screen) and **Open the full listing to review**. That opens the listing's own page with a review panel at the top: the reason, agent, owner and phone, unit, price, market, % above, price per sq ft, size, floor and view, furnishing and status, number of photos and the agent's notes, with Approve or Not approved. Below it are the full gallery, the floor plan with the unit marked, and the market comparison. After deciding, the app goes back to the approvals list.
 - **The admin** (and the CEO) get a phone notification and a **Price approvals** panel at the top of Home. Each row shows the agent, unit, price, +%, market, number of photos and the reason, with a note box and **Approve** or **Not approved**. The home's page shows the same box. The agent is notified of the decision with the note.
 - **Approved:** the listing can go online, and stays approved while the price stays the same. **Not approved:** the agent sees the note and a "Change the price" button. Any new price over 7% asks again.
 - The admin's own listings are approved automatically. Agents editing an offer directly can't go over 7% there.
@@ -288,6 +289,14 @@ When an agent has several homes of the same kind, a client sees only the cheapes
 - **External agents and clients** see a low, mid or high floor only.
 
 **Unit numbers to fill** (the admin's Team page): every home and listing that has no unit number yet, with likely units from the Peninsula contacts (same building and bedrooms, size within about 2%, same floor when known). Tap a suggestion or type the number, then Save. It shows in Admin › Activity.
+
+## Each agent's buildings first
+
+Each agent's stock shows their buildings first: Talal **Peninsula Three**; Giulia **Peninsula One and Two**; Blendjana **Peninsula Four**; Liubov **Peninsula Five and the duplexes** (duplexes and lofts in any building). Derya has none set.
+- In **Offers** the list opens with a heading per building ("Peninsula Three · your building"), then "Other buildings · your units / team units", then other offers. The count line says "your buildings first: P3".
+- In **My units**, current units follow the same order.
+
+The buildings are `focus` on each agent in the settings' agent list (set once by a migration; e.g. `[5,"duplex"]`), with the same defaults in the app.
 
 ## Unit numbers by agent (the admin's board)
 

@@ -1023,6 +1023,11 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
 :root[data-theme="dark"] .umgrp.na{background:#3A2D12}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .umgrp.na{background:#3A2D12}}
 .umall{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--accent-soft);border-radius:14px;padding:10px 12px;margin:6px 0 4px}.umall span{display:flex;align-items:center;gap:6px}
 #umy,#umiss{transition:box-shadow .4s}#umy.flash,#umiss.flash,#approvals.flash,#reminders.flash{box-shadow:0 0 0 3px var(--primary)}
+.aprph{display:flex;gap:6px;overflow-x:auto}.aprph button{flex:none;border:0;padding:0;border-radius:10px;overflow:hidden;cursor:pointer;width:84px;height:64px}.aprph img{width:100%;height:100%;object-fit:cover}
+.revtop{border:2px solid #E8A33A;background:#FFF6E6;border-radius:18px;padding:14px;margin:0 0 12px;display:flex;flex-direction:column;gap:8px}.revtop h3{margin:0}.revtop .kick{margin:0;display:flex;align-items:center;gap:6px}.revtop .kick .ic{width:16px;height:16px}.revwhy{margin:0;font-size:15px}.revtop .src{margin:0}
+.lhead.focus span{color:var(--primary)}
+.revgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:6px}.revgrid div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:7px 10px;display:flex;flex-direction:column;min-width:0}.revgrid span{font-size:11.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}.revgrid b{font-size:14px;word-break:break-word}
+:root[data-theme="dark"] .revtop{background:#3A2D12}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .revtop{background:#3A2D12}}
 #motiv{position:fixed;left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:86;display:flex;justify-content:center;padding:0 12px;pointer-events:none}#motiv[hidden]{display:none}
 @media(min-width:900px){#motiv{bottom:24px}}
 .mvcard{pointer-events:auto;position:relative;width:min(460px,100%);background:#1C1A18;color:#fff;border-radius:22px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.45);animation:regup .3s ease-out}
@@ -1712,9 +1717,14 @@ function filtered(){
   const S={"price-asc":(a,b)=>pk(a)-pk(b),"price-desc":(a,b)=>pk(b)-pk(a),"size-desc":(a,b)=>(b.size||0)-(a.size||0),"bld":(a,b)=>a.b-b.b||a.beds-b.beds,
     "psf-asc":(a,b)=>((a.x.psf||a.x.rpsf)??Infinity)-((b.x.psf||b.x.rpsf)??Infinity),"yield-desc":(a,b)=>(b.x.gy??-1)-(a.x.gy??-1),"value":(a,b)=>(a.x.ref??9)-(b.x.ref??9),"newest":(a,b)=>(Date.parse(b.x.listed||0)||0)-(Date.parse(a.x.listed||0)||0),"dom-desc":(a,b)=>(b.x.dom??-1)-(a.x.dom??-1)};
   l.sort(S[state.sort]||S["price-asc"]);
-  if(isTeam()){const g=offerGroup;return l.map((o,i)=>[o,i]).sort((a,b)=>g(a[0])-g(b[0])||a[1]-b[1]).map(x=>x[0])}
+  if(isTeam()){const g=offerGroup,f=myFocus();return l.map((o,i)=>[o,i]).sort((a,b)=>focusRank(a[0],f)-focusRank(b[0],f)||g(a[0])-g(b[0])||a[1]-b[1]).map(x=>x[0])}
   return l;
 }
+// Each agent's buildings: their stock shows these first (Talal P3; Giulia P1 and P2; Blendjana P4; Liubov P5 and duplexes).
+const FOCUS_DEFAULT={talal:[3],giulia:[1,2],blendjana:[4],love:[5,"duplex"]};
+const myFocus=()=>{const k=myKey(),a=AGENTS[k]||{};return Array.isArray(a.focus)&&a.focus.length?a.focus:FOCUS_DEFAULT[k]||[]};
+function focusRank(o,f){f=f||myFocus();if(!f.length)return 0;let r=f.length;f.forEach((x,i)=>{if(r<f.length)return;if(x==="duplex"?(o.layout==="duplex"||o.layout==="loft"):+o.b===+x)r=i});return r}
+const focusLabel=f=>f.map(x=>x==="duplex"?"duplexes":"P"+x).join(", ").replace(/, ([^,]*)$/," and $1");
 // For the team: 0 = my units, 1 = the rest of the team's units, 2 = other offers.
 function offerGroup(o){const k=myKey();if((o.mine&&o.own)||(k&&o.agent===k&&(o.teamUnit||o.fromListing)))return 0;if(o.teamUnit||o.fromListing||o.mine)return 1;return 2}
 function renderList(){
@@ -1722,9 +1732,11 @@ function renderList(){
   const l=filtered();
   if(!l.find(o=>o.id===state.sel))state.sel=l[0]?.id??null;
   const sale=l.filter(o=>o.deal!=="rent").length,rent=l.filter(o=>o.deal!=="sale").length;
-  $("#summary").textContent=`${l.length} offers · ${sale} for sale · ${rent} for rent`;
+  $("#summary").textContent=`${l.length} offers · ${sale} for sale · ${rent} for rent`+(isTeam()&&myFocus().length&&!state.bld?` · your buildings first: ${focusLabel(myFocus())}`:"");
   const GH=["Your units","Team units","Other offers"],cnt=[0,1,2].map(g=>isTeam()?l.filter(o=>offerGroup(o)===g).length:0);let last=-1;
-  $("#list").innerHTML=l.length?l.map(o=>{let h="";if(isTeam()){const g=offerGroup(o);if(g!==last){last=g;h=`<div class="lhead"><span>${GH[g]}</span><b class="num">${cnt[g]}</b></div>`}}return h+cardHTML(o,o.id===state.sel)}).join(""):(all().length?'<div class="empty">No offers match these filters.</div>':'<div class="empty">No offers yet. Admins add them in the Admin tab.</div>');
+  const F=isTeam()?myFocus():[],sk=o=>{const r=focusRank(o,F);return r<F.length?"f"+r:"g"+offerGroup(o)},skc={};if(isTeam())l.forEach(o=>{const k=sk(o);skc[k]=(skc[k]||0)+1});
+  const skl=k=>k[0]==="f"?(F[+k.slice(1)]==="duplex"?"Duplexes · your speciality":BLD[F[+k.slice(1)]]+" · your building"):(F.length&&k!=="g2"?"Other buildings · ":"")+GH[+k.slice(1)];
+  $("#list").innerHTML=l.length?l.map(o=>{let h="";if(isTeam()){const k=sk(o);if(k!==last){last=k;h=`<div class="lhead${k[0]==="f"?" focus":""}"><span>${esc(skl(k))}</span><b class="num">${skc[k]}</b></div>`}}return h+cardHTML(o,o.id===state.sel)}).join(""):(all().length?'<div class="empty">No offers match these filters.</div>':'<div class="empty">No offers yet. Admins add them in the Admin tab.</div>');
   $("#cnt-offers").textContent=all().length;
   renderDetail();
 }
@@ -1971,6 +1983,7 @@ function renderDetail(){
       <div class="big num"><b>${esc(p.big)}</b><span>${esc(p.sub)}</span></div></div>
     <div class="dbody">
       ${isTeam()?towerBar(o):""}
+      ${(isAdmin||isCEO())&&o.priceReview&&o.priceReview.status==="pending"?reviewTop(o):""}
       ${galleryHTML(o)}
       ${isTeam()&&o.priceReview?reviewBox(o):""}
       ${isTeam()?`<div class="qbar">${(o.mine||o.listingId)&&SRV?`<button class="btn primary" data-qa="photos" data-id="${esc(o.listingId||o.id)}">${ic("plus")}Add photos</button><button class="btn" data-qa="edit" data-id="${esc(o.listingId||o.id)}">${ic("pen")}Edit listing</button>`:""}<button class="btn" data-qa="dl" data-id="${esc(o.id)}">${ic("download")}Download ${photosOf(o).length>1?"all "+photosOf(o).length+" photos":"photo"}</button></div>`:""}
@@ -3515,7 +3528,7 @@ function mineSections(){if(!mine.length)return'<div class="empty">Listings you a
   if(due.length)h+=`<h4 class="mh due">Reminders due · ${due.length}</h4>`+due.map(reminderRow).join("");
   if(fut.length)h+=`<h4 class="mh">Future listings · ${fut.length}</h4>`+fut.map(reminderRow).join("");
   if(later.length)h+=`<h4 class="mh">Upcoming reminders · ${later.length}</h4>`+later.map(reminderRow).join("");
-  h+=`<h4 class="mh">Current units · ${cur.length}</h4>`+(cur.length?cur.map(m=>{const o=mineToOffer(m),n=Array.isArray(m.photos)?m.photos.length:0;return `<div class="myu">${cardHTML(o,false)}<div class="myu-act"><button class="btn sm" data-qa="edit" data-id="${esc(m.id)}">${ic("pen")}Edit</button><button class="btn sm${n?"":" primary"}" data-qa="photos" data-id="${esc(m.id)}">${ic("plus")}${n?"Photos ("+n+")":"Add photos"}</button><button class="btn sm" data-qa="dl" data-id="${esc(m.id)}">${ic("download")}Download</button></div></div>`}).join(""):'<div class="empty">No current units yet.</div>');
+  h+=`<h4 class="mh">Current units · ${cur.length}</h4>`+(cur.length?[...cur].sort((a,b)=>focusRank(mineToOffer(a))-focusRank(mineToOffer(b))).map(m=>{const o=mineToOffer(m),n=Array.isArray(m.photos)?m.photos.length:0;return `<div class="myu">${cardHTML(o,false)}<div class="myu-act"><button class="btn sm" data-qa="edit" data-id="${esc(m.id)}">${ic("pen")}Edit</button><button class="btn sm${n?"":" primary"}" data-qa="photos" data-id="${esc(m.id)}">${ic("plus")}${n?"Photos ("+n+")":"Add photos"}</button><button class="btn sm" data-qa="dl" data-id="${esc(m.id)}">${ic("download")}Download</button></div></div>`}).join(""):'<div class="empty">No current units yet.</div>');
   return h}
 async function saveMine(m,msg){const{id,...data}=m;delete data._by;delete data._own;
   if(SRV){try{await api("data/listings",{id,data},"PUT")}catch(x){toast(x.message);return}await loadListings()}else{const i=mine.findIndex(x=>x.id===id);if(i>=0)mine[i]=m;persist()}
@@ -4053,6 +4066,12 @@ let REMS=[],remShown=new Set();
 async function loadReminders(){if(!SRV||!isTeam())return;try{REMS=(await api("team/reminders")).reminders||[]}catch(e){}}
 const remWhen=r=>{const d=new Date(r.at),now=new Date(Date.now()+4*3600e3),dd=new Date(d.getTime()+4*3600e3),day=x=>x.toISOString().slice(0,10),tm=dd.toISOString().slice(11,16);
   const td=day(now),tmw=day(new Date(now.getTime()+864e5));return(day(dd)===td?"Today":day(dd)===tmw?"Tomorrow":dd.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",timeZone:"UTC"}))+" · "+tm};
+function reviewTop(o){const r=o.priceReview,x=o.x||{},m=mine.concat(teamListings).find(z=>z.id===(o.listingId||o.id))||{},ph=Array.isArray(m.photos)?m.photos.length:0;
+  const rows=[["Agent",(m._by&&m._by.name)||r.by||""],["Owner",m.owner?(m.owner+(m.phone?" · "+m.phone:"")):""],["Unit",m.unit?"Unit "+m.unit+(o.tower?" · Tower "+o.tower:""):""],["Price",aed(o.deal==="rent"?o.rent:o.price)+(o.deal==="rent"?" a year":"")],["Market",r.market?aed(r.market):"—"],["Above market",r.pct!=null?r.pct+"%":"—"],
+    ["Price / sq ft",x.psf?aed(x.psf):x.rpsf?aed(x.rpsf):"—"],["Size",o.size?fmt(o.size)+" sq ft":"—"],["Floor · view",[known(o.floor)?o.floor:"",known(o.view)?o.view:""].filter(Boolean).join(" · ")||"—"],["Furnishing · status",[m.furn,m.status].filter(Boolean).join(" · ")||"—"],["Photos",ph?ph+" of the home":"None yet"]].filter(z=>z[1]);
+  return `<div class="revtop"><p class="kick">${ic("shield")} Price approval · review</p><h3>${esc(catName(r.cat))}</h3><p class="revwhy">${esc(r.reason)}</p>
+    <div class="revgrid">${rows.map(([k,v])=>`<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("")}</div>
+    ${m.notes?`<p class="src"><b>Agent's notes:</b> ${esc(m.notes)}</p>`:""}<p class="src">Scroll down for the photos (tap one for full screen), the floor plan and the market comparison.</p>${prActions(o.listingId||o.id)}</div>`}
 function reviewBox(o){const r=o.priceReview,id=o.listingId||o.id,boss=isAdmin||isCEO(),st=r.status;
   return `<div class="prbox ${st}"><div class="prh"><span class="pill ${PR_PILL[st][0]}">${PR_PILL[st][1]}</span><b>${r.pct!=null?r.pct+"% above the market":""}${r.market?" · market "+aed(r.market):""}</b></div>
     <p><b>${esc(catName(r.cat))}</b> · ${esc(r.reason||"")}</p><small class="src">Asked by ${esc(firstName(r.by||""))}${r.at?" on "+esc(dShort(String(r.at).slice(0,10))):""}${r.decidedBy?" · "+(st==="approved"?"approved":"answered")+" by "+esc(firstName(r.decidedBy)):""}</small>
@@ -4060,13 +4079,19 @@ function reviewBox(o){const r=o.priceReview,id=o.listingId||o.id,boss=isAdmin||i
     ${boss&&st==="pending"?prActions(id):""}${!boss&&st==="rejected"?`<div class="actions"><button class="btn primary" data-qa="edit" data-id="${esc(id)}">${ic("pen")}Change the price</button></div>`:""}</div>`}
 const prActions=id=>`<div class="pract"><input data-prnote="${esc(id)}" maxlength="500" placeholder="Note to the agent (optional)"><div class="actions"><button class="btn primary" data-prd="approve" data-id="${esc(id)}">${ic("check")}Approve</button><button class="btn" data-prd="reject" data-id="${esc(id)}">${ic("x")}Not approved</button></div></div>`;
 document.addEventListener("click",async e=>{const b=e.target.closest("[data-prd]");if(!b)return;const id=b.dataset.id,n=document.querySelector(`[data-prnote="${CSS.escape(id)}"]`);b.disabled=true;
-  try{await api("team/price-review",{id,decision:b.dataset.prd,note:n?n.value.trim():""});await loadListings();await loadAll();renderAll();try{renderDetail()}catch(x){}toast(b.dataset.prd==="approve"?"Approved: it can go online now":"Sent back to the agent")}catch(x){toast(x.message);b.disabled=false}});
+  try{await api("team/price-review",{id,decision:b.dataset.prd,note:n?n.value.trim():""});await loadListings();await loadAll();renderAll();try{renderDetail()}catch(x){}toast(b.dataset.prd==="approve"?"Approved: it can go online now":"Sent back to the agent");if(b.closest(".revtop"))setTimeout(()=>{show("dash");const a=$("#approvals");if(a)a.scrollIntoView()},600)}catch(x){toast(x.message);b.disabled=false}});
 // The admin's and the CEO's list of prices waiting for a decision (on Home).
 function approvalsHTML(){if(!(isAdmin||isCEO()))return"";const P=mine.concat(teamListings).filter(m=>m.priceReview&&m.priceReview.status==="pending").sort((a,b)=>String(a.priceReview.at).localeCompare(String(b.priceReview.at)));
   if(!P.length)return"";return `<div class="panel apprp" id="approvals"><h3>${ic("shield")}Price approvals <span class="pill check">${P.length}</span></h3><p class="lede">Listings more than 7% above the market. They go online only once you approve.</p>
-    ${P.map(m=>{const o=enrich(mineToOffer(m)),r=m.priceReview,ph=Array.isArray(m.photos)?m.photos.length:0;return `<div class="aprow"><button class="aprh" data-id="${esc(m.id)}"><img src="${esc(imgSrc(photosOf(o)[0].k,true))}" alt=""><div><b>${esc((m._by&&firstName(m._by.name))||"You")} · ${m.unit?"Unit "+esc(m.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(typeOf(o))}</b>
+    ${P.map(m=>{const o=enrich(mineToOffer(m)),r=m.priceReview,ph=Array.isArray(m.photos)?m.photos.length:0,pl=photosOf(o);return `<div class="aprow"><button class="aprh" data-review-open="${esc(m.id)}"><img src="${esc(imgSrc(photosOf(o)[0].k,true))}" alt=""><div><b>${esc((m._by&&firstName(m._by.name))||"You")} · ${m.unit?"Unit "+esc(m.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(typeOf(o))}</b>
       <span>${aed(o.deal==="rent"?o.rent:o.price)}${o.deal==="rent"?" a year":""} · <b class="aprpct">+${r.pct}%</b>${r.market?" vs market "+aed(r.market):""}${ph?" · "+ph+" photo"+(ph>1?"s":""):""}</span></div></button>
-      <p><b>${esc(catName(r.cat))}:</b> ${esc(r.reason)}</p>${prActions(m.id)}</div>`}).join("")}</div>`}
+      ${ph?`<div class="aprph">${pl.slice(0,6).map((x,i)=>`<button type="button" data-review-ph="${esc(m.id)}" data-i="${i}" aria-label="Photo ${i+1}"><img loading="lazy" src="${esc(imgSrc(x.k,true))}" alt=""></button>`).join("")}</div>`:`<p class="src">No photos of the home yet: ask for photos of the works.</p>`}
+      <p><b>${esc(catName(r.cat))}:</b> ${esc(r.reason)}</p><button class="btn" data-review-open="${esc(m.id)}">${ic("eye")}Open the full listing to review</button>${prActions(m.id)}</div>`}).join("")}</div>`}
+// Opens the listing waiting for approval in full: photos, floor plan, market comparison, every detail, and the decision box at the top.
+function priceReviewOpen(id){const o=all().find(x=>x.id===id||x.listingId===id);if(!o){toast("Listing not found");return}show("offers");state.sel=o.id;store.set("orla.sel",o.id);try{renderList()}catch(e){}state.sel=o.id;try{renderDetail()}catch(e){}
+  setTimeout(()=>{const t=document.querySelector("#detail .revtop")||document.querySelector("#detail");if(t){window.scrollTo(0,Math.max(0,t.getBoundingClientRect().top+scrollY-80))}},250)}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-review-open]");if(b){e.preventDefault();priceReviewOpen(b.dataset.reviewOpen);return}
+  const ph=e.target.closest("[data-review-ph]");if(ph){const o=all().find(x=>x.id===ph.dataset.reviewPh||x.listingId===ph.dataset.reviewPh);if(o)openLightbox(o.id,+ph.dataset.i)}});
 function myRemindersHTML(){if(!SRV||!isTeam())return"";const open=REMS.filter(r=>!r.done),due=open.filter(r=>r.due);
   const def=new Date(Date.now()+4*3600e3+864e5);def.setUTCHours(9,0,0,0);const dv=def.toISOString().slice(0,16);
   const lst=isCEO()?[]:mine.filter(m=>m.remindAt&&(isDueR(m)||(Date.parse(m.remindAt)-Date.now())<3*864e5)).sort((a,b)=>String(a.remindAt).localeCompare(String(b.remindAt)));
