@@ -15,6 +15,7 @@ import { vapidKeys, subscribe, unsubscribe, notifyLead, pushTo } from "../lib/no
 import { runWeekly, buildWeekly, weeklyText, runDaily, greet } from "../lib/weekly.js";
 import { addReminder, listReminders, setDone, snooze, removeReminder, deliverDue, morningBriefing } from "../lib/reminders.js";
 import { cheer, recentCheers } from "../lib/cheers.js";
+import { matchOwners, ownerReport } from "../lib/ownermatch.js";
 
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
 const COOKIE = "orla_session";
@@ -653,6 +654,7 @@ const routes = {
     if (rows.length > 2000) fail(400, "Send at most 2,000 rows at a time.");
     const n = await importContacts(rows, c.body.replace === true);
     if (c.body.last) await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `Imported the Peninsula contacts (${str(c.body.file, 120) || "file"})`]);
+    if (c.body.last) { try { await matchOwners(); } catch (e) { console.error("owner match", e.message); } }
     return { imported: n, ...(c.body.last ? await contactStats() : {}) };
   },
   "POST admin/contacts/clear": async c => {
@@ -1226,6 +1228,8 @@ const routes = {
     await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `Set the owner's details on ${str(r.title, 100)}`]);
     return { ok: true };
   },
+  // The admin's private report: owners filled from the contacts database, units to check, and what's still missing.
+  "GET admin/owner-report": async c => { requireStaff(c); if (!seesAll(c.user)) fail(403, "Only the admin sees this report."); return await ownerReport(); },
   "POST admin/unit-set": async c => {
     requireStaff(c);
     const kind = c.body.kind === "listing" ? "listings" : "offers", id = str(c.body.id, 64), unit = str(c.body.unit, 20).toUpperCase().replace(/[^A-Z0-9-]/g, "");
@@ -1239,6 +1243,7 @@ const routes = {
     const { rows: [r] } = await q(`update ${kind} set data = jsonb_set(data, '{unit}', to_jsonb($2::text)) where id = $1 returning data->>'title' as title`, [id, unit]);
     if (!r) fail(404, "Home not found.");
     await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `Set unit ${unit} on ${str(r.title, 100)}`]);
+    try { await matchOwners(); } catch (e) {}
     return { ok: true };
   },
 

@@ -4638,7 +4638,7 @@ function umissDraw(){const el=$("#umiss");if(!el||!UMISS)return;const h=UMISS.ho
   if(!h.length){el.innerHTML=`<div class="panel umiss ok"><b>${ic("check")}Every home has its unit number and its agent.</b></div>`;return}
   const ag=UMISS.agents||{};
   el.innerHTML=`<details class="panel umiss" open><summary><h3>${ic("lock")}Unit numbers by agent · ${h.length}</h3></summary>
-    ${umGroups(h).filter(([k])=>k!=="_").length?`<div class="umall"><span>${ic("bell")}<b>${h.filter(x=>!x.needsAgent).length} homes</b> without a unit number, ${umGroups(h).filter(([k])=>k!=="_").length} agents</span><div class="actions"><button class="btn primary" data-um-remind="*">${ic("bell")}Remind everyone</button><button class="btn" data-um-report>${ic("download")}Missing unit numbers (PDF)</button>${(UMISS.noOwner||[]).length?`<button class="btn" data-um-owner>${ic("download")}Missing owner details · ${UMISS.noOwner.length} (PDF)</button>`:""}</div></div>`:""}
+    ${umGroups(h).filter(([k])=>k!=="_").length?`<div class="umall"><span>${ic("bell")}<b>${h.filter(x=>!x.needsAgent).length} homes</b> without a unit number, ${umGroups(h).filter(([k])=>k!=="_").length} agents</span><div class="actions"><button class="btn primary" data-um-remind="*">${ic("bell")}Remind everyone</button><button class="btn" data-um-match>${ic("users")}Owners matched (PDF)</button><button class="btn" data-um-report>${ic("download")}Missing unit numbers (PDF)</button>${(UMISS.noOwner||[]).length?`<button class="btn" data-um-owner>${ic("download")}Missing owner details · ${UMISS.noOwner.length} (PDF)</button>`:""}</div></div>`:""}
     ${umWho()}
     <p class="lede">Every home without its unit number, under the agent who listed it. Move a home to the right agent with "Listed by", fill the number, or send each agent their list to fill: on WhatsApp, or as a PDF. Agents can also fill theirs on their Home page. Unit numbers stay private: you and the listing agent only.${UMISS.contacts?"":" Import the contacts in Admin to get suggestions."}</p>
     ${umGroups(h).map(([k,l])=>{const a=ag[k]||{};return `<div class="umgrp${k==="_"?" na":""}"><div class="umgh"><div>${k==="_"?`<b>${ic("users")}Which agent listed these? · ${l.length}</b><span>From the market flyers, not in the team report. Choose the agent for each one.</span>`:`<img src="${esc(agentPhotoOf(k,a.name))}" alt=""><div><b>${esc(a.name||k)} · ${l.length} without a unit number</b></div>`}</div>
@@ -4663,7 +4663,22 @@ async function umReport(){const h=UMISS.homes||[],ag=UMISS.agents||{},B=UMISS.by
         nl(12*t.length+2);pdf.setFont("helvetica","normal");pdf.setFontSize(9);pdf.setTextColor(c.samePhone?20:70);pdf.text(t,M+14,y);y+=12*t.length});y+=6})});
   pdf.setFontSize(8);pdf.setTextColor(140);pdf.text("Private: owners' names, phones and unit numbers. For Talal and Mr Munir only. Matches are suggestions: confirm with the agent.",M,822);
   await shareFile(pdf.output("blob"),`Unit-numbers-report-${todayISO()}.pdf`,"Unit numbers report")}
-document.addEventListener("click",e=>{if(e.target.closest("[data-um-report]"))umReport().catch(x=>toast(x.message));if(e.target.closest("[data-um-owner]"))umOwnerPdf().catch(x=>toast(x.message))});
+document.addEventListener("click",e=>{if(e.target.closest("[data-um-report]"))umReport().catch(x=>toast(x.message));if(e.target.closest("[data-um-owner]"))umOwnerPdf().catch(x=>toast(x.message));if(e.target.closest("[data-um-match]"))umMatchPdf().catch(x=>toast(x.message))});
+// The private report of owners found in the contacts database for each home's unit number, by agent.
+async function umMatchPdf(){toast("Matching the owners…");const R=await api("admin/owner-report");await umissLoad(true);
+  if(!R.contacts){toast("Import the Peninsula contacts in Admin first: the owners are matched from them");return}
+  await soLibs();const {jsPDF}=window.jspdf,pdf=new jsPDF({unit:"pt",format:"a4"}),W=595,M=40;let y=56;const nl=n=>{if(y+n>800){pdf.addPage();y=56}};
+  const T=(t,x,sz,b,c)=>{pdf.setFont("helvetica",b?"bold":"normal");pdf.setFontSize(sz);pdf.setTextColor(c==null?20:c);const l=pdf.splitTextToSize(t,W-x-M);nl(l.length*(sz+3));pdf.text(l,x,y);y+=l.length*(sz+3)};
+  const home=x=>[(BLD[x.b]||"Peninsula")+(x.tower&&+x.b===4?" Tower "+x.tower:""),typeOf(x)||"Home",x.size?fmt(x.size)+" sq ft":"",x.unit?"unit "+x.unit:""].filter(Boolean).join(" · ");
+  T("Owner match report",M,20,1);y+=4;T(`Private · Orla Properties · ${new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})} · from ${fmt(R.contacts)} contacts with a unit number`,M,10,0,110);y+=10;
+  T(`${R.matched.length} homes filled with the owner's name and phone · ${R.unsure.length} to check · ${R.missing.length} still missing`,M,12,1);y+=10;
+  const by=l=>{const g={};l.forEach(x=>(g[x.agent||"No agent"]=g[x.agent||"No agent"]||[]).push(x));return Object.entries(g).sort((a,b)=>a[0].localeCompare(b[0]))};
+  const sec=(title,l,line)=>{if(!l.length)return;nl(40);pdf.setDrawColor(200);pdf.line(M,y,W-M,y);y+=20;T(title+" · "+l.length,M,14,1);y+=4;by(l).forEach(([a,xs])=>{y+=4;T(a+" · "+xs.length,M,11,1,60);xs.forEach((x,n)=>{T(`${n+1}. ${home(x)}`,M+10,10,1);line(x);y+=3})})};
+  sec("Filled from the contacts",R.matched,x=>T(`Owner: ${x.owner||"—"} · ${x.phone||"no phone"}${x.nationality?" · "+x.nationality:""}`,M+24,9.5,0,60));
+  sec("To check: several owners on the unit",R.unsure,x=>(x.candidates||[]).forEach(c=>T(`${c.name||"—"} · ${c.phone||"no phone"}`,M+24,9.5,0,60)));
+  sec("Still missing",R.missing,x=>T(x.why,M+24,9.5,0,120));
+  pdf.setFontSize(8);pdf.setTextColor(140);pdf.text("Private: owners' names and phones. For Talal and Mr Munir only. Filled automatically from the contacts database: confirm with the agent.",M,822);
+  await shareFile(pdf.output("blob"),`Owner-match-report-${todayISO()}.pdf`,"Owner match report")}
 // The private list of homes without their owner's name and phone, by agent, with lines to write them in.
 async function umOwnerPdf(){const h=UMISS.noOwner||[],ag=UMISS.agents||{};if(!h.length)return;
   await soLibs();const {jsPDF}=window.jspdf,pdf=new jsPDF({unit:"pt",format:"a4"}),W=595,M=40;let y=56;const nl=n=>{if(y+n>800){pdf.addPage();y=56}};
