@@ -998,6 +998,11 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
 .remlist{display:flex;flex-direction:column;gap:6px;margin-top:10px}.remrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg)}
 .remrow>div:first-child{display:flex;flex-direction:column;min-width:0;flex:1 1 220px}.remrow>div:first-child b{color:var(--fg);font-weight:700;word-break:break-word}.remrow .actions{flex:0 0 auto}.remrow small{color:var(--muted)}.remrow.due{border-color:var(--primary);background:var(--accent-soft)}.remrow .actions{margin:0}
 #remal{position:fixed;left:0;right:0;top:calc(12px + env(safe-area-inset-top,0px));z-index:91;display:flex;justify-content:center;padding:0 12px}#remal[hidden]{display:none}#remal h2{font-size:20px}#remal .kick{display:flex;align-items:center;gap:6px}#remal .kick .ic{width:16px;height:16px}
+.qbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.qbar .btn{flex:1 1 auto;justify-content:center}
+.myu{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}.myu .card{margin:0}.myu-act{display:flex;gap:6px;flex-wrap:wrap;padding:0 4px}.myu-act .btn{flex:1 1 auto;justify-content:center;min-height:40px}
+#mine-form .msave{position:sticky;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:5;background:var(--surface);padding:10px;margin:0 -10px;border-radius:16px;box-shadow:0 -6px 20px rgba(0,0,0,.12)}@media(min-width:900px){#mine-form .msave{bottom:12px}}
+#m-ph-wrap{border:1.5px dashed var(--line);border-radius:16px;padding:12px;transition:border-color .3s,background .3s}#m-ph-wrap.flash{border-color:var(--primary);background:var(--accent-soft)}
+.lbdl{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;border-radius:999px;padding:8px 14px;font:700 14px inherit;cursor:pointer;margin-left:auto;margin-right:8px}.lbdl .ic{width:16px;height:16px}
 #motiv{position:fixed;left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:86;display:flex;justify-content:center;padding:0 12px;pointer-events:none}#motiv[hidden]{display:none}
 @media(min-width:900px){#motiv{bottom:24px}}
 .mvcard{pointer-events:auto;position:relative;width:min(460px,100%);background:#1C1A18;color:#fff;border-radius:22px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.45);animation:regup .3s ease-out}
@@ -1302,7 +1307,7 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
           <div class="field wide"><label for="m-notes">Notes</label><textarea id="m-notes" rows="2"></textarea></div>
           <div class="field wide"><label for="m-adtitle">Portal title (Bayut, Property Finder)</label><input id="m-adtitle" maxlength="120" placeholder="The AI assistant can write it for you"></div>
           <div class="field wide"><label for="m-adtext">Portal description</label><textarea id="m-adtext" rows="5" maxlength="3000"></textarea><div class="actions" style="margin-top:6px"><button class="btn sm" type="button" id="m-adcopy"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M9 9h11v11H9zM5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg>Copy title and description</button><button class="btn sm" type="button" id="m-adai"><svg class="ic " viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>Write it with AI</button></div></div>
-          <div class="wide actions"><button class="btn primary" type="submit" id="m-save">Save listing</button><button class="btn" type="button" id="m-cancel" hidden>Cancel editing</button></div>
+          <div class="wide actions msave"><button class="btn primary" type="submit" id="m-save">Save listing</button><button class="btn" type="button" id="m-cancel" hidden>Cancel editing</button></div>
         </form>
       </div>
       <div class="panel stack">
@@ -1945,6 +1950,7 @@ function renderDetail(){
     <div class="dbody">
       ${isTeam()?towerBar(o):""}
       ${galleryHTML(o)}
+      ${isTeam()?`<div class="qbar">${(o.mine||o.listingId)&&SRV?`<button class="btn primary" data-qa="photos" data-id="${esc(o.listingId||o.id)}">${ic("plus")}Add photos</button><button class="btn" data-qa="edit" data-id="${esc(o.listingId||o.id)}">${ic("pen")}Edit listing</button>`:""}<button class="btn" data-qa="dl" data-id="${esc(o.id)}">${ic("download")}Download ${photosOf(o).length>1?"all "+photosOf(o).length+" photos":"photo"}</button></div>`:""}
       ${isTeam()?planBlock((()=>{const p=planOf(o);return p&&p.t==="f"?{u:imgSrc(p.k),c:p.c,type:p.c.replace(/^Floor plan · /,"").split(" · ")[0],mark:p.mark}:null})(),o.unit,o.id):""}
       ${tourCard(o)}
       ${sunCard(o)}
@@ -2978,14 +2984,14 @@ document.addEventListener("click",e=>{const g=e.target.closest("[data-gal]");if(
 let lb=null;
 function openLightbox(id,i){const o=all().find(x=>x.id===id);if(!o)return;openViewer(mediaOf(o),BLD[o.b]+" · "+typeOf(o),i)}
 function openViewer(m,title,i){lb={title,m,i:i||0};let el=$("#lightbox");
-  if(!el){document.body.insertAdjacentHTML("beforeend",`<div id="lightbox" role="dialog" aria-modal="true" aria-label="Photos"><div class="lbbar"><span class="lbt"></span><button class="lbx" aria-label="Close photos">${ic("x")}</button></div><div class="lbstage"><button class="lbn prev" aria-label="Previous photo">${ic("arrow")}</button><img alt=""><button class="lbn next" aria-label="Next photo">${ic("arrowr")}</button></div><div class="lbcap"></div></div>`);
-    el=$("#lightbox");el.querySelector(".lbx").onclick=closeLightbox;el.querySelector(".prev").onclick=()=>lbGo(-1);el.querySelector(".next").onclick=()=>lbGo(1);
+  if(!el){document.body.insertAdjacentHTML("beforeend",`<div id="lightbox" role="dialog" aria-modal="true" aria-label="Photos"><div class="lbbar"><span class="lbt"></span><button class="lbdl" aria-label="Download this photo" hidden>${ic("download")}<span>Download</span></button><button class="lbx" aria-label="Close photos">${ic("x")}</button></div><div class="lbstage"><button class="lbn prev" aria-label="Previous photo">${ic("arrow")}</button><img alt=""><button class="lbn next" aria-label="Next photo">${ic("arrowr")}</button></div><div class="lbcap"></div></div>`);
+    el=$("#lightbox");el.querySelector(".lbx").onclick=closeLightbox;el.querySelector(".lbdl").onclick=()=>{const p=lb&&lb.m[lb.i];if(p)savePhotos([{u:imgSrc(p.k)}],(lb.title||"photo").replace(/[^\w]+/g,"-")+"-"+(lb.i+1))};el.querySelector(".prev").onclick=()=>lbGo(-1);el.querySelector(".next").onclick=()=>lbGo(1);
     el.addEventListener("click",e=>{if(e.target===el||e.target.classList.contains("lbstage"))closeLightbox()});
     let x0=null;el.addEventListener("touchstart",e=>{x0=e.touches[0].clientX},{passive:true});el.addEventListener("touchend",e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)>50)lbGo(dx<0?1:-1)},{passive:true});
     document.addEventListener("keydown",e=>{if(!lb||$("#lightbox").hidden)return;if(e.key==="Escape")closeLightbox();if(e.key==="ArrowRight")lbGo(1);if(e.key==="ArrowLeft")lbGo(-1)})}
   el.hidden=false;document.body.classList.add("lbopen");lbDraw();el.querySelector(".lbx").focus()}
 function lbGo(d){if(!lb)return;lb.i=(lb.i+d+lb.m.length)%lb.m.length;lbDraw()}
-function lbDraw(){const el=$("#lightbox"),p=lb.m[lb.i];const img=el.querySelector("img");setMk(img,imgSrc(p.k),p.mark);img.alt=p.c||KIND[p.t];img.classList.toggle("plan",p.t==="f");
+function lbDraw(){const el=$("#lightbox"),p=lb.m[lb.i];el.querySelector(".lbdl").hidden=!isTeam();const img=el.querySelector("img");setMk(img,imgSrc(p.k),p.mark);img.alt=p.c||KIND[p.t];img.classList.toggle("plan",p.t==="f");
   el.querySelector(".lbt").textContent=lb.title+" · "+(lb.i+1)+" of "+lb.m.length;el.querySelector(".lbcap").textContent=KIND[p.t]+(p.c?" · "+String(p.c).replace(/^Floor plan( · )?/,""):"").replace(/ · $/,"");
   el.querySelectorAll(".lbn").forEach(b=>b.hidden=lb.m.length<2)}
 function closeLightbox(){const el=$("#lightbox");if(el)el.hidden=true;document.body.classList.remove("lbopen");lb=null}
@@ -3457,7 +3463,7 @@ function mineSections(){if(!mine.length)return'<div class="empty">Listings you a
   if(due.length)h+=`<h4 class="mh due">Reminders due · ${due.length}</h4>`+due.map(reminderRow).join("");
   if(fut.length)h+=`<h4 class="mh">Future listings · ${fut.length}</h4>`+fut.map(reminderRow).join("");
   if(later.length)h+=`<h4 class="mh">Upcoming reminders · ${later.length}</h4>`+later.map(reminderRow).join("");
-  h+=`<h4 class="mh">Current units · ${cur.length}</h4>`+(cur.length?cur.map(m=>cardHTML(mineToOffer(m),false)).join(""):'<div class="empty">No current units yet.</div>');
+  h+=`<h4 class="mh">Current units · ${cur.length}</h4>`+(cur.length?cur.map(m=>{const o=mineToOffer(m),n=Array.isArray(m.photos)?m.photos.length:0;return `<div class="myu">${cardHTML(o,false)}<div class="myu-act"><button class="btn sm" data-qa="edit" data-id="${esc(m.id)}">${ic("pen")}Edit</button><button class="btn sm${n?"":" primary"}" data-qa="photos" data-id="${esc(m.id)}">${ic("plus")}${n?"Photos ("+n+")":"Add photos"}</button><button class="btn sm" data-qa="dl" data-id="${esc(m.id)}">${ic("download")}Download</button></div></div>`}).join(""):'<div class="empty">No current units yet.</div>');
   return h}
 async function saveMine(m,msg){const{id,...data}=m;delete data._by;delete data._own;
   if(SRV){try{await api("data/listings",{id,data},"PUT")}catch(x){toast(x.message);return}await loadListings()}else{const i=mine.findIndex(x=>x.id===id);if(i>=0)mine[i]=m;persist()}
@@ -3524,6 +3530,22 @@ async function renderDocs(){const el=$("#docs");if(docs===null){el.innerHTML='<d
   const f=$("#doc-file");if(f)f.onchange=()=>{const x=f.files[0];if(x&&!$("#doc-title").value)$("#doc-title").value=x.name.replace(/\.[a-z0-9]+$/i,"").replace(/[_-]+/g," ");if(x&&/pdf/i.test(x.type)&&/floor|plan/i.test(x.name))$("#doc-kind").value="floorplan";else if(x&&/brochure/i.test(x.name))$("#doc-kind").value="brochure"}}
 async function docBlob(d){const parts=[];for(let i=0;i<d.parts;i++){const r=await fetch(API+"/team/docs/part?id="+d.id+"&idx="+i,{credentials:"same-origin"});if(!r.ok)throw new Error("The file couldn't be loaded. Try again.");parts.push(await r.arrayBuffer())}return new Blob(parts,{type:d.mime})}
 const docName=d=>String(d.title).replace(/[^\w\s.-]+/g,"").trim().replace(/\s+/g,"-")+(d.mime==="application/pdf"?".pdf":d.mime==="image/png"?".png":d.mime==="image/webp"?".webp":".jpg");
+// Photos to the phone: one share sheet with every photo ("Save images" on iPhone), or downloads one by one on a computer.
+async function toJpeg(blob){if(blob.type==="image/jpeg")return blob;try{const bm=await createImageBitmap(blob),c=document.createElement("canvas");c.width=bm.width;c.height=bm.height;const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.drawImage(bm,0,0);
+  return await new Promise(ok=>c.toBlob(b=>ok(b||blob),"image/jpeg",.9))}catch(e){return blob}}
+async function savePhotos(items,base){if(!items.length){toast("No photos to download");return}toast(`Preparing ${items.length} photo${items.length>1?"s":""}…`);
+  const files=[];for(const [i,it] of items.entries()){try{const r=await fetch(it.u,{credentials:"same-origin"});if(!r.ok)continue;const b=await toJpeg(await r.blob());files.push(new File([b],`${base}-${i+1}.jpg`,{type:"image/jpeg"}))}catch(e){}}
+  if(!files.length){toast("The photos couldn't be loaded. Check your connection.");return}
+  if(navigator.canShare&&navigator.canShare({files})){try{await navigator.share({files,title:base.replace(/-/g," ")});return}catch(e){if(e.name==="AbortError")return}}
+  for(const f of files){const a=document.createElement("a");a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();await new Promise(r=>setTimeout(r,350));URL.revokeObjectURL(a.href);a.remove()}
+  toast(`${files.length} photo${files.length>1?"s":""} downloaded`)}
+const photoItems=o=>photosOf(o).map(p=>({u:imgSrc(p.k),c:p.c}));
+const photoBase=o=>[BLD[o.b],o.unit&&isTeam()?"unit-"+o.unit:typeOf(o)].filter(Boolean).join("-").replace(/[^\w]+/g,"-");
+// Edit a listing and go straight to its photos (and open the picker when asked).
+function editPhotos(id,pick){editListing(id);if(pick)$("#m-up").click();setTimeout(()=>{const w=$("#m-ph-wrap");if(w){window.scrollTo(0,Math.max(0,w.getBoundingClientRect().top+scrollY-90));w.classList.add("flash");setTimeout(()=>w.classList.remove("flash"),1600)}},900)}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-qa]");if(!b)return;e.preventDefault();e.stopPropagation();const id=b.dataset.id,a=b.dataset.qa;
+  if(a==="edit")editListing(id);if(a==="photos")editPhotos(id,true);
+  if(a==="dl"){const o=all().find(x=>x.id===id||x.listingId===id);if(o)savePhotos(photoItems(o),photoBase(o))}},true);
 async function shareFile(blob,name,title){const file=new File([blob],name,{type:blob.type});
   if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title});return}catch(e){if(e.name==="AbortError")return}}
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast("Downloaded. Attach it in WhatsApp.")}

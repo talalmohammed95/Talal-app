@@ -181,12 +181,15 @@ The card closes by itself after 15 seconds. The messages are in `MOTIV` in the a
 
 ## Photos of a listing (agents)
 
-On a home's page an agent taps **Edit listing**. The My units form has **Photos of this home**:
-- **＋ Add photos** picks several from the phone. They're resized in the phone, so each upload is under 2 MB.
-- Each photo has **Make cover**, **Download** and **Remove**. The first photo is the cover.
-- **Save listing** keeps the photos.
+Editing and photos are one tap from wherever the agent is:
+- **My units:** under every unit there's **Edit**, **Add photos** / **Photos (n)** and **Download**.
+- **The home's page:** under the gallery, **Add photos**, **Edit listing** and **Download all n photos**.
+- **Full-screen photos:** a **Download** button for the photo on screen.
+- **The form:** "Photos of this home" has **＋ Add photos** (several at once, resized in the phone) and, on each photo, **Make cover**, **Download** and **Remove**. The first photo is the cover. "Add photos" opens the phone's photo picker straight away and goes to that section. **Save changes** stays in view at the bottom of the screen while editing.
 
-Without photos the building's standard photos show. A listing shared as an offer passes its photos to the offer. The 7%/10% price rule applies to a new or changed price only, so a listing whose price isn't changing can always be edited.
+Downloading on a phone opens the share sheet with every photo at once ("Save images" on iPhone puts them in Photos, ready for WhatsApp, Bayut or Property Finder). On a computer they download one by one. Photos are saved as JPEG and named after the building and unit, e.g. `Peninsula-Three-unit-1203-1.jpg`. Without the agent's own photos, the building's standard photos are what download.
+
+A listing shared as an offer passes its photos to the offer. The 7%/10% price rule applies to a new or changed price only, so a listing whose price isn't changing can always be edited.
 
 ## Agents edit their own homes
 On a home listed under their name, an agent taps **Edit this home** and gets the same editor as the admin: headline, building, type, sale or rent, status (available, reserved, under offer, sold, rented), price, rent, size, floor, view, furnishing, cheques, deposit, highlights, the unit number and owner, and photos and the floor plan. It saves for everyone straight away, price and status changes go into the home's history, and it shows in Admin › Activity. They can't move a home to another agent or change whether it counts in team performance (only the admin can), and they can't edit homes listed under someone else. Their own units in My units were already editable there. The admin also has **Edit this home** on every home.
