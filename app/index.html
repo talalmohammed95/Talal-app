@@ -1003,6 +1003,19 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
 #mine-form .msave{position:sticky;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:5;background:var(--surface);padding:10px;margin:0 -10px;border-radius:16px;box-shadow:0 -6px 20px rgba(0,0,0,.12)}@media(min-width:900px){#mine-form .msave{bottom:12px}}
 #m-ph-wrap{border:1.5px dashed var(--line);border-radius:16px;padding:12px;transition:border-color .3s,background .3s}#m-ph-wrap.flash{border-color:var(--primary);background:var(--accent-soft)}
 .lbdl{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;border-radius:999px;padding:8px 14px;font:700 14px inherit;cursor:pointer;margin-left:auto;margin-right:8px}.lbdl .ic{width:16px;height:16px}
+#prapp{position:fixed;inset:0;z-index:92;background:rgba(15,12,10,.6);display:grid;place-items:center;padding:12px;overflow:auto}#prapp .pccard{max-width:560px;position:relative}#prapp h2{margin:0;padding-right:40px}
+.pacmp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.pacmp div{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column}.pacmp span{font-size:12px;color:var(--muted);font-weight:700}.pacmp b{font-size:15px}
+.pacats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}.pacats button{text-align:left;border:1.5px solid var(--line);background:var(--bg);color:var(--fg);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:2px;cursor:pointer;font:inherit;min-height:56px}
+.pacats button small{color:var(--muted);font-size:12px}.pacats button[aria-checked="true"]{border-color:var(--primary);background:var(--accent-soft)}
+#prapp textarea{width:100%;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg);padding:10px;font:inherit}#prapp .field{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14px}
+.pawarn{display:flex;gap:8px;align-items:flex-start;background:#FDE5E2;color:#A3261B;border-radius:12px;padding:10px;font-size:14px;margin:0}.pawarn .ic{width:18px;height:18px;flex:none}#pa-err{color:#A3261B;margin:0}
+.prbox{border:1.5px solid var(--line);border-radius:16px;padding:12px 14px;margin:10px 0;display:flex;flex-direction:column;gap:6px;background:var(--bg)}.prbox.pending{border-color:#E8A33A;background:#FFF6E6}.prbox.rejected{border-color:#E59A90;background:#FDEEEC}.prbox.approved{border-color:#9ACFA8}
+.prbox p{margin:0}.prh{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.prnote{display:flex;gap:6px;align-items:flex-start;font-style:italic}.prnote .ic{width:16px;height:16px;flex:none}
+.pract{display:flex;flex-direction:column;gap:8px}.pract input{min-height:42px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:0 12px;font:inherit}.pract .actions{margin:0}
+.apprp h3{display:flex;align-items:center;gap:8px}.aprow{border:1.5px solid #E8A33A;background:#FFF6E6;border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:8px;margin-top:10px}.aprow p{margin:0}
+.aprh{display:flex;gap:10px;align-items:center;text-align:left;border:0;background:none;padding:0;color:var(--fg);font:inherit;cursor:pointer}.aprh img{width:56px;height:56px;border-radius:12px;object-fit:cover;flex:none}.aprh div{display:flex;flex-direction:column;gap:2px;min-width:0}.aprh span{color:var(--muted);font-size:14px}.aprpct{color:#A3261B}
+:root[data-theme="dark"] .prbox.pending,:root[data-theme="dark"] .aprow{background:#3A2D12}:root[data-theme="dark"] .prbox.rejected{background:#3B1C18}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .prbox.pending,:root:not([data-theme="light"]) .aprow{background:#3A2D12}:root:not([data-theme="light"]) .prbox.rejected{background:#3B1C18}}
 #motiv{position:fixed;left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:86;display:flex;justify-content:center;padding:0 12px;pointer-events:none}#motiv[hidden]{display:none}
 @media(min-width:900px){#motiv{bottom:24px}}
 .mvcard{pointer-events:auto;position:relative;width:min(460px,100%);background:#1C1A18;color:#fff;border-radius:22px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.45);animation:regup .3s ease-out}
@@ -1630,7 +1643,7 @@ function fillUnit(o){if(!isTeam()||!o||!o.unit)return o;const g=guideOf(o.b,o.to
   if(!known(x.floor)||/^(low|mid|high)/i.test(x.floor))x.floor=ordN(g.floor);
   if(!known(x.view)&&g.view)x.view=g.view;if(!x.size&&g.size)x.size=g.size;if(!x.balcony&&g.balcony)x.balcony=g.balcony;
   if(g.img&&(g.src||(g.doc&&g.page)))x.gplan={doc:g.doc,page:g.page,src:g.src,c:g.type||"",mark:g.mark||null};if(g.type)x.gtype=g.type;return x}
-function mineToOffer(m){return{photos:Array.isArray(m.photos)&&m.photos.length?m.photos:undefined,tour:m.tour||undefined,plan:m.plan||undefined,id:m.id,b:+m.b,tower:m.tower||"",layout:m.layout||"",beds:+m.beds,deal:m.deal,title:(m.unit?"Unit "+m.unit+" · ":"")+typeOf(m),price:m.deal==="sale"?+m.price:undefined,rent:m.deal==="rent"?+m.price:undefined,
+function mineToOffer(m){return{priceReview:m.priceReview||undefined,photos:Array.isArray(m.photos)&&m.photos.length?m.photos:undefined,tour:m.tour||undefined,plan:m.plan||undefined,id:m.id,b:+m.b,tower:m.tower||"",layout:m.layout||"",beds:+m.beds,deal:m.deal,title:(m.unit?"Unit "+m.unit+" · ":"")+typeOf(m),price:m.deal==="sale"?+m.price:undefined,rent:m.deal==="rent"?+m.price:undefined,
   size:m.size?+m.size:null,floor:m.floor||"",view:m.view||"",furn:m.furn,status:m.status,agent:m.agent,hl:m.notes||"",mine:true,future:!!m.future,unit:m.unit||null,owner:m.owner,ownerPhone:m.phone,date:m.date,by:m._by||null,own:m._own!==false,shared:m.sharedOffer||null,shareTo:m.shareTo,shareNote:m.shareNote,src:SRV?(m._by?"Added by "+(m._by.name||m._by.email):"Added by you"):"Added on this device"}}
 // A unit an agent has shared shows once, as its shared offer.
 // all() is called dozens of times in one redraw: it's worked out once and reused until the redraw ends (the next task).
@@ -1638,7 +1651,7 @@ let ALLC=null;const all=()=>{if(ALLC)return ALLC;ALLC=allFresh();queueMicrotask(
 const allFresh=()=>{const live=new Set(OFFERS.map(o=>o.id));
   // A shared listing shows once, as its offer; for whoever can see the listing (its agent, the admin) the offer keeps the unit number, owner and plan.
   const sh={};mine.concat(teamListings).forEach(m=>{if(m.sharedOffer)sh[m.sharedOffer]=m});
-  const offers=OFFERS.map(o=>{const m=sh[o.id];return m?Object.assign({},o,{unit:m.unit||o.unit,owner:m.owner||o.owner,ownerPhone:m.phone||o.ownerPhone,plan:o.plan||m.plan,tour:o.tour||m.tour,photos:Array.isArray(m.photos)&&m.photos.length?m.photos:o.photos,tower:o.tower||m.tower,listingId:m.id}):o});
+  const offers=OFFERS.map(o=>{const m=sh[o.id];return m?Object.assign({},o,{unit:m.unit||o.unit,owner:m.owner||o.owner,ownerPhone:m.phone||o.ownerPhone,plan:o.plan||m.plan,tour:o.tour||m.tour,photos:Array.isArray(m.photos)&&m.photos.length?m.photos:o.photos,tower:o.tower||m.tower,listingId:m.id,priceReview:m.priceReview}):o});
   return offers.concat(mine.concat(teamListings).filter(m=>!(m.sharedOffer&&live.has(m.sharedOffer))).map(mineToOffer)).map(fillUnit).map(enrich)};
 const agentOf=o=>AGENTS[o.agent]||Object.values(AGENTS)[0]||{name:"Orla Properties",phone:""};
 const dldLabel=()=>"DLD registration ("+(+(FEES.dld*100).toFixed(2))+"%)";
@@ -1651,6 +1664,7 @@ function priceLine(o){
   if(o.deal==="both")return{big:fromW(o)+aed(o.price),sub:"or rent "+aed(o.rent)+" / yr"};
   return{big:fromW(o)+aed(o.price),sub:o.size?"AED "+fmt(o.price/o.size)+" / sq ft":"for sale"};
 }
+const PR_PILL={pending:["pending","Waiting for price approval"],rejected:["st done","Price not approved"],approved:["ok","Price approved"]};
 function pills(o){
   let h="";
   if(o.deal!=="rent")h+='<span class="pill sale">Sale</span>';
@@ -1662,7 +1676,8 @@ function pills(o){
   if(o.x&&o.x.reduced)h+='<span class="pill reduced">Price reduced</span>';
   if(o.x&&o.x.value==='below')h+='<span class="pill below">Below market</span>';
   if(o.check)h+='<span class="pill check">Check price</span>';
-  if(isTeam()&&o.x&&o.x.ref!=null&&o.x.ref>PRICE_WARN&&!isDone(o))h+=`<span class="pill ${o.x.ref>PRICE_MAX?"overprice":"highprice"}">${o.x.ref>PRICE_MAX?"Over 10% limit":"7%+ above market"}</span>`;
+  if(isTeam()&&o.priceReview&&PR_PILL[o.priceReview.status])h+=`<span class="pill ${PR_PILL[o.priceReview.status][0]}">${PR_PILL[o.priceReview.status][1]}</span>`;
+  if(isTeam()&&!o.priceReview&&o.x&&o.x.ref!=null&&o.x.ref>PRICE_WARN&&!isDone(o))h+=`<span class="pill ${o.x.ref>PRICE_MAX?"overprice":"highprice"}">${o.x.ref>PRICE_MAX?"Over 10% limit":"7%+ above market"}</span>`;
   return h;
 }
 function cardHTML(o,cur){
@@ -1950,6 +1965,7 @@ function renderDetail(){
     <div class="dbody">
       ${isTeam()?towerBar(o):""}
       ${galleryHTML(o)}
+      ${isTeam()&&o.priceReview?reviewBox(o):""}
       ${isTeam()?`<div class="qbar">${(o.mine||o.listingId)&&SRV?`<button class="btn primary" data-qa="photos" data-id="${esc(o.listingId||o.id)}">${ic("plus")}Add photos</button><button class="btn" data-qa="edit" data-id="${esc(o.listingId||o.id)}">${ic("pen")}Edit listing</button>`:""}<button class="btn" data-qa="dl" data-id="${esc(o.id)}">${ic("download")}Download ${photosOf(o).length>1?"all "+photosOf(o).length+" photos":"photo"}</button></div>`:""}
       ${isTeam()?planBlock((()=>{const p=planOf(o);return p&&p.t==="f"?{u:imgSrc(p.k),c:p.c,type:p.c.replace(/^Floor plan · /,"").split(" · ")[0],mark:p.mark}:null})(),o.unit,o.id):""}
       ${tourCard(o)}
@@ -2072,6 +2088,26 @@ function renderMine(){
   const q=v=>{v=String(v??"");return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
   $("#csv-text").value=mine.length?[head.join(",")].concat(mine.map(m=>[m.unit,typeOf(m),m.floor,m.view,m.size,m.deal==="sale"?"Sale":"Rent",m.price,m.size&&m.price?Math.round(m.price/m.size):"",m.status,m.furn,m.owner,m.phone,m.date,m.notes].map(q).join(","))).join("\n"):"";
 }
+/* ---------------- Price approval (over 7% above the market) ---------------- */
+const PRICE_CATS=[["renovated","Fully renovated","Kitchen, bathrooms, floors redone"],["upgraded","Upgraded finishes","Marble, smart home, built-ins, lighting"],["furnished","Premium furniture","Designer furniture included"],["view","Exceptional view or floor","Full Burj or canal view, high floor, corner"],["layout","Bigger or rare layout","Extra room, bigger terrace, rare type"],["owner","Owner's firm price","Owner won't go lower yet"],["other","Other","Explain below"]];
+const catName=k=>(PRICE_CATS.find(c=>c[0]===k)||[,"Other"])[1];
+// Asks the agent why the price is above the market. Resolves with {cat, reason}, or null when they go back to change the price.
+function priceApproval(o,c){return new Promise(done=>{let el=$("#prapp");if(el)el.remove();
+  document.body.insertAdjacentHTML("beforeend",`<div id="prapp" role="dialog" aria-modal="true" aria-labelledby="prapp-t"><div class="pccard">
+    <button class="pcx" data-pa="back" aria-label="Close">${ic("x")}</button><p class="kick">Price approval</p><h2 id="prapp-t">${pctUp(c.ref)} above the market</h2>
+    <div class="pacmp"><div><span>Market</span><b>${c.market?aed(c.market):"—"}</b></div><div><span>Your price</span><b>${aed(o.deal==="rent"?o.rent:o.price)}</b></div><div><span>Online straight away up to</span><b>${c.warnAt?aed(c.warnAt):"+7%"}</b></div></div>
+    <p class="lede">We list up to 7% above the market. Above that, Talal approves it first. Tell him what makes this home worth more.</p>
+    <h4 class="mh">Why is it worth more?</h4><div class="pacats" role="radiogroup">${PRICE_CATS.map(([k,t,d])=>`<button type="button" role="radio" aria-checked="false" data-pacat="${k}"><b>${t}</b><small>${d}</small></button>`).join("")}</div>
+    <label class="field"><span>Explain it (what was done, when, cost, what's special)</span><textarea id="pa-reason" rows="3" maxlength="800" placeholder="e.g. Renovated in 2025: new kitchen and bathrooms, wooden floors, AED 120k of works. Photos in the listing."></textarea></label>
+    ${c.ref>PRICE_MAX?`<p class="pawarn">${ic("shield")}More than 10% above the market: clients compare with DXB Interact deals. A strong reason and photos of the works make approval more likely.</p>`:""}
+    <p class="src" id="pa-err" role="alert"></p>
+    <div class="actions"><button class="btn primary big" data-pa="send">${ic("check")}Send to Talal for approval</button><button class="btn" data-pa="back">Change the price</button></div>
+    <p class="src">Until it's approved the listing stays in your units and isn't shown on the website or counted online.</p></div></div>`);
+  el=$("#prapp");let cat="";document.body.classList.add("lbopen");const end=v=>{el.remove();document.body.classList.remove("lbopen");done(v)};
+  el.addEventListener("click",e=>{const k=e.target.closest("[data-pacat]");if(k){cat=k.dataset.pacat;$("#pa-err").textContent="";el.querySelectorAll("[data-pacat]").forEach(b=>b.setAttribute("aria-checked",b===k))}
+    const a=e.target.closest("[data-pa]");if(!a)return;if(a.dataset.pa==="back"){end(null);setTimeout(()=>{const f=$("#m-price");if(f){f.focus();f.select()}},100);return}
+    const r=$("#pa-reason").value.trim();if(!cat){$("#pa-err").textContent="Choose why it's worth more.";return}if(r.length<15){$("#pa-err").textContent="Explain it in a sentence or two, so Talal can approve it.";$("#pa-reason").focus();return}
+    end({cat,reason:r})});setTimeout(()=>{const f=el.querySelector("[data-pacat]");if(f)f.focus()},60)})}
 function mPriceLive(){const el=$("#m-pchk");if(!el)return;const num=v=>parseFloat(String(v||"").replace(/[^0-9.]/g,""))||0,t=(()=>{try{return mTypeVal()}catch(e){return{beds:0}}})(),deal=$("#m-deal").value,pr=num($("#m-price").value);
   if(!pr){el.innerHTML="";return}const o={id:"_chk",b:+$("#m-bld").value,beds:+t.beds,layout:t.layout||"",deal,price:deal==="rent"?null:pr,rent:deal==="rent"?pr:null,size:num($("#m-size").value)||null};
   el.innerHTML=priceHint(priceCheck(o))}
@@ -2086,11 +2122,17 @@ $("#mine-form").addEventListener("submit",async e=>{e.preventDefault();
   {const prevL=mine.concat(teamListings).find(x=>x.id===m.id)||{},up=m.unit&&unitPlan(m.b,m.tower,m.unit);if(prevL.plan&&prevL.plan.custom)m.plan=prevL.plan;else if(up)m.plan={u:up.u,c:up.c,from:"brochure",mark:up.mark||undefined};else if(prevL.plan&&prevL.plan.from==="brochure")m.plan=null}
   // The price rule applies to a new price; an existing listing whose price isn't changing can still be edited (photos, details).
   {const pv=mine.concat(teamListings).find(x=>x.id===m.id),same=pv&&String(pv.price||"").replace(/[^0-9.]/g,"")===String(m.price||"")&&pv.deal===m.deal;
-   if(!$("#m-future").checked&&!same&&!priceGate(mineToOffer(m),"mine"))return}
+   // Over 7%: the agent gives the reason and it goes to Talal; the same approved price stays approved.
+   const chk=!$("#m-future").checked&&m.price?priceCheck(mineToOffer(m)):null;
+   if(chk&&chk.ref>PRICE_WARN){
+     if(same&&pv.priceReview)m.priceReview=Object.assign({needed:true},pv.priceReview);
+     else if(isAdmin)m.priceReview={needed:true,cat:"other",reason:"Set by the admin",pct:Math.round(chk.ref*1000)/10,market:Math.round(chk.market||0)};
+     else{const a=await priceApproval(mineToOffer(m),chk);if(!a)return;m.priceReview={needed:true,cat:a.cat,reason:a.reason,pct:Math.round(chk.ref*1000)/10,market:Math.round(chk.market||0)}}}
+   else m.priceReview=undefined}
   const wasOnline=(()=>{const pv=mine.concat(teamListings).find(x=>x.id===m.id);return !!(pv&&isOnline(pv,goalOf()))})(),nowOnline=!!isOnline(m,goalOf());
   if(SRV){const prev=mine.concat(teamListings).find(x=>x.id===m.id)||{};const{id,...data}=Object.assign({},prev,m);delete data._by;delete data._own;let r;try{r=await api("data/listings",{id,data},"PUT")}catch(x){toast(x.message);return}await loadListings();if(r&&r.warning){resetMineForm();renderAll();setTimeout(()=>toast(r.warning),50);return}}
   else{const i=mine.findIndex(x=>x.id===m.id);if(i>=0)mine[i]=m;else mine.push(m);persist()}
-  const was=!!g("#m-id");resetMineForm();renderAll();toast(was?"Listing updated":"Listing saved");if(SRV&&m.phone)setTimeout(()=>ownerInvitePrompt(m.id),300);
+  const was=!!g("#m-id");resetMineForm();renderAll();toast(m.priceReview&&!isAdmin&&!(m.priceReview.status==="approved")?"Sent to Talal for price approval. It goes online once he approves.":was?"Listing updated":"Listing saved");if(SRV&&m.phone)setTimeout(()=>ownerInvitePrompt(m.id),300);
   if(nowOnline&&!wasOnline)motivate("online");else if(!was)motivate("saved");
 });
 function mTypeVal(){const v=String($("#m-type").value||"0|").split("|");return{beds:+v[0]||0,layout:v[1]||""}}
@@ -2127,9 +2169,9 @@ async function loadListings(){if(!SRV||!isTeam())return;
 /* ---------------- Dashboard ---------------- */
 const today=()=>new Date().toISOString().slice(0,10);
 const isDue=c=>c.follow&&c.follow<=today()&&c.status!=="Closed"&&c.status!=="Lost";
-function renderDash(){if(!isTeam()){renderShowroom();{const h=$("#dash").firstElementChild;if(h)h.insertAdjacentHTML("afterend",bestHTML()+c3dCard())}if(myProps.length)$("#dash").insertAdjacentHTML("afterbegin",propertyHTML());return}clearInterval(heroT);if(isCEO()){$("#dash").innerHTML=ceoHome();{const f=$("#dash").firstElementChild;if(f)f.insertAdjacentHTML("afterend",myRemindersHTML()+newuStrip())}return}renderTeamDash();
+function renderDash(){if(!isTeam()){renderShowroom();{const h=$("#dash").firstElementChild;if(h)h.insertAdjacentHTML("afterend",bestHTML()+c3dCard())}if(myProps.length)$("#dash").insertAdjacentHTML("afterbegin",propertyHTML());return}clearInterval(heroT);if(isCEO()){$("#dash").innerHTML=ceoHome();{const f=$("#dash").firstElementChild;if(f)f.insertAdjacentHTML("afterend",approvalsHTML()+myRemindersHTML()+newuStrip())}return}renderTeamDash();
   const myl=renderMyListings();if(myl){const r=$("#dash").children[0];if(r)r.insertAdjacentHTML("afterend",myl);else $("#dash").insertAdjacentHTML("afterbegin",myl)}
-  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+myRemindersHTML()+newuStrip()+unitLookupHTML()+bestHTML()+c3dCard()+(isAdmin?weeklyPanel()+visitorsPanel():"")+myTasksHTML()+towerTodoHTML()+pushSlot()+leadsHTML())}
+  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+approvalsHTML()+myRemindersHTML()+newuStrip()+unitLookupHTML()+bestHTML()+c3dCard()+(isAdmin?weeklyPanel()+visitorsPanel():"")+myTasksHTML()+towerTodoHTML()+pushSlot()+leadsHTML())}
 // The top achiever: first in the team ranking (online, then units), once they have a unit.
 let topPub=null;
 async function loadTop(){try{topPub=(await api("public/top")).top}catch(e){}}
@@ -2307,10 +2349,11 @@ function priceCheck(o){const x=enrich(o).x;if(x.ref==null)return null;const rent
 const pctUp=r=>Math.round(r*100)+"%";
 function priceHint(c){if(!c)return"";const lvl=c.ref>PRICE_MAX?"over":c.ref>PRICE_WARN?"warn":"ok";
   const mk=c.market?`Market ${aed(c.market)}${c.rent?" a year":""}`:"Market";
-  return `<span class="pchk ${lvl}">${lvl==="ok"?ic("check"):ic("shield")}<span>${esc(mk)} · yours ${c.ref>=0?"+":""}${pctUp(c.ref)}${lvl==="ok"?" · good price":lvl==="warn"?` · above our 7% target: negotiate it down to ${c.warnAt?aed(c.warnAt):"7%"} or less`:` · over the 10% limit: the most we list at is ${c.max?aed(c.max):"10% above market"}`}</span></span>`}
+  return `<span class="pchk ${lvl}">${lvl==="ok"?ic("check"):ic("shield")}<span>${esc(mk)} · yours ${c.ref>=0?"+":""}${pctUp(c.ref)}${lvl==="ok"?" · good price, it goes online straight away":` · over 7%: it needs Talal's approval. Up to ${c.warnAt?aed(c.warnAt):"7% above"} goes online straight away`}</span></span>`}
 const PGATE={};
 // Saving: up to 7% goes through; 7 to 10% needs a second tap; over 10% is refused (the admin can confirm with a second tap).
-function priceGate(o,form){const c=priceCheck(o);if(!c||c.ref<=PRICE_WARN)return true;const k=(o.deal==="rent"?o.rent:o.price)+"";
+function priceGate(o,form){const c=priceCheck(o);if(!c||c.ref<=PRICE_WARN||isAdmin)return true;
+  if(form==="offer"){toast(`${pctUp(c.ref)} above market. Over 7% needs Talal's approval: lower it to ${c.warnAt?aed(c.warnAt):"7% above"} or less.`);return false}const k=(o.deal==="rent"?o.rent:o.price)+"";
   if(c.ref>PRICE_MAX&&!isAdmin){toast(`${pctUp(c.ref)} above market. The limit is 10%: list at ${c.max?aed(c.max):"a lower price"} or less, and show the owner the market figures.`);return false}
   if(PGATE[form]===k){delete PGATE[form];return true}PGATE[form]=k;
   toast(c.ref>PRICE_MAX?`${pctUp(c.ref)} above market, over the 10% limit. Tap Save again to list it anyway.`:`${pctUp(c.ref)} above market, over our 7% target. Negotiate with the owner; tap Save again only if they insist.`);return false}
@@ -2868,7 +2911,7 @@ async function loadAll(first){
       else if(owner&&owner!==uid){mine=[];clients=[];starred=new Set();persist()}
       else if(mine.length||clients.length||starred.size)persist();
       store.set("orla.localOwner",uid)}
-    migrateOvr();if(!isTeam()){await loadTop();await loadMyProperty()}await loadDealMkt();if(isTeam()){await loadGuide();await loadUnitTypes();await loadListings();await loadPerf(true);await loadLeads();await loadTasks();await loadReminders();if(isAdmin||isCEO()){loadWeekly();loadVisitorsBrief()}setTimeout(paceModal,700);setTimeout(leadPollStart,1500);if(isCEO()){setTimeout(remCheck,2500);setInterval(()=>{if(document.visibilityState==="visible")remCheck()},45000)}if(location.hash==='#reminders')setTimeout(()=>{show('dash');const r=$('#reminders');if(r)r.scrollIntoView()},900);if(location.hash==='#requests')setTimeout(()=>{show('dash');const r=$('#requests');if(r)r.scrollIntoView()},900);await loadNewUnits();setTimeout(newuModal,400);if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
+    migrateOvr();if(!isTeam()){await loadTop();await loadMyProperty()}await loadDealMkt();if(isTeam()){await loadGuide();await loadUnitTypes();await loadListings();await loadPerf(true);await loadLeads();await loadTasks();await loadReminders();if(isAdmin||isCEO()){loadWeekly();loadVisitorsBrief()}setTimeout(paceModal,700);setTimeout(leadPollStart,1500);if(isCEO()){setTimeout(remCheck,2500);setInterval(()=>{if(document.visibilityState==="visible")remCheck()},45000)}if(location.hash==='#approvals')setTimeout(()=>{show(isAdmin||isCEO()?'dash':'mine');const r=$('#approvals');if(r)r.scrollIntoView()},900);if(location.hash==='#reminders')setTimeout(()=>{show('dash');const r=$('#reminders');if(r)r.scrollIntoView()},900);if(location.hash==='#requests')setTimeout(()=>{show('dash');const r=$('#requests');if(r)r.scrollIntoView()},900);await loadNewUnits();setTimeout(newuModal,400);if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
   catch(e){if(e.status===401||e.status===403){location.reload();return}
     if(first){OFFERS=store.get("orla.cache.offers",[]);applySettings(store.get("orla.cache.settings",{}))}
     if(first||!loadAll.warned){loadAll.warned=true;toast("Offline: showing what's saved on this device")}}
@@ -4001,6 +4044,20 @@ let REMS=[],remShown=new Set();
 async function loadReminders(){if(!SRV||!isTeam())return;try{REMS=(await api("team/reminders")).reminders||[]}catch(e){}}
 const remWhen=r=>{const d=new Date(r.at),now=new Date(Date.now()+4*3600e3),dd=new Date(d.getTime()+4*3600e3),day=x=>x.toISOString().slice(0,10),tm=dd.toISOString().slice(11,16);
   const td=day(now),tmw=day(new Date(now.getTime()+864e5));return(day(dd)===td?"Today":day(dd)===tmw?"Tomorrow":dd.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",timeZone:"UTC"}))+" · "+tm};
+function reviewBox(o){const r=o.priceReview,id=o.listingId||o.id,boss=isAdmin||isCEO(),st=r.status;
+  return `<div class="prbox ${st}"><div class="prh"><span class="pill ${PR_PILL[st][0]}">${PR_PILL[st][1]}</span><b>${r.pct!=null?r.pct+"% above the market":""}${r.market?" · market "+aed(r.market):""}</b></div>
+    <p><b>${esc(catName(r.cat))}</b> · ${esc(r.reason||"")}</p><small class="src">Asked by ${esc(firstName(r.by||""))}${r.at?" on "+esc(dShort(String(r.at).slice(0,10))):""}${r.decidedBy?" · "+(st==="approved"?"approved":"answered")+" by "+esc(firstName(r.decidedBy)):""}</small>
+    ${r.note?`<p class="prnote">${ic("chat")}${esc(r.note)}</p>`:""}
+    ${boss&&st==="pending"?prActions(id):""}${!boss&&st==="rejected"?`<div class="actions"><button class="btn primary" data-qa="edit" data-id="${esc(id)}">${ic("pen")}Change the price</button></div>`:""}</div>`}
+const prActions=id=>`<div class="pract"><input data-prnote="${esc(id)}" maxlength="500" placeholder="Note to the agent (optional)"><div class="actions"><button class="btn primary" data-prd="approve" data-id="${esc(id)}">${ic("check")}Approve</button><button class="btn" data-prd="reject" data-id="${esc(id)}">${ic("x")}Not approved</button></div></div>`;
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-prd]");if(!b)return;const id=b.dataset.id,n=document.querySelector(`[data-prnote="${CSS.escape(id)}"]`);b.disabled=true;
+  try{await api("team/price-review",{id,decision:b.dataset.prd,note:n?n.value.trim():""});await loadListings();await loadAll();renderAll();try{renderDetail()}catch(x){}toast(b.dataset.prd==="approve"?"Approved: it can go online now":"Sent back to the agent")}catch(x){toast(x.message);b.disabled=false}});
+// The admin's and the CEO's list of prices waiting for a decision (on Home).
+function approvalsHTML(){if(!(isAdmin||isCEO()))return"";const P=mine.concat(teamListings).filter(m=>m.priceReview&&m.priceReview.status==="pending").sort((a,b)=>String(a.priceReview.at).localeCompare(String(b.priceReview.at)));
+  if(!P.length)return"";return `<div class="panel apprp" id="approvals"><h3>${ic("shield")}Price approvals <span class="pill check">${P.length}</span></h3><p class="lede">Listings more than 7% above the market. They go online only once you approve.</p>
+    ${P.map(m=>{const o=enrich(mineToOffer(m)),r=m.priceReview,ph=Array.isArray(m.photos)?m.photos.length:0;return `<div class="aprow"><button class="aprh" data-id="${esc(m.id)}"><img src="${esc(imgSrc(photosOf(o)[0].k,true))}" alt=""><div><b>${esc((m._by&&firstName(m._by.name))||"You")} · ${m.unit?"Unit "+esc(m.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(typeOf(o))}</b>
+      <span>${aed(o.deal==="rent"?o.rent:o.price)}${o.deal==="rent"?" a year":""} · <b class="aprpct">+${r.pct}%</b>${r.market?" vs market "+aed(r.market):""}${ph?" · "+ph+" photo"+(ph>1?"s":""):""}</span></div></button>
+      <p><b>${esc(catName(r.cat))}:</b> ${esc(r.reason)}</p>${prActions(m.id)}</div>`}).join("")}</div>`}
 function myRemindersHTML(){if(!SRV||!isTeam())return"";const open=REMS.filter(r=>!r.done),due=open.filter(r=>r.due);
   const def=new Date(Date.now()+4*3600e3+864e5);def.setUTCHours(9,0,0,0);const dv=def.toISOString().slice(0,16);
   const lst=isCEO()?[]:mine.filter(m=>m.remindAt&&(isDueR(m)||(Date.parse(m.remindAt)-Date.now())<3*864e5)).sort((a,b)=>String(a.remindAt).localeCompare(String(b.remindAt)));

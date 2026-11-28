@@ -280,6 +280,28 @@ async function teamStats(opts = {}) {
 
 // Writes the offer for a shared listing. Only these fields are copied: the unit number, the owner and the notes stay in the listing.
 const SHARE_STATUS = { Ready: "Ready", Vacant: "Ready · vacant", Tenanted: "Tenanted", "Off-plan": "Off-plan" };
+// Price approval: a listing priced more than 7% above the market waits for the admin. The agent gives the reason
+// (renovated, upgraded, view, furnished…); only approved listings, or listings within 7%, are published on the website.
+const PRICE_CATS = { renovated: "Fully renovated", upgraded: "Upgraded finishes", furnished: "Premium furniture", view: "Exceptional view or floor", layout: "Bigger or rare layout", owner: "Owner's firm price", other: "Other" };
+const priceKey = d => (d.deal === "rent" ? "r" : "s") + ":" + String(d.price ?? "").replace(/[^0-9.]/g, "");
+function reviewFor(user, data, prev) {
+  const want = data.priceReview && typeof data.priceReview === "object" ? data.priceReview : null, old = prev && prev.priceReview;
+  if (!want || !want.needed) return null; // within 7% (or no market figure): no approval needed
+  const same = old && priceKey(prev) === priceKey(data);
+  if (same && old.status === "approved") return old;           // approved price unchanged: stays approved
+  const r = { status: user.role === "admin" ? "approved" : "pending", cat: PRICE_CATS[want.cat] ? want.cat : "other", reason: str(want.reason, 800),
+    pct: Math.round(Number(want.pct) * 10) / 10 || null, market: Number(want.market) || null, price: Number(String(data.price ?? "").replace(/[^0-9.]/g, "")) || null,
+    at: same && old.status === "pending" ? old.at : new Date().toISOString(), by: str(user.name || user.email, 100) };
+  if (user.role === "admin") { r.decidedAt = r.at; r.decidedBy = str(user.name || "Admin", 100); }
+  if (user.role !== "admin" && !r.reason) fail(400, "Explain why the price is above the market.", "no_reason");
+  return r;
+}
+async function notifyAdminsReview(l, data, appUrlStr) {
+  const { rows } = await q("select id from users where status = 'active' and role in ('admin','ceo')");
+  const r = data.priceReview, B = ["", "Peninsula One", "Peninsula Two", "Peninsula Three", "Peninsula Four", "Peninsula Five"][+data.b] || "Peninsula";
+  try { await pushTo(rows.map(x => x.id), { title: `Price approval: ${r.by}`, body: `${B}${data.unit ? " · unit " + data.unit : ""} · ${r.pct}% above market\n${PRICE_CATS[r.cat]}: ${r.reason.slice(0, 140)}`, url: "/app/#approvals", tag: "pr-" + l }); } catch (e) { console.error("review push", e); }
+}
+
 // A 3D model or 360° tour link: only the viewers the app opens inside a page (Sketchfab, Matterport, Kuula, YouTube).
 function cleanTour(u) {
   try { const x = new URL(String(u || "").trim()); return x.protocol === "https:" && /^(www\.)?(sketchfab\.com|my\.matterport\.com|kuula\.co|youtube\.com|m\.youtube\.com|youtu\.be)$/.test(x.hostname) ? x.href.slice(0, 300) : undefined; } catch (e) { return undefined; }
@@ -300,6 +322,7 @@ async function shareListing(listingId, email) {
   // The agent's own photos (uploaded in My units) go with the shared offer.
   const ph = Array.isArray(d.photos) ? d.photos.filter(p => p && /^\/api\/media\?id=[A-Za-z0-9-]{1,64}$/.test(String(p.u || ""))).slice(0, 30).map(p => ({ u: p.u, c: str(p.c, 80), t: "p" })) : [];
   if (ph.length) offer.photos = ph;
+  if (d.priceReview && d.priceReview.status !== "approved") { offer.teamOnly = true; offer.pricePending = true; } else offer.pricePending = undefined;
   const { rows: [prev] } = await q("select data from offers where id = $1", [d.sharedOffer]);
   await q(`insert into offers (id, data, updated_at) values ($1, $2, now())
            on conflict (id) do update set data = excluded.data, updated_at = now()`, [d.sharedOffer, prev ? { ...prev.data, ...offer, avail: prev.data.avail || "Available" } : offer]);
@@ -486,6 +509,12 @@ const routes = {
     if (prev && prev.user_id !== c.user.id && c.user.role !== "admin") fail(403, "This listing belongs to another agent.");
     // The owner's account is linked only by the invitation (team/invite), never by a save.
     if (prev && prev.data.ownerUserId) data.ownerUserId = prev.data.ownerUserId; else delete data.ownerUserId;
+    // Price approval (see reviewFor). An agent can't approve their own price; changing the price asks again.
+    const review = reviewFor(c.user, data, prev && prev.data);
+    if (review) data.priceReview = review; else delete data.priceReview;
+    // Not approved yet: it can't be marked online on the platforms either.
+    if (review && review.status !== "approved" && data.online && typeof data.online === "object") data.online = data.online.off ? { off: true } : {};
+    const newlyPending = review && review.status === "pending" && !(prev && prev.data.priceReview && prev.data.priceReview.status === "pending" && priceKey(prev.data) === priceKey(data));
     // The day a listing first went live on every platform counts towards the team goal.
     const goal = await teamGoal(), on = data.online && typeof data.online === "object" ? data.online : {};
     if (on.off) { for (const p of goal.platforms) delete on[p.k]; data.online = { off: true }; }
@@ -497,10 +526,27 @@ const routes = {
       await q("insert into listings (id, user_id, data) values ($1, $2, $3)", [id, c.user.id, data]);
     } else await q("update listings set data = $2, updated_at = now() where id = $1", [id, data]);
     if (data.sharedOffer) await shareListing(id, c.user.email);
-    return { ok: true, warning: await claimWarning(c.user, data) };
+    if (newlyPending) await notifyAdminsReview(id, data, appUrl(c.req));
+    return { ok: true, warning: await claimWarning(c.user, data), review: data.priceReview ? data.priceReview.status : null };
   },
 
   // An agent shares their own unit as an offer: with the floor, never the unit number or the owner.
+  // The admin (or the CEO) approves or rejects a price above the market. The agent gets a notification either way.
+  "POST team/price-review": async c => {
+    requireStaff(c);
+    if (!seesAll(c.user)) fail(403, "Only the admin approves prices.", "not_allowed");
+    const id = str(c.body.id, 64), ok = c.body.decision === "approve", note = str(c.body.note, 500);
+    const { rows: [l] } = await q("select user_id, data from listings where id = $1", [id]);
+    if (!l || !l.data.priceReview) fail(404, "Nothing to review for this listing.");
+    const data = { ...l.data, priceReview: { ...l.data.priceReview, status: ok ? "approved" : "rejected", decidedAt: new Date().toISOString(), decidedBy: str(c.user.name || c.user.email, 100), note } };
+    await q("update listings set data = $2, updated_at = now() where id = $1", [id, data]);
+    if (data.sharedOffer) await shareListing(id, c.user.email);
+    await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `${ok ? "Approved" : "Rejected"} the price of listing ${id} (${data.priceReview.pct}% above market)`]);
+    const B = ["", "Peninsula One", "Peninsula Two", "Peninsula Three", "Peninsula Four", "Peninsula Five"][+data.b] || "Peninsula";
+    try { await pushTo([l.user_id], { title: ok ? "Price approved ✓" : "Price not approved", body: `${B}${data.unit ? " · unit " + data.unit : ""}${note ? "\n" + note : ok ? "\nIt can go online now." : "\nLower the price to within 7% of the market, or add more reasons."}`, url: "/app/#approvals", tag: "prd-" + id }); } catch (e) {}
+    return { ok: true, status: data.priceReview.status };
+  },
+
   "POST data/listings/share": async c => {
     requireTeam(c);
     const id = str(c.body.id, 64);

@@ -128,18 +128,17 @@ Every Sunday at 9:00 Dubai time (05:00 UTC), the daily Vercel Cron (`/api/cron/d
 
 **Tasks** are private: the admin or the CEO gives one to an agent (with a due date and notes), and only that agent, the admin and the CEO see it. They show on the agent's Home (overdue ones in red), and the agent ticks them done.
 
-## Price discipline (7% target, 10% limit)
+## Price approval (over 7% above the market)
 
-No listing should be more than 7% above the market, and never more than 10%. The market is the DXB Interact registered deals for that building, bedrooms and layout: price per sq ft × size for a sale, the average rent for a rental.
+We list homes up to 7% above the market. Above that, the admin approves first. The market is the DXB Interact registered deals for the building, bedrooms and layout: price per sq ft × size for a sale, the average rent for a rental.
 
-- **While typing the price in My units**, a line under the price shows the market and how far above it the price is:
-  - green up to 7%: "good price";
-  - amber from 7% to 10%: "negotiate it down to AED … or less";
-  - red over 10%: "the most we list at is AED …".
-- **Saving:** up to 7% saves as normal. From 7% to 10%, the agent has to tap Save twice (only if the owner insists). Over 10%, agents can't save. The admin can, with a second tap.
-- The same check runs on the admin's offer form. Team views mark listings with **"7%+ above market"** or **"Over 10% limit"**.
-- Homes without market data, and "coming soon" listings without a price, aren't checked.
-- The limits are `PRICE_WARN` and `PRICE_MAX` in the app.
+- **While typing the price** (My units), a line shows the market and how far above it the price is. Green means it goes online straight away; amber or red means it needs Talal's approval, with the highest price that doesn't.
+- **Saving above 7%** opens "Price approval". It shows the market, the agent's price and the highest price that needs no approval. The agent picks why the home is worth more (fully renovated, upgraded finishes, premium furniture, exceptional view or floor, bigger or rare layout, owner's firm price, other) and explains it: what was done, when, the cost. A warning shows over 10%. "Change the price" goes back to the price instead.
+- **While waiting:** the listing shows "Waiting for price approval". It stays in the agent's units, isn't published on the website (a shared offer is kept team-only) and can't be ticked online on the platforms.
+- **The admin** (and the CEO) get a phone notification and a **Price approvals** panel at the top of Home. Each row shows the agent, unit, price, +%, market, number of photos and the reason, with a note box and **Approve** or **Not approved**. The home's page shows the same box. The agent is notified of the decision with the note.
+- **Approved:** the listing can go online, and stays approved while the price stays the same. **Not approved:** the agent sees the note and a "Change the price" button. Any new price over 7% asks again.
+- The admin's own listings are approved automatically. Agents editing an offer directly can't go over 7% there.
+- Prices are stored in `priceReview` on the listing (status, category, reason, %, market, who asked, who decided, note). The decision route is `POST team/price-review`.
 
 The motivation card's messages also push expertise and negotiation: knowing the deals, the price per sq ft and the building, and pricing it right.
 
