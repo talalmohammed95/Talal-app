@@ -129,7 +129,8 @@ function forRole(data, user) {
     // The yellow box on the floor plan shows which unit it is, so it goes with the unit number.
     if (d.plan && typeof d.plan === "object" && d.plan.mark) { d.plan = { ...d.plan }; delete d.plan.mark; }
     if (typeof d.title === "string") d.title = d.title.replace(/\bunit\s*[#no.]*\s*\d+[a-z]?\b\s*[·,-]?\s*/gi, "").trim();
-    return d;
+    // Other agents see the floor band only (low, mid, high), like clients: the exact floor stays with the listing agent.
+    return hideFloor(d);
   }
   const d = { ...data };
   for (const k of TEAM_ONLY) delete d[k];
@@ -494,7 +495,7 @@ const routes = {
       by: { id: r.user_id, name: r.name, email: r.email, agentKey: r.agent_key } })) };
   },
 
-  // Units the team added in the last days, for the "new on the team" alert. Teammates see the home and the floor,
+  // Units the team added in the last days, for the "new on the team" alert. Teammates see the home and the floor band,
   // never the unit number or the owner; the admin, the CEO and the agent who added it see the unit number too.
   "GET team/new-units": async c => {
     requireStaff(c);
@@ -510,7 +511,7 @@ const routes = {
     const shape = (d, at, by, mine, offerId) => {
       const f = floorFromUnit(d);
       return { at, by, mine, offerId: offerId || null, b: +d.b || null, tower: +d.b === 4 ? d.tower || "" : "", beds: d.beds === undefined || d.beds === "" ? null : +d.beds, layout: d.layout || "",
-        size: d.size ? +String(d.size).replace(/[^0-9.]/g, "") || null : null, floor: f.floor || "", view: d.view || "", deal: d.deal || "", price: d.deal === "rent" ? null : +d.price || null,
+        size: d.size ? +String(d.size).replace(/[^0-9.]/g, "") || null : null, floor: seesAll(c.user) || mine ? f.floor || "" : hideFloor({ floor: f.floor || "" }).floor, view: d.view || "", deal: d.deal || "", price: d.deal === "rent" ? null : +d.price || null,
         rent: d.deal === "rent" ? +d.price || +d.rent || null : +d.rent || null, furn: d.furn || "", future: !!d.future, unit: seesAll(c.user) || mine ? d.unit || "" : undefined };
     };
     const items = L.map(r => shape(r.data, r.created_at, { name: r.name || "", agentKey: r.agent_key || "" }, r.uid === c.user.id, r.data.sharedOffer))
