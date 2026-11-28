@@ -303,6 +303,18 @@ function reviewFor(user, data, prev) {
   if (user.role !== "admin" && !r.reason) fail(400, "Explain why the price is above the market.", "no_reason");
   return r;
 }
+// The plan for an above-market price, sent to the agent with the decision: two viewings with colleagues, then the
+// market report with the owner, then list it at a reasonable price. A follow-up a week later checks on it.
+async function priceDropPlan(agentIds, fromUser, home, id) {
+  const B = ["", "Peninsula One", "Peninsula Two", "Peninsula Three", "Peninsula Four", "Peninsula Five"][+home.b] || "Peninsula";
+  const what = `${B}${home.unit ? " unit " + home.unit : ""}`;
+  const plan = `${what}: 1) 2 viewings this week with colleagues' clients. 2) Note the price feedback. 3) Meet the owner with the market report and the feedback: the price is high, we need another price. 4) Agree a reasonable price (within 7%) and list it on Bayut and Property Finder.`;
+  for (const uid of agentIds) {
+    await q("insert into reminders (user_id, at, text, by_user, by_name, via, link) values ($1, now(), $2, $3, $4, 'plan', '/app/#approvals')", [uid, plan.slice(0, 300), fromUser.id, fromUser.name || fromUser.email || ""]);
+    await q("insert into reminders (user_id, at, text, by_user, by_name, via, link) values ($1, now() + interval '7 days', $2, $3, $4, 'plan', '/app/#approvals')",
+      [uid, `${what}: did you do the 2 viewings? Meet the owner with the market report and the feedback, agree a reasonable price and list it online.`.slice(0, 300), fromUser.id, fromUser.name || fromUser.email || ""]);
+  }
+}
 async function notifyAdminsReview(l, data, appUrlStr) {
   const { rows } = await q("select id from users where status = 'active' and role in ('admin','ceo')");
   const r = data.priceReview, B = ["", "Peninsula One", "Peninsula Two", "Peninsula Three", "Peninsula Four", "Peninsula Five"][+data.b] || "Peninsula";
@@ -556,6 +568,7 @@ const routes = {
       await q("update offers set data = $2, updated_at = now() where id = $1", [id, d]);
       await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `${ok ? "Approved" : "Rejected"} the price of offer ${id}`]);
       const { rows: ag } = await q("select id from users where status = 'active' and agent_key = $1", [str(o.data.agent, 40)]);
+      try { if (ag.length && !ok) await priceDropPlan(ag.map(x => x.id), c.user, o.data, id); } catch (e) { console.error("plan", e); }
       try { if (ag.length) await pushTo(ag.map(x => x.id), { title: ok ? "Price approved ✓" : "Price not approved", body: `${o.data.title || id}${note ? "\n" + note : ok ? "\nIt is online again." : "\nLower the price to within 7% of the market, or add reasons."}`, url: "/app/#approvals", tag: "prd-" + id }); } catch (e) {}
       return { ok: true, status: pr.status };
     }
@@ -565,6 +578,7 @@ const routes = {
     if (data.sharedOffer) await shareListing(id, c.user.email);
     await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `${ok ? "Approved" : "Rejected"} the price of listing ${id} (${data.priceReview.pct}% above market)`]);
     const B = ["", "Peninsula One", "Peninsula Two", "Peninsula Three", "Peninsula Four", "Peninsula Five"][+data.b] || "Peninsula";
+    try { if (!ok) await priceDropPlan([l.user_id], c.user, data, id); } catch (e) { console.error("plan", e); }
     try { await pushTo([l.user_id], { title: ok ? "Price approved ✓" : "Price not approved", body: `${B}${data.unit ? " · unit " + data.unit : ""}${note ? "\n" + note : ok ? "\nIt can go online now." : "\nLower the price to within 7% of the market, or add more reasons."}`, url: "/app/#approvals", tag: "prd-" + id }); } catch (e) {}
     return { ok: true, status: data.priceReview.status };
   },

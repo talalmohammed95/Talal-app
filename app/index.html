@@ -4196,6 +4196,14 @@ async function mrPdf(id){toast("Preparing the market report…");const R=await a
     "Every buyer can check DXB Interact. A price backed by real deals builds trust; a price far above them loses it.",
     "Your edge: you know every recent deal, the price per sq ft and what is listed today. Lead the conversation with the numbers."].filter(Boolean);
   tp.forEach((t,i)=>{T(`${i+1}.`,M,10,1,25,20);y-=14;T(t,M+16,10,0,45)});
+  // The plan to bring the owner to a reasonable price.
+  y+=12;T("The plan with the owner",M,13,1);y+=2;
+  const pl=["Take the listing and start working on it: book at least 2 viewings this week with your colleagues' clients (ask the team who has a buyer for this type).",
+    "After each viewing, note the feedback on the price and which other homes the buyer compared it with.",
+    "Sit with the owner and show this report: the last registered deals, what is listed today, and the viewings' feedback. Tell them clearly: the price is high, and we have to work on another price.",
+    `Agree a reasonable price${R.within7?` (within 7% of the market: up to ${A(R.within7)}${per})`:" within 7% of the market"} and list it on Bayut and Property Finder at that price.`,
+    "Set a date to review it together in two weeks. If there's no offer, adjust again with the new numbers."];
+  pl.forEach((t,i)=>{T(`Step ${i+1}`,M,10,1,[20,40,48],50);y-=14;T(t,M+50,10,0,45)});
   pdf.setFontSize(8);pdf.setTextColor(140);pdf.text(pdf.splitTextToSize("Sources: DXB Interact (DLD registered deals) imported by Orla Properties; listed prices from the Orla offers database. Figures are a guide for the negotiation, not a valuation.",W-2*M),M,812);
   await shareFile(pdf.output("blob"),`Market-report-${bld.replace(/\s+/g,"-")}-${typ.replace(/\s+/g,"-")}.pdf`,"Market report")}
 // The admin's and the CEO's list of prices waiting for a decision (on Home).
