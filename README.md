@@ -289,6 +289,16 @@ When an agent has several homes of the same kind, a client sees only the cheapes
 
 **Unit numbers to fill** (the admin's Team page): every home and listing that has no unit number yet, with likely units from the Peninsula contacts (same building and bedrooms, size within about 2%, same floor when known). Tap a suggestion or type the number, then Save. It shows in Admin › Activity.
 
+## Unit numbers by agent (the admin's board)
+
+On the Team page, **Unit numbers by agent** lists every home without its unit number under the agent who listed it, matching the "Peninsula Stars · Team Performance" report of 20–26 Nov 2026: Giulia 8, Talal 4 (including 2107, which has its number), Blendjana 3, Derya 1.
+
+- **"Which agent listed these?"** at the top holds the 7 Peninsula Three offers that came from the market flyers ("priced from the lowest listing on Bayut / Property Finder"). They aren't in the report under any agent, so they're marked `needsAgent` (a migration, once) and wait for the admin to choose the agent. They still show Talal as the contact until then.
+- **Each row** has **Listed by** (move the home to another agent), contact suggestions and the unit number box.
+- **Each agent's group** has **WhatsApp [agent]**, a ready message listing their homes with a blank "Unit no." for each, and **PDF for [agent]**, a one-page form to fill and send back.
+- **Agents** see **Unit numbers to fill** on their own Home with their homes and a box for each. They can fill only their own: `POST admin/unit-set` checks it, and `POST admin/offer-agent` is admin-only.
+- Unit numbers stay private: the admin and the listing agent only.
+
 ## Unit lookup (team home)
 At the top of the team's Home: type any unit number (or a duplex number like G07), and pick a building if you know it. It shows, for each building where that number exists, the floor plan, layout, floor, size and view from the developer's brochures, and the owner if they're in the Peninsula contacts (with Call and WhatsApp; a client another agent already listed shows as taken, as everywhere else). **List this unit** or **List with this owner** opens My units already filled in. Every contacts lookup is logged as before.
 

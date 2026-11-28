@@ -1016,6 +1016,11 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
 .aprh{display:flex;gap:10px;align-items:center;text-align:left;border:0;background:none;padding:0;color:var(--fg);font:inherit;cursor:pointer}.aprh img{width:56px;height:56px;border-radius:12px;object-fit:cover;flex:none}.aprh div{display:flex;flex-direction:column;gap:2px;min-width:0}.aprh span{color:var(--muted);font-size:14px}.aprpct{color:#A3261B}
 :root[data-theme="dark"] .prbox.pending,:root[data-theme="dark"] .aprow{background:#3A2D12}:root[data-theme="dark"] .prbox.rejected{background:#3B1C18}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .prbox.pending,:root:not([data-theme="light"]) .aprow{background:#3A2D12}:root:not([data-theme="light"]) .prbox.rejected{background:#3B1C18}}
+.umgrp{border:1px solid var(--line);border-radius:16px;padding:10px;margin-top:12px;display:flex;flex-direction:column;gap:8px}.umgrp.na{border-color:#E8A33A;background:#FFF6E6}
+.umgh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.umgh>div:first-child{display:flex;align-items:center;gap:10px;min-width:0}.umgh img{width:40px;height:40px;border-radius:50%;object-fit:cover}.umgh span{display:block;color:var(--muted);font-size:13px}.umgh b{display:flex;align-items:center;gap:6px}.umgh .actions{margin:0}
+.umag{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--muted)}.umag select{min-height:38px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:0 8px;font:inherit;font-weight:600;flex:1;min-width:0}
+.umrow.na .umag select{border-color:#E8A33A}
+:root[data-theme="dark"] .umgrp.na{background:#3A2D12}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .umgrp.na{background:#3A2D12}}
 #motiv{position:fixed;left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:86;display:flex;justify-content:center;padding:0 12px;pointer-events:none}#motiv[hidden]{display:none}
 @media(min-width:900px){#motiv{bottom:24px}}
 .mvcard{pointer-events:auto;position:relative;width:min(460px,100%);background:#1C1A18;color:#fff;border-radius:22px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.45);animation:regup .3s ease-out}
@@ -2171,7 +2176,7 @@ const today=()=>new Date().toISOString().slice(0,10);
 const isDue=c=>c.follow&&c.follow<=today()&&c.status!=="Closed"&&c.status!=="Lost";
 function renderDash(){if(!isTeam()){renderShowroom();{const h=$("#dash").firstElementChild;if(h)h.insertAdjacentHTML("afterend",bestHTML()+c3dCard())}if(myProps.length)$("#dash").insertAdjacentHTML("afterbegin",propertyHTML());return}clearInterval(heroT);if(isCEO()){$("#dash").innerHTML=ceoHome();{const f=$("#dash").firstElementChild;if(f)f.insertAdjacentHTML("afterend",approvalsHTML()+myRemindersHTML()+newuStrip())}return}renderTeamDash();
   const myl=renderMyListings();if(myl){const r=$("#dash").children[0];if(r)r.insertAdjacentHTML("afterend",myl);else $("#dash").insertAdjacentHTML("afterbegin",myl)}
-  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+approvalsHTML()+myRemindersHTML()+newuStrip()+unitLookupHTML()+bestHTML()+c3dCard()+(isAdmin?weeklyPanel()+visitorsPanel():"")+myTasksHTML()+towerTodoHTML()+pushSlot()+leadsHTML())}
+  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+approvalsHTML()+myRemindersHTML()+myUnitsMissingHTML()+newuStrip()+unitLookupHTML()+bestHTML()+c3dCard()+(isAdmin?weeklyPanel()+visitorsPanel():"")+myTasksHTML()+towerTodoHTML()+pushSlot()+leadsHTML())}
 // The top achiever: first in the team ranking (online, then units), once they have a unit.
 let topPub=null;
 async function loadTop(){try{topPub=(await api("public/top")).top}catch(e){}}
@@ -2911,7 +2916,7 @@ async function loadAll(first){
       else if(owner&&owner!==uid){mine=[];clients=[];starred=new Set();persist()}
       else if(mine.length||clients.length||starred.size)persist();
       store.set("orla.localOwner",uid)}
-    migrateOvr();if(!isTeam()){await loadTop();await loadMyProperty()}await loadDealMkt();if(isTeam()){await loadGuide();await loadUnitTypes();await loadListings();await loadPerf(true);await loadLeads();await loadTasks();await loadReminders();if(isAdmin||isCEO()){loadWeekly();loadVisitorsBrief()}setTimeout(paceModal,700);setTimeout(leadPollStart,1500);if(isCEO()){setTimeout(remCheck,2500);setInterval(()=>{if(document.visibilityState==="visible")remCheck()},45000)}if(location.hash==='#approvals')setTimeout(()=>{show(isAdmin||isCEO()?'dash':'mine');const r=$('#approvals');if(r)r.scrollIntoView()},900);if(location.hash==='#reminders')setTimeout(()=>{show('dash');const r=$('#reminders');if(r)r.scrollIntoView()},900);if(location.hash==='#requests')setTimeout(()=>{show('dash');const r=$('#requests');if(r)r.scrollIntoView()},900);await loadNewUnits();setTimeout(newuModal,400);if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
+    migrateOvr();if(!isTeam()){await loadTop();await loadMyProperty()}await loadDealMkt();if(isTeam()){await loadGuide();await loadUnitTypes();await loadListings();await loadPerf(true);await loadLeads();await loadTasks();await loadReminders();await loadMyMissing();if(isAdmin||isCEO()){loadWeekly();loadVisitorsBrief()}setTimeout(paceModal,700);setTimeout(leadPollStart,1500);if(isCEO()){setTimeout(remCheck,2500);setInterval(()=>{if(document.visibilityState==="visible")remCheck()},45000)}if(location.hash==='#approvals')setTimeout(()=>{show(isAdmin||isCEO()?'dash':'mine');const r=$('#approvals');if(r)r.scrollIntoView()},900);if(location.hash==='#reminders')setTimeout(()=>{show('dash');const r=$('#reminders');if(r)r.scrollIntoView()},900);if(location.hash==='#requests')setTimeout(()=>{show('dash');const r=$('#requests');if(r)r.scrollIntoView()},900);await loadNewUnits();setTimeout(newuModal,400);if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
   catch(e){if(e.status===401||e.status===403){location.reload();return}
     if(first){OFFERS=store.get("orla.cache.offers",[]);applySettings(store.get("orla.cache.settings",{}))}
     if(first||!loadAll.warned){loadAll.warned=true;toast("Offline: showing what's saved on this device")}}
@@ -4496,16 +4501,47 @@ $("#dash").addEventListener("click",e=>{const b=e.target.closest("[data-ul-add]"
 /* ---------------- Unit numbers to fill (the admin) ---------------- */
 let UMISS=null;
 async function umissLoad(force){const el=$("#umiss");if(!el||!isAdmin||!SRV)return;if(!UMISS||force){try{UMISS=await api("admin/units-missing")}catch(e){el.innerHTML="";return}}umissDraw()}
+// The unit-numbers board: every home without its number, under the agent who listed it.
+// The admin moves homes to the right agent, fills numbers, and sends each agent their list (WhatsApp or PDF); an agent fills their own on Home.
+const umLine=x=>[(BLD[x.b]||"Peninsula")+(x.tower&&+x.b===4?" Tower "+x.tower:""),typeOf(x)||"Home",x.size?fmt(x.size)+" sq ft":"",known(x.floor)?x.floor+(/floor/i.test(x.floor)?"":" floor"):"",known(x.view)?x.view+" view":"",x.deal==="rent"?(x.rent?aed(x.rent)+" a year":"for rent"):[x.price?aed(x.price):"",x.deal==="both"&&x.rent?"or "+aed(x.rent)+" a year":""].filter(Boolean).join(" ")].filter(Boolean).join(" · ");
+function umGroups(h){const g={};h.forEach((x,i)=>{const k=x.needsAgent?"_":x.agentKey||"?";(g[k]=g[k]||[]).push([x,i])});
+  return Object.entries(g).sort(([a],[b])=>a==="_"?-1:b==="_"?1:String((UMISS.agents[a]||{}).name||a).localeCompare(String((UMISS.agents[b]||{}).name||b)))}
+function umRow(x,i,admin){const ag=UMISS.agents||{};
+  return `<div class="umrow${x.needsAgent?" na":""}" data-um="${i}"><div class="umi"><b>${esc(umLine(x))}</b><span>${esc([x.title,x.kind==="listing"?"in My units":"offer",x.src&&admin?"from "+x.src:""].filter(Boolean).join(" · "))}</span></div>
+    ${admin&&x.kind==="offer"?`<label class="umag"><span>${x.needsAgent?"Who listed it?":"Listed by"}</span><select data-um-agent aria-label="Agent who listed it">${x.needsAgent?'<option value="">Choose the agent…</option>':""}${Object.entries(ag).map(([k,a])=>`<option value="${esc(k)}"${!x.needsAgent&&x.agentKey===k?" selected":""}>${esc(a.name)}</option>`).join("")}</select></label>`:""}
+    ${admin&&(x.suggestions||[]).length?`<div class="umsug">${x.suggestions.map(c=>`<button type="button" class="chip" data-um-pick="${esc(c.unit)}">${esc(c.unit)} · ${esc(c.name||"owner")}${c.size?" · "+fmt(c.size)+" sq ft":""}</button>`).join("")}</div>`:""}
+    ${x.needsAgent?"":`<div class="umf"><input aria-label="Unit number" placeholder="Unit no., e.g. 1203" inputmode="text"><button type="button" class="btn sm primary" data-um-save>Save</button></div>`}</div>`}
 function umissDraw(){const el=$("#umiss");if(!el||!UMISS)return;const h=UMISS.homes||[];
-  if(!h.length){el.innerHTML=`<div class="panel umiss ok"><b>${ic("check")}Every home has its unit number.</b></div>`;return}
-  el.innerHTML=`<details class="panel umiss" open><summary><h3>${ic("lock")}Unit numbers to fill · ${h.length}</h3></summary>
-    <p class="lede">These homes have no unit number yet. Type it, or tap a likely unit from the Peninsula contacts (same building, bedrooms, size and floor). Only you and the agent the home is listed under will see it: the other Peninsula Stars see the floor, external agents and clients a low, mid or high floor.${UMISS.contacts?"":" Import the contacts in Admin to get suggestions."}</p>
-    ${h.map((x,i)=>`<div class="umrow" data-um="${i}"><div class="umi"><b>${esc((BLD[x.b]||"Peninsula")+(x.tower&&+x.b===4?" · Tower "+x.tower:"")+" · "+(typeOf(x)||"Home"))}</b><span>${esc([x.title,x.size?fmt(x.size)+" sq ft":"",known(x.floor)?x.floor+(/floor/i.test(x.floor)?"":" floor"):"",known(x.view)?x.view:"",x.agent?"listed by "+x.agent:"",x.kind==="listing"?"My units":"offer"].filter(Boolean).join(" · "))}</span></div>
-      ${(x.suggestions||[]).length?`<div class="umsug">${x.suggestions.map(c=>`<button type="button" class="chip" data-um-pick="${esc(c.unit)}">${esc(c.unit)} · ${esc(c.name||"owner")}${c.size?" · "+fmt(c.size)+" sq ft":""}</button>`).join("")}</div>`:""}
-      <div class="umf"><input aria-label="Unit number" placeholder="Unit no." inputmode="text"><button type="button" class="btn sm primary" data-um-save>Save</button></div></div>`).join("")}</details>`}
+  if(!h.length){el.innerHTML=`<div class="panel umiss ok"><b>${ic("check")}Every home has its unit number and its agent.</b></div>`;return}
+  const ag=UMISS.agents||{};
+  el.innerHTML=`<details class="panel umiss" open><summary><h3>${ic("lock")}Unit numbers by agent · ${h.length}</h3></summary>
+    <p class="lede">Every home without its unit number, under the agent who listed it. Move a home to the right agent with "Listed by", fill the number, or send each agent their list to fill: on WhatsApp, or as a PDF. Agents can also fill theirs on their Home page. Unit numbers stay private: you and the listing agent only.${UMISS.contacts?"":" Import the contacts in Admin to get suggestions."}</p>
+    ${umGroups(h).map(([k,l])=>{const a=ag[k]||{};return `<div class="umgrp${k==="_"?" na":""}"><div class="umgh"><div>${k==="_"?`<b>${ic("users")}Which agent listed these? · ${l.length}</b><span>From the market flyers, not in the team report. Choose the agent for each one.</span>`:`<img src="${esc(agentPhotoOf(k,a.name))}" alt=""><div><b>${esc(a.name||k)} · ${l.length} without a unit number</b></div>`}</div>
+      ${k!=="_"?`<div class="actions">${a.phone?`<a class="btn sm" href="${esc(waTo(a.phone,umMsg(k,l.map(z=>z[0]))))}" target="_blank" rel="noopener">${ic("chat")}WhatsApp ${esc(firstName(a.name||""))}</a>`:""}<button class="btn sm" data-um-pdf="${esc(k)}">${ic("download")}PDF for ${esc(firstName(a.name||k))}</button></div>`:""}</div>
+      ${l.map(([x,i])=>umRow(x,i,true)).join("")}</div>`}).join("")}</details>`}
+function umMsg(k,l){const a=(UMISS.agents||{})[k]||{};return `Hi ${firstName(a.name||"")}, please send me the unit numbers for your ${l.length} home${l.length>1?"s":""} below (or fill them in the app: Home › Unit numbers to fill):\n\n${l.map((x,n)=>`${n+1}. ${umLine(x)}\n   Unit no.: ______`).join("\n")}\n\nThanks!`}
+async function umPdf(k){const l=(UMISS.homes||[]).filter(x=>!x.needsAgent&&x.agentKey===k),a=(UMISS.agents||{})[k]||{};if(!l.length)return;
+  await soLibs();const {jsPDF}=window.jspdf,pdf=new jsPDF({unit:"pt",format:"a4"}),W=595,M=44;let y=60;
+  pdf.setFont("helvetica","bold");pdf.setFontSize(18);pdf.text("Unit numbers to fill",M,y);y+=22;pdf.setFont("helvetica","normal");pdf.setFontSize(11);pdf.setTextColor(110);
+  pdf.text(`${a.name||k} · ${l.length} home${l.length>1?"s":""} · Orla Properties · ${new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}`,M,y);y+=16;
+  pdf.text("Write the unit number for each home and send it back to Talal, or fill it in the app: Home › Unit numbers to fill.",M,y);y+=24;pdf.setTextColor(20);
+  l.forEach((x,n)=>{pdf.setFontSize(10);const lines=pdf.splitTextToSize(umLine(x).replace(/^[^·]+·[^·]+· ?/,"").replace(/ · /g,"  ·  "),W-2*M-200).slice(0,3),hh=44+lines.length*13;
+    if(y+hh>790){pdf.addPage();y=60}pdf.setDrawColor(220);pdf.roundedRect(M,y,W-2*M,hh,6,6);pdf.setFont("helvetica","bold");pdf.setFontSize(12);
+    pdf.text(`${n+1}. ${(BLD[x.b]||"Peninsula")+(x.tower&&+x.b===4?" Tower "+x.tower:"")} · ${typeOf(x)||"Home"}`,M+12,y+20);pdf.setFont("helvetica","normal");pdf.setFontSize(10);pdf.setTextColor(90);
+    pdf.text(lines,M+12,y+37);pdf.setTextColor(20);pdf.setFontSize(11);pdf.text("Unit no.:",W-M-170,y+hh/2+4);pdf.setDrawColor(150);pdf.line(W-M-118,y+hh/2+6,W-M-14,y+hh/2+6);y+=hh+10});
+  pdf.setFontSize(9);pdf.setTextColor(140);pdf.text("Private: unit numbers are seen only by Talal and the listing agent.",M,812);
+  await shareFile(pdf.output("blob"),`Unit-numbers-${(a.name||k).split(" ")[0]}.pdf`,"Unit numbers to fill")}
+// An agent's own homes without a unit number, on their Home page.
+let UMY=[];async function loadMyMissing(){if(!SRV||!isTeam()||isAdmin||isCEO())return;try{const r=await api("admin/units-missing");UMY=r.homes||[]}catch(e){UMY=[]}}
+function myUnitsMissingHTML(){if(!UMY.length)return"";return `<div class="panel umiss" id="umy"><h3>${ic("lock")}Unit numbers to fill · ${UMY.length}</h3><p class="lede">Your homes without a unit number. Only you and Talal see it.</p>${UMY.map((x,i)=>`<div class="umrow" data-umy="${i}"><div class="umi"><b>${esc(umLine(x))}</b></div><div class="umf"><input aria-label="Unit number" placeholder="Unit no., e.g. 1203"><button type="button" class="btn sm primary" data-umy-save>Save</button></div></div>`).join("")}</div>`}
 document.addEventListener("click",async e=>{const pk=e.target.closest("[data-um-pick]");if(pk){const row=pk.closest(".umrow");row.querySelector("input").value=pk.dataset.umPick;row.querySelector("input").focus();return}
+  const pdfb=e.target.closest("[data-um-pdf]");if(pdfb){pdfb.disabled=true;try{await umPdf(pdfb.dataset.umPdf)}catch(x){toast("The PDF couldn't be made")}pdfb.disabled=false;return}
+  const my=e.target.closest("[data-umy-save]");if(my){const row=my.closest(".umrow"),x=UMY[+row.dataset.umy],unit=row.querySelector("input").value.trim();if(!unit){toast("Type the unit number");return}
+    my.disabled=true;try{await api("admin/unit-set",{kind:x.kind,id:x.id,unit});toast("Unit "+unit.toUpperCase()+" saved");UMY.splice(+row.dataset.umy,1);await loadAll().catch(()=>{});if(x.kind==="listing")await loadListings();renderDash()}catch(er){toast(er.message);my.disabled=false}return}
   const sv=e.target.closest("[data-um-save]");if(!sv)return;const row=sv.closest(".umrow"),x=UMISS.homes[+row.dataset.um],unit=row.querySelector("input").value.trim();if(!unit){toast("Type the unit number");return}
   sv.disabled=true;try{await api("admin/unit-set",{kind:x.kind,id:x.id,unit});toast("Unit "+unit.toUpperCase()+" saved");UMISS.homes.splice(+row.dataset.um,1);umissDraw();await loadAll().catch(()=>{});if(x.kind==="listing")await loadListings();perf=null}catch(er){toast(er.message);sv.disabled=false}});
+document.addEventListener("change",async e=>{const s=e.target.closest("[data-um-agent]");if(!s||!s.value)return;const row=s.closest(".umrow"),x=UMISS.homes[+row.dataset.um];s.disabled=true;
+  try{await api("admin/offer-agent",{id:x.id,agent:s.value});x.agentKey=s.value;x.needsAgent=false;x.agent=(UMISS.agents[s.value]||{}).name||s.value;umissDraw();toast("Now under "+firstName(x.agent));await loadAll().catch(()=>{});perf=null}catch(er){toast(er.message);s.disabled=false}});
 
 /* ---------------- New on the team ---------------- */
 let NEWU=[],NEWU_PENDING=true;

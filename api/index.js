@@ -1112,7 +1112,8 @@ const routes = {
   // The admin: every home (offer or listing) with no unit number yet, with likely units from the Peninsula contacts
   // (same building and bedrooms, size within about 2%, the same floor when the home's floor is known).
   "GET admin/units-missing": async c => {
-    requireAdmin(c);
+    requireStaff(c);
+    const mine = !seesAll(c.user); // an agent gets only the homes under their own name
     const [{ rows: O }, { rows: L }, { rows: C }, { rows: st }] = await Promise.all([
       q("select id, data from offers where coalesce(data->>'unit', '') = '' and coalesce(data->>'avail', 'Available') not in ('Sold', 'Rented')"),
       q("select l.id, l.data, u.name, u.agent_key from listings l join users u on u.id = l.user_id where coalesce(l.data->>'unit', '') = ''"),
@@ -1134,17 +1135,35 @@ const routes = {
       }).filter(Boolean).sort((a, z) => z.score - a.score).slice(0, 4);
     };
     const pick = d => ({ b: d.b, beds: d.beds, layout: d.layout, size: d.size, floor: d.floor, view: d.view, deal: d.deal, price: d.price, rent: d.rent, title: d.title, tower: d.tower });
-    const homes = O.map(r => ({ kind: "offer", id: r.id, agent: (agents[r.data.agent] || {}).name || r.data.agent || "", ...pick(r.data), suggestions: suggest(r.data) }))
-      .concat(L.map(r => ({ kind: "listing", id: r.id, agent: r.name || r.agent_key || "", ...pick(r.data), suggestions: suggest(r.data) })));
-    return { homes, contacts: C.length };
+    let homes = O.map(r => ({ kind: "offer", id: r.id, agentKey: r.data.agent || "", agent: (agents[r.data.agent] || {}).name || r.data.agent || "", needsAgent: !!r.data.needsAgent, src: str(r.data.src, 80), ...pick(r.data), suggestions: suggest(r.data) }))
+      .concat(L.filter(r => !r.data.sharedOffer).map(r => ({ kind: "listing", id: r.id, agentKey: r.data.agent || r.agent_key || "", agent: (agents[r.data.agent || r.agent_key] || {}).name || r.name || "", ...pick(r.data), suggestions: suggest(r.data) })));
+    if (mine) homes = homes.filter(h => !h.needsAgent && h.agentKey && h.agentKey === c.user.agent_key).map(h => ({ ...h, suggestions: [] }));
+    return { homes, contacts: mine ? 0 : C.length, agents: Object.fromEntries(Object.entries(agents).map(([k, a]) => [k, { name: a.name, phone: a.phone || "" }])) };
   },
   "POST admin/unit-set": async c => {
-    requireAdmin(c);
+    requireStaff(c);
     const kind = c.body.kind === "listing" ? "listings" : "offers", id = str(c.body.id, 64), unit = str(c.body.unit, 20).toUpperCase().replace(/[^A-Z0-9-]/g, "");
     if (!unit) fail(400, "Type the unit number.");
+    if (c.user.role !== "admin") {
+      // An agent fills the unit number of a home under their own name only.
+      const { rows: [own] } = kind === "listings" ? await q("select 1 from listings where id = $1 and user_id = $2", [id, c.user.id])
+        : await q("select 1 from offers where id = $1 and data->>'agent' = $2 and coalesce(data->>'needsAgent','') = ''", [id, c.user.agent_key || "-"]);
+      if (!own) fail(403, "You can fill unit numbers only for your own homes.");
+    }
     const { rows: [r] } = await q(`update ${kind} set data = jsonb_set(data, '{unit}', to_jsonb($2::text)) where id = $1 returning data->>'title' as title`, [id, unit]);
     if (!r) fail(404, "Home not found.");
     await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `Set unit ${unit} on ${str(r.title, 100)}`]);
+    return { ok: true };
+  },
+
+  // The admin moves a home to the agent who really listed it.
+  "POST admin/offer-agent": async c => {
+    requireAdmin(c);
+    const id = str(c.body.id, 64), agent = str(c.body.agent, 40);
+    if (!/^[A-Za-z0-9_-]+$/.test(agent)) fail(400, "Choose the agent.");
+    const { rows: [r] } = await q(`update offers set data = (data - 'needsAgent') || jsonb_build_object('agent', $2::text) where id = $1 returning data->>'title' as title`, [id, agent]);
+    if (!r) fail(404, "Home not found.");
+    await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `Moved ${str(r.title, 100)} to ${agent}`]);
     return { ok: true };
   },
 
