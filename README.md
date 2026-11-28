@@ -179,6 +179,15 @@ Every time an agent adds a unit, or a listing goes online on every platform (fro
 
 The card closes by itself after 15 seconds. The messages are in `MOTIV` in the app; the admin and the CEO don't get it.
 
+## Photos of a listing (agents)
+
+On a home's page an agent taps **Edit listing**. The My units form has **Photos of this home**:
+- **＋ Add photos** picks several from the phone. They're resized in the phone, so each upload is under 2 MB.
+- Each photo has **Make cover**, **Download** and **Remove**. The first photo is the cover.
+- **Save listing** keeps the photos.
+
+Without photos the building's standard photos show. A listing shared as an offer passes its photos to the offer. The 7%/10% price rule applies to a new or changed price only, so a listing whose price isn't changing can always be edited.
+
 ## Agents edit their own homes
 On a home listed under their name, an agent taps **Edit this home** and gets the same editor as the admin: headline, building, type, sale or rent, status (available, reserved, under offer, sold, rented), price, rent, size, floor, view, furnishing, cheques, deposit, highlights, the unit number and owner, and photos and the floor plan. It saves for everyone straight away, price and status changes go into the home's history, and it shows in Admin › Activity. They can't move a home to another agent or change whether it counts in team performance (only the admin can), and they can't edit homes listed under someone else. Their own units in My units were already editable there. The admin also has **Edit this home** on every home.
 

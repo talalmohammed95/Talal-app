@@ -297,6 +297,9 @@ async function shareListing(listingId, email) {
     status: SHARE_STATUS[d.status] || "Ready", avail: "Available", agent: str(d.agent, 40) || l.agent_key || "",
     hl: str(d.shareNote, 500), teamOnly: d.shareTo !== "all", fromListing: listingId, tour: cleanTour(d.tour), tower: +d.b === 4 && ["A", "B"].includes(d.tower) ? d.tower : undefined, src: "Shared by the listing agent"
   };
+  // The agent's own photos (uploaded in My units) go with the shared offer.
+  const ph = Array.isArray(d.photos) ? d.photos.filter(p => p && /^\/api\/media\?id=[A-Za-z0-9-]{1,64}$/.test(String(p.u || ""))).slice(0, 30).map(p => ({ u: p.u, c: str(p.c, 80), t: "p" })) : [];
+  if (ph.length) offer.photos = ph;
   const { rows: [prev] } = await q("select data from offers where id = $1", [d.sharedOffer]);
   await q(`insert into offers (id, data, updated_at) values ($1, $2, now())
            on conflict (id) do update set data = excluded.data, updated_at = now()`, [d.sharedOffer, prev ? { ...prev.data, ...offer, avail: prev.data.avail || "Available" } : offer]);

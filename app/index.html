@@ -1283,6 +1283,8 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
           <div class="field"><label for="m-deal">Sale / Rent</label><select id="m-deal"><option value="sale">Sale</option><option value="rent">Rent</option></select></div>
           <div class="field"><label for="m-floor">Floor</label><input id="m-floor" placeholder="e.g. 33rd"></div>
           <div class="field"><label for="m-view">View</label><input id="m-view" placeholder="e.g. Canal & Burj"></div>
+          <div class="field wide" id="m-ph-wrap"><label>Photos of this home</label><p class="src" id="m-ph-note" style="margin:0 0 8px">Add the real photos: the first one is the cover. Without photos, the building's standard photos show.</p><div class="phed" id="m-photos"></div>
+            <div class="actions" style="margin-top:10px"><label class="btn primary filebtn">＋ Add photos<input type="file" id="m-up" accept="image/*" multiple></label></div></div>
           <div class="field wide"><label for="m-tour">3D model or 360° tour (link)</label><input id="m-tour" type="url" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="Sketchfab, Matterport, Kuula or YouTube 360 link"><small class="src">Clients open it inside the home's page.</small></div>
           <div class="field"><label for="m-size">Size (sq ft)</label><input id="m-size" inputmode="numeric"></div>
           <div class="field"><label for="m-price">Price (AED, or rent per year)</label><input id="m-price" inputmode="numeric"><div id="m-pchk" aria-live="polite"></div></div>
@@ -1623,7 +1625,7 @@ function fillUnit(o){if(!isTeam()||!o||!o.unit)return o;const g=guideOf(o.b,o.to
   if(!known(x.floor)||/^(low|mid|high)/i.test(x.floor))x.floor=ordN(g.floor);
   if(!known(x.view)&&g.view)x.view=g.view;if(!x.size&&g.size)x.size=g.size;if(!x.balcony&&g.balcony)x.balcony=g.balcony;
   if(g.img&&(g.src||(g.doc&&g.page)))x.gplan={doc:g.doc,page:g.page,src:g.src,c:g.type||"",mark:g.mark||null};if(g.type)x.gtype=g.type;return x}
-function mineToOffer(m){return{tour:m.tour||undefined,plan:m.plan||undefined,id:m.id,b:+m.b,tower:m.tower||"",layout:m.layout||"",beds:+m.beds,deal:m.deal,title:(m.unit?"Unit "+m.unit+" · ":"")+typeOf(m),price:m.deal==="sale"?+m.price:undefined,rent:m.deal==="rent"?+m.price:undefined,
+function mineToOffer(m){return{photos:Array.isArray(m.photos)&&m.photos.length?m.photos:undefined,tour:m.tour||undefined,plan:m.plan||undefined,id:m.id,b:+m.b,tower:m.tower||"",layout:m.layout||"",beds:+m.beds,deal:m.deal,title:(m.unit?"Unit "+m.unit+" · ":"")+typeOf(m),price:m.deal==="sale"?+m.price:undefined,rent:m.deal==="rent"?+m.price:undefined,
   size:m.size?+m.size:null,floor:m.floor||"",view:m.view||"",furn:m.furn,status:m.status,agent:m.agent,hl:m.notes||"",mine:true,future:!!m.future,unit:m.unit||null,owner:m.owner,ownerPhone:m.phone,date:m.date,by:m._by||null,own:m._own!==false,shared:m.sharedOffer||null,shareTo:m.shareTo,shareNote:m.shareNote,src:SRV?(m._by?"Added by "+(m._by.name||m._by.email):"Added by you"):"Added on this device"}}
 // A unit an agent has shared shows once, as its shared offer.
 // all() is called dozens of times in one redraw: it's worked out once and reused until the redraw ends (the next task).
@@ -1631,7 +1633,7 @@ let ALLC=null;const all=()=>{if(ALLC)return ALLC;ALLC=allFresh();queueMicrotask(
 const allFresh=()=>{const live=new Set(OFFERS.map(o=>o.id));
   // A shared listing shows once, as its offer; for whoever can see the listing (its agent, the admin) the offer keeps the unit number, owner and plan.
   const sh={};mine.concat(teamListings).forEach(m=>{if(m.sharedOffer)sh[m.sharedOffer]=m});
-  const offers=OFFERS.map(o=>{const m=sh[o.id];return m?Object.assign({},o,{unit:m.unit||o.unit,owner:m.owner||o.owner,ownerPhone:m.phone||o.ownerPhone,plan:o.plan||m.plan,tour:o.tour||m.tour,tower:o.tower||m.tower,listingId:m.id}):o});
+  const offers=OFFERS.map(o=>{const m=sh[o.id];return m?Object.assign({},o,{unit:m.unit||o.unit,owner:m.owner||o.owner,ownerPhone:m.phone||o.ownerPhone,plan:o.plan||m.plan,tour:o.tour||m.tour,photos:Array.isArray(m.photos)&&m.photos.length?m.photos:o.photos,tower:o.tower||m.tower,listingId:m.id}):o});
   return offers.concat(mine.concat(teamListings).filter(m=>!(m.sharedOffer&&live.has(m.sharedOffer))).map(mineToOffer)).map(fillUnit).map(enrich)};
 const agentOf=o=>AGENTS[o.agent]||Object.values(AGENTS)[0]||{name:"Orla Properties",phone:""};
 const dldLabel=()=>"DLD registration ("+(+(FEES.dld*100).toFixed(2))+"%)";
@@ -2074,9 +2076,11 @@ $("#mine-form").addEventListener("submit",async e=>{e.preventDefault();
   if(!price&&!$("#m-future").checked){toast("Enter a price");$("#m-price").focus();return}
   if($("#m-future").checked&&!g("#m-remind")){toast("Pick a reminder date");$("#m-remind").focus();return}
   if(hasTowers(g("#m-bld"))&&!g("#m-tower")){toast(BLD[g("#m-bld")]+": choose Tower A or Tower B");$("#m-tower").focus();return}
-  const m={id:g("#m-id")||"l-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),unit:g("#m-unit"),b:g("#m-bld"),tower:hasTowers(g("#m-bld"))&&g("#m-tower")||undefined,layout:mTypeVal().layout||undefined,beds:String(mTypeVal().beds),deal:g("#m-deal"),floor:g("#m-floor"),view:g("#m-view"),tour:tourEmbed(g("#m-tour"))?g("#m-tour"):undefined,size:g("#m-size").replace(/[^0-9.]/g,""),price,status:g("#m-status"),furn:g("#m-furn"),owner:g("#m-owner"),phone:g("#m-phone"),agent:g("#m-agent"),date:g("#m-date"),notes:g("#m-notes"),online:onlineFromForm(),future:$("#m-future").checked||undefined,availableFrom:g("#m-avail")||undefined,remindAt:g("#m-remind")||undefined,remindNote:g("#m-rnote")||undefined,adTitle:g("#m-adtitle")||undefined,adText:g("#m-adtext")||undefined};
+  const m={id:g("#m-id")||"l-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),unit:g("#m-unit"),b:g("#m-bld"),tower:hasTowers(g("#m-bld"))&&g("#m-tower")||undefined,layout:mTypeVal().layout||undefined,beds:String(mTypeVal().beds),deal:g("#m-deal"),floor:g("#m-floor"),view:g("#m-view"),tour:tourEmbed(g("#m-tour"))?g("#m-tour"):undefined,photos:mPh.length?mPh.slice(0,30):undefined,size:g("#m-size").replace(/[^0-9.]/g,""),price,status:g("#m-status"),furn:g("#m-furn"),owner:g("#m-owner"),phone:g("#m-phone"),agent:g("#m-agent"),date:g("#m-date"),notes:g("#m-notes"),online:onlineFromForm(),future:$("#m-future").checked||undefined,availableFrom:g("#m-avail")||undefined,remindAt:g("#m-remind")||undefined,remindNote:g("#m-rnote")||undefined,adTitle:g("#m-adtitle")||undefined,adText:g("#m-adtext")||undefined};
   {const prevL=mine.concat(teamListings).find(x=>x.id===m.id)||{},up=m.unit&&unitPlan(m.b,m.tower,m.unit);if(prevL.plan&&prevL.plan.custom)m.plan=prevL.plan;else if(up)m.plan={u:up.u,c:up.c,from:"brochure",mark:up.mark||undefined};else if(prevL.plan&&prevL.plan.from==="brochure")m.plan=null}
-  if(!$("#m-future").checked&&!priceGate(mineToOffer(m),"mine"))return;
+  // The price rule applies to a new price; an existing listing whose price isn't changing can still be edited (photos, details).
+  {const pv=mine.concat(teamListings).find(x=>x.id===m.id),same=pv&&String(pv.price||"").replace(/[^0-9.]/g,"")===String(m.price||"")&&pv.deal===m.deal;
+   if(!$("#m-future").checked&&!same&&!priceGate(mineToOffer(m),"mine"))return}
   const wasOnline=(()=>{const pv=mine.concat(teamListings).find(x=>x.id===m.id);return !!(pv&&isOnline(pv,goalOf()))})(),nowOnline=!!isOnline(m,goalOf());
   if(SRV){const prev=mine.concat(teamListings).find(x=>x.id===m.id)||{};const{id,...data}=Object.assign({},prev,m);delete data._by;delete data._own;let r;try{r=await api("data/listings",{id,data},"PUT")}catch(x){toast(x.message);return}await loadListings();if(r&&r.warning){resetMineForm();renderAll();setTimeout(()=>toast(r.warning),50);return}}
   else{const i=mine.findIndex(x=>x.id===m.id);if(i>=0)mine[i]=m;else mine.push(m);persist()}
@@ -2089,10 +2093,17 @@ function mFillTypes(beds,layout){const b=+$("#m-bld").value||3,info=BLDINFO[b],c
   $("#m-type").innerHTML=opts.map(([v,t])=>`<option value="${esc(v)}">${esc(t)}</option>`).join("");if(cur&&opts.some(o=>o[0]===cur))$("#m-type").value=cur;
   $("#m-tower-wrap").hidden=!hasTowers(b);if(!hasTowers(b))$("#m-tower").value=""}
 $("#m-bld").addEventListener("change",()=>mFillTypes());mFillTypes(0,"");
-function resetMineForm(){$("#mine-form").reset();mFillTypes(0,"");drawOnlineBoxes({});$("#m-id").value="";$("#m-save").textContent="Save listing";$("#m-cancel").hidden=true;try{$("#m-date").valueAsDate=new Date()}catch(e){}const k=myKey();if(k&&AGENTS[k])$("#m-agent").value=k}
+/* My units: the listing's own photos (upload, cover, remove, download). */
+let mPh=[];
+function mPhDraw(){const el=$("#m-photos");if(!el)return;el.innerHTML=mPh.map((x,i)=>`<figure><img src="${esc(imgSrc(x.u,true))}" alt=""><figcaption>${i===0?"<b>Cover</b>":"Photo "+(i+1)}</figcaption><div class="phb">${i?`<button type="button" class="btn sm" data-mph="cover" data-i="${i}">Make cover</button>`:""}<a class="btn sm" href="${esc(x.u)}" download="photo-${i+1}.jpg" target="_blank" rel="noopener">${ic("download")}Download</a><button type="button" class="btn sm" data-mph="del" data-i="${i}">Remove</button></div></figure>`).join("")}
+$("#m-photos").addEventListener("click",e=>{const b=e.target.closest("[data-mph]");if(!b)return;const i=+b.dataset.i;if(b.dataset.mph==="del")mPh.splice(i,1);if(b.dataset.mph==="cover"){const [x]=mPh.splice(i,1);mPh.unshift(x)}mPhDraw()});
+$("#m-up").addEventListener("change",async e=>{const f=[...e.target.files];e.target.value="";if(!f.length)return;if(!SRV){toast("Uploading needs the online version of the app");return}const st=$("#m-ph-note");
+  for(const [n,x] of f.entries()){st.textContent=`Uploading ${n+1} of ${f.length}…`;try{const data=await shrink(x,1600),r=await api("admin/media",{mime:"image/jpeg",data});mPh.push({u:r.url,c:"",t:"p"});mPhDraw()}catch(err){toast(err.message||"A photo couldn't be uploaded")}}
+  st.textContent=`${mPh.length} photo${mPh.length===1?"":"s"}. Tap Save listing to keep them.`});
+function resetMineForm(){mPh=[];setTimeout(mPhDraw,0);$("#mine-form").reset();mFillTypes(0,"");drawOnlineBoxes({});$("#m-id").value="";$("#m-save").textContent="Save listing";$("#m-cancel").hidden=true;try{$("#m-date").valueAsDate=new Date()}catch(e){}const k=myKey();if(k&&AGENTS[k])$("#m-agent").value=k}
 $("#m-cancel").onclick=resetMineForm;
 function editListing(id){const m=mine.concat(teamListings).find(x=>x.id===id);if(!m)return;show("mine");
-  const set=(k,v)=>{$(k).value=v??""};set("#m-id",m.id);set("#m-unit",m.unit);set("#m-bld",m.b);mFillTypes(m.beds,m.layout);set("#m-tower",m.tower);set("#m-deal",m.deal);set("#m-floor",m.floor);set("#m-view",m.view);set("#m-tour",m.tour);set("#m-size",m.size);set("#m-price",m.price?fmt(m.price):"");
+  const set=(k,v)=>{$(k).value=v??""};set("#m-id",m.id);set("#m-unit",m.unit);set("#m-bld",m.b);mFillTypes(m.beds,m.layout);set("#m-tower",m.tower);set("#m-deal",m.deal);set("#m-floor",m.floor);set("#m-view",m.view);set("#m-tour",m.tour);mPh=Array.isArray(m.photos)?m.photos.map(x=>({u:x.u||x.k,c:x.c||"",t:"p"})).filter(x=>x.u):[];mPhDraw();set("#m-size",m.size);set("#m-price",m.price?fmt(m.price):"");
   set("#m-status",m.status);set("#m-furn",m.furn);set("#m-owner",m.owner);set("#m-phone",m.phone);if(AGENTS[m.agent])set("#m-agent",m.agent);set("#m-date",m.date);set("#m-notes",m.notes);$("#m-future").checked=!!m.future;set("#m-avail",m.availableFrom);set("#m-remind",m.remindAt);set("#m-rnote",m.remindNote);set("#m-adtitle",m.adTitle);set("#m-adtext",m.adText);drawOnlineBoxes(m.online||{});
   $("#m-save").textContent="Save changes";$("#m-cancel").hidden=false;setTimeout(()=>{$("#mine-form").scrollIntoView({behavior:"smooth",block:"start"});$("#m-owner").focus({preventScroll:true})},60)}
 // Each agent's own units live on the server. Units saved before (in the agent's private app data) move there once.
