@@ -537,7 +537,19 @@ const routes = {
     if (!seesAll(c.user)) fail(403, "Only the admin approves prices.", "not_allowed");
     const id = str(c.body.id, 64), ok = c.body.decision === "approve", note = str(c.body.note, 500);
     const { rows: [l] } = await q("select user_id, data from listings where id = $1", [id]);
-    if (!l || !l.data.priceReview) fail(404, "Nothing to review for this listing.");
+    if (!l) {
+      // A built-in offer the admin moved to approvals: approving puts it back on the website.
+      const { rows: [o] } = await q("select data from offers where id = $1", [id]);
+      if (!o || !o.data.priceReview) fail(404, "Nothing to review for this listing.");
+      const pr = { ...o.data.priceReview, status: ok ? "approved" : "rejected", decidedAt: new Date().toISOString(), decidedBy: str(c.user.name || c.user.email, 100), note };
+      const d = { ...o.data, priceReview: pr, pricePending: ok ? undefined : true, teamOnly: ok ? !!o.data.wasTeamOnly : true };
+      await q("update offers set data = $2, updated_at = now() where id = $1", [id, d]);
+      await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `${ok ? "Approved" : "Rejected"} the price of offer ${id}`]);
+      const { rows: ag } = await q("select id from users where status = 'active' and agent_key = $1", [str(o.data.agent, 40)]);
+      try { if (ag.length) await pushTo(ag.map(x => x.id), { title: ok ? "Price approved ✓" : "Price not approved", body: `${o.data.title || id}${note ? "\n" + note : ok ? "\nIt is online again." : "\nLower the price to within 7% of the market, or add reasons."}`, url: "/app/#approvals", tag: "prd-" + id }); } catch (e) {}
+      return { ok: true, status: pr.status };
+    }
+    if (!l.data.priceReview) fail(404, "Nothing to review for this listing.");
     const data = { ...l.data, priceReview: { ...l.data.priceReview, status: ok ? "approved" : "rejected", decidedAt: new Date().toISOString(), decidedBy: str(c.user.name || c.user.email, 100), note } };
     await q("update listings set data = $2, updated_at = now() where id = $1", [id, data]);
     if (data.sharedOffer) await shareListing(id, c.user.email);
