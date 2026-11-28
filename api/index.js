@@ -8,7 +8,7 @@ import { mailEnabled, sendMail, trySendMail } from "../lib/mail.js";
 import { SETTINGS } from "../lib/seed.js";
 import Anthropic from "@anthropic-ai/sdk";
 import { assist, assistOffline, aiEnabled } from "../lib/assistant.js";
-import { importContacts, contactStats, searchContacts, claimWarning } from "../lib/contacts.js";
+import { importContacts, contactStats, searchContacts, claimWarning, phoneKey } from "../lib/contacts.js";
 import { importDeals, dealStats } from "../lib/deals.js";
 import { readBrochure, guideRows } from "../lib/guide.js";
 import { vapidKeys, subscribe, unsubscribe, notifyLead, pushTo } from "../lib/notify.js";
@@ -1133,9 +1133,20 @@ const routes = {
     const [{ rows: O }, { rows: L }, { rows: C }, { rows: st }] = await Promise.all([
       q("select id, data from offers where coalesce(data->>'unit', '') = '' and coalesce(data->>'avail', 'Available') not in ('Sold', 'Rented')"),
       q("select l.id, l.data, u.name, u.agent_key from listings l join users u on u.id = l.user_id where coalesce(l.data->>'unit', '') = ''"),
-      q("select name, unit, building, data from contacts where unit <> '' and building between 1 and 5"),
+      q("select name, unit, building, data, phones, phone_keys from contacts where unit <> '' and building between 1 and 5"),
       q("select data from settings where id = 'app'")]);
+    // Who on the team deals with each phone number: the owner of a home in their My units, or one of their clients.
     const agents = (st[0] && st[0].data && st[0].data.agents) || {};
+    const deal = new Map();
+    if (!mine) {
+      const [{ rows: AL }, { rows: US }] = await Promise.all([
+        q("select l.id, l.data, u.name, u.agent_key from listings l join users u on u.id = l.user_id"),
+        q("select s.data, u.name, u.agent_key from user_state s join users u on u.id = s.user_id where u.role in ('agent','admin','ceo')")]);
+      const add = (ph, who, how) => { const k = phoneKey(ph); if (!k || !who) return; const l = deal.get(k) || []; if (!l.some(x => x.who === who && x.how === how)) l.push({ who, how }); deal.set(k, l); };
+      for (const r of AL) add(r.data.phone, (agents[r.data.agent || r.agent_key] || {}).name || r.name, `owner in their My units${r.data.unit ? " (unit " + r.data.unit + ")" : ""}`);
+      for (const r of US) for (const cl of Array.isArray(r.data && r.data.clients) ? r.data.clients : []) add(cl && cl.phone, (agents[r.agent_key] || {}).name || r.name, `their client${cl.status ? " · " + str(cl.status, 30) : ""}`);
+    }
+    const dealing = keys => { const out = []; for (const k of keys || []) for (const x of deal.get(k) || []) if (!out.some(y => y.who === x.who && y.how === x.how)) out.push(x); return out; };
     const num = v => { const n = parseFloat(String(v ?? "").replace(/[^0-9.]/g, "")); return Number.isFinite(n) && n > 0 ? n : null; };
     const floorOf = f => { const m = String(f || "").match(/\d{1,2}/); return m && !/low|mid|high|podium/i.test(f) ? +m[0] : null; };
     const suggest = d => {
@@ -1143,18 +1154,29 @@ const routes = {
       return C.filter(x => +x.building === b).map(x => {
         const xb = x.data && x.data.beds != null ? +x.data.beds : null, xs = num(x.data && x.data.size), digits = String(x.unit).replace(/\D/g, "");
         const xf = digits.length >= 3 ? +digits.slice(0, -2) : null;
-        if (beds != null && xb != null && xb !== beds) return null;
-        if (size && xs && Math.abs(xs - size) / size > 0.02) return null;
-        if (fl != null && xf != null && xf !== fl) return null;
+        const samePhone = !!d.phone && (x.phone_keys || []).includes(phoneKey(d.phone)); // the owner's own phone: the strongest match
+        if (!samePhone && beds != null && xb != null && xb !== beds) return null;
+        if (!samePhone && size && xs && Math.abs(xs - size) / size > 0.02) return null;
+        if (!samePhone && fl != null && xf != null && xf !== fl) return null;
         const score = (size && xs ? 2 : 0) + (fl != null && xf === fl ? 2 : 0) + (beds != null && xb === beds ? 1 : 0);
-        return score ? { unit: x.unit, name: x.name, size: xs, type: (x.data && x.data.type) || "", score } : null;
+        const sc = score + (samePhone ? 10 : 0);
+        return sc ? { unit: x.unit, name: x.name, size: xs, type: (x.data && x.data.type) || "", score: sc, samePhone, phones: (x.phones || []).slice(0, 3), dealing: dealing(x.phone_keys) } : null;
       }).filter(Boolean).sort((a, z) => z.score - a.score).slice(0, 4);
     };
     const pick = d => ({ b: d.b, beds: d.beds, layout: d.layout, size: d.size, floor: d.floor, view: d.view, deal: d.deal, price: d.price, rent: d.rent, title: d.title, tower: d.tower });
     let homes = O.map(r => ({ kind: "offer", id: r.id, agentKey: r.data.agent || "", agent: (agents[r.data.agent] || {}).name || r.data.agent || "", needsAgent: !!r.data.needsAgent, src: str(r.data.src, 80), ...pick(r.data), suggestions: suggest(r.data) }))
       .concat(L.filter(r => !r.data.sharedOffer).map(r => ({ kind: "listing", id: r.id, agentKey: r.data.agent || r.agent_key || "", agent: (agents[r.data.agent || r.agent_key] || {}).name || r.name || "", ...pick(r.data), suggestions: suggest(r.data) })));
     if (mine) homes = homes.filter(h => !h.needsAgent && h.agentKey && h.agentKey === c.user.agent_key).map(h => ({ ...h, suggestions: [] }));
-    return { homes, contacts: mine ? 0 : C.length, agents: Object.fromEntries(Object.entries(agents).map(([k, a]) => [k, { name: a.name, phone: a.phone || "" }])) };
+    // Per agent: how many of their homes are on the website and how many still have no unit number.
+    let byAgent;
+    if (!mine) {
+      const { rows: T } = await q(`select coalesce(nullif(data->>'agent',''), '?') as k, count(*)::int as n from offers where coalesce(data->>'avail','Available') not in ('Sold','Rented') group by 1
+        union all select coalesce(nullif(l.data->>'agent',''), u.agent_key, '?'), count(*)::int from listings l join users u on u.id = l.user_id where coalesce(l.data->>'sharedOffer','') = '' group by 1`);
+      byAgent = {};
+      for (const r of T) byAgent[r.k] = { total: ((byAgent[r.k] || {}).total || 0) + r.n, missing: 0 };
+      for (const h of homes) if (!h.needsAgent) { const k = h.agentKey || "?"; byAgent[k] = byAgent[k] || { total: 0, missing: 0 }; byAgent[k].missing++; }
+    }
+    return { homes, byAgent, contacts: mine ? 0 : C.length, agents: Object.fromEntries(Object.entries(agents).map(([k, a]) => [k, { name: a.name, phone: a.phone || "" }])) };
   },
   "POST admin/unit-set": async c => {
     requireStaff(c);
