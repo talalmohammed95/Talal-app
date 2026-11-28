@@ -1145,7 +1145,9 @@ const routes = {
     requireStaff(c);
     const mine = !seesAll(c.user); // an agent gets only the homes under their own name
     const [{ rows: O }, { rows: L }, { rows: C }, { rows: st }] = await Promise.all([
-      q("select id, data from offers where coalesce(data->>'unit', '') = '' and coalesce(data->>'avail', 'Available') not in ('Sold', 'Rented')"),
+      // An offer shared from My units takes its unit number from that listing.
+      q(`select o.id, o.data from offers o left join listings l on l.id = o.data->>'fromListing'
+         where coalesce(o.data->>'unit', '') = '' and coalesce(l.data->>'unit', '') = '' and coalesce(o.data->>'avail', 'Available') not in ('Sold', 'Rented')`),
       q("select l.id, l.data, u.name, u.agent_key from listings l join users u on u.id = l.user_id where coalesce(l.data->>'unit', '') = ''"),
       q("select name, unit, building, data, phones, phone_keys from contacts where unit <> '' and building between 1 and 5"),
       q("select data from settings where id = 'app'")]);
@@ -1190,7 +1192,20 @@ const routes = {
       for (const r of T) byAgent[r.k] = { total: ((byAgent[r.k] || {}).total || 0) + r.n, missing: 0 };
       for (const h of homes) if (!h.needsAgent) { const k = h.agentKey || "?"; byAgent[k] = byAgent[k] || { total: 0, missing: 0 }; byAgent[k].missing++; }
     }
-    return { homes, byAgent, contacts: mine ? 0 : C.length, agents: Object.fromEntries(Object.entries(agents).map(([k, a]) => [k, { name: a.name, phone: a.phone || "" }])) };
+    // Homes without the owner's details (name and phone): the built-in offers have none unless an agent's
+    // listing in My units holds them; a listing needs both its owner's name and phone.
+    let noOwner;
+    if (!mine) {
+      const [{ rows: OA }, { rows: LA }] = await Promise.all([
+        q("select id, data from offers where coalesce(data->>'avail', 'Available') not in ('Sold', 'Rented')"),
+        q("select l.id, l.data, u.name, u.agent_key from listings l join users u on u.id = l.user_id")]);
+      const has = d => !!(String(d.owner || "").trim() && String(d.phone || "").trim());
+      const byOffer = new Map(LA.filter(r => r.data.sharedOffer).map(r => [r.data.sharedOffer, r]));
+      noOwner = OA.filter(r => { const l = byOffer.get(r.id) || LA.find(x => x.id === r.data.fromListing); return !(l && has(l.data)) && !(r.data.owner && r.data.ownerPhone); })
+        .map(r => { const l = byOffer.get(r.id) || LA.find(x => x.id === r.data.fromListing); return { kind: "offer", id: r.id, agentKey: r.data.agent || "", needsAgent: !!r.data.needsAgent, unit: r.data.unit || (l && l.data.unit) || "", has: l ? { owner: !!String(l.data.owner || "").trim(), phone: !!String(l.data.phone || "").trim() } : { owner: false, phone: false }, ...pick(r.data) }; })
+        .concat(LA.filter(r => !r.data.sharedOffer && !has(r.data)).map(r => ({ kind: "listing", id: r.id, agentKey: r.data.agent || r.agent_key || "", unit: r.data.unit || "", has: { owner: !!String(r.data.owner || "").trim(), phone: !!String(r.data.phone || "").trim() }, ...pick(r.data) })));
+    }
+    return { homes, byAgent, noOwner, contacts: mine ? 0 : C.length, agents: Object.fromEntries(Object.entries(agents).map(([k, a]) => [k, { name: a.name, phone: a.phone || "" }])) };
   },
   "POST admin/unit-set": async c => {
     requireStaff(c);
