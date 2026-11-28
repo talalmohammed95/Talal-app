@@ -1195,17 +1195,36 @@ const routes = {
     // Homes without the owner's details (name and phone): the built-in offers have none unless an agent's
     // listing in My units holds them; a listing needs both its owner's name and phone.
     let noOwner;
-    if (!mine) {
+    {
       const [{ rows: OA }, { rows: LA }] = await Promise.all([
         q("select id, data from offers where coalesce(data->>'avail', 'Available') not in ('Sold', 'Rented')"),
-        q("select l.id, l.data, u.name, u.agent_key from listings l join users u on u.id = l.user_id")]);
+        q("select l.id, l.data, l.user_id, u.name, u.agent_key from listings l join users u on u.id = l.user_id")]);
       const has = d => !!(String(d.owner || "").trim() && String(d.phone || "").trim());
       const byOffer = new Map(LA.filter(r => r.data.sharedOffer).map(r => [r.data.sharedOffer, r]));
       noOwner = OA.filter(r => { const l = byOffer.get(r.id) || LA.find(x => x.id === r.data.fromListing); return !(l && has(l.data)) && !(r.data.owner && r.data.ownerPhone); })
         .map(r => { const l = byOffer.get(r.id) || LA.find(x => x.id === r.data.fromListing); return { kind: "offer", id: r.id, agentKey: r.data.agent || "", needsAgent: !!r.data.needsAgent, unit: r.data.unit || (l && l.data.unit) || "", has: l ? { owner: !!String(l.data.owner || "").trim(), phone: !!String(l.data.phone || "").trim() } : { owner: false, phone: false }, ...pick(r.data) }; })
-        .concat(LA.filter(r => !r.data.sharedOffer && !has(r.data)).map(r => ({ kind: "listing", id: r.id, agentKey: r.data.agent || r.agent_key || "", unit: r.data.unit || "", has: { owner: !!String(r.data.owner || "").trim(), phone: !!String(r.data.phone || "").trim() }, ...pick(r.data) })));
+        .concat(LA.filter(r => !r.data.sharedOffer && !has(r.data)).map(r => ({ kind: "listing", id: r.id, uid: r.user_id, agentKey: r.data.agent || r.agent_key || "", unit: r.data.unit || "", has: { owner: !!String(r.data.owner || "").trim(), phone: !!String(r.data.phone || "").trim() }, ...pick(r.data) })));
+      // An agent gets only their own homes.
+      if (mine) noOwner = noOwner.filter(h => h.kind === "listing" ? h.uid === c.user.id : !h.needsAgent && h.agentKey && h.agentKey === c.user.agent_key);
+      noOwner.forEach(h => delete h.uid);
     }
     return { homes, byAgent, noOwner, contacts: mine ? 0 : C.length, agents: Object.fromEntries(Object.entries(agents).map(([k, a]) => [k, { name: a.name, phone: a.phone || "" }])) };
+  },
+  // The owner's name and phone on a home: the agent it's listed under (or the admin). Only that agent and the admin see them.
+  "POST admin/owner-set": async c => {
+    requireStaff(c);
+    const kind = c.body.kind === "listing" ? "listings" : "offers", id = str(c.body.id, 64), owner = str(c.body.owner, 100), phone = str(c.body.phone, 40);
+    if (!owner && !phone) fail(400, "Type the owner's name or phone.");
+    if (c.user.role !== "admin") {
+      const { rows: [own] } = kind === "listings" ? await q("select 1 from listings where id = $1 and user_id = $2", [id, c.user.id])
+        : await q("select 1 from offers where id = $1 and data->>'agent' = $2 and coalesce(data->>'needsAgent','') = ''", [id, c.user.agent_key || "-"]);
+      if (!own) fail(403, "You can fill owner details only for your own homes.");
+    }
+    const set = kind === "listings" ? { ...(owner ? { owner } : {}), ...(phone ? { phone } : {}) } : { ...(owner ? { owner } : {}), ...(phone ? { ownerPhone: phone } : {}) };
+    const { rows: [r] } = await q(`update ${kind} set data = data || $2::jsonb, updated_at = now() where id = $1 returning data->>'title' as title`, [id, JSON.stringify(set)]);
+    if (!r) fail(404, "Home not found.");
+    await q("insert into activity (by_user, by_email, text) values ($1, $2, $3)", [c.user.id, c.user.email, `Set the owner's details on ${str(r.title, 100)}`]);
+    return { ok: true };
   },
   "POST admin/unit-set": async c => {
     requireStaff(c);
