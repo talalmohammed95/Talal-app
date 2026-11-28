@@ -143,6 +143,12 @@ No listing should be more than 7% above the market, and never more than 10%. The
 
 The motivation card's messages also push expertise and negotiation: knowing the deals, the price per sq ft and the building, and pricing it right.
 
+## Staying open on the phone
+
+- **Sign-in lasts a year from the last use.** Every day someone uses the app, their sign-in is pushed back to a full year. People who use it stay signed in.
+- **PIN lock:** when the phone closes the app in the background, reopening it doesn't ask for the PIN again unless the person was really idle longer than their setting (5, 15 or 60 minutes). With "Never", that phone never asks again.
+- **Back where you left off:** reopening goes to the same page, scrolled to the same place.
+
 ## Reminders (the AI reminds you)
 
 Tell the AI assistant "remind me tomorrow at 10 to call Valeria about 2107", "remind Giulia Monday at 9 to send Form A" (the admin and the CEO can set reminders for agents), "what reminders do I have this week?" or "mark the Valeria one done". It also offers a reminder when something needs a follow-up. Every time is Dubai time.

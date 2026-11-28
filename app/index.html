@@ -2659,7 +2659,8 @@ function migrateOvr(){if(!ovr||!OFFERS.length||(CLOUD&&!isAdmin))return;const o2
 
 /* ---------------- Login page ---------------- */
 let gateMode="loading",idleT=null;
-const sessionOpen=()=>{try{return sessionStorage.getItem("orla.open")==="1"}catch(e){return false}};
+// Unlocked stays unlocked when the phone closes the app in the background: only real idle time (the PIN setting) locks it.
+const sessionOpen=()=>{try{if(sessionStorage.getItem("orla.open")==="1")return true}catch(e){}const m=+store.get("orla.lockmin",15),at=+store.get("orla.lastActive",0);return !m?!!at:(at&&Date.now()-at<m*60000)};
 async function pinHash(p){try{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("orla-pin:"+p));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}catch(e){let h=7;for(const c of "orla-pin:"+p)h=(h*31+c.charCodeAt(0))|0;return "x"+h}}
 function setGate(mode){gateMode=mode;authMode=null;authFields([]);$("#g-links").innerHTML="";$("#gate-go").hidden=false;closePresent();$("#gate").hidden=false;
   const T={loading:["Sign in","Checking your sign-in…"],
@@ -2675,9 +2676,9 @@ function setGate(mode){gateMode=mode;authMode=null;authFields([]);$("#g-links").
   $("#gate-who").hidden=!meInfo;
   if(meInfo){$("#gate-avatar").src=meInfo.avatarUrl;$("#gate-name").textContent=meInfo.name||"Signed in";const r=$("#gate-role");r.textContent=isAdmin?"Admin":"Agent";r.className="pill "+(isAdmin?"admin":"agent")}
   if(mode==="pin"||mode==="create")setTimeout(()=>{try{$("#gate-pin").focus()}catch(e){}},60)}
-function lock(){try{sessionStorage.removeItem("orla.open")}catch(e){}clearTimeout(idleT);const pin=store.get("orla.pin",null);setGate(pin?"pin":(CLOUD||SRV)?"continue":"create")}
-function unlock(){$("#gate").hidden=true;try{sessionStorage.setItem("orla.open","1")}catch(e){}bump()}
-function bump(){clearTimeout(idleT);const m=+store.get("orla.lockmin",15);if(m&&store.get("orla.pin",null)&&$("#gate").hidden)idleT=setTimeout(lock,m*60000)}
+function lock(){try{sessionStorage.removeItem("orla.open")}catch(e){}store.set("orla.lastActive",0);clearTimeout(idleT);const pin=store.get("orla.pin",null);setGate(pin?"pin":(CLOUD||SRV)?"continue":"create")}
+function unlock(){$("#gate").hidden=true;try{sessionStorage.setItem("orla.open","1")}catch(e){}store.set("orla.lastActive",Date.now());bump()}
+function bump(){if($("#gate").hidden&&Date.now()-(bump.at||0)>15000){bump.at=Date.now();store.set("orla.lastActive",bump.at)}clearTimeout(idleT);const m=+store.get("orla.lockmin",15);if(m&&store.get("orla.pin",null)&&$("#gate").hidden)idleT=setTimeout(lock,m*60000)}
 ["pointerdown","keydown","scroll"].forEach(ev=>addEventListener(ev,bump,{passive:true}));
 $("#gate-form").addEventListener("submit",async e=>{e.preventDefault();if(authMode){await authSubmit();return}const p=$("#gate-pin").value.trim(),err=$("#gate-err");
   if(gateMode==="continue"){unlock();return}
@@ -4444,7 +4445,10 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-nu-open]")
 /* ---------------- Start-up ---------------- */
 function startApp(){if(!SRV)setRole(isAdmin?"admin":"team");updateAcct();const ch=$("#userchip");
   if(meInfo){ch.innerHTML=`<img alt="" src="${esc(myPhoto()||meInfo.avatarUrl)}"><span></span>`;ch.querySelector("span").textContent=(meInfo.name||"You")+" · "+ROLE_LABEL[ROLE]}else ch.textContent=VISITOR?"Browsing as a guest":"Admin · this device";
-  syncFilters();renderAll();renderMarket();const first=OFFERS.find(o=>o.deal!=="rent"&&o.price);if(first&&!pick.value)loadCalc(first.id);else calc();show(store.get("orla.tab","dash"))}
+  syncFilters();renderAll();renderMarket();const first=OFFERS.find(o=>o.deal!=="rent"&&o.price);if(first&&!pick.value)loadCalc(first.id);else calc();show(store.get("orla.tab","dash"));
+  // Back where you left off when the phone reopens the app: the same page and the same place on it.
+  {const sy=+store.get("orla.scroll."+store.get("orla.tab","dash"),0);if(sy>0)setTimeout(()=>window.scrollTo(0,sy),350)}}
+addEventListener("scroll",()=>{clearTimeout(window._scT);window._scT=setTimeout(()=>{try{store.set("orla.scroll."+store.get("orla.tab","dash"),Math.round(scrollY))}catch(e){}},400)},{passive:true});
 async function boot(){
   if(SRV){bootServer();return}
   if(!CLOUD){const saved=store.get("orla.offers",null);if(Array.isArray(saved))OFFERS=saved;applySettings(store.get("orla.settings",{}));migrateOvr();startApp();if(sessionOpen()&&store.get("orla.pin",null))unlock();else lock();return}

@@ -17,7 +17,7 @@ import { addReminder, listReminders, setDone, snooze, removeReminder, deliverDue
 
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
 const COOKIE = "orla_session";
-const SESSION_DAYS = 30;
+const SESSION_DAYS = 365; // a sign-in lasts a year from the last use: people stay signed in on their phone
 
 class HttpError extends Error {
   constructor(status, message, code) { super(message); this.status = status; this.code = code; }
@@ -162,9 +162,11 @@ async function currentUser(req) {
   const token = cookies(req)[COOKIE];
   if (!token) return null;
   const { rows } = await q(
-    `select u.* from sessions s join users u on u.id = s.user_id
+    `select u.*, s.expires_at as session_expires from sessions s join users u on u.id = s.user_id
      where s.token_hash = $1 and s.expires_at > now()`, [sha256(token)]);
-  return rows[0] || null;
+  const u = rows[0] || null;
+  if (u) u.session_token = token;
+  return u;
 }
 
 async function startSession(req, res, userId) {
@@ -1380,6 +1382,13 @@ export default async function handler(req, res) {
     const user = await currentUser(req);
     // Due reminders go out with whatever request comes in (at most once a minute per server), so they're sent on time while the team uses the app.
     deliverDue().catch(e => console.error("reminders", e));
+    // Sliding sign-in: in use, it's pushed back to a full year (at most once a day), so the app stays signed in on the phone.
+    if (user && user.session_expires && new Date(user.session_expires) - Date.now() < (SESSION_DAYS - 1) * 864e5) {
+      try {
+        await q("update sessions set expires_at = now() + make_interval(days => $2) where token_hash = $1", [sha256(user.session_token), SESSION_DAYS]);
+        setSessionCookie(req, res, user.session_token, SESSION_DAYS * 86400);
+      } catch (e) { console.error("session renew", e); }
+    }
     const c = { req, res, body, user, ip: clientIp(req) };
     const out = await fn(c);
     if (out !== RAW) send(res, 200, out || { ok: true }, c.cache);
