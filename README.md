@@ -297,6 +297,8 @@ On the Team page, **Unit numbers by agent** lists every home without its unit nu
 - **Each row** has **Listed by** (move the home to another agent), contact suggestions and the unit number box.
 - **Each agent's group** has **WhatsApp [agent]**, a ready message listing their homes with a blank "Unit no." for each, and **PDF for [agent]**, a one-page form to fill and send back.
 - **Agents** see **Unit numbers to fill** on their own Home with their homes and a box for each. They can fill only their own: `POST admin/unit-set` checks it, and `POST admin/offer-agent` is admin-only.
+- **Reminding the team with a link:** the board opens with "N homes without a unit number, N agents" and **Remind everyone**, and each agent's group has **Remind [agent]**. That sends the agent a reminder straight away ("Fill the unit numbers of your N homes: tap to open them"). It arrives as a phone notification, a pop-up in the app (**Open now** / **Later (1 hour)**) and a row in their Reminders with **Open**. Each one opens `/app/#units`, the agent's **Unit numbers to fill** box, highlighted. **WhatsApp the link** sends the same link in a message. On a phone that isn't signed in, the link asks them to sign in and then opens the box. Arriving from a link skips the welcome pop-ups. When the agent fills their last number, the reminder closes itself. An agent without an app account gets no reminder (the toast says so); use WhatsApp for them.
+- Reminders can carry a link to a place in the app (`link` on the reminder; `#units`, `#approvals`, `#reminders` or `#requests`).
 - Unit numbers stay private: the admin and the listing agent only.
 
 ## Unit lookup (team home)

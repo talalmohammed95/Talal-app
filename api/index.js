@@ -853,7 +853,11 @@ const routes = {
   "POST team/reminders": async c => {
     requireStaff(c);
     await limit("rem:" + c.user.id, 120, 3600);
-    try { return { reminder: await addReminder(c.user, { when: c.body.when, text: c.body.text, who: c.body.who }) }; } catch (e) { fail(e.status || 400, e.message); }
+    try {
+      const r = await addReminder(c.user, { when: c.body.when, text: c.body.text, who: c.body.who, link: c.body.link });
+      if (c.body.when === "now") await deliverDue({ force: true }); // sent to the phone straight away
+      return { reminder: r };
+    } catch (e) { fail(e.status || 400, e.message); }
   },
   "POST team/reminders/update": async c => {
     requireStaff(c);

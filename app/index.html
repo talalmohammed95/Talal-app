@@ -1017,10 +1017,12 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
 :root[data-theme="dark"] .prbox.pending,:root[data-theme="dark"] .aprow{background:#3A2D12}:root[data-theme="dark"] .prbox.rejected{background:#3B1C18}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .prbox.pending,:root:not([data-theme="light"]) .aprow{background:#3A2D12}:root:not([data-theme="light"]) .prbox.rejected{background:#3B1C18}}
 .umgrp{border:1px solid var(--line);border-radius:16px;padding:10px;margin-top:12px;display:flex;flex-direction:column;gap:8px}.umgrp.na{border-color:#E8A33A;background:#FFF6E6}
-.umgh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.umgh>div:first-child{display:flex;align-items:center;gap:10px;min-width:0}.umgh img{width:40px;height:40px;border-radius:50%;object-fit:cover}.umgh span{display:block;color:var(--muted);font-size:13px}.umgh b{display:flex;align-items:center;gap:6px}.umgh .actions{margin:0}
+.umgh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.umgh>div:first-child{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 240px}.umgrp.na .umgh>div:first-child{flex-direction:column;align-items:flex-start;gap:2px}.umgh img{width:40px;height:40px;border-radius:50%;object-fit:cover}.umgh span{display:block;color:var(--muted);font-size:13px}.umgh b{display:flex;align-items:center;gap:6px}.umgh .actions{margin:0}
 .umag{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--muted)}.umag select{min-height:38px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:0 8px;font:inherit;font-weight:600;flex:1;min-width:0}
 .umrow.na .umag select{border-color:#E8A33A}
 :root[data-theme="dark"] .umgrp.na{background:#3A2D12}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .umgrp.na{background:#3A2D12}}
+.umall{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--accent-soft);border-radius:14px;padding:10px 12px;margin:6px 0 4px}.umall span{display:flex;align-items:center;gap:6px}
+#umy,#umiss{transition:box-shadow .4s}#umy.flash,#umiss.flash,#approvals.flash,#reminders.flash{box-shadow:0 0 0 3px var(--primary)}
 #motiv{position:fixed;left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:86;display:flex;justify-content:center;padding:0 12px;pointer-events:none}#motiv[hidden]{display:none}
 @media(min-width:900px){#motiv{bottom:24px}}
 .mvcard{pointer-events:auto;position:relative;width:min(460px,100%);background:#1C1A18;color:#fff;border-radius:22px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.45);animation:regup .3s ease-out}
@@ -2830,7 +2832,9 @@ async function enterVisitor(){VISITOR=true;uid=null;profile=null;isAdmin=false;m
   try{const [o,st]=await Promise.all([api("public/offers"),api("public/settings").catch(()=>({}))]);OFFERS=(o.offers||[]).map(r=>Object.assign({},r));store.set("orla.cache.pub",OFFERS);applySettings((st&&st.settings)||{})}
   catch(e){OFFERS=store.get("orla.cache.pub",[]);applySettings({})}
   await loadTop();try{await loadDealMkt()}catch(e){}
-  $("#signout").hidden=true;startApp();unlock();regArm(90000)}
+  $("#signout").hidden=true;startApp();unlock();regArm(90000);
+  // A team link (e.g. a reminder's /app/#units) on a phone that isn't signed in: sign in first, then it opens.
+  if(/^#(units|approvals|reminders|requests)$/.test(location.hash)){clearTimeout(regT);setAuthGate("signin");$("#gate-msg").textContent="Sign in to open your unit numbers."}}
 const ssGet=k=>{try{return sessionStorage.getItem(k)}catch(e){return null}},ssSet=(k,v)=>{try{sessionStorage.setItem(k,v)}catch(e){}};
 function regBusy(){return["#book","#wiz","#lightbox","#newu","#present"].some(k=>{const e=$(k);return e&&!e.hidden&&getComputedStyle(e).display!=="none"})||!$("#gate").hidden}
 function regArm(ms){clearTimeout(regT);if(!VISITOR)return;regT=setTimeout(()=>regAuto("time"),ms)}
@@ -2916,7 +2920,7 @@ async function loadAll(first){
       else if(owner&&owner!==uid){mine=[];clients=[];starred=new Set();persist()}
       else if(mine.length||clients.length||starred.size)persist();
       store.set("orla.localOwner",uid)}
-    migrateOvr();if(!isTeam()){await loadTop();await loadMyProperty()}await loadDealMkt();if(isTeam()){await loadGuide();await loadUnitTypes();await loadListings();await loadPerf(true);await loadLeads();await loadTasks();await loadReminders();await loadMyMissing();if(isAdmin||isCEO()){loadWeekly();loadVisitorsBrief()}setTimeout(paceModal,700);setTimeout(leadPollStart,1500);if(isCEO()){setTimeout(remCheck,2500);setInterval(()=>{if(document.visibilityState==="visible")remCheck()},45000)}if(location.hash==='#approvals')setTimeout(()=>{show(isAdmin||isCEO()?'dash':'mine');const r=$('#approvals');if(r)r.scrollIntoView()},900);if(location.hash==='#reminders')setTimeout(()=>{show('dash');const r=$('#reminders');if(r)r.scrollIntoView()},900);if(location.hash==='#requests')setTimeout(()=>{show('dash');const r=$('#requests');if(r)r.scrollIntoView()},900);await loadNewUnits();setTimeout(newuModal,400);if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
+    migrateOvr();if(!isTeam()){await loadTop();await loadMyProperty()}await loadDealMkt();if(isTeam()){await loadGuide();await loadUnitTypes();await loadListings();await loadPerf(true);await loadLeads();await loadTasks();await loadReminders();await loadMyMissing();if(isAdmin||isCEO()){loadWeekly();loadVisitorsBrief()}setTimeout(paceModal,700);setTimeout(leadPollStart,1500);if(isCEO()){setTimeout(remCheck,2500);setInterval(()=>{if(document.visibilityState==="visible")remCheck()},45000)}if(location.hash)setTimeout(()=>goHash(location.hash),900);await loadNewUnits();setTimeout(newuModal,400);if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
   catch(e){if(e.status===401||e.status===403){location.reload();return}
     if(first){OFFERS=store.get("orla.cache.offers",[]);applySettings(store.get("orla.cache.settings",{}))}
     if(first||!loadAll.warned){loadAll.warned=true;toast("Offline: showing what's saved on this device")}}
@@ -2955,7 +2959,7 @@ async function enterServer(u){if(entering)return;entering=true;
     $("#signout").hidden=false;startApp();if(isAdmin)loadUsers();
     clearInterval(pollT);pollT=setInterval(()=>{if(!document.hidden&&uid){loadAll();if(isAdmin)loadUsers()}},30000);
     if(!enterServer.vis){enterServer.vis=true;document.addEventListener("visibilitychange",()=>{if(!document.hidden&&uid){loadAll();if(isAdmin)loadUsers()}})}
-    if(store.get("orla.pin",null)&&!sessionOpen())setGate("pin");else{unlock();let seen=null;try{seen=sessionStorage.getItem("orla.wiz")}catch(e){}if(ROLE!=="admin"&&!seen){let tries=0;const ow=()=>{const n=$("#newu");if((n&&!n.hidden)||(NEWU_PENDING&&isTeam()&&tries++<10)){setTimeout(ow,700);return}openWizard()};setTimeout(ow,500)}}
+    if(store.get("orla.pin",null)&&!sessionOpen())setGate("pin");else{unlock();let seen=null;try{seen=sessionStorage.getItem("orla.wiz")}catch(e){}if(ROLE!=="admin"&&!seen&&!/^#(units|approvals|reminders|requests)$/.test(location.hash)){let tries=0;const ow=()=>{const n=$("#newu");if((n&&!n.hidden)||(NEWU_PENDING&&isTeam()&&tries++<10)){setTimeout(ow,700);return}openWizard()};setTimeout(ow,500)}}
   }finally{entering=false}}
 async function bootServer(){OFFERS=[];applySettings({});startApp();setAuthGate("loading");
   try{emailOn=!!(await api("auth/config")).emailEnabled}catch(e){}
@@ -4074,7 +4078,7 @@ function myRemindersHTML(){if(!SRV||!isTeam())return"";const open=REMS.filter(r=
     <p class="lede">Everything to follow up, in one place. Ask the AI ("remind me tomorrow at 10 to call Valeria") or add one here: it comes to your phone at that time.</p>
     <form class="remadd" id="rem-form"><input id="rem-text" maxlength="300" placeholder="What to remember, e.g. Send Form A to the owner of 2107" required><input id="rem-when" type="datetime-local" value="${dv}" required aria-label="When (Dubai time)"><button class="btn primary" type="submit">${ic("plus")}Add</button></form>
     ${open.length?`<div class="remlist">${open.slice(0,12).map(r=>`<div class="remrow${r.due?" due":""}"><div><b>${esc(r.text)}</b><small>${esc(remWhen(r))}${r.fromOther?" · from "+esc(firstName(r.fromOther)):""}</small></div>
-      <div class="actions"><button class="btn sm" data-rmd="${r.id}" data-ra="done">${ic("check")}Done</button>${r.due?`<button class="btn sm" data-rmd="${r.id}" data-ra="snooze">+1 hour</button>`:""}<button class="btn sm ghost" data-rmd="${r.id}" data-ra="delete" aria-label="Delete">${ic("x")}</button></div></div>`).join("")}</div>`
+      <div class="actions">${r.link?`<button class="btn sm primary" data-rlink="${esc(r.link)}" data-rid="${r.id}">${ic("arrowr")}Open</button>`:""}<button class="btn sm" data-rmd="${r.id}" data-ra="done">${ic("check")}Done</button>${r.due?`<button class="btn sm" data-rmd="${r.id}" data-ra="snooze">+1 hour</button>`:""}<button class="btn sm ghost" data-rmd="${r.id}" data-ra="delete" aria-label="Delete">${ic("x")}</button></div></div>`).join("")}</div>`
       :(lst.length||cl.length?"":'<p class="src">Nothing coming up. Try asking the AI: "remind me Monday at 9 to chase my viewings".</p>')}
     ${cl.length?`<h4 class="mh">Clients to call back · ${cl.length}</h4><div class="remlist">${cl.slice(0,8).map(clRow).join("")}</div>`:""}
     ${lst.length?`<h4 class="mh">Listings to follow up · ${lst.length}</h4><div class="stack">${lst.slice(0,8).map(reminderRow).join("")}</div>`:""}</div>`}
@@ -4083,11 +4087,12 @@ document.addEventListener("submit",async e=>{if(e.target.id!=="rem-form")return;
 document.addEventListener("click",async e=>{const b=e.target.closest("[data-rmd]");if(!b)return;b.disabled=true;
   try{await api("team/reminders/update",{id:+b.dataset.rmd,action:b.dataset.ra,minutes:60});await loadReminders();const al=$("#remal");if(al&&b.closest("#remal"))al.hidden=true;renderDash();
     toast(b.dataset.ra==="done"?"Done":b.dataset.ra==="snooze"?"Snoozed for an hour":"Deleted")}catch(x){toast(x.message);b.disabled=false}});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-rlink]");if(!b)return;const al=$("#remal");if(al)al.hidden=true;goHash(b.dataset.rlink)});
 // A due reminder pops up in the app too (checked with the request polling).
 async function remCheck(){if(!SRV||!isTeam())return;await loadReminders();const due=REMS.filter(r=>r.due&&!r.done&&!remShown.has(r.id));if(!due.length)return;
   due.forEach(r=>remShown.add(r.id));let el=$("#remal");if(!el){document.body.insertAdjacentHTML("beforeend",'<div id="remal" role="alertdialog" aria-labelledby="remal-t"><div class="mvcard"></div></div>');el=$("#remal");el.addEventListener("click",e=>{if(e.target.closest("[data-remal-x]"))el.hidden=true})}
   el.querySelector(".mvcard").innerHTML=`<button class="pcx" data-remal-x aria-label="Close">${ic("x")}</button><p class="kick">${ic("bell")} Reminder${due.length>1?"s":""}</p>${due.slice(0,3).map(r=>`<h2 id="remal-t">${esc(r.text)}</h2><p>${esc(remWhen(r))}${r.fromOther?" · from "+esc(firstName(r.fromOther)):""}</p>
-    <div class="actions"><button class="btn primary" data-rmd="${r.id}" data-ra="done">${ic("check")}Done</button><button class="btn" data-rmd="${r.id}" data-ra="snooze">Remind me in 1 hour</button></div>`).join("")}`;el.hidden=false;
+    <div class="actions">${r.link?`<button class="btn primary" data-rlink="${esc(r.link)}" data-rid="${r.id}">${ic("arrowr")}Open now</button><button class="btn" data-rmd="${r.id}" data-ra="snooze">Later (1 hour)</button>`:`<button class="btn primary" data-rmd="${r.id}" data-ra="done">${ic("check")}Done</button><button class="btn" data-rmd="${r.id}" data-ra="snooze">Remind me in 1 hour</button>`}</div>`).join("")}`;el.hidden=false;
   if(!$("#view-dash").hidden)renderDash()}
 function myTasksHTML(){const k=myKey();if(!k||isCEO())return"";const l=tasks.filter(t=>t.agent_key===k),open=l.filter(t=>!t.done);if(!l.length)return"";
   return `<div class="panel"><h2>Your tasks${open.length?` <span class="count num">${open.length}</span>`:""}</h2><p class="lede">Only you, the admin and the CEO see these.</p><div class="stack">${open.concat(l.filter(t=>t.done).slice(0,2)).map(t=>taskRow(t,false)).join("")||'<div class="empty">All done.</div>'}</div></div>`}
@@ -4191,7 +4196,7 @@ const pacePill=p=>`<span class="pill ${PACE[p.status][1]}">${PACE[p.status][0]}<
 function paceLine(p){return p.status==="done"?`Goal reached: ${p.online} of ${p.target} online. Outstanding!`:p.status==="track"?`On track: ${p.online} online, ${p.expected} expected by today. Keep going.`:p.status==="close"?`So close: ${p.gap} more online and you're on track.`:`Behind: ${p.online} online, ${p.expected} expected by today. ${p.perWeek} a week gets you to ${p.target}.`}
 function paceTeamText(g,ag){const by=k=>ag.filter(a=>a.p.status===k);const L=[`Peninsula · team pace, ${new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"})}`,`By today each agent should have ${ag[0]?ag[0].p.expected:0} of ${g.target} online on ${g.platforms.map(p=>p.n).join(" and ")}.`];
   for(const k of ["behind","close","track","done"]){const l=by(k);if(l.length){L.push("",`${PACE[k][0]} (${l.length}):`);l.forEach(a=>L.push(`• ${a.name}: ${a.p.online} online${k==="done"?"":`, ${a.p.expected} expected, ${a.p.perWeek}/week needed`}`))}}return L.join("\n")}
-function paceModal(){if(!perf||!isTeam())return;const wz=$("#wiz"),so=$("#so"),nu=$("#newu");if((wz&&!wz.hidden)||(so&&!so.hidden)||(nu&&!nu.hidden)){setTimeout(paceModal,1500);return}const k="orla.pace."+todayISO()+"."+(uid||"");if(store.get(k))return;const g=perf.goal,me=perf.agents.find(a=>a.key===myKey());let h="";
+function paceModal(){if(!perf||!isTeam()||teamLinkVisit)return;const wz=$("#wiz"),so=$("#so"),nu=$("#newu");if((wz&&!wz.hidden)||(so&&!so.hidden)||(nu&&!nu.hidden)){setTimeout(paceModal,1500);return}const k="orla.pace."+todayISO()+"."+(uid||"");if(store.get(k))return;const g=perf.goal,me=perf.agents.find(a=>a.key===myKey());let h="";
   if(isCEO()||isAdmin){const ag=perf.agents.filter(a=>a.name).map(a=>({key:a.key,name:a.name,p:paceOf(a.online,g)})).sort((x,y)=>["behind","close","track","done"].indexOf(x.p.status)-["behind","close","track","done"].indexOf(y.p.status)||x.p.online-y.p.online);
     const n=s=>ag.filter(a=>a.p.status===s).length,first=hello(),txt=paceTeamText(g,ag);
     h=`<p class="kick" style="margin:0">Good ${new Date().getHours()<12?"morning":new Date().getHours()<18?"afternoon":"evening"}${first?", "+esc(first):""}</p><h2 style="margin:2px 0 6px">${n("behind")?`${n("behind")} agent${n("behind")===1?" is":"s are"} behind today`:"The team is on track"}</h2>
@@ -4515,11 +4520,16 @@ function umissDraw(){const el=$("#umiss");if(!el||!UMISS)return;const h=UMISS.ho
   if(!h.length){el.innerHTML=`<div class="panel umiss ok"><b>${ic("check")}Every home has its unit number and its agent.</b></div>`;return}
   const ag=UMISS.agents||{};
   el.innerHTML=`<details class="panel umiss" open><summary><h3>${ic("lock")}Unit numbers by agent · ${h.length}</h3></summary>
+    ${umGroups(h).filter(([k])=>k!=="_").length?`<div class="umall"><span>${ic("bell")}<b>${h.filter(x=>!x.needsAgent).length} homes</b> without a unit number, ${umGroups(h).filter(([k])=>k!=="_").length} agents</span><button class="btn primary" data-um-remind="*">${ic("bell")}Remind everyone</button></div>`:""}
     <p class="lede">Every home without its unit number, under the agent who listed it. Move a home to the right agent with "Listed by", fill the number, or send each agent their list to fill: on WhatsApp, or as a PDF. Agents can also fill theirs on their Home page. Unit numbers stay private: you and the listing agent only.${UMISS.contacts?"":" Import the contacts in Admin to get suggestions."}</p>
     ${umGroups(h).map(([k,l])=>{const a=ag[k]||{};return `<div class="umgrp${k==="_"?" na":""}"><div class="umgh"><div>${k==="_"?`<b>${ic("users")}Which agent listed these? · ${l.length}</b><span>From the market flyers, not in the team report. Choose the agent for each one.</span>`:`<img src="${esc(agentPhotoOf(k,a.name))}" alt=""><div><b>${esc(a.name||k)} · ${l.length} without a unit number</b></div>`}</div>
-      ${k!=="_"?`<div class="actions">${a.phone?`<a class="btn sm" href="${esc(waTo(a.phone,umMsg(k,l.map(z=>z[0]))))}" target="_blank" rel="noopener">${ic("chat")}WhatsApp ${esc(firstName(a.name||""))}</a>`:""}<button class="btn sm" data-um-pdf="${esc(k)}">${ic("download")}PDF for ${esc(firstName(a.name||k))}</button></div>`:""}</div>
+      ${k!=="_"?`<div class="actions"><button class="btn sm primary" data-um-remind="${esc(k)}">${ic("bell")}Remind ${esc(firstName(a.name||k))}</button>${a.phone?`<a class="btn sm" href="${esc(waTo(a.phone,umMsg(k,l.map(z=>z[0]))))}" target="_blank" rel="noopener">${ic("chat")}WhatsApp the link</a>`:""}<button class="btn sm ghost" data-um-pdf="${esc(k)}">${ic("download")}PDF</button></div>`:""}</div>
       ${l.map(([x,i])=>umRow(x,i,true)).join("")}</div>`}).join("")}</details>`}
-function umMsg(k,l){const a=(UMISS.agents||{})[k]||{};return `Hi ${firstName(a.name||"")}, please send me the unit numbers for your ${l.length} home${l.length>1?"s":""} below (or fill them in the app: Home › Unit numbers to fill):\n\n${l.map((x,n)=>`${n+1}. ${umLine(x)}\n   Unit no.: ______`).join("\n")}\n\nThanks!`}
+function umMsg(k,l){const a=(UMISS.agents||{})[k]||{};return `Hi ${firstName(a.name||"")}, ${l.length} of your home${l.length>1?"s don't":" doesn't"} have a unit number on the website yet. Tap the link: it opens them, type each number and save (30 seconds):\n\n${unitsLink()}\n\n${l.map((x,n)=>`${n+1}. ${umLine(x)}`).join("\n")}\n\nThanks!`}
+// Sends the agent a reminder that opens their unit numbers: a notification on their phone now, the pop-up and the Reminders list in the app.
+async function umRemind(keys){let ok=0,bad=[];for(const k of keys){const n=(UMISS.homes||[]).filter(x=>!x.needsAgent&&x.agentKey===k).length;if(!n)continue;
+    try{await api("team/reminders",{who:k,when:"now",link:"/app/#units",text:`Fill the unit number${n>1?"s":""} of your ${n} home${n>1?"s":""}: tap to open them`});ok++}catch(e){bad.push(firstName(((UMISS.agents||{})[k]||{}).name||k))}}
+  toast(ok?`Reminder sent to ${ok} agent${ok>1?"s":""}: it opens their unit numbers${bad.length?". Not sent to "+bad.join(", ")+" (no app account yet: use WhatsApp)":""}`:bad.length?`${bad.join(", ")} ${bad.length>1?"have":"has"} no app account yet: send the WhatsApp link instead`:"Nothing to remind")}
 async function umPdf(k){const l=(UMISS.homes||[]).filter(x=>!x.needsAgent&&x.agentKey===k),a=(UMISS.agents||{})[k]||{};if(!l.length)return;
   await soLibs();const {jsPDF}=window.jspdf,pdf=new jsPDF({unit:"pt",format:"a4"}),W=595,M=44;let y=60;
   pdf.setFont("helvetica","bold");pdf.setFontSize(18);pdf.text("Unit numbers to fill",M,y);y+=22;pdf.setFont("helvetica","normal");pdf.setFontSize(11);pdf.setTextColor(110);
@@ -4535,13 +4545,24 @@ async function umPdf(k){const l=(UMISS.homes||[]).filter(x=>!x.needsAgent&&x.age
 let UMY=[];async function loadMyMissing(){if(!SRV||!isTeam()||isAdmin||isCEO())return;try{const r=await api("admin/units-missing");UMY=r.homes||[]}catch(e){UMY=[]}}
 function myUnitsMissingHTML(){if(!UMY.length)return"";return `<div class="panel umiss" id="umy"><h3>${ic("lock")}Unit numbers to fill · ${UMY.length}</h3><p class="lede">Your homes without a unit number. Only you and Talal see it.</p>${UMY.map((x,i)=>`<div class="umrow" data-umy="${i}"><div class="umi"><b>${esc(umLine(x))}</b></div><div class="umf"><input aria-label="Unit number" placeholder="Unit no., e.g. 1203"><button type="button" class="btn sm primary" data-umy-save>Save</button></div></div>`).join("")}</div>`}
 document.addEventListener("click",async e=>{const pk=e.target.closest("[data-um-pick]");if(pk){const row=pk.closest(".umrow");row.querySelector("input").value=pk.dataset.umPick;row.querySelector("input").focus();return}
+  const rm=e.target.closest("[data-um-remind]");if(rm){rm.disabled=true;const k=rm.dataset.umRemind;await umRemind(k==="*"?[...new Set((UMISS.homes||[]).filter(x=>!x.needsAgent).map(x=>x.agentKey))]:[k]);rm.disabled=false;rm.innerHTML=ic("check")+"Reminded";return}
   const pdfb=e.target.closest("[data-um-pdf]");if(pdfb){pdfb.disabled=true;try{await umPdf(pdfb.dataset.umPdf)}catch(x){toast("The PDF couldn't be made")}pdfb.disabled=false;return}
   const my=e.target.closest("[data-umy-save]");if(my){const row=my.closest(".umrow"),x=UMY[+row.dataset.umy],unit=row.querySelector("input").value.trim();if(!unit){toast("Type the unit number");return}
-    my.disabled=true;try{await api("admin/unit-set",{kind:x.kind,id:x.id,unit});toast("Unit "+unit.toUpperCase()+" saved");UMY.splice(+row.dataset.umy,1);await loadAll().catch(()=>{});if(x.kind==="listing")await loadListings();renderDash()}catch(er){toast(er.message);my.disabled=false}return}
+    my.disabled=true;try{await api("admin/unit-set",{kind:x.kind,id:x.id,unit});toast("Unit "+unit.toUpperCase()+" saved"+(UMY.length===1?". All done, thank you!":""));UMY.splice(+row.dataset.umy,1);
+    if(!UMY.length)for(const r of REMS.filter(r=>!r.done&&r.link==="/app/#units"))api("team/reminders/update",{id:r.id,action:"done"}).catch(()=>{});await loadAll().catch(()=>{});if(x.kind==="listing")await loadListings();renderDash()}catch(er){toast(er.message);my.disabled=false}return}
   const sv=e.target.closest("[data-um-save]");if(!sv)return;const row=sv.closest(".umrow"),x=UMISS.homes[+row.dataset.um],unit=row.querySelector("input").value.trim();if(!unit){toast("Type the unit number");return}
   sv.disabled=true;try{await api("admin/unit-set",{kind:x.kind,id:x.id,unit});toast("Unit "+unit.toUpperCase()+" saved");UMISS.homes.splice(+row.dataset.um,1);umissDraw();await loadAll().catch(()=>{});if(x.kind==="listing")await loadListings();perf=null}catch(er){toast(er.message);sv.disabled=false}});
 document.addEventListener("change",async e=>{const s=e.target.closest("[data-um-agent]");if(!s||!s.value)return;const row=s.closest(".umrow"),x=UMISS.homes[+row.dataset.um];s.disabled=true;
   try{await api("admin/offer-agent",{id:x.id,agent:s.value});x.agentKey=s.value;x.needsAgent=false;x.agent=(UMISS.agents[s.value]||{}).name||s.value;umissDraw();toast("Now under "+firstName(x.agent));await loadAll().catch(()=>{});perf=null}catch(er){toast(er.message);s.disabled=false}});
+
+// Links inside the app: /app/#units (your unit numbers to fill), #approvals, #reminders, #requests.
+function goHash(h){h=String(h||"").replace(/^.*#/,"#");if(!h||h==="#")return;
+  const T={"#units":isAdmin?["team","#umiss"]:["dash","#umy"],"#approvals":[isAdmin||isCEO()?"dash":"mine","#approvals"],"#reminders":["dash","#reminders"],"#requests":["dash","#requests"]}[h];if(!T)return;
+  if(h==="#units"&&!isAdmin&&!UMY.length){loadMyMissing().then(()=>{renderDash();setTimeout(()=>{const el=$("#umy");if(el){window.scrollTo(0,Math.max(0,el.getBoundingClientRect().top+scrollY-80));el.classList.add("flash")}},300)});}
+  show(T[0]);const go=n=>{const el=$(T[1]);if(el){window.scrollTo(0,Math.max(0,el.getBoundingClientRect().top+scrollY-80));el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1800)}else if(n<8)setTimeout(()=>go(n+1),400)};setTimeout(()=>go(0),350)}
+addEventListener("hashchange",()=>{if(uid)goHash(location.hash)});
+if("serviceWorker" in navigator)navigator.serviceWorker.addEventListener("message",e=>{if(e.data&&e.data.type==="open"&&/#/.test(e.data.url||"")&&!/requests/.test(e.data.url))goHash(e.data.url)});
+const unitsLink=()=>location.origin+"/app/#units";
 
 /* ---------------- New on the team ---------------- */
 let NEWU=[],NEWU_PENDING=true;
@@ -4555,7 +4576,8 @@ function newuCard(x){const nm=firstName(x.by.name||"")||"A teammate",typ=typeOf(
     <div class="actions">${o?`<button class="btn sm primary" data-nu-open="${esc(o.id)}">Open</button>`:""}${!x.mine&&a.phone?`<a class="btn sm" href="${esc(waTo(a.phone,`Hi ${nm}, I saw your new ${typ.toLowerCase()} in ${BLD[x.b]||"the Peninsula"} on the website. I may have a client for it.`))}" target="_blank" rel="noopener">${ic("chat")}Message ${esc(nm)}</a>`:""}</div></div></div>`}
 function newuStrip(){const l=NEWU.filter(x=>!x.mine).slice(0,6);if(!l.length)return"";
   return `<div class="panel nustrip"><h3>${ic("spark")}New on the team this week</h3><div class="nulist">${l.map(newuCard).join("")}</div></div>`}
-function newuModal(){if(!isTeam()||!NEWU.length){NEWU_PENDING=false;return}{const wz=$("#wiz"),so=$("#so"),bk=$("#book"),la=$("#leadal");if([wz,so,bk,la].some(x=>x&&!x.hidden)){setTimeout(newuModal,1200);return}}const k="orla.newSeen."+(uid||""),seen=Date.parse(store.get(k,""))||Date.now()-3*864e5;
+const teamLinkVisit=/^#(units|approvals|reminders|requests)$/.test(location.hash);
+function newuModal(){if(!isTeam()||!NEWU.length||teamLinkVisit){NEWU_PENDING=false;return}{const wz=$("#wiz"),so=$("#so"),bk=$("#book"),la=$("#leadal");if([wz,so,bk,la].some(x=>x&&!x.hidden)){setTimeout(newuModal,1200);return}}const k="orla.newSeen."+(uid||""),seen=Date.parse(store.get(k,""))||Date.now()-3*864e5;
   const fresh=NEWU.filter(x=>!x.mine&&Date.parse(x.at)>seen);NEWU_PENDING=false;if(!fresh.length)return;
   let el=$("#newu");if(!el){document.body.insertAdjacentHTML("beforeend",'<div id="newu" role="dialog" aria-modal="true" aria-label="New on the team"><div class="pccard"></div></div>');el=$("#newu");
     el.addEventListener("click",e=>{if(e.target===el||e.target.closest("[data-nu-close]")){el.hidden=true;document.body.classList.remove("lbopen")}})}
