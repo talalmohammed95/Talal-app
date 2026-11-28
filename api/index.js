@@ -14,6 +14,7 @@ import { readBrochure, guideRows } from "../lib/guide.js";
 import { vapidKeys, subscribe, unsubscribe, notifyLead, pushTo } from "../lib/notify.js";
 import { runWeekly, buildWeekly, weeklyText, runDaily, greet } from "../lib/weekly.js";
 import { addReminder, listReminders, setDone, snooze, removeReminder, deliverDue, morningBriefing } from "../lib/reminders.js";
+import { cheer, recentCheers } from "../lib/cheers.js";
 
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
 const COOKIE = "orla_session";
@@ -527,6 +528,9 @@ const routes = {
     } else await q("update listings set data = $2, updated_at = now() where id = $1", [id, data]);
     if (data.sharedOffer) await shareListing(id, c.user.email);
     if (newlyPending) await notifyAdminsReview(id, data, appUrl(c.req));
+    // Congratulations: a new unit, or a unit that just went online on every platform.
+    if (!prev) await cheer(c.user, data, "added");
+    else if (data.onlineAt && !prev.data.onlineAt) await cheer(c.user, data, "online");
     return { ok: true, warning: await claimWarning(c.user, data), review: data.priceReview ? data.priceReview.status : null };
   },
 
@@ -857,6 +861,7 @@ const routes = {
     if (secret ? auth !== "Bearer " + secret && key !== secret : !/vercel-cron/i.test(c.req.headers["user-agent"] || "")) fail(401, "Not allowed.");
     return { sent: await deliverDue({ force: true }) };
   },
+  "GET team/cheers": async c => { requireStaff(c); return { cheers: await recentCheers(7) }; },
   "GET team/reminders": async c => {
     requireStaff(c);
     const all = new URL(c.req.url, "http://localhost").searchParams.get("all") === "1";
@@ -1007,6 +1012,10 @@ const routes = {
     if (c.body.on) { if (platform === "off") data.online = { off: true }; else delete data.online.off; }
     if (goal.platforms.every(p => data.online[p.k])) data.onlineAt = o.data.onlineAt || new Date().toISOString(); else delete data.onlineAt;
     await q("update offers set data = $2, updated_at = now() where id = $1", [id, data]);
+    if (data.onlineAt && !o.data.onlineAt) { // congratulate the agent the offer is listed under
+      const { rows: [u] } = await q("select id, name, email, role, agent_key from users where status = 'active' and agent_key = $1 limit 1", [str(data.agent, 40)]);
+      await cheer(u || c.user, data, "online");
+    }
     return { ok: true, online: data.online };
   },
 

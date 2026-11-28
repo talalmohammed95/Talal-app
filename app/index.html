@@ -1022,7 +1022,7 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
 .umrow.na .umag select{border-color:#E8A33A}
 :root[data-theme="dark"] .umgrp.na{background:#3A2D12}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .umgrp.na{background:#3A2D12}}
 .umall{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--accent-soft);border-radius:14px;padding:10px 12px;margin:6px 0 4px}.umall span{display:flex;align-items:center;gap:6px}
-#umy,#umiss{transition:box-shadow .4s}#umy.flash,#umiss.flash,#approvals.flash,#reminders.flash{box-shadow:0 0 0 3px var(--primary)}
+#umy,#umiss{transition:box-shadow .4s}#umy.flash,#umiss.flash,#wins.flash,#approvals.flash,#reminders.flash{box-shadow:0 0 0 3px var(--primary)}
 .aprph{display:flex;gap:6px;overflow-x:auto}.aprph button{flex:none;border:0;padding:0;border-radius:10px;overflow:hidden;cursor:pointer;width:84px;height:64px}.aprph img{width:100%;height:100%;object-fit:cover}
 .revtop{border:2px solid #E8A33A;background:#FFF6E6;border-radius:18px;padding:14px;margin:0 0 12px;display:flex;flex-direction:column;gap:8px}.revtop h3{margin:0}.revtop .kick{margin:0;display:flex;align-items:center;gap:6px}.revtop .kick .ic{width:16px;height:16px}.revwhy{margin:0;font-size:15px}.revtop .src{margin:0}
 .lhead.focus span{color:var(--primary)}
@@ -1085,6 +1085,9 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
 .umiss summary{list-style:none;cursor:pointer}.umiss summary::-webkit-details-marker{display:none}.umiss h3{display:flex;align-items:center;gap:8px;margin:0}.umiss h3 .ic{width:18px;height:18px;color:var(--primary)}
 .umiss.ok b{display:flex;align-items:center;gap:6px;color:var(--good,#1a7f4b)}.umiss.ok .ic{width:16px;height:16px}
 .umrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 14px;align-items:center;border-top:1px solid var(--line);padding:10px 0}.umi{display:flex;flex-direction:column;gap:2px}.umi span{color:var(--muted);font-size:13px}
+.wins .winme{background:var(--accent-soft);border-radius:14px;padding:12px 14px;margin:4px 0 10px}.wins .winme b{font-size:16px}.wins .winme p{margin:4px 0 0}
+.winlist{display:flex;flex-direction:column;gap:8px}.winrow{display:flex;gap:10px;align-items:center}.winrow img{width:36px;height:36px;border-radius:50%;object-fit:cover;flex:none}.winrow div{display:flex;flex-direction:column;min-width:0}.winrow span{font-size:12.5px;color:var(--muted)}
+.mvcongrats{font-weight:700;font-size:15px;margin:2px 0 0}
 .umsug{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}.umsg{display:flex;flex-direction:column;gap:2px;max-width:100%}.umsg small{font-size:11.5px;color:var(--muted);padding-left:4px}.umsg.ph .chip{border-color:var(--accent);font-weight:700}
 .umwho{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:8px 0}.umw{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px}.umw img{width:34px;height:34px;border-radius:50%;object-fit:cover}.umw div{display:flex;flex-direction:column;min-width:0;flex:1}.umw span{font-size:12px;color:var(--muted)}.umw i{display:block;height:4px;border-radius:3px;margin-top:4px;background:linear-gradient(90deg,var(--accent) var(--p),var(--line) 0)}.umw.ok span{color:var(--ok,#2e7d4f)}.umf{display:flex;gap:6px;align-items:center}.umf input{width:110px;border-radius:10px;border:1.5px solid var(--line-strong);background:var(--bg);color:var(--fg);padding:8px 10px;font:inherit;font-size:16px}
 @media (max-width:620px){.umrow{grid-template-columns:minmax(0,1fr)}.umf{min-width:0}.umf input{flex:1;width:auto;min-width:0}}
@@ -2262,9 +2265,9 @@ async function loadListings(){if(!SRV||!isTeam())return;
 /* ---------------- Dashboard ---------------- */
 const today=()=>new Date().toISOString().slice(0,10);
 const isDue=c=>c.follow&&c.follow<=today()&&c.status!=="Closed"&&c.status!=="Lost";
-function renderDash(){if(!isTeam()){renderShowroom();{const h=$("#dash").firstElementChild;if(h)h.insertAdjacentHTML("afterend",bestHTML()+c3dCard())}if(myProps.length)$("#dash").insertAdjacentHTML("afterbegin",propertyHTML());return}clearInterval(heroT);if(isCEO()){$("#dash").innerHTML=ceoHome();{const f=$("#dash").firstElementChild;if(f)f.insertAdjacentHTML("afterend",approvalsHTML()+myRemindersHTML()+newuStrip())}return}renderTeamDash();
+function renderDash(){if(!isTeam()){renderShowroom();{const h=$("#dash").firstElementChild;if(h)h.insertAdjacentHTML("afterend",bestHTML()+c3dCard())}if(myProps.length)$("#dash").insertAdjacentHTML("afterbegin",propertyHTML());return}clearInterval(heroT);if(isCEO()){$("#dash").innerHTML=ceoHome();{const f=$("#dash").firstElementChild;if(f)f.insertAdjacentHTML("afterend",approvalsHTML()+winsHTML()+myRemindersHTML()+newuStrip())}return}renderTeamDash();
   const myl=renderMyListings();if(myl){const r=$("#dash").children[0];if(r)r.insertAdjacentHTML("afterend",myl);else $("#dash").insertAdjacentHTML("afterbegin",myl)}
-  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+approvalsHTML()+myRemindersHTML()+myUnitsMissingHTML()+newuStrip()+unitLookupHTML()+bestHTML()+c3dCard()+(isAdmin?weeklyPanel()+visitorsPanel():"")+myTasksHTML()+towerTodoHTML()+pushSlot()+leadsHTML())}
+  $("#dash").insertAdjacentHTML("afterbegin",teamHero()+approvalsHTML()+winsHTML()+myRemindersHTML()+myUnitsMissingHTML()+newuStrip()+unitLookupHTML()+bestHTML()+c3dCard()+(isAdmin?weeklyPanel()+visitorsPanel():"")+myTasksHTML()+towerTodoHTML()+pushSlot()+leadsHTML())}
 // The top achiever: first in the team ranking (online, then units), once they have a unit.
 let topPub=null;
 async function loadTop(){try{topPub=(await api("public/top")).top}catch(e){}}
@@ -3006,7 +3009,7 @@ async function loadAll(first){
       else if(owner&&owner!==uid){mine=[];clients=[];starred=new Set();persist()}
       else if(mine.length||clients.length||starred.size)persist();
       store.set("orla.localOwner",uid)}
-    migrateOvr();if(!isTeam()){await loadTop();await loadMyProperty()}await loadDealMkt();if(isTeam()){await loadGuide();await loadUnitTypes();await loadListings();await loadPerf(true);await loadLeads();await loadTasks();await loadReminders();await loadMyMissing();if(isAdmin||isCEO()){loadWeekly();loadVisitorsBrief()}setTimeout(paceModal,700);setTimeout(leadPollStart,1500);if(isCEO()){setTimeout(remCheck,2500);setInterval(()=>{if(document.visibilityState==="visible")remCheck()},45000)}if(location.hash)setTimeout(()=>goHash(location.hash),900);await loadNewUnits();setTimeout(newuModal,400);if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
+    migrateOvr();if(!isTeam()){await loadTop();await loadMyProperty()}await loadDealMkt();if(isTeam()){await loadGuide();await loadUnitTypes();await loadListings();await loadPerf(true);await loadLeads();await loadTasks();await loadReminders();await loadCheers();await loadMyMissing();if(isAdmin||isCEO()){loadWeekly();loadVisitorsBrief()}setTimeout(paceModal,700);setTimeout(leadPollStart,1500);if(isCEO()){setTimeout(remCheck,2500);setInterval(()=>{if(document.visibilityState==="visible")remCheck()},45000)}if(location.hash)setTimeout(()=>goHash(location.hash),900);await loadNewUnits();setTimeout(newuModal,400);if(isCEO())await loadOverview();else loadInvites();chatStart();if(!$("#view-team").hidden)renderTeam();updateAcct();welcomeTop()}}
   catch(e){if(e.status===401||e.status===403){location.reload();return}
     if(first){OFFERS=store.get("orla.cache.offers",[]);applySettings(store.get("orla.cache.settings",{}))}
     if(first||!loadAll.warned){loadAll.warned=true;toast("Offline: showing what's saved on this device")}}
@@ -4170,6 +4173,16 @@ function priceReviewOpen(id){const o=all().find(x=>x.id===id||x.listingId===id);
   setTimeout(()=>{const t=document.querySelector("#detail .revtop")||document.querySelector("#detail");if(t){window.scrollTo(0,Math.max(0,t.getBoundingClientRect().top+scrollY-80))}},250)}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-review-open]");if(b){e.preventDefault();priceReviewOpen(b.dataset.reviewOpen);return}
   const ph=e.target.closest("[data-review-ph]");if(ph){const o=all().find(x=>x.id===ph.dataset.reviewPh||x.listingId===ph.dataset.reviewPh);if(o)openLightbox(o.id,+ph.dataset.i)}});
+/* ---------------- Team wins: congratulations for every unit added and every listing online ---------------- */
+let CHEERS=[];async function loadCheers(){if(!SRV||!isTeam())return;try{CHEERS=(await api("team/cheers")).cheers||[]}catch(e){CHEERS=[]}}
+const ordW=n=>n+(n%100>=11&&n%100<=13?"th":["th","st","nd","rd"][n%10]||"th");
+const WIN_ME=["Keep doing exactly what you're doing: every listing is a new chance to close.","More listings, more calls, more deals. You're on the right path.","Owners talk to each other: the next one is a call away.","Proud of you. Now price it like an expert and get the next one."];
+function winsHTML(){if(!CHEERS.length)return"";const me=meInfo&&meInfo.id,mk=myKey(),list=CHEERS.slice(0,6);
+  const mine=list.find(c=>c.userId===me||(mk&&c.agentKey===mk)),ago=t=>{const h=Math.round((Date.now()-Date.parse(t))/36e5);return h<1?"just now":h<24?h+"h ago":Math.round(h/24)+"d ago"};
+  return `<div class="panel wins" id="wins"><h3>${ic("star")}Team wins</h3>
+    ${mine&&Date.now()-Date.parse(mine.at)<2*864e5?`<div class="winme"><b>Congratulations, ${esc(mine.name)}!</b><p>Your ${ordW(mine.n)} ${mine.kind==="online"?"listing online":"unit added"} this month: a ${esc(mine.what)}. ${esc(WIN_ME[(mine.n-1)%WIN_ME.length])}</p></div>`:""}
+    <div class="winlist">${list.map(c=>`<div class="winrow"><img src="${esc(agentPhotoOf(c.agentKey,c.name))}" alt=""><div><b>${esc(c.name)} ${c.kind==="online"?"got a "+esc(c.what)+" online":"added a "+esc(c.what)}</b><span>${ordW(c.n)} this month · ${ago(c.at)} · Well done, ${esc(c.name)}!</span></div></div>`).join("")}</div>
+    ${isCEO()?"":`<p class="src">Every unit you add shows here for the whole team. Who's next?</p>`}</div>`}
 function myRemindersHTML(){if(!SRV||!isTeam())return"";const open=REMS.filter(r=>!r.done),due=open.filter(r=>r.due);
   const def=new Date(Date.now()+4*3600e3+864e5);def.setUTCHours(9,0,0,0);const dv=def.toISOString().slice(0,16);
   const lst=isCEO()?[]:mine.filter(m=>m.remindAt&&(isDueR(m)||(Date.parse(m.remindAt)-Date.now())<3*864e5)).sort((a,b)=>String(a.remindAt).localeCompare(String(b.remindAt)));
@@ -4282,12 +4295,12 @@ const MOTIV={
 function motivate(kind){if(!isTeam()||isCEO()||!MOTIV[kind])return;
   setTimeout(async()=>{try{perf=null;await loadPerf(true)}catch(e){}
     const g=perf&&perf.goal,me=perf&&perf.agents.find(a=>a.key===myKey()),pc=g&&me?paceOf(me.online,g):null;
-    const n=+store.get("orla.motiv."+kind,0)||0,[h,t]=MOTIV[kind][n%MOTIV[kind].length];store.set("orla.motiv."+kind,n+1);
+    const n=+store.get("orla.motiv."+kind,0)||0,[h,t]=MOTIV[kind][n%MOTIV[kind].length];store.set("orla.motiv."+kind,n+1);await loadCheers();const cw=CHEERS.find(c=>(c.userId===(meInfo&&meInfo.id)||c.agentKey===myKey())&&c.kind===(kind==="online"?"online":"added")&&Date.now()-Date.parse(c.at)<5*60e3);
     const first=hello();let el=$("#motiv");
     if(!el){document.body.insertAdjacentHTML("beforeend",'<div id="motiv" role="dialog" aria-modal="false" aria-labelledby="motiv-t"><div class="mvcard"></div></div>');el=$("#motiv");
       el.addEventListener("click",e=>{if(e.target.closest("[data-mv-x]")){el.hidden=true}if(e.target.closest("[data-mv-next]")){el.hidden=true;show("mine");try{resetMineForm()}catch(x){}setTimeout(()=>{const f=$("#m-unit");if(f){f.scrollIntoView({block:"center"});f.focus()}},200)}})}
     const pct=pc?Math.min(100,Math.round(pc.online/Math.max(1,pc.target)*100)):0;
-    el.querySelector(".mvcard").innerHTML=`<button class="pcx" data-mv-x aria-label="Close">${ic("x")}</button><p class="kick">${kind==="online"?"Listing online":"Unit added"}${first?" · "+esc(first):""}</p><h2 id="motiv-t">${esc(h)}</h2><p>${esc(t)}</p>
+    el.querySelector(".mvcard").innerHTML=`<button class="pcx" data-mv-x aria-label="Close">${ic("x")}</button><p class="kick">${kind==="online"?"Listing online":"Unit added"}</p><p class="mvcongrats">Congratulations${first?", "+esc(first):""}!${cw?` That's your ${ordW(cw.n)} ${kind==="online"?"listing online":"unit"} this month.`:""}</p><h2 id="motiv-t">${esc(h)}</h2><p>${esc(t)}</p>
       ${pc?`<div class="mvbar" role="img" aria-label="${pc.online} of ${pc.target} listings online"><i style="width:${pct}%"></i></div><p class="mvnum"><b>${pc.online} of ${pc.target}</b> online${pc.left?` · <b>${pc.left}</b> to go${pc.perWeek?` · ${pc.perWeek} a week keeps you on track`:""}`:" · goal reached!"}</p>`:""}
       <div class="actions"><button class="btn primary" data-mv-next>${ic("plus")}Add the next unit</button><button class="btn" data-mv-x>Later</button></div>`;
     el.hidden=false;clearTimeout(motivate.t);motivate.t=setTimeout(()=>{el.hidden=true},15000)},600)}
@@ -4680,7 +4693,7 @@ document.addEventListener("change",async e=>{const s=e.target.closest("[data-um-
 
 // Links inside the app: /app/#units (your unit numbers to fill), #approvals, #reminders, #requests.
 function goHash(h){h=String(h||"").replace(/^.*#/,"#");if(!h||h==="#")return;
-  const T={"#units":isAdmin?["team","#umiss"]:["dash","#umy"],"#approvals":[isAdmin||isCEO()?"dash":"mine","#approvals"],"#reminders":["dash","#reminders"],"#requests":["dash","#requests"]}[h];if(!T)return;
+  const T={"#units":isAdmin?["team","#umiss"]:["dash","#umy"],"#approvals":[isAdmin||isCEO()?"dash":"mine","#approvals"],"#reminders":["dash","#reminders"],"#wins":["dash","#wins"],"#requests":["dash","#requests"]}[h];if(!T)return;
   if(h==="#units"&&!isAdmin&&!UMY.length){loadMyMissing().then(()=>{renderDash();setTimeout(()=>{const el=$("#umy");if(el){window.scrollTo(0,Math.max(0,el.getBoundingClientRect().top+scrollY-80));el.classList.add("flash")}},300)});}
   show(T[0]);const go=n=>{const el=$(T[1]);if(el){window.scrollTo(0,Math.max(0,el.getBoundingClientRect().top+scrollY-80));el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1800)}else if(n<8)setTimeout(()=>go(n+1),400)};setTimeout(()=>go(0),350)}
 addEventListener("hashchange",()=>{if(uid)goHash(location.hash)});
