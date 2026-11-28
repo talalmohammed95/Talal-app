@@ -1048,6 +1048,7 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
 .oc-deal.sale{background:#E8F1FB;color:#1D5FA8}.oc-deal.rent{background:#E7F5EC;color:#1E7A3A}.oc-deal.both{background:var(--accent-soft);color:var(--accent-ink)}
 .oc-unit{display:inline-flex;align-items:center;gap:4px;font-weight:700;font-size:11.5px;color:var(--muted)}.oc-unit .ic{width:12px;height:12px}.oc-star{color:#E8B53A;margin-left:auto}
 .ocard h3{margin:0;font:700 16.5px/1.25 var(--display,inherit);letter-spacing:-.005em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsub{margin:4px 0 0;color:var(--muted);font-size:14px}.oc-loc svg{width:12px;height:12px;vertical-align:-1px}
 .oc-loc{margin:0;color:var(--muted);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .oc-specs{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px;color:var(--fg)}.oc-specs span{display:inline-flex;align-items:center;gap:5px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}.oc-specs .ic{width:14px;height:14px;color:var(--primary);flex:none}
 .oc-price{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:2px}.oc-price b{font:800 18px var(--display,inherit)}.oc-price b i{font-weight:700;font-size:11px;font-style:normal;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}.oc-price small{color:var(--muted);font-size:12.5px}
@@ -1728,6 +1729,9 @@ function pills(o){
   return h;
 }
 // A home in the list, presented properly: photo, full name of the type, building and floor, key facts, full price, who listed it.
+const unitName=(o,withUnit=true)=>[BLD[o.b]||"Peninsula",isTeam()&&o.tower&&hasTowers(o.b)?"Tower "+o.tower:"",typeOf(o)||"Home",withUnit&&o.unit?"Unit "+o.unit:floorTxt(o)].filter(Boolean).join(" · ");
+// The headline only when it says more than the name (not just "2 bed, 14th floor").
+const extraTitle=o=>{const t=String(o.title||"").trim();return !t||/^(studio|\d\s*bed(room)?s?)(\s+\w+)?\s*(,\s*[^,]*floor)?$/i.test(t)||/^(studio|\d\s*bed)[^,]*,\s*[\w\s/]*floor$/i.test(t)?"":t.replace(/^(studio|\d\s*bed(room)?s?)\s*,\s*/i,"").replace(/^\w/,c=>c.toUpperCase())};
 const homeName=o=>{const t=typeOf(o);if(!t)return o.title||"Home";return o.layout&&LAYOUT[o.layout]?t:+o.beds===0?"Studio Apartment":t+" Apartment"};
 const floorTxt=o=>{if(!isTeam())return o.x&&o.x.band?{low:"Low floor",mid:"Mid floor",high:"High floor"}[o.x.band]||"":"";if(!known(o.floor))return"";const f=String(o.floor);return /floor|podium/i.test(f)?f:f+" floor"};
 const shortView=v=>{v=String(v||"").replace(/\s*view$/i,"");return v.length>34?v.slice(0,32).replace(/[ ,&]+\w*$/,"")+"…":v};
@@ -1751,9 +1755,9 @@ function cardHTML(o,cur){const ph=photosOf(o)[0],x=o.x||{},a=agentOf(o),team=isT
   return `<button class="ocard" data-id="${esc(o.id)}" aria-current="${cur}">
     <div class="oc-ph"><img loading="lazy" src="${esc(imgSrc(ph.k,true))}" alt=""><span class="oc-b">P${o.b}${team&&o.tower&&hasTowers(o.b)?esc(o.tower):""}</span>${hasRealPhotos(o)?'<span class="oc-real">Real photos</span>':""}</div>
     <div class="oc-main">
-      <div class="oc-top"><span class="oc-deal ${deal[0]}">${deal[1]}</span>${team&&o.unit?`<span class="oc-unit">${ic("lock")}Unit ${esc(o.unit)}</span>`:""}${starred.has(o.id)?'<span class="oc-star" aria-label="Shortlisted">★</span>':""}</div>
-      <h3>${esc(homeName(o))}</h3>
-      <p class="oc-loc">${esc(BLD[o.b]||"Peninsula")}${team&&o.tower&&hasTowers(o.b)?" · Tower "+esc(o.tower):""}${fl?" · "+esc(fl):""}</p>
+      <div class="oc-top"><span class="oc-deal ${deal[0]}">${deal[1]}</span>${starred.has(o.id)?'<span class="oc-star" aria-label="Shortlisted">★</span>':""}</div>
+      <h3>${esc(unitName(o))}</h3>
+      <p class="oc-loc">${esc([team&&o.unit&&fl?fl:"",extraTitle(o)].filter(Boolean).join(" · "))}</p>
       <div class="oc-specs">${specs.map(([i,t])=>`<span>${i}${esc(t)}</span>`).join("")}</div>
       <div class="oc-price"><b class="num">${fromW(o)?'<i>From</i> ':""}${price?aed(price):"Price on request"}</b>${sub?`<small>${esc(sub)}</small>`:""}</div>
       ${team||ocTags(o)?`<div class="oc-foot">${team?`<span class="oc-who"><img src="${esc(agentPhotoOf(o.agent,a.name))}" alt="">${esc(who)}</span>`:""}<span class="oc-tags">${ocTags(o)}</span></div>`:""}
@@ -1821,7 +1825,7 @@ function renderList(){
 function kv(k,v,cls=""){return `<div class="kv ${cls}"><span>${esc(k)}</span><span class="num">${esc(v)}</span></div>`}
 function offerText(o){
   const a=agentOf(o),p=priceLine(o);
-  let t=`*${BLD[o.b]} – ${typeOf(o)}* (${o.deal==="rent"?"for rent":o.deal==="both"?"for sale or rent":"for sale"})\n`;
+  let t=`*${unitName(o,false)}* (${o.deal==="rent"?"for rent":o.deal==="both"?"for sale or rent":"for sale"})\n`;
   t+=`${o.title}\n💰 ${p.big}${p.sub?" ("+p.sub+")":""}\n`;
   if(o.size)t+=`📐 ${fmt(o.size)} sq ft\n`;
   t+=`🏢 Floor: ${o.floor} · View: ${o.view}\n`;
@@ -2057,7 +2061,7 @@ function renderDetail(){
   const check=o.check?`<div class="notes"><b>Figures to confirm</b><ul>${o.check.map(c=>"<li>"+esc(c)+"</li>").join("")}</ul></div>`:"";
   const wa="https://wa.me/?text="+encodeURIComponent(offerText(o));
   el.innerHTML=`<article class="detail">
-    <div class="dhead"><div><div class="eyebrow">${esc(bldT(o).toUpperCase())} · ${o.deal==="rent"?"FOR RENT":o.deal==="both"?"FOR SALE OR RENT":"FOR SALE"}</div><h2>${esc(o.title)}</h2></div>
+    <div class="dhead"><div><div class="eyebrow">${o.deal==="rent"?"FOR RENT":o.deal==="both"?"FOR SALE OR RENT":"FOR SALE"}</div><h2>${esc(unitName(o))}</h2>${o.title?`<p class="dsub">${esc(o.title)}</p>`:""}</div>
       <div class="big num"><b>${esc(p.big)}</b><span>${esc(p.sub)}</span></div></div>
     <div class="dbody">
       ${isTeam()?towerBar(o):""}
@@ -2388,7 +2392,7 @@ function renderPresent(){
   if(o.deal!=="sale"){const dep=parseFloat(o.deposit||"5")/100;money+=`<div class="panel"><h4>Rent</h4>${kv("Annual rent",aed(o.rent))}${kv("Monthly equivalent",aed(o.rent/12))}${kv("Security deposit ("+(dep*100)+"%)",aed(o.rent*dep))}${kv("Cheques",o.cheques||"To agree")}</div>`}
   $("#present").innerHTML=`<div class="pbar"><button class="btn" id="p-close">Close</button><span class="num" style="font-size:13px;color:#CFC8BF">${pres.i+1} of ${pres.ids.length}</span><div style="display:flex;gap:8px">${CLOUD?"":'<button class="btn" id="p-print">Print</button>'}<button class="btn" id="p-prev" ${pres.i===0?"disabled":""}>‹ Previous</button><button class="btn" id="p-next" ${pres.i===pres.ids.length-1?"disabled":""}>Next ›</button></div></div>
    <div class="pwrap">
-    <div class="phero"><div><div class="eyebrow">${esc(BLD[o.b].toUpperCase())} · BUSINESS BAY · ${o.deal==="rent"?"FOR RENT":o.deal==="both"?"FOR SALE OR RENT":"FOR SALE"}</div><h1>${esc(o.title)}</h1></div><div class="big num"><b>${esc(p.big)}</b><span>${esc(p.sub)}</span></div></div>
+    <div class="phero"><div><div class="eyebrow">${esc(BLD[o.b].toUpperCase())} · BUSINESS BAY · ${o.deal==="rent"?"FOR RENT":o.deal==="both"?"FOR SALE OR RENT":"FOR SALE"}</div><h1>${esc(unitName(o,false))}</h1>${o.title?`<p class="dsub">${esc(o.title)}</p>`:""}</div><div class="big num"><b>${esc(p.big)}</b><span>${esc(p.sub)}</span></div></div>
     ${presentPhotos(o)}
     ${o.hl?`<p class="hl" style="font-size:17px">${esc(o.hl)}</p>`:""}
     <div class="pfacts">${f.map(x=>`<div class="pfact"><span>${esc(x[0])}</span><b>${esc(x[1])}</b></div>`).join("")}</div>
@@ -3125,7 +3129,7 @@ document.addEventListener("click",e=>{const g=e.target.closest("[data-gal]");if(
 (()=>{let x0=null;document.addEventListener("touchstart",e=>{const g=e.target.closest(".gmain");x0=g?e.touches[0].clientX:null},{passive:true});
   document.addEventListener("touchend",e=>{if(x0==null)return;const g=e.target.closest("[data-gal]");const dx=e.changedTouches[0].clientX-x0;x0=null;if(g&&Math.abs(dx)>50)galGo(g,+g.dataset.i+(dx<0?1:-1))},{passive:true})})();
 let lb=null;
-function openLightbox(id,i){const o=all().find(x=>x.id===id);if(!o)return;openViewer(mediaOf(o),BLD[o.b]+" · "+typeOf(o),i)}
+function openLightbox(id,i){const o=all().find(x=>x.id===id);if(!o)return;openViewer(mediaOf(o),unitName(o),i)}
 function openViewer(m,title,i){lb={title,m,i:i||0};let el=$("#lightbox");
   if(!el){document.body.insertAdjacentHTML("beforeend",`<div id="lightbox" role="dialog" aria-modal="true" aria-label="Photos"><div class="lbbar"><span class="lbt"></span><button class="lbdl" aria-label="Download this photo" hidden>${ic("download")}<span>Download</span></button><button class="lbx" aria-label="Close photos">${ic("x")}</button></div><div class="lbstage"><button class="lbn prev" aria-label="Previous photo">${ic("arrow")}</button><img alt=""><button class="lbn next" aria-label="Next photo">${ic("arrowr")}</button></div><div class="lbcap"></div></div>`);
     el=$("#lightbox");el.querySelector(".lbx").onclick=closeLightbox;el.querySelector(".lbdl").onclick=()=>{const p=lb&&lb.m[lb.i];if(p)savePhotos([{u:imgSrc(p.k)}],(lb.title||"photo").replace(/[^\w]+/g,"-")+"-"+(lb.i+1))};el.querySelector(".prev").onclick=()=>lbGo(-1);el.querySelector(".next").onclick=()=>lbGo(1);
@@ -3742,7 +3746,7 @@ function soPage(o,opt){const x=o.x||{},a=AGENTS[opt.agent]||agentOf(o),photos=ph
     ${opt.client?`<div class="so-for"><span class="pf">Prepared for <b>${esc(opt.client)}</b></span><span>${esc(date)} · Ref ${esc(o.id.toUpperCase())}</span></div>`:`<div class="so-for"><span>${esc(date)} · Ref ${esc(o.id.toUpperCase())}</span></div>`}
     <img class="so-hero" src="${esc(imgSrc(photos[0].k))}" crossorigin="anonymous" alt="">
     <div class="so-body">
-      <div class="so-title"><div><span class="so-k">${esc(o.hlTitle||"SPECIAL "+(o.deal==="rent"?"RENTAL":"SALE")+" OFFER")}</span><h1>${esc(o.layout?typeOf(o):typeOf(o)+" Apartment")}</h1><p>${esc(o.title)}</p></div>
+      <div class="so-title"><div><span class="so-k">${esc(o.hlTitle||"SPECIAL "+(o.deal==="rent"?"RENTAL":"SALE")+" OFFER")}</span><h1>${esc(unitName(o,false))}</h1><p>${esc(o.title)}</p></div>
         <div class="so-price"><b>${esc(sale?aed(o.price):aed(o.rent))}</b><span>${sale?(o.size?"AED "+fmt(o.price/o.size)+" / sq ft":""):"per year"}${o.deal==="both"?" · or rent "+esc(aed(o.rent))+" / yr":""}</span></div></div>
       ${o.hl&&opt.hl?`<p class="so-hl">${esc(o.hl)}</p>`:""}
       <div class="so-cols"><div><h3>UNIT DETAILS</h3>${details}</div><div class="so-money">${money}</div></div>
@@ -4214,7 +4218,7 @@ function approvalsHTML(){if(!(isAdmin||isCEO()))return"";const P=mine.concat(tea
     return `<div class="aprow"><button class="aprh" data-review-open="${esc(o.id)}"><img src="${esc(imgSrc(pl[0].k,true))}" alt=""><div><b>${esc((AGENTS[o.agent]&&firstName(AGENTS[o.agent].name))||r.by||"")} · ${esc(BLD[o.b])} · ${esc(typeOf(o))}${known(o.floor)?" · "+esc(o.floor)+" floor":""}</b>
       <span>${aed(o.deal==="rent"?o.rent:o.price)}${o.deal==="rent"?" a year":""}${pct!=null?` · <b class="aprpct">${pct>0?"+":""}${pct}%</b>`:""}${mk?" vs market "+aed(mk):""}${o.size?" · "+fmt(o.size)+" sq ft":""}</span></div></button>
       <p><b>${esc(catName(r.cat))}:</b> ${esc(r.reason)}</p><p class="src">Hidden from the website until you approve.</p><button class="btn" data-review-open="${esc(o.id)}">${ic("eye")}Open the full listing to review</button>${prActions(o.id)}</div>`};return `<div class="panel apprp" id="approvals"><h3>${ic("shield")}Price approvals <span class="pill check">${P.length+OP.length}</span></h3><p class="lede">Listings more than 7% above the market. They go online only once you approve.</p>
-    ${P.map(m=>{const o=enrich(mineToOffer(m)),r=m.priceReview,ph=Array.isArray(m.photos)?m.photos.length:0,pl=photosOf(o);return `<div class="aprow"><button class="aprh" data-review-open="${esc(m.id)}"><img src="${esc(imgSrc(photosOf(o)[0].k,true))}" alt=""><div><b>${esc((m._by&&firstName(m._by.name))||"You")} · ${m.unit?"Unit "+esc(m.unit)+" · ":""}${esc(BLD[o.b])} · ${esc(typeOf(o))}</b>
+    ${P.map(m=>{const o=enrich(mineToOffer(m)),r=m.priceReview,ph=Array.isArray(m.photos)?m.photos.length:0,pl=photosOf(o);return `<div class="aprow"><button class="aprh" data-review-open="${esc(m.id)}"><img src="${esc(imgSrc(photosOf(o)[0].k,true))}" alt=""><div><b>${esc(unitName(Object.assign({},o,{unit:m.unit})))} · ${esc((m._by&&firstName(m._by.name))||"You")}</b>
       <span>${aed(o.deal==="rent"?o.rent:o.price)}${o.deal==="rent"?" a year":""} · <b class="aprpct">+${r.pct}%</b>${r.market?" vs market "+aed(r.market):""}${ph?" · "+ph+" photo"+(ph>1?"s":""):""}</span></div></button>
       ${ph?`<div class="aprph">${pl.slice(0,6).map((x,i)=>`<button type="button" data-review-ph="${esc(m.id)}" data-i="${i}" aria-label="Photo ${i+1}"><img loading="lazy" src="${esc(imgSrc(x.k,true))}" alt=""></button>`).join("")}</div>`:`<p class="src">No photos of the home yet: ask for photos of the works.</p>`}
       <p><b>${esc(catName(r.cat))}:</b> ${esc(r.reason)}</p><button class="btn" data-review-open="${esc(m.id)}">${ic("eye")}Open the full listing to review</button>${prActions(m.id)}</div>`}).join("")}${OP.map(opRow).join("")}</div>`}
@@ -4674,7 +4678,7 @@ let UMISS=null;
 async function umissLoad(force){const el=$("#umiss");if(!el||!isAdmin||!SRV)return;if(!UMISS||force){try{UMISS=await api("admin/units-missing")}catch(e){el.innerHTML="";return}}umissDraw()}
 // The unit-numbers board: every home without its number, under the agent who listed it.
 // The admin moves homes to the right agent, fills numbers, and sends each agent their list (WhatsApp or PDF); an agent fills their own on Home.
-const umLine=x=>[(BLD[x.b]||"Peninsula")+(x.tower&&+x.b===4?" Tower "+x.tower:""),typeOf(x)||"Home",x.size?fmt(x.size)+" sq ft":"",known(x.floor)?x.floor+(/floor/i.test(x.floor)?"":" floor"):"",known(x.view)?x.view+" view":"",x.deal==="rent"?(x.rent?aed(x.rent)+" a year":"for rent"):[x.price?aed(x.price):"",x.deal==="both"&&x.rent?"or "+aed(x.rent)+" a year":""].filter(Boolean).join(" ")].filter(Boolean).join(" · ");
+const umLine=x=>[(BLD[x.b]||"Peninsula")+(x.tower&&+x.b===4?" · Tower "+x.tower:""),typeOf(x)||"Home",x.unit?"Unit "+x.unit:"",x.size?fmt(x.size)+" sq ft":"",known(x.floor)?x.floor+(/floor/i.test(x.floor)?"":" floor"):"",known(x.view)?x.view+" view":"",x.deal==="rent"?(x.rent?aed(x.rent)+" a year":"for rent"):[x.price?aed(x.price):"",x.deal==="both"&&x.rent?"or "+aed(x.rent)+" a year":""].filter(Boolean).join(" ")].filter(Boolean).join(" · ");
 function umGroups(h){const g={};h.forEach((x,i)=>{const k=x.needsAgent?"_":x.agentKey||"?";(g[k]=g[k]||[]).push([x,i])});
   return Object.entries(g).sort(([a],[b])=>a==="_"?-1:b==="_"?1:String((UMISS.agents[a]||{}).name||a).localeCompare(String((UMISS.agents[b]||{}).name||b)))}
 function umRow(x,i,admin){const ag=UMISS.agents||{};
@@ -4741,7 +4745,7 @@ async function umOwnerPdf(){const h=UMISS.noOwner||[],ag=UMISS.agents||{};if(!h.
   pdf.setFontSize(8);pdf.setTextColor(140);pdf.text("Private: owners' names and phones are seen only by Talal, Mr Munir and the listing agent. Fill them in My units.",M,822);
   await shareFile(pdf.output("blob"),`Owner-details-to-fill-${todayISO()}.pdf`,"Owner details to fill")}
 function umMsg(k,l){const a=(UMISS.agents||{})[k]||{},o=(UMISS.noOwner||[]).filter(x=>!x.needsAgent&&x.agentKey===k),parts=[l.length?`${l.length} without a unit number`:"",o.length?`${o.length} without the owner's name and phone`:""].filter(Boolean).join(" and ");
-  return `Hi ${firstName(a.name||"")}, some of your homes on the website are missing details: ${parts}. Tap the link: it opens them on your Home page, type each one and save (1 minute):\n\n${unitsLink()}\n\n${l.length?"Unit numbers:\n"+l.map((x,n)=>`${n+1}. ${umLine(x)}`).join("\n")+"\n\n":""}${o.length?"Owner's name and phone:\n"+o.map((x,n)=>`${n+1}. ${umLine(x)}${x.unit?" · unit "+x.unit:""}`).join("\n")+"\n\n":""}Only you and Talal see these details. Thanks!`}
+  return `Hi ${firstName(a.name||"")}, some of your homes on the website are missing details: ${parts}. Tap the link: it opens them on your Home page, type each one and save (1 minute):\n\n${unitsLink()}\n\n${l.length?"Unit numbers:\n"+l.map((x,n)=>`${n+1}. ${umLine(x)}`).join("\n")+"\n\n":""}${o.length?"Owner's name and phone:\n"+o.map((x,n)=>`${n+1}. ${umLine(x)}`).join("\n")+"\n\n":""}Only you and Talal see these details. Thanks!`}
 // Sends the agent a reminder that opens their unit numbers: a notification on their phone now, the pop-up and the Reminders list in the app.
 async function umRemind(keys){let ok=0,bad=[];for(const k of keys){const n=(UMISS.homes||[]).filter(x=>!x.needsAgent&&x.agentKey===k).length,o=umOwnN(k);if(!n&&!o)continue;
     try{await api("team/reminders",{who:k,when:"now",link:"/app/#units",text:`Fill the missing details of your homes (${[n?n+" unit number"+(n>1?"s":""):"",o?o+" owner"+(o>1?"s'":"'s")+" details":""].filter(Boolean).join(", ")}): tap to open them`});ok++}catch(e){bad.push(firstName(((UMISS.agents||{})[k]||{}).name||k))}}
