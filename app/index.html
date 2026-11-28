@@ -1028,6 +1028,14 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
 .lhead.focus span{color:var(--primary)}
 .revgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:6px}.revgrid div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:7px 10px;display:flex;flex-direction:column;min-width:0}.revgrid span{font-size:11.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}.revgrid b{font-size:14px;word-break:break-word}
 :root[data-theme="dark"] .revtop{background:#3A2D12}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .revtop{background:#3A2D12}}
+.fhero{position:relative;border-radius:22px;overflow:hidden;color:#fff;margin-bottom:12px;background:linear-gradient(100deg,rgba(14,12,11,.88),rgba(14,12,11,.55) 60%,rgba(14,12,11,.3)),var(--fh) center/cover;background-color:#1C1A18}
+.fhin{padding:18px;display:flex;flex-direction:column;gap:10px}.fhero .kick{color:#F5A23A;margin:0;display:flex;align-items:center;gap:6px}.fhero .kick .ic{width:16px;height:16px}.fhero h2{margin:0;font-size:28px;line-height:1.1}
+.fhstats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}.fhstats div{background:rgba(255,255,255,.12);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;min-width:0}.fhstats b{font-size:22px;line-height:1.1}.fhstats span{font-size:11.5px;opacity:.85}
+@media(max-width:600px){.fhstats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.fhnote{margin:0;font-size:14px;display:flex;align-items:center;gap:4px}.fhnote a{color:#F5A23A;font-weight:700}.fhnote .ic{width:14px;height:14px}
+.fhchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}.fhchips .chip{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:38px}.fhchips .chip .ic{width:15px;height:15px}
+.fhero .fhchips .chip{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.25)}.fhero .fhchips .chip.on{background:#fff;color:#1C1A18}
+.fhslim{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}.fhslim>span{display:flex;align-items:center;gap:6px;font-weight:700;font-size:14px;color:var(--muted)}.fhslim>span .ic{width:15px;height:15px;color:var(--primary)}.fhslim .fhchips{flex:1;min-width:0}.fhslim .chip.on{background:var(--primary);color:#fff;border-color:var(--primary)}
 #motiv{position:fixed;left:0;right:0;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:86;display:flex;justify-content:center;padding:0 12px;pointer-events:none}#motiv[hidden]{display:none}
 @media(min-width:900px){#motiv{bottom:24px}}
 .mvcard{pointer-events:auto;position:relative;width:min(460px,100%);background:#1C1A18;color:#fff;border-radius:22px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.45);animation:regup .3s ease-out}
@@ -1127,6 +1135,7 @@ body.visitor #a2hs{display:none}@media(max-width:480px){body.visitor #theme-togg
   <section class="view" id="view-offers" hidden>
     <div class="split">
       <div>
+        <div id="focushero"></div>
         <div class="filters">
           <div class="seg" role="group" aria-label="Deal type">
             <button data-deal="all" aria-pressed="true">All</button>
@@ -1727,7 +1736,26 @@ function focusRank(o,f){f=f||myFocus();if(!f.length)return 0;let r=f.length;f.fo
 const focusLabel=f=>f.map(x=>x==="duplex"?"duplexes":"P"+x).join(", ").replace(/, ([^,]*)$/," and $1");
 // For the team: 0 = my units, 1 = the rest of the team's units, 2 = other offers.
 function offerGroup(o){const k=myKey();if((o.mine&&o.own)||(k&&o.agent===k&&(o.teamUnit||o.fromListing)))return 0;if(o.teamUnit||o.fromListing||o.mine)return 1;return 2}
+/* Offers open on the agent's own building: a welcome card with their stock there, and the list filtered to it. */
+function focusDefault(){if(!isTeam())return;const f=myFocus();if(!f.length)return;let done=null;try{done=sessionStorage.getItem("orla.focusOpen")}catch(e){}if(done)return;
+  try{sessionStorage.setItem("orla.focusOpen","1")}catch(e){}const b=f.find(x=>x!=="duplex");if(b&&!state.bld&&!state.q){state.bld=String(b);if(state.type==="duplex")state.type="";syncFilters()}}
+function focusHeroHTML(){if(!isTeam())return"";const f=myFocus();if(!f.length)return"";const A=all().filter(o=>!isDone(o)),mk=myKey();
+  const inF=(o,x)=>x==="duplex"?(o.layout==="duplex"||o.layout==="loft"):+o.b===+x;
+  const cur=state.type==="duplex"&&f.includes("duplex")?"duplex":f.find(x=>x!=="duplex"&&String(x)===String(state.bld));
+  const chips=`<div class="fhchips">${f.map(x=>{const n=A.filter(o=>inF(o,x)).length,on=String(x)===String(cur);return `<button type="button" class="chip${on?" on":""}" data-fh="${x}" aria-pressed="${on}">${ic(x==="duplex"?"building":"star")}${x==="duplex"?"Duplexes":"P"+x} · ${n}</button>`}).join("")}<button type="button" class="chip${!state.bld&&state.type!=="duplex"?" on":""}" data-fh="all">${ic("globe")}All buildings · ${A.length}</button></div>`;
+  if(cur==null)return `<div class="fhslim"><span>${ic("star")}Your buildings</span>${chips}</div>`;
+  const L=A.filter(o=>inF(o,cur)),mine=L.filter(o=>offerGroup(o)===0),team=L.filter(o=>offerGroup(o)===1),sale=L.filter(o=>o.deal!=="rent"),rent=L.filter(o=>o.deal!=="sale");
+  const lo=(l,k)=>{const v=l.map(o=>k==="rent"?o.rent:o.price).filter(x=>x>0);return v.length?Math.min(...v):null},ls=lo(sale,"sale"),lr=lo(rent,"rent");
+  const cover=cur==="duplex"?MEDIA.bld[4].cover:MEDIA.bld[cur].cover,name=cur==="duplex"?"Duplexes & lofts":BLD[cur];
+  return `<section class="fhero" style="--fh:url('${esc(imgSrc(toItem(cover).k))}')"><div class="fhin"><p class="kick">${ic("star")} Your ${cur==="duplex"?"speciality":"building"}${hello()?" · "+esc(hello()):""}</p><h2>${esc(name)}</h2>
+    <div class="fhstats"><div><b class="num">${mine.length}</b><span>your units</span></div><div><b class="num">${team.length}</b><span>team units</span></div><div><b class="num">${L.length}</b><span>homes in all</span></div>
+      <div><b class="num">${ls?short(ls):"—"}</b><span>sale from (AED)</span></div><div><b class="num">${lr?short(lr):"—"}</b><span>rent from (AED/yr)</span></div></div>
+    ${mine.length?"":`<p class="fhnote">No units of yours here yet. ${ic("plus")}<a href="#" data-fhadd>Add your first one</a></p>`}${chips}</div></section>`}
+document.addEventListener("click",e=>{if(e.target.closest("[data-fhadd]")){e.preventDefault();show("mine");try{resetMineForm();const v=String(state.bld||"");if(v)$("#m-bld").value=v;mFillTypes()}catch(x){}return}const b=e.target.closest("[data-fh]");if(!b)return;const v=b.dataset.fh;
+  if(v==="all"){state.bld="";if(state.type==="duplex")state.type=""}else if(v==="duplex"){state.bld="";state.type="duplex"}else{state.bld=v;if(state.type==="duplex")state.type=""}
+  syncFilters();renderList();const fh=$("#focushero");if(fh)fh.scrollIntoView({block:"start"})});
 function renderList(){
+  {const fh=$("#focushero");if(fh)fh.innerHTML=focusHeroHTML()}
   renderChips();saveFilters();
   const l=filtered();
   if(!l.find(o=>o.id===state.sel))state.sel=l[0]?.id??null;
@@ -4642,7 +4670,7 @@ async function boot(){
   if(sessionOpen()&&!store.get("orla.pin",null))unlock();else lock()}
 
 /* ---------------- Wiring ---------------- */
-function show(v){setTimeout(()=>{if(LAZYDIRTY[v]&&LAZY[v]){LAZYDIRTY[v]=false;try{LAZY[v]()}catch(e){}}},0);if(v==="admin"&&!isAdmin)v="dash";if((v==="train"||v==="review"||v==="visitors")&&!canTrain())v="dash";if(isCEO()&&CEO_HIDE.includes(v))v="dash";if(!isTeam()&&TEAM_VIEWS.includes(v))v="dash";if(v==="admin"&&SRV){loadUsers();loadLog()}document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.view===v));document.querySelectorAll(".view").forEach(s=>s.hidden=s.id!=="view-"+v);store.set("orla.tab",v);window.scrollTo(0,0);setPageHead(v);closeMenus();const forMe=t=>!t.hidden&&!(isTeam()?t.classList.contains("guest-only"):t.classList.contains("team-only"));
+function show(v){if(v==="offers")try{focusDefault()}catch(e){}setTimeout(()=>{if(LAZYDIRTY[v]&&LAZY[v]){LAZYDIRTY[v]=false;try{LAZY[v]()}catch(e){}}},0);if(v==="admin"&&!isAdmin)v="dash";if((v==="train"||v==="review"||v==="visitors")&&!canTrain())v="dash";if(isCEO()&&CEO_HIDE.includes(v))v="dash";if(!isTeam()&&TEAM_VIEWS.includes(v))v="dash";if(v==="admin"&&SRV){loadUsers();loadLog()}document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.view===v));document.querySelectorAll(".view").forEach(s=>s.hidden=s.id!=="view-"+v);store.set("orla.tab",v);window.scrollTo(0,0);setPageHead(v);closeMenus();const forMe=t=>!t.hidden&&!(isTeam()?t.classList.contains("guest-only"):t.classList.contains("team-only"));
   $("#bn-more").classList.toggle("on",![...document.querySelectorAll(".bnav .tab")].some(t=>t.dataset.view===v&&forMe(t)));$("#pagehead").hidden=v==="dash";
   $("#tmore-btn").classList.toggle("on",![...document.querySelectorAll("nav.tabs > .tab")].some(t=>t.dataset.view===v&&forMe(t)));requestAnimationFrame(()=>fillCharts($("#view-"+v)));if(v==="team")renderTeam();if(v==="docs")renderDocs();if(v==="assist")aiOpen();if(v==="chat")chatOpen();if(v==="train")trainOpen();if(v==="review")reviewOpen();if(v==="visitors")visitorsOpen()}
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>show(t.dataset.view));

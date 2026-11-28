@@ -293,6 +293,7 @@ When an agent has several homes of the same kind, a client sees only the cheapes
 ## Each agent's buildings first
 
 Each agent's stock shows their buildings first: Talal **Peninsula Three**; Giulia **Peninsula One and Two**; Blendjana **Peninsula Four**; Liubov **Peninsula Five and the duplexes** (duplexes and lofts in any building). Derya has none set.
+- **Offers opens on the agent's building** (once per visit, unless they've typed a search): the list is filtered to it, and a card at the top shows the building's photo with "Your building · Peninsula Three". It shows their units there, the team's units, homes in all, and the lowest sale price and rent. Chips switch between their buildings (P1 · 3, P2 · 3, Duplexes) and **All buildings**. In another building, the card shrinks to a row of "Your buildings" chips to get back. With no units of their own there, it offers "Add your first one".
 - In **Offers** the list opens with a heading per building ("Peninsula Three · your building"), then "Other buildings · your units / team units", then other offers. The count line says "your buildings first: P3".
 - In **My units**, current units follow the same order.
 
