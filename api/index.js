@@ -225,7 +225,12 @@ async function guessAgentKey(u) {
   const near = (a, b) => a && b && (a === b || (a.length >= 5 && b.length >= 5 && a.slice(0, 5) === b.slice(0, 5)));
   const mail = norm(String(u.email || "").split("@")[0]).replace(/\s+/g, "");
   const hits = Object.keys(agents).filter(k => near(first(agents[k].name), first(u.name)) || (mail && (mail.startsWith(k.toLowerCase()) || (first(agents[k].name).length >= 4 && mail.startsWith(first(agents[k].name))))));
-  const key = hits.length === 1 ? hits[0] : null;
+  let key = hits.length === 1 ? hits[0] : null;
+  // The admin is Talal: link the admin account to Talal's agent profile when nothing else matched and nobody else holds it.
+  if (!key && u.role === "admin" && agents.talal) {
+    const { rows: [t] } = await q("select 1 from users where agent_key = 'talal' and id <> $1 limit 1", [u.id]);
+    if (!t) key = "talal";
+  }
   if (key) { await q("update users set agent_key = $2 where id = $1", [u.id, key]); u.agent_key = key; }
 }
 
@@ -350,7 +355,7 @@ const routes = {
   "GET auth/me": async c => {
     if (!c.user) fail(401, "Not signed in.", "signed_out");
     // An Orla agent whose account isn't linked to their agent profile yet (name spelled differently at sign-up): link it now.
-    if (c.user.role === "agent" && !c.user.agent_key) { try { await guessAgentKey(c.user); } catch (e) {} }
+    if ((c.user.role === "agent" || c.user.role === "admin") && !c.user.agent_key) { try { await guessAgentKey(c.user); } catch (e) {} }
     return { user: publicUser(c.user) };
   },
 
@@ -408,7 +413,7 @@ const routes = {
       if (canResend) await sendVerification(c.req, user);
       fail(403, "Confirm your email first. We've just sent you a new confirmation link.", "unverified");
     }
-    if (user.role === "agent" && !user.agent_key) { try { await guessAgentKey(user); } catch (e) {} }
+    if ((user.role === "agent" || user.role === "admin") && !user.agent_key) { try { await guessAgentKey(user); } catch (e) {} }
     await startSession(c.req, c.res, user.id);
     return { user: publicUser(user) };
   },

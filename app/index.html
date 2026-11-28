@@ -1783,10 +1783,11 @@ const myFocus=()=>{const k=myKey(),a=AGENTS[k]||{};return Array.isArray(a.focus)
 function focusRank(o,f){f=f||myFocus();if(!f.length)return 0;let r=f.length;f.forEach((x,i)=>{if(r<f.length)return;if(x==="duplex"?(o.layout==="duplex"||o.layout==="loft"):+o.b===+x)r=i});return r}
 const focusLabel=f=>f.map(x=>x==="duplex"?"duplexes":"P"+x).join(", ").replace(/, ([^,]*)$/," and $1");
 // For the team: 0 = my units, 1 = the rest of the team's units, 2 = other offers.
-function offerGroup(o){const k=myKey();if((o.mine&&o.own)||(k&&o.agent===k&&(o.teamUnit||o.fromListing)))return 0;if(o.teamUnit||o.fromListing||o.mine)return 1;return 2}
+function offerGroup(o){const k=myKey();if((o.mine&&o.own)||(k&&o.agent===k))return 0;if(o.teamUnit||o.fromListing||o.mine)return 1;return 2}
 /* Offers open on the agent's own building: a welcome card with their stock there, and the list filtered to it. */
 function focusDefault(){if(!isTeam())return;const f=myFocus();if(!f.length)return;let done=null;try{done=sessionStorage.getItem("orla.focusOpen")}catch(e){}if(done)return;
-  try{sessionStorage.setItem("orla.focusOpen","1")}catch(e){}const b=f.find(x=>x!=="duplex");if(b&&!state.bld&&!state.q){state.bld=String(b);if(state.type==="duplex")state.type="";syncFilters()}}
+  try{sessionStorage.setItem("orla.focusOpen","1")}catch(e){}const b=f.find(x=>x!=="duplex");if(b&&!state.q){state.bld=String(b);if(state.type==="duplex")state.type="";syncFilters()}
+  try{const l=filtered(),cur=l.find(o=>o.id===state.sel);if(l.length&&(!cur||offerGroup(cur)!==0)){state.sel=l[0].id;store.set("orla.sel",l[0].id)}}catch(e){}}
 function focusHeroHTML(){if(!isTeam())return"";const f=myFocus();if(!f.length)return"";const A=all().filter(o=>!isDone(o)),mk=myKey();
   const inF=(o,x)=>x==="duplex"?(o.layout==="duplex"||o.layout==="loft"):+o.b===+x;
   const cur=state.type==="duplex"&&f.includes("duplex")?"duplex":f.find(x=>x!=="duplex"&&String(x)===String(state.bld));
@@ -3327,7 +3328,7 @@ $("#o-up").onchange=e=>{if(e.target.files.length)phUpload(e.target.files,false);
 $("#o-up-plan").onchange=e=>{if(e.target.files.length)phUpload(e.target.files,true);e.target.value=""};
 
 /* ---------------- Owners: only the agent an offer is listed under sees the owner's contact ---------------- */
-function myKey(){if(profile&&profile.agentKey)return profile.agentKey;const a=myAgent();return a?Object.keys(AGENTS).find(k=>AGENTS[k]===a):(profile&&profile.role==="agent"?agentKeyByName(profile.name):"")}
+function myKey(){if(profile&&profile.agentKey)return profile.agentKey;if(isAdmin&&AGENTS.talal&&!myAgent())return "talal";const a=myAgent();return a?Object.keys(AGENTS).find(k=>AGENTS[k]===a):(profile&&profile.role==="agent"?agentKeyByName(profile.name):"")}
 const telOf=p=>String(p||"").replace(/[^0-9+]/g,"");
 function ownerWa(o){const me=(meInfo&&meInfo.name)||"your agent";
   const msg=`Hello${o.owner?" "+String(o.owner).split(" ")[0]:""}, this is ${me} from Orla Properties. About your ${typeOf(o).toLowerCase()} in ${BLD[o.b]}${o.unit?" (unit "+o.unit+")":""}: I have a client interested. When would suit you for a viewing?`;
